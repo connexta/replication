@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /**
- * Copyright (c) Connexta
+ * Copyright (c) Codice Foundation
  *
  * This is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or any later version.
@@ -16,16 +16,13 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>replication-admin</artifactId>
-        <groupId>replication</groupId>
+        <artifactId>test</artifactId>
+        <groupId>replication.distributions</groupId>
         <version>0.1.5-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>replication-admin-query</artifactId>
-    <name>Replication :: Admin Console :: Query</name>
-    <packaging>bundle</packaging>
-
+    <name>DITTO :: Admin Console :: Test :: ITests</name>
+    <artifactId>itests</artifactId>
 
     <dependencies>
         <dependency>
@@ -34,46 +31,29 @@
             <version>${hamcrest-all.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.codice.ddf.admin.query</groupId>
-            <artifactId>admin-query-common</artifactId>
-            <version>${admin-query.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codice.ddf.admin.query</groupId>
-            <artifactId>admin-query-api</artifactId>
-            <version>${admin-query.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ddf.admin</groupId>
-            <artifactId>admin-configurator-api</artifactId>
+            <groupId>ddf.thirdparty</groupId>
+            <artifactId>rest-assured</artifactId>
             <version>${ddf.version}</version>
         </dependency>
         <dependency>
-            <groupId>ddf.admin</groupId>
-            <artifactId>admin-configurator-actions-api</artifactId>
-            <version>${ddf.version}</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
         </dependency>
         <dependency>
             <groupId>replication</groupId>
             <artifactId>replication-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>replication</groupId>
+            <artifactId>replication-api-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>${awaitility.version}</version>
+        </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <configuration>
-                    <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Embed-Dependency>
-                            admin-query-common
-                        </Embed-Dependency>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
