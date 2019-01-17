@@ -413,6 +413,7 @@
                             <whitelistedValues>
                                 <param>-beta</param>
                                 <param>#</param>
+                                <param>-bridge</param>
                             </whitelistedValues>
                         </configuration>
                     </plugin>
