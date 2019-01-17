@@ -9,14 +9,15 @@
 .history
 jsconfig.json
 .vscode/
-node_modules/
-node/
 bin/
-npm-debug.log*
 atlassian-ide-plugin.xml
 *.sonar-ide.properties
-**/webapp/css/styles.css
-platform/solr/**/overlays
+
+# Node/Yarn ignores
+yarn-error.log*
+npm-debug.log*
+node_modules/
+node/
 
 # JMeter Related files to ignore
 jmeter.log

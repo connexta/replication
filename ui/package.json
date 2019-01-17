@@ -14,6 +14,8 @@
     "start": "webpack-dev-server --mode development --progress --open",
     "test": "jest",
     "test:coverage": "jest --coverage --coverageDirectory ./target/coverage",
+    "format": "prettier \"**/*+(.tsx|.js|.less|.json|.css)\"",
+    "fmt": "yarn format --write",
     "build": "webpack --mode production"
   },
   "dependencies": {
@@ -44,6 +46,7 @@
     "html-webpack-plugin": "3.2.0",
     "identity-obj-proxy": "3.0.0",
     "jest": "23.6.0",
+    "prettier": "1.15.3",
     "react-hot-loader": "4.6.3",
     "react-test-renderer": "16.7.0",
     "style-loader": "0.23.1",

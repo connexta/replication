@@ -1,11 +1,11 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import client from "./client";
+import React from 'react'
+import ReactDOM from 'react-dom'
+import client from './client'
 
-import { ApolloProvider } from "react-apollo";
-import { AppContainer } from "react-hot-loader";
+import { ApolloProvider } from 'react-apollo'
+import { AppContainer } from 'react-hot-loader'
 
-import App from "./app";
+import App from './app'
 
 const render = Component =>
   ReactDOM.render(
@@ -14,11 +14,11 @@ const render = Component =>
         <Component />
       </ApolloProvider>
     </AppContainer>,
-    document.getElementById("app")
-  );
+    document.getElementById('app')
+  )
 
-render(App);
+render(App)
 
-if (process.env.NODE_ENV !== "production") {
-  module.hot.accept("./app", () => render(require("./app").default));
+if (process.env.NODE_ENV !== 'production') {
+  module.hot.accept('./app', () => render(require('./app').default))
 }
