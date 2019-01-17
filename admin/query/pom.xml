@@ -29,11 +29,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <version>${hamcrest-all.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.codice.ddf.admin.query</groupId>
             <artifactId>admin-query-common</artifactId>
             <version>${admin-query.version}</version>
