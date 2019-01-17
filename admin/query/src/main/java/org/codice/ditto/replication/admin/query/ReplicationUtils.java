@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.admin.query;
 
+import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import org.codice.ddf.admin.api.fields.ListField;
@@ -44,7 +45,11 @@ public class ReplicationUtils {
     ReplicationSite newSite = persistentStore.saveSite(name, urlString);
 
     ReplicationSiteField siteField = new ReplicationSiteField();
-    siteField.address(new AddressField().url(newSite.getUrl().toString()));
+    AddressField addressField = new AddressField();
+    addressField.url(newSite.getUrl().toString());
+    addressField.hostname(newSite.getUrl().getHost());
+    addressField.port((newSite.getUrl().getPort()));
+    siteField.address(addressField);
     siteField.id(newSite.getId());
     siteField.name(newSite.getName());
 
@@ -55,7 +60,13 @@ public class ReplicationUtils {
     String urlString = addressFieldToUrlString(address);
     ReplicationSite site = persistentStore.editSite(id, name, urlString);
     ReplicationSiteField siteField = new ReplicationSiteField();
-    siteField.address(new AddressField().url(site.getUrl().toString()));
+    AddressField addressField = new AddressField();
+    URL siteUrl = site.getUrl();
+    addressField.url(siteUrl.toString());
+    addressField.hostname(siteUrl.getHost());
+    addressField.port(siteUrl.getPort());
+
+    siteField.address(addressField);
     siteField.id(site.getId());
     siteField.name(site.getName());
 
@@ -111,10 +122,14 @@ public class ReplicationUtils {
 
     for (ReplicationSite site : sites) {
       ReplicationSiteField field = new ReplicationSiteField();
+      AddressField address = new AddressField();
+      URL siteUrl = site.getUrl();
+      address.url(siteUrl.toString());
+      address.hostname(siteUrl.getHost());
+      address.port(siteUrl.getPort());
+
       field.id(site.getId());
       field.name(site.getName());
-      AddressField address = new AddressField();
-      address.url(site.getUrl().toString());
       field.address(address);
       siteFields.add(field);
     }
