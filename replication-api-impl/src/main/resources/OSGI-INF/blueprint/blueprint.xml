@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright (c) Connexta
+ *
+ * This is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details. A copy of the GNU Lesser General Public License is distributed along with this program and can be found at
+ * <http://www.gnu.org/licenses/lgpl.html>.
+ *
+ **/
+-->
+<blueprint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+           xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
+
+    <reference id="catalog" interface="ddf.catalog.CatalogFramework"/>
+    <reference id="filterAdapter" interface="ddf.catalog.filter.FilterAdapter"/>
+    <reference id="filterBuilder" interface="ddf.catalog.filter.FilterBuilder"/>
+    <reference id="mimeTypeMapper" interface="ddf.mime.MimeTypeMapper"/>
+    <reference id="resourceReader" interface="ddf.catalog.resource.ResourceReader"
+               filter="(shortname=URLResourceReader)"/>
+    <reference id="cswTransformProvider" interface="com.thoughtworks.xstream.converters.Converter"/>
+    <reference id="securityManager" interface="ddf.security.service.SecurityManager"/>
+    <reference id="encryptionService" interface="ddf.security.encryption.EncryptionService"/>
+    <reference id="persistentStore" interface="org.codice.ddf.persistence.PersistentStore"/>
+    <reference id="clientFactoryFactory" interface="org.codice.ddf.cxf.client.ClientFactoryFactory"/>
+
+    <bean id="replicationPersistentStore"
+          class="org.codice.ditto.replication.api.impl.ReplicationPersistentStoreImpl">
+        <argument ref="persistentStore"/>
+    </bean>
+
+    <bean id="replicationSitePersistentStore" class="org.codice.ditto.replication.api.impl.modern.ReplicationSitePersistentStoreImpl">
+        <argument ref="persistentStore"/>
+    </bean>
+
+    <bean id="metacardTransformerManager"
+          class="org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerManager">
+        <argument ref="metacardTransformers"/>
+    </bean>
+
+    <bean id="metacardTransformers" class="ddf.catalog.util.impl.SortedServiceReferenceList"/>
+    <reference-list id="metacardTransformerList" member-type="service-reference"
+                    interface="ddf.catalog.transform.MetacardTransformer">
+        <reference-listener bind-method="bindService" unbind-method="unbindService"
+                            ref="metacardTransformers"/>
+    </reference-list>
+
+    <bean id="cswTransactionWriter"
+          class="org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter">
+        <argument ref="cswTransformProvider"/>
+    </bean>
+
+    <bean id="catalogResourceStoreFactory" class="org.codice.ditto.replication.api.impl.ReplicatorStoreFactoryImpl">
+        <property name="bundleContext" ref="blueprintBundleContext"/>
+        <property name="filterBuilder" ref="filterBuilder"/>
+        <property name="filterAdapter" ref="filterAdapter"/>
+        <property name="resourceReader" ref="resourceReader"/>
+        <property name="cswTransformConverter">
+            <bean class="org.codice.ddf.spatial.ogc.csw.catalog.converter.GetRecordsResponseConverter">
+                <argument ref="cswTransformProvider"/>
+            </bean>
+        </property>
+        <property name="securityManager" ref="securityManager"/>
+        <property name="encryptionService" ref="encryptionService"/>
+        <!-- CSW Store Properties -->
+        <property name="schemaTransformerManager" ref="metacardTransformerManager"/>
+        <property name="cswTransactionWriter" ref="cswTransactionWriter"/>
+        <property name="clientFactoryFactory" ref="clientFactoryFactory"/>
+    </bean>
+
+    <service ref="catalogResourceStoreFactory" interface="org.codice.ditto.replication.api.ReplicatorStoreFactory"/>
+    <service ref="replicationPersistentStore" interface="org.codice.ditto.replication.api.ReplicationPersistentStore"/>
+    <service ref="replicationSitePersistentStore" interface="org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore"/>
+
+    <bean id="metacardHelper" class="org.codice.ditto.replication.api.impl.MetacardHelper">
+        <argument ref="catalog"/>
+        <argument ref="filterBuilder"/>
+    </bean>
+
+    <bean id="configLoader" class="org.codice.ditto.replication.api.impl.MetacardConfigLoader">
+        <argument ref="catalog"/>
+        <argument ref="filterBuilder"/>
+        <argument ref="metacardHelper"/>
+        <argument ref="replicationConfig"/>
+    </bean>
+
+    <service ref="configLoader" interface="org.codice.ditto.replication.api.ReplicatorConfigLoader"/>
+
+    <bean id="localResourceStore" class="org.codice.ditto.replication.api.impl.LocalCatalogResourceStore">
+        <argument ref="catalog"/>
+    </bean>
+
+    <bean id="historyService" class="org.codice.ditto.replication.api.impl.ReplicatorHistoryImpl">
+        <argument ref="catalog"/>
+        <argument ref="filterBuilder"/>
+        <argument ref="metacardHelper"/>
+        <argument ref="replicationHistory"/>
+    </bean>
+
+    <service ref="historyService" interface="org.codice.ditto.replication.api.ReplicatorHistory"/>
+
+    <bean id="replicator" class="org.codice.ditto.replication.api.impl.ReplicatorImpl" init-method="init"
+          destroy-method="cleanUp">
+        <argument ref="catalogResourceStoreFactory"/>
+        <argument ref="localResourceStore"/>
+        <argument ref="historyService"/>
+        <argument ref="replicationPersistentStore"/>
+        <argument ref="replicatorImplExecutor"/>
+        <argument ref="filterBuilder"/>
+    </bean>
+
+    <bean id="replicatorImplExecutor" class="java.util.concurrent.Executors"
+          factory-method="newSingleThreadScheduledExecutor">
+        <argument ref="replicatorImplThreadFactory"/>
+    </bean>
+
+    <bean id="replicatorImplThreadFactory"
+          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          factory-method="newThreadFactory">
+        <argument value="replicatorImplProcessorThread"/>
+    </bean>
+
+    <service ref="replicator" interface="org.codice.ditto.replication.api.Replicator"/>
+
+    <bean id="frameworkPlugin" class="org.codice.ditto.replication.api.impl.ReplicationFrameworkPlugin"/>
+
+    <service ref="frameworkPlugin" interface="ddf.catalog.plugin.AccessPlugin" ranking="100"/>
+
+    <bean id="replicationAttributes" class="ddf.catalog.data.impl.MetacardTypeImpl">
+        <argument value="replication"/>
+        <argument>
+            <list>
+                <bean class="org.codice.ditto.replication.api.impl.mcard.ReplicationAttributes"/>
+                <bean class="ddf.catalog.data.impl.types.CoreAttributes"/>
+            </list>
+        </argument>
+    </bean>
+
+    <service ref="replicationAttributes" interface="ddf.catalog.data.MetacardType">
+        <service-properties>
+            <entry key="name" value="replication"/>
+        </service-properties>
+    </service>
+
+    <bean id="replicationConfig" class="ddf.catalog.data.impl.MetacardTypeImpl">
+        <argument value="replication-config"/>
+        <argument>
+            <list>
+                <bean class="org.codice.ditto.replication.api.impl.mcard.ReplicationConfigAttributes"/>
+                <bean class="ddf.catalog.data.impl.types.CoreAttributes"/>
+            </list>
+        </argument>
+    </bean>
+
+    <service ref="replicationConfig" interface="ddf.catalog.data.MetacardType">
+        <service-properties>
+            <entry key="name" value="replication-config"/>
+        </service-properties>
+    </service>
+
+    <bean id="replicationHistory" class="ddf.catalog.data.impl.MetacardTypeImpl">
+        <argument value="replication-history"/>
+        <argument>
+            <list>
+                <bean class="org.codice.ditto.replication.api.impl.mcard.ReplicationHistoryAttributes"/>
+                <bean class="ddf.catalog.data.impl.types.CoreAttributes"/>
+            </list>
+        </argument>
+    </bean>
+
+    <service ref="replicationHistory" interface="ddf.catalog.data.MetacardType">
+        <service-properties>
+            <entry key="name" value="replication-history"/>
+        </service-properties>
+    </service>
+
+    <bean id="replicationPolicyPlugin" class="org.codice.ditto.replication.api.impl.ReplicationPolicyPlugin">
+        <cm:managed-properties persistent-id="org.codice.ditto.replication.api.impl.ReplicationPolicyPlugin"
+                               update-strategy="container-managed"/>
+        <property name="replicationPolicyStrings">
+            <array>
+                <value>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role=admin
+                </value>
+            </array>
+        </property>
+    </bean>
+
+    <service ref="replicationPolicyPlugin" auto-export="interfaces"/>
+</blueprint>

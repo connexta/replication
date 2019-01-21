@@ -1,0 +1,21 @@
+priority "grant";
+
+grant codeBase "file:/org.apache.felix.fileinstall/admin-core-jolokia/javax.servlet-api/org.eclipse.jetty.servlet/security-filter-api/platform-filter-clientinfo/platform-filter-response/security-filter-authorization/security-filter-login/org.apache.cxf.cxf-rt-transports-http" {
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions${/}-", "read,write";
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions", "read";
+}
+
+grant codeBase "file:/org.apache.karaf.features.command" {
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions", "read,write";
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions${/}-", "read,write";
+}
+
+grant codeBase "file:/replication-api-impl/replication-commands" {
+    permission java.lang.RuntimePermission "createClassLoader";
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}keystores${/}-", "read";
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}ws-security${/}server${/}-", "read";
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}ws-security${/}issuer${/}-", "read";
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}pdp${/}-", "read";
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions", "read";
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions${/}-", "read";
+}

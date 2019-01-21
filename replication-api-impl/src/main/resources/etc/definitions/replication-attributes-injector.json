@@ -1,0 +1,7 @@
+{
+  "inject": [
+    {
+      "attribute": "replication.origins"
+    }
+  ]
+}
