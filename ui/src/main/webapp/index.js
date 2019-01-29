@@ -1,3 +1,4 @@
+/*global document, require, process, module */
 import React from 'react'
 import ReactDOM from 'react-dom'
 import client from './client'
@@ -7,7 +8,7 @@ import { AppContainer } from 'react-hot-loader'
 
 import App from './app'
 
-const render = Component =>
+const render = function(Component) {
   ReactDOM.render(
     <AppContainer>
       <ApolloProvider client={client}>
@@ -16,6 +17,7 @@ const render = Component =>
     </AppContainer>,
     document.getElementById('app')
   )
+}
 
 render(App)
 

@@ -71,6 +71,15 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>yarn lint</id>
+                        <goals>
+                            <goal>yarn</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run lint</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>yarn test</id>
                         <phase>test</phase>
                         <goals>

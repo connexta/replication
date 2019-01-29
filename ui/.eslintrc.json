@@ -1,0 +1,25 @@
+{
+  "extends": [
+    "plugin:prettier/recommended",
+    "plugin:react/recommended",
+    "eslint:recommended"
+  ],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+  "plugins": ["prettier", "react", "eslint-plugin-html"],
+  "rules": {
+    "prettier/prettier": "error",
+    "no-unused-vars": "error"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

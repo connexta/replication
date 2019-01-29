@@ -1,7 +1,9 @@
+/*global alert */
 import React, { Fragment } from 'react'
 import Site from './Site'
+import PropTypes from 'prop-types'
 
-export default props => {
+export default function Sites(props) {
   const { sites } = props
 
   return (
@@ -20,4 +22,8 @@ export default props => {
         ))}
     </Fragment>
   )
+}
+
+Sites.propTypes = {
+  sites: PropTypes.object,
 }
