@@ -5,8 +5,9 @@ import PowerIcon from '@material-ui/icons/Power'
 import PowerOffIcon from '@material-ui/icons/PowerOff'
 import { expandingTile, siteHeader, siteContent } from './styles.css'
 import { CardHeader } from '@material-ui/core'
+import PropTypes from 'prop-types'
 
-export default props => {
+export default function Site(props) {
   const { name, connected, onClick } = props
 
   let status
@@ -22,4 +23,10 @@ export default props => {
       <CardContent className={siteContent}>{status}</CardContent>
     </Card>
   )
+}
+
+Site.propTypes = {
+  name: PropTypes.string.isRequired,
+  connected: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
 }

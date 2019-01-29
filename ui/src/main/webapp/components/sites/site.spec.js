@@ -1,3 +1,4 @@
+/*global test, mount, expect */
 import React from 'react'
 import Site from './Site'
 
