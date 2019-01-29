@@ -26,5 +26,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>query</module>
+        <module>test</module>
     </modules>
 </project>
