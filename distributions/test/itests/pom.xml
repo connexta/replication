@@ -55,5 +55,11 @@
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
         </dependency>
+        <dependency>
+            <groupId>replication</groupId>
+            <artifactId>replication-admin-test</artifactId>
+            <version>0.1.5-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

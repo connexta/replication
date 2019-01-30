@@ -13,19 +13,17 @@
  */
 package org.codice.ditto.replication.admin.query;
 
-import static com.jayway.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
-import com.jayway.restassured.specification.RequestSpecification;
 import java.net.MalformedURLException;
+import org.codice.ditto.replication.admin.test.QueryHelper;
 import org.junit.Test;
 
 public class ITReplicationQuery {
-
-  private static final String GRAPHQL_ENDPOINT = "https://localhost:8993/admin/hub/graphql";
 
   private static final String URL = "https://localhost:9999";
 
@@ -34,13 +32,7 @@ public class ITReplicationQuery {
   @Test
   public void createReplicationSite() throws MalformedURLException {
     String name = "create";
-    asAdmin()
-        .body(makeCreateSiteQuery(name, URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
+    QueryHelper.performCreateSiteQuery(name, URL)
         .body("data.createReplicationSite.name", is(name))
         .body("data.createReplicationSite.address.url", is(URL))
         .body("data.createReplicationSite.address.host.hostname", is("localhost"))
@@ -51,16 +43,10 @@ public class ITReplicationQuery {
   @Test
   public void createReplicationSiteWithHostnameAndPort() {
     String name = "createHostnameAndPort";
-    asAdmin()
-        .body(
+    QueryHelper.performQuery(
             String.format(
                 "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { host: { hostname: \\\"localhost\\\" port: 9999 }}){ id name address{ host{ hostname port } url }}}\"}",
                 name))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
         .body("data.createReplicationSite.name", is(name))
         .body("data.createReplicationSite.address.url", is(URL))
         .body("data.createReplicationSite.address.host.hostname", is("localhost"))
@@ -70,130 +56,47 @@ public class ITReplicationQuery {
 
   @Test
   public void createReplicationSiteWithEmptyName() {
-    asAdmin()
-        .body(makeCreateSiteQuery("", URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem("EMPTY_FIELD"));
+    QueryHelper.performCreateSiteQuery("", URL).body("errors.message", hasItem("EMPTY_FIELD"));
   }
 
   @Test
   public void createReplicationSiteWithInvalidUrl() {
-    asAdmin()
-        .body(makeCreateSiteQuery("badUrl", "localhost:9999"))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
+    QueryHelper.performCreateSiteQuery("badUrl", "localhost:9999")
         .body("errors.message", hasItem("INVALID_URL"));
   }
 
   @Test
   public void createReplicationSiteWithIntegerName() {
-    asAdmin()
-        .body(
+    QueryHelper.performQuery(
             String.format(
                 "{\"query\":\"mutation{ createReplicationSite(name: 25, address: { url: \\\"%s\\\"}){ id name address{ host{ hostname port } url }}}\"}",
                 URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body(
-            "errors.errorType",
-            hasItem("ValidationError")); // returns an empty body for queries it doesn't recognize
+        .body("errors.errorType", hasItem("ValidationError"));
   }
 
   @Test
   public void getReplicationSites() {
-    asAdmin()
-        .body(makeGetSitesQuery())
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors", is(nullValue()));
+    QueryHelper.performGetSitesQuery().body("errors", is(nullValue()));
   }
 
   @Test
   public void updateReplicationSite() {
-    asAdmin()
-        .body(makeUpdateSiteQuery("siteId", "newName", URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body(
-            "errors.message",
-            hasItem(
-                "Internal Server Error(s) while executing query")); // what we currently get when a
+    QueryHelper.performUpdateSiteQuery("siteId", "newName", URL)
+        .body("errors", is(nullValue())); // what we currently get when a
     // site with the given ID
     // doesn't exist
   }
 
   @Test
   public void deleteReplicationSite() {
-    asAdmin()
-        .body(makeDeleteSiteQuery("fakeId"))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("data.deleteReplicationSite", is(false));
+    assertThat(QueryHelper.deleteSite("fakeId"), is(false));
   }
 
   // ----------------------------------- General Tests -----------------------------------//
 
   @Test
   public void undefinedFieldInQuery() {
-    asAdmin()
-        .body("{\"query\":\"mutation{ unknownField }\"}")
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
+    QueryHelper.performQuery("{\"query\":\"mutation{ unknownField }\"}")
         .body("errors.errorType", hasItem("ValidationError"));
-  }
-
-  private static RequestSpecification asAdmin() {
-    return given()
-        .log()
-        .all()
-        .header("Content-Type", "application/json")
-        .relaxedHTTPSValidation()
-        .auth()
-        .preemptive()
-        .basic("admin", "admin")
-        .header("X-Requested-With", "XMLHttpRequest");
-  }
-
-  private static String makeCreateSiteQuery(String name, String url) {
-    return String.format(
-        "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { url: \\\"%s\\\"}){ id name address{ host{ hostname port } url }}}\"}",
-        name, url);
-  }
-
-  private static String makeGetSitesQuery() {
-    return "{\"query\":\"{ replication{ sites{ id name address{ host{ hostname port } url }}}}\"}";
-  }
-
-  private static String makeUpdateSiteQuery(String id, String name, String url) {
-    return String.format(
-        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}){ id name address{ host{ hostname port } url }}}\"}",
-        id, name, url);
-  }
-
-  private String makeDeleteSiteQuery(String siteId) {
-    return String.format(
-        "{\"query\":\"mutation{ deleteReplicationSite(id: \\\"%s\\\")}\"}", siteId);
   }
 }
