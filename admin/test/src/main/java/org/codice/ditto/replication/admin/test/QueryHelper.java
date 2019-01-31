@@ -14,15 +14,25 @@
 package org.codice.ditto.replication.admin.test;
 
 import static com.jayway.restassured.RestAssured.given;
+import static junit.framework.TestCase.fail;
+import static org.codice.ddf.test.common.options.TestResourcesOptions.getTestResource;
 import static org.hamcrest.core.Is.is;
 
 import com.jayway.restassured.path.json.JsonPath;
 import com.jayway.restassured.response.ValidatableResponse;
 import com.jayway.restassured.specification.RequestSpecification;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.apache.commons.io.IOUtils;
+import org.boon.Boon;
 import org.codice.ditto.replication.api.modern.ReplicationSite;
 
 public class QueryHelper {
@@ -42,24 +52,88 @@ public class QueryHelper {
   }
 
   public static String makeCreateSiteQuery(String name, String url) {
-    return String.format(
-        "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { url: \\\"%s\\\"}){ id name address{ host{ hostname port } url }}}\"}",
-        name, url);
+    Map<String, Object> args = new HashMap<>();
+    args.put("name", name);
+    args.put("address", new Address(url));
+
+    return makeQuery("query/createReplicationSite.graphql", args);
   }
 
   public static String makeGetSitesQuery() {
-    return "{\"query\":\"{ replication{ sites{ id name address{ host{ hostname port } url }}}}\"}";
+    return makeQuery("query/getSites.graphql", null);
+  }
+
+  public static String makeQuery(String resourceUrl, Map<String, Object> args){
+    Map<String, String> query = new HashMap<>();
+    String queryBody = getResourceAsString(resourceUrl);
+    query.put("query", queryBody);
+    query.put("variables", Boon.toJson(args));
+
+    return Boon.toPrettyJson(query);
   }
 
   public static String makeUpdateSiteQuery(String id, String name, String url) {
-    return String.format(
-        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}){ id name address{ host{ hostname port } url }}}\"}",
-        id, name, url);
+    Map<String, Object> args = new HashMap<>();
+    args.put("id", id);
+    args.put("name", name);
+    args.put("address", new Address(url));
+
+    return makeQuery("query/updateReplicationSite.graphql", args);
   }
 
-  public static String makeDeleteSiteQuery(String siteId) {
-    return String.format(
-        "{\"query\":\"mutation{ deleteReplicationSite(id: \\\"%s\\\")}\"}", siteId);
+  public static String makeDeleteSiteQuery(String id) {
+    Map<String, Object> args = new HashMap<>();
+    args.put("id", id);
+
+    return makeQuery("query/deleteReplicationSite.graphql", args);
+  }
+
+  public static String makeCreateRepsyncQuery(String name, String sourceId, String destinationId, String filter){
+    Map<String, Object> args = new HashMap<>();
+    args.put("name", name);
+    args.put("sourceId", sourceId);
+    args.put("destinationId", destinationId);
+    args.put("filter", filter);
+
+    return makeQuery("query/createRepsync.graphql", args);
+  }
+
+  public static String makeUpdateRepsyncQuery(String id, String name, String sourceId, String destinationId, String filter){
+    Map<String, Object> args = new HashMap<>();
+    args.put("id", id);
+    args.put("name", name);
+    args.put("sourceId", sourceId);
+    args.put("destinationId", destinationId);
+    args.put("filter", filter);
+
+    return makeQuery("query/updateRepsync.graphql", args);
+  }
+
+  public static String makeDeleteRepsyncQuery(String id){
+    Map<String, Object> args = new HashMap<>();
+    args.put("id", id);
+
+    return makeQuery("query/deleteRepsync.graphql", args);
+  }
+
+  public static String makeGetRepsyncsQuery(){
+    return makeQuery("query/getRepsyncs.graphql", null);
+  }
+
+  public static ValidatableResponse performCreateRepsyncQuery(String name, String sourceId, String destinationId, String filter){
+    return performQuery(makeCreateRepsyncQuery(name, sourceId, destinationId, filter));
+  }
+
+  public static ValidatableResponse performUpdateRepsyncQuery(String id, String name, String sourceId, String destinationId, String filter) {
+    return performQuery(makeUpdateRepsyncQuery(id, name, sourceId, destinationId, filter));
+  }
+
+  public static ValidatableResponse performDeleteRepsyncQuery(String id){
+    return performQuery(makeDeleteRepsyncQuery(id));
+  }
+
+  public static ValidatableResponse performGetRepsyncsQuery(){
+    return performQuery(makeGetRepsyncsQuery());
   }
 
   public static ValidatableResponse performQuery(String body){
@@ -126,5 +200,35 @@ public class QueryHelper {
     URL url = new URL(urlString);
     return new ReplicationSiteImpl(id, name, url);
   }
+
+  private static String getResourceAsString(String resourcePath) {
+    try (InputStream is = QueryHelper.class.getClassLoader().getResourceAsStream(resourcePath)) {
+      return IOUtils.toString(is, "UTF-8");
+    } catch (IOException e) {
+      fail("Unable to retrieve resource: " + resourcePath);
+    }
+
+    return null;
+  }
+
+
+private static class Address {
+
+  private String url;
+
+  public Address(String url){
+    this.url = url;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
+  }
+
+}
+
 
 }

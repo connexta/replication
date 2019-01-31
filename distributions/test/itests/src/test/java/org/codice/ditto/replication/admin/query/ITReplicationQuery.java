@@ -92,6 +92,33 @@ public class ITReplicationQuery {
     assertThat(QueryHelper.deleteSite("fakeId"), is(false));
   }
 
+  // ----------------------------------- Replication Tests -----------------------------------//
+
+  //TODO: make these more rigorous when Repsync persistence functionality is implemented
+  @Test
+  public void createRepsync() {
+    QueryHelper.performCreateRepsyncQuery("name", "sourceid", "destinationid", "filter")
+        .body("data.createRepsync.name", is("name"));
+  }
+
+  @Test
+  public void updateRepsync() {
+    QueryHelper.performUpdateRepsyncQuery("id", "name", "sourceid", "destinationid", "filter")
+        .body("data.updateRepsync.name", is("name"));
+  }
+
+  @Test
+  public void deleteRepsync() {
+    QueryHelper.performDeleteRepsyncQuery("id")
+    .body("data.deleteRepsync", is(true));
+  }
+
+  @Test
+  public void getRepsyncs() {
+    QueryHelper.performGetRepsyncsQuery()
+    .body("errors", is(nullValue()));
+  }
+
   // ----------------------------------- General Tests -----------------------------------//
 
   @Test

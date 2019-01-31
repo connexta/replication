@@ -1,0 +1,13 @@
+mutation CreateReplicationSite($name: String!, $address: Address!) {
+  createReplicationSite(name: $name, address: $address){
+    id
+    name
+    address{
+      host {
+        hostname
+        port
+      }
+      url
+    }
+  }
+}

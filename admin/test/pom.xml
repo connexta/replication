@@ -48,6 +48,17 @@
             <artifactId>rest-assured</artifactId>
             <version>${ddf.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.fastjson</groupId>
+            <artifactId>boon</artifactId>
+            <version>0.34</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>ddf.lib</groupId>
+            <artifactId>test-common</artifactId>
+            <version>${ddf.version}</version>
+        </dependency>
     </dependencies>
 
 

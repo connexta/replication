@@ -1,0 +1,31 @@
+{
+	replication{
+    repsyncs{
+      id
+      name
+      source{
+        id
+        name
+        address{
+          host{
+            hostname
+            port
+          }
+          url
+        }
+      }
+      destination{
+        id
+        name
+        address{
+          host{
+            hostname
+            port
+          }
+          url
+        }
+      }
+      filter
+    }
+  }
+}

@@ -1,0 +1,29 @@
+mutation createRepsync($name: String!, $sourceId: Pid!, $destinationId: Pid!, $filter: CqlExpression!){
+  createRepsync(name: $name, sourceId: $sourceId, destinationId: $destinationId, filter: $filter){
+    id
+    name
+    source{
+      id
+      name
+      address{
+        host{
+          hostname
+          port
+        }
+        url
+      }
+    }
+    destination{
+      id
+      name
+      address{
+        host{
+          hostname
+          port
+        }
+        url
+      }
+    }
+    filter
+  }
+}

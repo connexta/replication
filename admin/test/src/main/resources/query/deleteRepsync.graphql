@@ -1,0 +1,3 @@
+mutation deleteRepsync($id: Pid!){
+  deleteRepsync(id: $id)
+}

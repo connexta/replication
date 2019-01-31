@@ -1,0 +1,13 @@
+mutation UpdateReplicationSite($id: Pid!, $name: String, $address: Address){
+  updateReplicationSite(id: $id, name: $name, address: $address){
+    id
+    name
+    address{
+      host{
+        hostname
+        port
+      }
+      url
+    }
+  }
+}

@@ -1,0 +1,15 @@
+query {
+   replication {
+      sites{
+        id
+        name
+        address{
+          host{
+            hostname
+            port
+          }
+          url
+        }
+      }
+    }
+}
