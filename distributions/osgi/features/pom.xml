@@ -25,6 +25,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>replication</module>
-        <module>ApiTest</module>
+        <module>test-utilities</module>
     </modules>
 </project>

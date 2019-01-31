@@ -24,13 +24,14 @@ import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ditto.replication.admin.query.replications.fields.CqlExpressionField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 
 public class CreateReplication extends BaseFunctionField<ReplicationField> {
 
-  public static final String FIELD_NAME = "createReplication";
+  public static final String FIELD_NAME = "createRepsync";
 
-  public static final String DESCRIPTION = "Creates a replication.";
+  public static final String DESCRIPTION = "Creates a repsync.";
 
   public static final ReplicationField RETURN_TYPE = new ReplicationField();
 
@@ -40,7 +41,7 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
 
   private PidField destination;
 
-  private StringField filter;
+  private CqlExpressionField filter;
 
   public CreateReplication() {
     super(FIELD_NAME, DESCRIPTION);
@@ -48,7 +49,7 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
     name = new StringField("name");
     source = new PidField("sourceId");
     destination = new PidField("destinationId");
-    filter = new StringField("filter");
+    filter = new CqlExpressionField("filter");
   }
 
   @Override

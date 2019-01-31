@@ -8,7 +8,7 @@
         <version>0.1.5-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <name>Replication :: Features :: ApiTest</name>
+    <name>Replication :: Features :: test-utilities</name>
     <artifactId>test-utilities</artifactId>
     <packaging>feature</packaging>
 

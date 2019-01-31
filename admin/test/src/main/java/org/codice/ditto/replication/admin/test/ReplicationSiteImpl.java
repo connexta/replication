@@ -62,7 +62,7 @@ public class ReplicationSiteImpl implements ReplicationSite {
     this.url = url;
   }
 
-  public void setUrl(String url){
+  public void setUrl(String url) {
     try {
       this.url = new URL(url);
     } catch (MalformedURLException e) {

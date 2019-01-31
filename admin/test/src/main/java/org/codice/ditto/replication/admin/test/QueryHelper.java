@@ -15,14 +15,11 @@ package org.codice.ditto.replication.admin.test;
 
 import static com.jayway.restassured.RestAssured.given;
 import static junit.framework.TestCase.fail;
-import static org.codice.ddf.test.common.options.TestResourcesOptions.getTestResource;
 import static org.hamcrest.core.Is.is;
 
 import com.jayway.restassured.path.json.JsonPath;
 import com.jayway.restassured.response.ValidatableResponse;
 import com.jayway.restassured.specification.RequestSpecification;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -63,7 +60,7 @@ public class QueryHelper {
     return makeQuery("query/getSites.graphql", null);
   }
 
-  public static String makeQuery(String resourceUrl, Map<String, Object> args){
+  public static String makeQuery(String resourceUrl, Map<String, Object> args) {
     Map<String, String> query = new HashMap<>();
     String queryBody = getResourceAsString(resourceUrl);
     query.put("query", queryBody);
@@ -88,7 +85,8 @@ public class QueryHelper {
     return makeQuery("query/deleteReplicationSite.graphql", args);
   }
 
-  public static String makeCreateRepsyncQuery(String name, String sourceId, String destinationId, String filter){
+  public static String makeCreateRepsyncQuery(
+      String name, String sourceId, String destinationId, String filter) {
     Map<String, Object> args = new HashMap<>();
     args.put("name", name);
     args.put("sourceId", sourceId);
@@ -98,7 +96,8 @@ public class QueryHelper {
     return makeQuery("query/createRepsync.graphql", args);
   }
 
-  public static String makeUpdateRepsyncQuery(String id, String name, String sourceId, String destinationId, String filter){
+  public static String makeUpdateRepsyncQuery(
+      String id, String name, String sourceId, String destinationId, String filter) {
     Map<String, Object> args = new HashMap<>();
     args.put("id", id);
     args.put("name", name);
@@ -109,34 +108,36 @@ public class QueryHelper {
     return makeQuery("query/updateRepsync.graphql", args);
   }
 
-  public static String makeDeleteRepsyncQuery(String id){
+  public static String makeDeleteRepsyncQuery(String id) {
     Map<String, Object> args = new HashMap<>();
     args.put("id", id);
 
     return makeQuery("query/deleteRepsync.graphql", args);
   }
 
-  public static String makeGetRepsyncsQuery(){
+  public static String makeGetRepsyncsQuery() {
     return makeQuery("query/getRepsyncs.graphql", null);
   }
 
-  public static ValidatableResponse performCreateRepsyncQuery(String name, String sourceId, String destinationId, String filter){
+  public static ValidatableResponse performCreateRepsyncQuery(
+      String name, String sourceId, String destinationId, String filter) {
     return performQuery(makeCreateRepsyncQuery(name, sourceId, destinationId, filter));
   }
 
-  public static ValidatableResponse performUpdateRepsyncQuery(String id, String name, String sourceId, String destinationId, String filter) {
+  public static ValidatableResponse performUpdateRepsyncQuery(
+      String id, String name, String sourceId, String destinationId, String filter) {
     return performQuery(makeUpdateRepsyncQuery(id, name, sourceId, destinationId, filter));
   }
 
-  public static ValidatableResponse performDeleteRepsyncQuery(String id){
+  public static ValidatableResponse performDeleteRepsyncQuery(String id) {
     return performQuery(makeDeleteRepsyncQuery(id));
   }
 
-  public static ValidatableResponse performGetRepsyncsQuery(){
+  public static ValidatableResponse performGetRepsyncsQuery() {
     return performQuery(makeGetRepsyncsQuery());
   }
 
-  public static ValidatableResponse performQuery(String body){
+  public static ValidatableResponse performQuery(String body) {
     return asAdmin()
         .body(body)
         .when()
@@ -146,31 +147,40 @@ public class QueryHelper {
         .header("Content-Type", is("application/json;charset=utf-8"));
   }
 
-  public static ValidatableResponse performCreateSiteQuery(String name, String url){
+  public static ValidatableResponse performCreateSiteQuery(String name, String url) {
     return performQuery(makeCreateSiteQuery(name, url));
   }
 
-  public static ValidatableResponse performUpdateSiteQuery(String id, String name, String url){
+  public static ValidatableResponse performUpdateSiteQuery(String id, String name, String url) {
     return performQuery(makeUpdateSiteQuery(id, name, url));
   }
 
-  public static ValidatableResponse performDeleteSiteQuery(String id){
+  public static ValidatableResponse performDeleteSiteQuery(String id) {
     return performQuery(makeDeleteSiteQuery(id));
   }
 
-  public static ValidatableResponse performGetSitesQuery(){
+  public static ValidatableResponse performGetSitesQuery() {
     return performQuery(makeGetSitesQuery());
   }
 
   public static ReplicationSite createSite(String name, String url) throws MalformedURLException {
-    return extractSiteFromJsonPath(performCreateSiteQuery(name, url).extract().jsonPath().setRoot("data.createReplicationSite"));
+    return extractSiteFromJsonPath(
+        performCreateSiteQuery(name, url)
+            .extract()
+            .jsonPath()
+            .setRoot("data.createReplicationSite"));
   }
 
-  public static ReplicationSite updateSite(String id, String name, String url) throws MalformedURLException {
-    return extractSiteFromJsonPath(performUpdateSiteQuery(id, name, url).extract().jsonPath().setRoot("data.updateReplicationSite"));
+  public static ReplicationSite updateSite(String id, String name, String url)
+      throws MalformedURLException {
+    return extractSiteFromJsonPath(
+        performUpdateSiteQuery(id, name, url)
+            .extract()
+            .jsonPath()
+            .setRoot("data.updateReplicationSite"));
   }
 
-  public static boolean deleteSite(String id){
+  public static boolean deleteSite(String id) {
     return performDeleteSiteQuery(id).extract().jsonPath().getBoolean("data.deleteReplicationSite");
   }
 
@@ -178,16 +188,17 @@ public class QueryHelper {
     List<ReplicationSite> sites = new ArrayList<>();
     JsonPath json = performGetSitesQuery().extract().jsonPath();
 
-    //if the response has a site we haven't retrieved yet, set the root at the next site
-    //and pass the jsonPath on so the site can be extracted. Then, reset and check the next site.
+    // if the response has a site we haven't retrieved yet, set the root at the next site
+    // and pass the jsonPath on so the site can be extracted. Then, reset and check the next site.
     int i = 0;
-    String nextRoot = String.format("data.replication.sites[%d]", i );
-    while(json.get(nextRoot) != null){
+    String nextRoot = String.format("data.replication.sites[%d]", i);
+    while (json.get(nextRoot) != null) {
       json.setRoot(nextRoot);
       sites.add(extractSiteFromJsonPath(json));
       i++;
-      nextRoot = String.format("data.replication.sites[%d]", i );
-      json.setRoot(""); //reset the root so it doesn't mess up our path when we check for the next site
+      nextRoot = String.format("data.replication.sites[%d]", i);
+      json.setRoot(
+          ""); // reset the root so it doesn't mess up our path when we check for the next site
     }
     return sites;
   }
@@ -211,24 +222,20 @@ public class QueryHelper {
     return null;
   }
 
+  private static class Address {
 
-private static class Address {
+    private String url;
 
-  private String url;
+    public Address(String url) {
+      this.url = url;
+    }
 
-  public Address(String url){
-    this.url = url;
+    public String getUrl() {
+      return url;
+    }
+
+    public void setUrl(String url) {
+      this.url = url;
+    }
   }
-
-  public String getUrl() {
-    return url;
-  }
-
-  public void setUrl(String url) {
-    this.url = url;
-  }
-
-}
-
-
 }

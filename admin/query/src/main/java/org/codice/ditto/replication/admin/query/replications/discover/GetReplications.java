@@ -26,9 +26,9 @@ import org.codice.ditto.replication.admin.query.replications.fields.ReplicationF
 
 public class GetReplications extends BaseFunctionField<ListField<ReplicationField>> {
 
-  public static final String FIELD_NAME = "replications";
+  public static final String FIELD_NAME = "repsyncs";
 
-  public static final String DESCRIPTION = "Retrieves all currently saved replications.";
+  public static final String DESCRIPTION = "Retrieves all currently saved repsyncs.";
 
   private static final ListField<ReplicationField> RETURN_TYPE = new ReplicationField.ListImpl();
 

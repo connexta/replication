@@ -27,9 +27,9 @@ import org.codice.ddf.admin.common.fields.common.PidField;
 
 public class DeleteReplication extends BaseFunctionField<BooleanField> {
 
-  public static final String FIELD_NAME = "deleteReplication";
+  public static final String FIELD_NAME = "deleteRepsync";
 
-  public static final String DESCRIPTION = "Deletes a replication.";
+  public static final String DESCRIPTION = "Deletes a repsync.";
 
   public static final BooleanField RETURN_TYPE = new BooleanField();
 

@@ -94,7 +94,7 @@ public class ITReplicationQuery {
 
   // ----------------------------------- Replication Tests -----------------------------------//
 
-  //TODO: make these more rigorous when Repsync persistence functionality is implemented
+  // TODO: make these more rigorous when Repsync persistence functionality is implemented
   @Test
   public void createRepsync() {
     QueryHelper.performCreateRepsyncQuery("name", "sourceid", "destinationid", "filter")
@@ -109,14 +109,12 @@ public class ITReplicationQuery {
 
   @Test
   public void deleteRepsync() {
-    QueryHelper.performDeleteRepsyncQuery("id")
-    .body("data.deleteRepsync", is(true));
+    QueryHelper.performDeleteRepsyncQuery("id").body("data.deleteRepsync", is(true));
   }
 
   @Test
   public void getRepsyncs() {
-    QueryHelper.performGetRepsyncsQuery()
-    .body("errors", is(nullValue()));
+    QueryHelper.performGetRepsyncsQuery().body("errors", is(nullValue()));
   }
 
   // ----------------------------------- General Tests -----------------------------------//

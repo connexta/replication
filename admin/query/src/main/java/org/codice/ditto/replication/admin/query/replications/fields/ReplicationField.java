@@ -44,7 +44,7 @@ public class ReplicationField extends BaseObjectField {
   private StringField dataTransferred;
 
   public ReplicationField() {
-    super("replication", "Replication", DESCRIPTION);
+    super("repsync", "Repsync", DESCRIPTION);
     id = new PidField("id");
     name = new StringField("name");
     source = new ReplicationSiteField("source");
