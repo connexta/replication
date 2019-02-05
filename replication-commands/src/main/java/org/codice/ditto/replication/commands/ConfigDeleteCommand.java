@@ -31,16 +31,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import javax.annotation.Nullable;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.karaf.shell.api.action.Argument;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.Option;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.codice.ddf.commands.catalog.SubjectCommands;
 import org.codice.ddf.configuration.SystemInfo;
 import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicatorConfig;
+import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.mcard.Replication;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
 import org.codice.ditto.replication.api.mcard.ReplicationHistory;
 import org.opengis.filter.Filter;
@@ -51,32 +57,51 @@ import org.slf4j.LoggerFactory;
 @Service
 @Command(
   scope = "replication",
-  name = "config-delete",
-  description = "Delete replication configurations"
+  name = "delete",
+  description = "Delete replication configurations, metacards and history"
 )
-public class ConfigDeleteCommand extends ExistingConfigsCommands {
+public class ConfigDeleteCommand extends SubjectCommands {
   private static final Logger LOGGER = LoggerFactory.getLogger(ConfigDeleteCommand.class);
 
   @Option(
     name = "--delete-data",
     aliases = {"-m"},
-    description = "Delete replicated metacards/products associated with this configuration"
+    description = "Delete replicated metacards/products"
   )
   boolean deleteMetacards;
 
   @Option(
     name = "--delete-history",
     aliases = {"-h"},
-    description = "Delete replication history associated with this configuration"
+    description = "Delete replication history"
   )
   boolean deleteHistory;
 
   @Option(
+    name = "--delete-config",
+    aliases = {"-c"},
+    description = "Delete replication configuration"
+  )
+  boolean deleteConfig;
+
+  @Option(
     name = "--force",
     aliases = {"-f"},
-    description = "Delete replication configuration even if the metacard or history deletions fail."
+    description =
+        "Delete replication configuration even if the metacard or history deletions fail. Only applies when configNames are supplied"
   )
   boolean force;
+
+  @Argument(
+    name = "configNames",
+    description =
+        "Names of the replication configurations to perform removes on. If none are supplied then all requested items types will be removed",
+    multiValued = true
+  )
+  @Nullable
+  List<String> configNames;
+
+  @Reference ReplicatorConfigLoader replicatorConfigLoader;
 
   @Reference CatalogFramework framework;
 
@@ -91,6 +116,43 @@ public class ConfigDeleteCommand extends ExistingConfigsCommands {
   private static final int DEFAULT_START_INDEX = 0;
 
   @Override
+  protected final Object executeWithSubject() throws Exception {
+    if (CollectionUtils.isEmpty(configNames)) {
+      if (deleteMetacards) {
+        removeAllReplicatedMetacards();
+        removeReplicationItems(null);
+      }
+
+      if (deleteHistory) {
+        removeHistoryItems(null);
+      }
+
+      if (deleteConfig) {
+        replicatorConfigLoader.getAllConfigs().forEach(replicatorConfigLoader::removeConfig);
+      }
+    } else {
+      configNames
+          .stream()
+          .distinct()
+          .forEach(
+              configName -> {
+                final ReplicatorConfig config =
+                    replicatorConfigLoader.getConfig(configName).orElse(null);
+
+                if (config != null) {
+                  executeWithExistingConfig(configName, config);
+                } else {
+                  printErrorMessage(
+                      "There are no replication configurations with the name \""
+                          + configName
+                          + "\". Nothing was executed for that name.");
+                }
+              });
+    }
+
+    return null;
+  }
+
   void executeWithExistingConfig(final String configName, final ReplicatorConfig config) {
 
     boolean success = true;
@@ -102,7 +164,7 @@ public class ConfigDeleteCommand extends ExistingConfigsCommands {
       success = removeHistoryItems(config.getName());
     }
 
-    if (force || success) {
+    if (deleteConfig && (force || success)) {
       try {
         replicatorConfigLoader.removeConfig(config);
         printSuccessMessage(
@@ -113,9 +175,13 @@ public class ConfigDeleteCommand extends ExistingConfigsCommands {
     }
   }
 
-  private boolean removeReplicationItems(String configId) {
+  private boolean removeReplicationItems(@Nullable String configId) {
     try {
-      store.deleteItemsForConfig(configId);
+      if (configId == null) {
+        store.deleteAllItems();
+      } else {
+        store.deleteItemsForConfig(configId);
+      }
     } catch (PersistenceException e) {
       printErrorMessage("Problem removing replication items: " + e.getMessage());
       return false;
@@ -215,13 +281,44 @@ public class ConfigDeleteCommand extends ExistingConfigsCommands {
     int deleteCount = 0;
     try {
       Filter filter =
-          builder.allOf(
-              builder
-                  .attribute(Core.METACARD_TAGS)
-                  .is()
-                  .equalTo()
-                  .text(ReplicationHistory.METACARD_TAG),
-              builder.attribute(ReplicationConfig.NAME).is().equalTo().text(configName));
+          builder
+              .attribute(Core.METACARD_TAGS)
+              .is()
+              .equalTo()
+              .text(ReplicationHistory.METACARD_TAG);
+      if (configName != null) {
+        filter =
+            builder.allOf(
+                filter, builder.attribute(ReplicationConfig.NAME).is().equalTo().text(configName));
+      }
+      QueryRequest request = new QueryRequestImpl(new QueryImpl(filter));
+      ResultIterable iterable = ResultIterable.resultIterable(framework, request);
+      List<Serializable> idsToDelete = new ArrayList<>();
+      for (Result result : iterable) {
+        idsToDelete.add(result.getMetacard().getId());
+        deleteCount++;
+        if (idsToDelete.size() >= BATCH_SIZE) {
+          framework.delete(new DeleteRequestImpl(idsToDelete, Core.ID, new HashMap<>()));
+          idsToDelete.clear();
+        }
+      }
+      if (!idsToDelete.isEmpty()) {
+        framework.delete(new DeleteRequestImpl(idsToDelete, Core.ID, new HashMap<>()));
+      }
+    } catch (IngestException | SourceUnavailableException e) {
+      printErrorMessage("Problem removing replication history: " + e.getMessage());
+      return false;
+    }
+    printSuccessMessage("Removed " + deleteCount + " history items");
+    return true;
+  }
+
+  private boolean removeAllReplicatedMetacards() {
+    int deleteCount = 0;
+    try {
+      Filter filter =
+          builder.attribute(Core.METACARD_TAGS).is().equalTo().text(Replication.REPLICATED_TAG);
+
       QueryRequest request = new QueryRequestImpl(new QueryImpl(filter));
       ResultIterable iterable = ResultIterable.resultIterable(framework, request);
       List<Serializable> idsToDelete = new ArrayList<>();
