@@ -29,7 +29,7 @@ For this scenario first copy the `replication.policy` file into the `<ddf-home>/
 
 ==== Installing Via Kar Command
 
-On an already installed system run: `kar:install mvn:replication.distributions/replication-kar/${project.version}/kar`
+On an already installed system run: `kar:install mvn:replication.distributions.features/replication/${project.version}/kar`
 
 ==== Installing Via Hot-Deploy Directory
 

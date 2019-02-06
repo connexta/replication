@@ -97,6 +97,17 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
   }
 
   @Override
+  public void deleteAllItems() throws PersistenceException {
+    String cql = "'id' = '*'";
+    int index = DEFAULT_START_INDEX;
+    long itemsDeleted = 0;
+    do {
+      itemsDeleted = persistentStore.delete(PERSISTENCE_TYPE, cql, index, DEFAULT_PAGE_SIZE);
+      index += DEFAULT_PAGE_SIZE;
+    } while (itemsDeleted != 0);
+  }
+
+  @Override
   public List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize)
       throws PersistenceException {
     String cql = String.format("'config-id' = '%s'", configId);

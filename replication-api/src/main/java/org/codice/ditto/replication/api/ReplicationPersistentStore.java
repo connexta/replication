@@ -26,6 +26,8 @@ public interface ReplicationPersistentStore {
 
   void saveItem(ReplicationItem replicationItem);
 
+  void deleteAllItems() throws PersistenceException;
+
   void deleteItem(String id, String source, String destination);
 
   List<String> getFailureList(int maximumFailureCount, String source, String destination);

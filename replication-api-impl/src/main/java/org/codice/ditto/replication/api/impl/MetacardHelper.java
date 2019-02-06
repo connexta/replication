@@ -28,8 +28,8 @@ import ddf.catalog.operation.impl.QueryImpl;
 import ddf.catalog.operation.impl.QueryRequestImpl;
 import ddf.catalog.source.SourceUnavailableException;
 import ddf.catalog.source.UnsupportedQueryException;
+import ddf.catalog.util.impl.ResultIterable;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -110,17 +110,12 @@ public class MetacardHelper {
                 true,
                 0L));
 
-    try {
-      List<Result> results = framework.query(request).getResults();
-      return results
-          .stream()
-          .map(Result::getMetacard)
-          .map(function)
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList());
-    } catch (UnsupportedQueryException | SourceUnavailableException | FederationException e) {
-      LOGGER.warn("Unable to retrieve replication configuration metacard for {}", filter, e);
-    }
-    return Collections.emptyList();
+    ResultIterable results = ResultIterable.resultIterable(framework, request);
+    return results
+        .stream()
+        .map(Result::getMetacard)
+        .map(function)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 }

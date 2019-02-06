@@ -24,6 +24,5 @@
     <packaging>pom</packaging>
     <modules>
         <module>features</module>
-        <module>replication-kar</module>
     </modules>
 </project>
