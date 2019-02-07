@@ -135,6 +135,12 @@
         <cve>CVE-2018-19361</cve>
         <cve>CVE-2018-19360</cve>
     </suppress>
+    <suppress>
+        <notes>
+            This is not an issue since the console and deploy directories are protected via other means
+        </notes>
+        <cve>CVE-2018-11788</cve>
+    </suppress>
     <!-- ************************************************************************************* -->
     <!-- END DDF related suppression -->
     <!-- ************************************************************************************* -->
