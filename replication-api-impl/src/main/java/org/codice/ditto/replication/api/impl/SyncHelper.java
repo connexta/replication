@@ -208,7 +208,11 @@ class SyncHelper {
     }
 
     if (lastSuccessfulRun != null) {
-      Date timeStamp = new Date(lastSuccessfulRun.getStartTime().getTime() - 1000);
+      long time = lastSuccessfulRun.getStartTime().getTime();
+      if (lastSuccessfulRun.getLastSuccess() != null) {
+        time = lastSuccessfulRun.getLastSuccess().getTime();
+      }
+      Date timeStamp = new Date(time - 1000);
       List<Filter> deletedFilters = createDeletedMetacardFilters(timeStamp);
       filters.add(builder.attribute(Core.METACARD_MODIFIED).is().after().date(timeStamp));
       finalFilter =

@@ -23,6 +23,10 @@ import java.util.Set;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
 import org.codice.ditto.replication.api.mcard.ReplicationHistory;
 
+/**
+ * Defines the MetacardType for replication history metacards. This is required for storing
+ * metacards in the solr catalog.
+ */
 public class ReplicationHistoryAttributes implements ReplicationHistory, MetacardType {
   private static final Set<AttributeDescriptor> DESCRIPTORS;
 
@@ -33,6 +37,22 @@ public class ReplicationHistoryAttributes implements ReplicationHistory, Metacar
     descriptors.add(
         new AttributeDescriptorImpl(
             ReplicationHistory.START_TIME,
+            true /* indexed */,
+            true /* stored */,
+            false /* tokenized */,
+            false /* multivalued */,
+            BasicTypes.DATE_TYPE));
+    descriptors.add(
+        new AttributeDescriptorImpl(
+            ReplicationHistory.LAST_SUCCESS,
+            true /* indexed */,
+            true /* stored */,
+            false /* tokenized */,
+            false /* multivalued */,
+            BasicTypes.DATE_TYPE));
+    descriptors.add(
+        new AttributeDescriptorImpl(
+            ReplicationHistory.LAST_RUN,
             true /* indexed */,
             true /* stored */,
             false /* tokenized */,
