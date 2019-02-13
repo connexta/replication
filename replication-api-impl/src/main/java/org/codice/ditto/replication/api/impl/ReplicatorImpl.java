@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.security.Subject;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -41,13 +42,13 @@ import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorConfig;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
-import org.codice.ditto.replication.api.modern.ReplicationSite;
-import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
+import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ public class ReplicatorImpl implements Replicator {
 
   private final ReplicationPersistentStore persistentStore;
 
-  private final ReplicationSitePersistentStore siteStore;
+  private final SiteManager siteManager;
 
   private final ExecutorService executor;
 
@@ -81,14 +82,14 @@ public class ReplicatorImpl implements Replicator {
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
       ReplicationPersistentStore persistentStore,
-      ReplicationSitePersistentStore siteStore,
+      SiteManager siteManager,
       ExecutorService executor,
       FilterBuilder builder) {
     this(
         replicatorStoreFactory,
         history,
         persistentStore,
-        siteStore,
+        siteManager,
         executor,
         builder,
         Security.getInstance());
@@ -98,7 +99,7 @@ public class ReplicatorImpl implements Replicator {
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
       ReplicationPersistentStore persistentStore,
-      ReplicationSitePersistentStore siteStore,
+      SiteManager siteManager,
       ExecutorService executor,
       FilterBuilder builder,
       Security security) {
@@ -107,7 +108,7 @@ public class ReplicatorImpl implements Replicator {
     this.persistentStore = notNull(persistentStore);
     this.executor = notNull(executor);
     this.builder = notNull(builder);
-    this.siteStore = notNull(siteStore);
+    this.siteManager = notNull(siteManager);
     this.security = security;
   }
 
@@ -313,12 +314,9 @@ public class ReplicatorImpl implements Replicator {
 
   private ReplicationStore getStoreForId(String siteId) {
     ReplicationStore store;
-    ReplicationSite site =
-        siteStore
-            .getSite(siteId)
-            .orElseThrow(() -> new ReplicationException("Could not find site " + siteId));
+    ReplicationSite site = siteManager.get(siteId);
     try {
-      store = replicatorStoreFactory.createReplicatorStore(site.getUrl());
+      store = replicatorStoreFactory.createReplicatorStore(new URL(site.getUrl()));
     } catch (Exception e) {
       throw new ReplicationException("Error connecting to node at " + site.getUrl(), e);
     }

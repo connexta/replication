@@ -25,10 +25,10 @@ import org.codice.ddf.commands.catalog.SubjectCommands;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationType;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
-import org.codice.ditto.replication.api.modern.ReplicationSite;
-import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.codice.ditto.replication.commands.completers.DirectionStringCompleter;
 import org.codice.ditto.replication.commands.completers.ReplicationTypeCompleter;
 
@@ -39,6 +39,8 @@ import org.codice.ditto.replication.commands.completers.ReplicationTypeCompleter
   description = "Add a new replication configuration"
 )
 public class ConfigAddCommand extends SubjectCommands {
+
+  private static final String CONFIG_NOT_ADDED = "A new replication configuration was not added.";
 
   @Argument(
     name = "configurationName",
@@ -112,28 +114,28 @@ public class ConfigAddCommand extends SubjectCommands {
   )
   boolean suspend = false;
 
-  @Reference ReplicatorConfigLoader replicatorConfigLoader;
+  @Reference ReplicatorConfigManager replicatorConfigManager;
 
-  @Reference ReplicationSitePersistentStore siteStore;
+  @Reference SiteManager siteManager;
 
   @Override
   @SuppressWarnings(
       "squid:S3516" /*Method signature requires a return value but none is needed here*/)
   protected final Object executeWithSubject() {
-    if (replicatorConfigLoader.getConfig(configName).isPresent()) {
+    if (replicatorConfigManager.objects().anyMatch(c -> c.getName().equals(configName))) {
       printErrorMessage(
           "A replication configuration already exists with the name \"" + configName + "\".");
-      printErrorMessage("A new replication configuration was not added.");
+      printErrorMessage(CONFIG_NOT_ADDED);
     } else {
       final ReplicatorConfigImpl config = new ReplicatorConfigImpl();
       config.setName(configName);
-      config.setCql(cqlFilter);
+      config.setFilter(cqlFilter);
 
       try {
         config.setDestination(getOrCreateSite(destination).getId());
       } catch (MalformedURLException e) {
         printErrorMessage("The URL \"" + destination + "\" is malformed: " + e.getMessage());
-        printErrorMessage("A new replication configuration was not added.");
+        printErrorMessage(CONFIG_NOT_ADDED);
         return null;
       }
 
@@ -144,7 +146,7 @@ public class ConfigAddCommand extends SubjectCommands {
         config.setSource(getOrCreateSite(source).getId());
       } catch (MalformedURLException e) {
         printErrorMessage("The URL \"" + source + "\" is malformed: " + e.getMessage());
-        printErrorMessage("A new replication configuration was not added.");
+        printErrorMessage(CONFIG_NOT_ADDED);
         return null;
       }
       config.setDescription(description);
@@ -163,7 +165,7 @@ public class ConfigAddCommand extends SubjectCommands {
       config.setFailureRetryCount(failureRetryCount);
       config.setSuspended(suspend);
 
-      replicatorConfigLoader.saveConfig(config);
+      replicatorConfigManager.save(config);
       printSuccessMessage(
           "A new replication configuration with the name \"" + configName + "\" was added.");
     }
@@ -171,19 +173,16 @@ public class ConfigAddCommand extends SubjectCommands {
     return null;
   }
 
-  private ReplicationSite getOrCreateSite(String site) throws MalformedURLException {
+  private ReplicationSite getOrCreateSite(String stringUrl) throws MalformedURLException {
     ReplicationSite replicationSite =
-        siteStore
-            .getSites()
-            .stream()
-            .filter(s -> s.getUrl().toString().equals(site))
-            .findFirst()
-            .orElse(null);
+        siteManager.objects().filter(s -> s.getUrl().equals(stringUrl)).findFirst().orElse(null);
     if (replicationSite != null) {
       return replicationSite;
     } else {
-      URL url = new URL(site);
-      return siteStore.saveSite(url.getHost(), site);
+      URL url = new URL(stringUrl);
+      ReplicationSite site = siteManager.createSite(url.getHost(), stringUrl);
+      siteManager.save(site);
+      return site;
     }
   }
 }

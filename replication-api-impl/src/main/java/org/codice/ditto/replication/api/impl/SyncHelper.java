@@ -71,9 +71,9 @@ import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.ReplicationType;
-import org.codice.ditto.replication.api.ReplicatorConfig;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.mcard.Replication;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
@@ -208,9 +208,9 @@ class SyncHelper {
     Filter finalFilter;
 
     try {
-      ecqlFilter = ECQL.toFilter(config.getCql());
+      ecqlFilter = ECQL.toFilter(config.getFilter());
     } catch (CQLException e) {
-      throw new ReplicationException("Error creating filter from cql: " + config.getCql(), e);
+      throw new ReplicationException("Error creating filter from cql: " + config.getFilter(), e);
     }
 
     if (lastSuccessfulRun != null) {

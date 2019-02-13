@@ -11,31 +11,9 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.modern;
+package org.codice.ditto.replication.api.persistence;
 
-import java.net.URL;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
-/** A ReplicationSite holds information about a system to be replicated to/from */
-public interface ReplicationSite {
-
-  /**
-   * Get the unique ID for this site
-   *
-   * @return site ID
-   */
-  String getId();
-
-  /**
-   * Get the human readable name of this site
-   *
-   * @return site name
-   */
-  String getName();
-
-  /**
-   * Get the URL of this site
-   *
-   * @return site URL
-   */
-  URL getUrl();
-}
+/** A ReplicatorConfigManager performs CRUD operations for replication configs. */
+public interface ReplicatorConfigManager extends DataManager<ReplicatorConfig> {}

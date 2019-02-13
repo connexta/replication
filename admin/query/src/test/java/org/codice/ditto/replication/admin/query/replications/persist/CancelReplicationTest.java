@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.ws.rs.NotFoundException;
 import org.codice.ddf.admin.api.report.ErrorMessage;
 import org.codice.ddf.admin.api.report.FunctionReport;
 import org.codice.ddf.admin.common.report.message.DefaultMessages;
@@ -55,7 +56,7 @@ public class CancelReplicationTest {
 
   @Test
   public void validateNoConfig() {
-    when(utils.getConfigForId("myid")).thenReturn(null);
+    when(utils.getConfigForId("myid")).thenThrow(new NotFoundException());
     FunctionReport report = cancel.execute(input, null);
     assertThat(report.getErrorMessages().size(), is(1));
     assertThat(

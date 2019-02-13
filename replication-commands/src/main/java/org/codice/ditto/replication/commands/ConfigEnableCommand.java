@@ -14,6 +14,7 @@
 package org.codice.ditto.replication.commands;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.karaf.shell.api.action.Argument;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.Option;
@@ -21,9 +22,8 @@ import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.codice.ddf.commands.catalog.SubjectCommands;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
-import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 
 @Service
 @Command(
@@ -43,23 +43,24 @@ public class ConfigEnableCommand extends SubjectCommands {
   )
   List<String> configNames;
 
-  @Reference ReplicatorConfigLoader replicatorConfigLoader;
+  @Reference ReplicatorConfigManager replicatorConfigManager;
 
   @Reference Replicator replicator;
 
   @Override
   protected Object executeWithSubject() throws Exception {
-    for (String config : configNames) {
-      ReplicatorConfig replicatorConfig = replicatorConfigLoader.getConfig(config).orElse(null);
+    List<ReplicatorConfig> configs = replicatorConfigManager.objects().collect(Collectors.toList());
+    for (String configName : configNames) {
+      ReplicatorConfig replicatorConfig =
+          configs.stream().filter(c -> c.getName().equals(configName)).findFirst().orElse(null);
       if (replicatorConfig == null) {
-        printErrorMessage("No config found for name " + config);
+        printErrorMessage("No config found for name " + configName);
         continue;
       }
-      ReplicatorConfigImpl newConfig = new ReplicatorConfigImpl(replicatorConfig);
-      newConfig.setSuspended(suspend);
-      replicatorConfigLoader.saveConfig(newConfig);
+      replicatorConfig.setSuspended(suspend);
+      replicatorConfigManager.save(replicatorConfig);
       if (suspend) {
-        replicator.cancelSyncRequest(newConfig.getId());
+        replicator.cancelSyncRequest(replicatorConfig.getId());
       }
     }
     return null;

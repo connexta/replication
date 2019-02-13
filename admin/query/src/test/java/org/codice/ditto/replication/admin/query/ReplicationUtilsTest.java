@@ -15,15 +15,20 @@ package org.codice.ditto.replication.admin.query;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
+import java.util.stream.Stream;
+import javax.ws.rs.NotFoundException;
+import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
@@ -31,12 +36,14 @@ import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
 import org.codice.ditto.replication.api.ReplicatorHistory;
+import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
-import org.codice.ditto.replication.api.impl.modern.ReplicationSiteImpl;
-import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
+import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,9 +56,9 @@ public class ReplicationUtilsTest {
 
   ReplicationUtils utils;
 
-  @Mock ReplicationSitePersistentStore persistentStore;
+  @Mock SiteManager siteManager;
 
-  @Mock ReplicatorConfigLoader configLoader;
+  @Mock ReplicatorConfigManager configManager;
 
   @Mock ReplicatorHistory history;
 
@@ -59,39 +66,69 @@ public class ReplicationUtilsTest {
 
   @Before
   public void setUp() throws Exception {
-    utils = new ReplicationUtils(persistentStore, configLoader, history, replicator);
+    when(siteManager.create()).thenReturn(new ReplicationSiteImpl());
+    when(configManager.create()).thenReturn(new ReplicatorConfigImpl());
+    utils = new ReplicationUtils(siteManager, configManager, history, replicator);
   }
 
   @Test
   public void createSite() throws Exception {
-    ReplicationSiteImpl site =
-        new ReplicationSiteImpl("id", "site", new URL("https://localhost:1234"));
-    when(persistentStore.saveSite(anyString(), anyString())).thenReturn(site);
-    ReplicationSiteField field = utils.createSite(site.getName(), getAddress(site.getUrl()));
+    ReplicationSiteImpl site = new ReplicationSiteImpl();
+    site.setId("id");
+    site.setName("site");
+    site.setUrl("https://localhost:1234");
+
+    when(siteManager.createSite(anyString(), anyString())).thenReturn(site);
+    ReplicationSiteField field =
+        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())));
     assertThat(field.id(), is("id"));
     assertThat(field.name(), is("site"));
     assertThat(field.address().url(), is("https://localhost:1234"));
+    verify(siteManager).save(any(ReplicationSiteImpl.class));
+  }
+
+  @Test
+  public void getSiteFieldForSiteReturnsNull() throws Exception {
+    ReplicationSiteImpl site = new ReplicationSiteImpl();
+    site.setId("id");
+    site.setName("site");
+    site.setUrl("https://localhost:1234");
+
+    when(siteManager.createSite(anyString(), anyString())).thenReturn(null);
+    when(siteManager.objects()).thenReturn(Stream.empty());
+    ReplicationSiteField field =
+        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())));
+    assertNull(field);
   }
 
   @Test(expected = ReplicationException.class)
-  public void createSiteDuplicate() throws Exception {
-    ReplicationSiteImpl site =
-        new ReplicationSiteImpl("id", "site", new URL("https://localhost:1234"));
-    when(persistentStore.getSites()).thenReturn(Collections.singleton(site));
-    utils.createSite(site.getName(), getAddress(site.getUrl()));
+  public void getSiteFieldForSiteBadUrl() throws Exception {
+    ReplicationSiteImpl site = new ReplicationSiteImpl();
+    site.setId("id");
+    site.setName("site");
+    site.setUrl("NotSoGood.URL");
+
+    when(siteManager.createSite(anyString(), anyString())).thenReturn(site);
+    AddressField address = new AddressField();
+    address.url(site.getUrl());
+    utils.createSite(site.getName(), address);
   }
 
   @Test
   public void createReplication() throws Exception {
-    ReplicationSiteImpl src =
-        new ReplicationSiteImpl("srcId", "source", new URL("https://localhost:1234"));
-    ReplicationSiteImpl dest =
-        new ReplicationSiteImpl("destId", "destination", new URL("https://otherhost:1234"));
+    ReplicationSiteImpl src = new ReplicationSiteImpl();
+    src.setId("srcId");
+    src.setName("source");
+    src.setUrl("https://localhost:1234");
 
-    when(persistentStore.getSite("srcId")).thenReturn(Optional.of(src));
-    when(persistentStore.getSite("destId")).thenReturn(Optional.of(dest));
+    ReplicationSiteImpl dest = new ReplicationSiteImpl();
+    dest.setId("destId");
+    dest.setName("destination");
+    dest.setUrl("https://otherhost:1234");
 
-    when(configLoader.getConfig(anyString())).thenReturn(Optional.empty());
+    when(siteManager.get("srcId")).thenReturn(src);
+    when(siteManager.get("destId")).thenReturn(dest);
+
     ReplicationStatus status = new ReplicationStatus("test");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
@@ -107,20 +144,24 @@ public class ReplicationUtilsTest {
     assertThat(field.biDirectional(), is(true));
     assertThat(field.itemsTransferred(), is(3));
     assertThat(field.dataTransferred(), is("15 MB"));
-    verify(configLoader).saveConfig(any(ReplicatorConfig.class));
+    verify(configManager).save(any(ReplicatorConfig.class));
   }
 
   @Test
   public void createReplicationNoHistory() throws Exception {
-    ReplicationSiteImpl src =
-        new ReplicationSiteImpl("srcId", "source", new URL("https://localhost:1234"));
-    ReplicationSiteImpl dest =
-        new ReplicationSiteImpl("destId", "destination", new URL("https://otherhost:1234"));
+    ReplicationSiteImpl src = new ReplicationSiteImpl();
+    src.setId("srcId");
+    src.setName("source");
+    src.setUrl("https://localhost:1234");
 
-    when(persistentStore.getSite("srcId")).thenReturn(Optional.of(src));
-    when(persistentStore.getSite("destId")).thenReturn(Optional.of(dest));
+    ReplicationSiteImpl dest = new ReplicationSiteImpl();
+    dest.setId("destId");
+    dest.setName("destination");
+    dest.setUrl("https://otherhost:1234");
 
-    when(configLoader.getConfig(anyString())).thenReturn(Optional.empty());
+    when(siteManager.get("srcId")).thenReturn(src);
+    when(siteManager.get("destId")).thenReturn(dest);
+
     when(history.getReplicationEvents("test")).thenReturn(Collections.emptyList());
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
     ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true);
@@ -131,54 +172,29 @@ public class ReplicationUtilsTest {
     assertThat(field.biDirectional(), is(true));
     assertThat(field.itemsTransferred(), is(0));
     assertThat(field.dataTransferred(), is("0 MB"));
-    verify(configLoader).saveConfig(any(ReplicatorConfig.class));
-  }
-
-  @Test(expected = ReplicationException.class)
-  public void createReplicationInvalidSourceId() throws Exception {
-    ReplicationSiteImpl dest =
-        new ReplicationSiteImpl("destId", "destination", new URL("https://otherhost:1234"));
-
-    when(persistentStore.getSite("srcId")).thenReturn(Optional.empty());
-    when(persistentStore.getSite("destId")).thenReturn(Optional.of(dest));
-
-    when(configLoader.getConfig(anyString())).thenReturn(Optional.empty());
-    utils.createReplication("test", "srcId", "destId", "cql", true);
-  }
-
-  @Test(expected = ReplicationException.class)
-  public void createReplicationInvalidDestId() throws Exception {
-    ReplicationSiteImpl src =
-        new ReplicationSiteImpl("srcId", "source", new URL("https://localhost:1234"));
-
-    when(persistentStore.getSite("srcId")).thenReturn(Optional.of(src));
-    when(persistentStore.getSite("destId")).thenReturn(Optional.empty());
-
-    when(configLoader.getConfig(anyString())).thenReturn(Optional.empty());
-    utils.createReplication("test", "srcId", "destId", "cql", true);
-  }
-
-  @Test(expected = ReplicationException.class)
-  public void createDuplicateReplication() throws Exception {
-    when(configLoader.getConfig(anyString())).thenReturn(Optional.of(new ReplicatorConfigImpl()));
-    utils.createReplication("test", "srcId", "destId", "cql", true);
+    verify(configManager).save(any(ReplicatorConfig.class));
   }
 
   @Test
   public void updateReplication() throws Exception {
-    ReplicationSiteImpl src =
-        new ReplicationSiteImpl("srcId", "source", new URL("https://localhost:1234"));
-    ReplicationSiteImpl dest =
-        new ReplicationSiteImpl("destId", "destination", new URL("https://otherhost:1234"));
+    ReplicationSiteImpl src = new ReplicationSiteImpl();
+    src.setId("srcId");
+    src.setName("source");
+    src.setUrl("https://localhost:1234");
 
-    when(persistentStore.getSite("srcId")).thenReturn(Optional.of(src));
-    when(persistentStore.getSite("destId")).thenReturn(Optional.of(dest));
+    ReplicationSiteImpl dest = new ReplicationSiteImpl();
+    dest.setId("destId");
+    dest.setName("destination");
+    dest.setUrl("https://otherhost:1234");
+
+    when(siteManager.get("srcId")).thenReturn(src);
+    when(siteManager.get("destId")).thenReturn(dest);
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setId("id");
     config.setName("oldName");
-    config.setCql("oldCql");
+    config.setFilter("oldCql");
     config.setFailureRetryCount(7);
-    when(configLoader.getConfig(anyString())).thenReturn(Optional.of(config));
+    when(configManager.get(anyString())).thenReturn(config);
     ReplicationStatus status = new ReplicationStatus("test");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
@@ -194,7 +210,85 @@ public class ReplicationUtilsTest {
     assertThat(field.biDirectional(), is(true));
     assertThat(field.itemsTransferred(), is(3));
     assertThat(field.dataTransferred(), is("15 MB"));
-    verify(configLoader).saveConfig(any(ReplicatorConfig.class));
+    verify(configManager).save(any(ReplicatorConfig.class));
+  }
+
+  @Test
+  public void updateReplicationNullValues() {
+    ReplicationSiteImpl src = new ReplicationSiteImpl();
+    src.setId("srcId");
+    src.setName("source");
+    src.setUrl("https://localhost:1234");
+
+    ReplicationSiteImpl dest = new ReplicationSiteImpl();
+    dest.setId("destId");
+    dest.setName("destination");
+    dest.setUrl("https://otherhost:1234");
+
+    when(siteManager.get("srcId")).thenReturn(src);
+    when(siteManager.get("destId")).thenReturn(dest);
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setId("id");
+    config.setName("test");
+    config.setSource("srcId");
+    config.setDestination("destId");
+    config.setFilter("cql");
+    config.setBiDirectional(true);
+    config.setFailureRetryCount(7);
+    when(configManager.get(anyString())).thenReturn(config);
+    ReplicationStatus status = new ReplicationStatus("test");
+    status.setPushCount(1L);
+    status.setPushBytes(1024 * 1024 * 5L);
+    status.setPullCount(2L);
+    status.setPullBytes(1024 * 1024 * 10L);
+    when(history.getReplicationEvents("test")).thenReturn(Collections.singletonList(status));
+    when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
+    ReplicationField field = utils.updateReplication("id", null, null, null, null, null);
+    assertThat(field.name(), is("test"));
+    assertThat(field.source().id(), is("srcId"));
+    assertThat(field.destination().id(), is("destId"));
+    assertThat(field.filter(), is("cql"));
+    assertThat(field.biDirectional(), is(true));
+    assertThat(field.itemsTransferred(), is(3));
+    assertThat(field.dataTransferred(), is("15 MB"));
+    verify(configManager).save(any(ReplicatorConfig.class));
+  }
+
+  @Test
+  public void updateReplicationActiveSyncRequest() {
+    ReplicationSiteImpl src = new ReplicationSiteImpl();
+    src.setId("srcId");
+    src.setName("source");
+    src.setUrl("https://localhost:1234");
+
+    ReplicationSiteImpl dest = new ReplicationSiteImpl();
+    dest.setId("destId");
+    dest.setName("destination");
+    dest.setUrl("https://otherhost:1234");
+
+    when(siteManager.get("srcId")).thenReturn(src);
+    when(siteManager.get("destId")).thenReturn(dest);
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setId("id");
+    config.setName("oldName");
+    config.setFilter("oldCql");
+    config.setFailureRetryCount(7);
+    when(configManager.get(anyString())).thenReturn(config);
+    ReplicationStatus status = new ReplicationStatus("test");
+    status.setStatus(Status.PUSH_IN_PROGRESS);
+    when(history.getReplicationEvents("test")).thenReturn(new ArrayList<>());
+    SyncRequestImpl syncRequest = new SyncRequestImpl(config, status);
+    when(replicator.getActiveSyncRequests()).thenReturn(Collections.singleton(syncRequest));
+    ReplicationField field = utils.updateReplication("id", "test", "srcId", "destId", "cql", true);
+    assertThat(field.name(), is("test"));
+    assertThat(field.source().id(), is("srcId"));
+    assertThat(field.destination().id(), is("destId"));
+    assertThat(field.filter(), is("cql"));
+    assertThat(field.biDirectional(), is(true));
+    assertThat(field.itemsTransferred(), is(0));
+    assertThat(field.dataTransferred(), is("0 MB"));
+    assertThat(field.status().getValue(), is("PUSH_IN_PROGRESS"));
+    verify(configManager).save(any(ReplicatorConfig.class));
   }
 
   @Test
@@ -202,27 +296,30 @@ public class ReplicationUtilsTest {
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setId("id");
     config.setName("name");
-    when(configLoader.getAllConfigs()).thenReturn(Collections.singletonList(config));
     assertThat(utils.deleteConfig("id"), is(true));
-    verify(configLoader).removeConfig(any(ReplicatorConfig.class));
+    verify(configManager).remove(anyString());
   }
 
   @Test
   public void deleteConfigFailed() {
-    when(configLoader.getConfig(anyString())).thenReturn(Optional.empty());
+    doThrow(new NotFoundException()).when(configManager).remove(anyString());
     assertThat(utils.deleteConfig("id"), is(false));
-    verify(configLoader, never()).removeConfig(any(ReplicatorConfig.class));
   }
 
   @Test
   public void getReplications() throws Exception {
-    ReplicationSiteImpl src =
-        new ReplicationSiteImpl("srcId", "source", new URL("https://localhost:1234"));
-    ReplicationSiteImpl dest =
-        new ReplicationSiteImpl("destId", "destination", new URL("https://otherhost:1234"));
+    ReplicationSiteImpl src = new ReplicationSiteImpl();
+    src.setId("srcId");
+    src.setName("source");
+    src.setUrl("https://localhost:1234");
 
-    when(persistentStore.getSite("srcId")).thenReturn(Optional.of(src));
-    when(persistentStore.getSite("destId")).thenReturn(Optional.of(dest));
+    ReplicationSiteImpl dest = new ReplicationSiteImpl();
+    dest.setId("destId");
+    dest.setName("destination");
+    dest.setUrl("https://otherhost:1234");
+
+    when(siteManager.get("srcId")).thenReturn(src);
+    when(siteManager.get("destId")).thenReturn(dest);
 
     ReplicationStatus status = new ReplicationStatus("test");
     status.setPushCount(1L);
@@ -234,11 +331,11 @@ public class ReplicationUtilsTest {
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setId("id");
     config.setName("test");
-    config.setCql("cql");
+    config.setFilter("cql");
     config.setSource("srcId");
     config.setDestination("destId");
     config.setDirection(Direction.PUSH);
-    when(configLoader.getAllConfigs()).thenReturn(Collections.singletonList(config));
+    when(configManager.objects()).thenReturn(Stream.of(config));
     ReplicationField field = utils.getReplications().getList().get(0);
     assertThat(field.name(), is("test"));
     assertThat(field.source().id(), is("srcId"));
@@ -261,19 +358,12 @@ public class ReplicationUtilsTest {
     config.setId("id");
     config.setName("test");
     config.setSuspended(false);
-    when(configLoader.getAllConfigs()).thenReturn(Collections.singletonList(config));
+    when(configManager.get(anyString())).thenReturn(config);
     assertThat(utils.setConfigSuspended("id", true), is(true));
     ArgumentCaptor<ReplicatorConfig> captor = ArgumentCaptor.forClass(ReplicatorConfig.class);
-    verify(configLoader).saveConfig(captor.capture());
+    verify(configManager).save(captor.capture());
     assertThat(captor.getValue().isSuspended(), is(true));
     verify(replicator).cancelSyncRequest("id");
-  }
-
-  @Test
-  public void suspendConfigBadId() {
-    when(configLoader.getAllConfigs()).thenReturn(Collections.emptyList());
-    assertThat(utils.setConfigSuspended("id", true), is(false));
-    verify(configLoader, never()).saveConfig(any(ReplicatorConfig.class));
   }
 
   @Test
@@ -282,9 +372,9 @@ public class ReplicationUtilsTest {
     config.setId("id");
     config.setName("test");
     config.setSuspended(true);
-    when(configLoader.getAllConfigs()).thenReturn(Collections.singletonList(config));
+    when(configManager.get(anyString())).thenReturn(config);
     assertThat(utils.setConfigSuspended("id", true), is(false));
-    verify(configLoader, never()).saveConfig(any(ReplicatorConfig.class));
+    verify(configManager, never()).save(any(ReplicatorConfig.class));
   }
 
   @Test
@@ -293,12 +383,123 @@ public class ReplicationUtilsTest {
     config.setId("id");
     config.setName("test");
     config.setSuspended(true);
-    when(configLoader.getAllConfigs()).thenReturn(Collections.singletonList(config));
+    when(configManager.get(anyString())).thenReturn(config);
     assertThat(utils.setConfigSuspended("id", false), is(true));
     ArgumentCaptor<ReplicatorConfig> captor = ArgumentCaptor.forClass(ReplicatorConfig.class);
-    verify(configLoader).saveConfig(captor.capture());
+    verify(configManager).save(captor.capture());
     assertThat(captor.getValue().isSuspended(), is(false));
     verify(replicator, never()).cancelSyncRequest("id");
+  }
+
+  @Test
+  public void siteIdExists() {
+    when(siteManager.get(anyString())).thenReturn(new ReplicationSiteImpl());
+    assertThat(utils.siteIdExists("id"), is(true));
+  }
+
+  @Test
+  public void siteIdDoesNotExist() {
+    when(siteManager.get(anyString())).thenThrow(new NotFoundException());
+    assertThat(utils.siteIdExists("id"), is(false));
+  }
+
+  @Test
+  public void updateSite() throws Exception {
+    ReplicationSiteImpl site = new ReplicationSiteImpl();
+    site.setId("id");
+    site.setName("site");
+    site.setUrl("https://localhost:1234");
+
+    when(siteManager.get(anyString())).thenReturn(site);
+    ReplicationSiteField field =
+        utils.updateSite("id", "site", getAddress(new URL("https://localhost:1234")));
+    assertThat(field.id(), is("id"));
+    assertThat(field.name(), is("site"));
+    assertThat(field.address().url(), is("https://localhost:1234"));
+    assertThat(field.address().host().hostname(), is("localhost"));
+    assertThat(field.address().host().port(), is(1234));
+  }
+
+  @Test // tests the ternary in addressFieldToUrlString
+  public void updateSiteAddressHostIsNull() {
+    ReplicationSiteImpl site = new ReplicationSiteImpl();
+    site.setId("id");
+    site.setName("site");
+    site.setUrl("https://localhost:1234");
+
+    when(siteManager.get(anyString())).thenReturn(site);
+    AddressField address = new AddressField();
+    address.url(site.getUrl());
+    ReplicationSiteField field = utils.updateSite("id", "site", address);
+    assertThat(field.id(), is("id"));
+    assertThat(field.name(), is("site"));
+    assertThat(field.address().url(), is("https://localhost:1234"));
+    assertThat(field.address().host().hostname(), is("localhost"));
+    assertThat(field.address().host().port(), is(1234));
+  }
+
+  @Test
+  public void getSites() {
+    ReplicationSiteImpl site = new ReplicationSiteImpl();
+    site.setId("id");
+    site.setName("site");
+    site.setUrl("https://localhost:1234");
+
+    when(siteManager.objects()).thenReturn(Stream.of(site));
+    ListField<ReplicationSiteField> sites = utils.getSites();
+    ReplicationSiteField field = sites.getList().get(0);
+    assertThat(field.id(), is(site.getId()));
+    assertThat(field.name(), is(site.getName()));
+    assertThat(field.address().url(), is(site.getUrl()));
+  }
+
+  @Test
+  public void deleteSite() {
+    assertThat(utils.deleteSite("id"), is(true));
+    verify(siteManager).remove("id");
+  }
+
+  @Test
+  public void deleteSiteFailed() {
+    doThrow(new NotFoundException()).when(siteManager).remove(anyString());
+    assertThat(utils.deleteSite("id"), is(false));
+    verify(siteManager).remove("id");
+  }
+
+  @Test
+  public void replicationConfigExists() {
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setName("test");
+    when(configManager.objects()).thenReturn(Stream.of(config));
+    assertThat(utils.replicationConfigExists("test"), is(true));
+  }
+
+  @Test
+  public void replicationConfigDoesNotExist() {
+    when(configManager.objects()).thenReturn(Stream.empty());
+    assertThat(utils.replicationConfigExists("test"), is(false));
+  }
+
+  @Test
+  public void siteExists() {
+    ReplicationSiteImpl site = new ReplicationSiteImpl();
+    site.setId("id");
+    site.setName("site");
+    site.setUrl("https://localhost:1234");
+
+    when(siteManager.objects()).thenReturn(Stream.of(site));
+    assertThat(utils.siteExists("site"), is(true));
+  }
+
+  @Test
+  public void siteDoesNotExist() {
+    ReplicationSiteImpl site = new ReplicationSiteImpl();
+    site.setId("id");
+    site.setName("site");
+    site.setUrl("https://localhost:1234");
+
+    when(siteManager.objects()).thenReturn(Stream.empty());
+    assertThat(utils.siteExists("site"), is(false));
   }
 
   private AddressField getAddress(URL url) {

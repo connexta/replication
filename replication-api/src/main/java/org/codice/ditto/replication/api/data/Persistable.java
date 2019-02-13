@@ -11,23 +11,29 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api;
+package org.codice.ditto.replication.api.data;
 
-import org.codice.ditto.replication.api.data.ReplicatorConfig;
-
-public interface SyncRequest {
-
-  /**
-   * Get the configuration for this request
-   *
-   * @return The configuration of this request
-   */
-  ReplicatorConfig getConfig();
+/** A Persistable is an object that can be saved in persistence. */
+public interface Persistable {
 
   /**
-   * Get the status of this request. Status will be updated during processing.
+   * Returns the ID of the persistable object
    *
-   * @return The status of this request
+   * @return The ID of the object
    */
-  ReplicationStatus getStatus();
+  String getId();
+
+  /**
+   * Sets the ID of the persistable object
+   *
+   * @param id the ID to set as the persistable object's ID
+   */
+  void setId(String id);
+
+  /**
+   * Returns the version of this persistable
+   *
+   * @return integer version of the persistable
+   */
+  int getVersion();
 }

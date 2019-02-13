@@ -35,8 +35,13 @@
         <argument ref="persistentStore"/>
     </bean>
 
-    <bean id="replicationSitePersistentStore" class="org.codice.ditto.replication.api.impl.modern.ReplicationSitePersistentStoreImpl"  init-method="init">
+    <bean id="newReplicationPersistentStore"
+        class="org.codice.ditto.replication.api.impl.persistence.ReplicationPersistentStore">
         <argument ref="persistentStore"/>
+    </bean>
+
+    <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl"  init-method="init">
+        <argument ref="newReplicationPersistentStore"/>
     </bean>
 
     <bean id="metacardTransformerManager"
@@ -77,22 +82,18 @@
 
     <service ref="catalogResourceStoreFactory" interface="org.codice.ditto.replication.api.ReplicatorStoreFactory"/>
     <service ref="replicationPersistentStore" interface="org.codice.ditto.replication.api.ReplicationPersistentStore"/>
-    <service ref="replicationSitePersistentStore" interface="org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore"/>
+    <service ref="siteManager" interface="org.codice.ditto.replication.api.persistence.SiteManager"/>
 
     <bean id="metacardHelper" class="org.codice.ditto.replication.api.impl.MetacardHelper">
         <argument ref="catalog"/>
         <argument ref="filterBuilder"/>
     </bean>
 
-    <bean id="configLoader" class="org.codice.ditto.replication.api.impl.MetacardConfigLoader">
-        <argument ref="catalog"/>
-        <argument ref="filterBuilder"/>
-        <argument ref="metacardHelper"/>
-        <argument ref="replicationConfig"/>
-        <argument ref="replicationSitePersistentStore"/>
+    <bean id="configManager" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorConfigManagerImpl">
+        <argument ref="newReplicationPersistentStore"/>
     </bean>
 
-    <service ref="configLoader" interface="org.codice.ditto.replication.api.ReplicatorConfigLoader"/>
+    <service ref="configManager" interface="org.codice.ditto.replication.api.persistence.ReplicatorConfigManager"/>
 
     <bean id="historyService" class="org.codice.ditto.replication.api.impl.ReplicatorHistoryImpl" init-method="init">
         <argument ref="catalog"/>
@@ -109,7 +110,7 @@
         <argument ref="catalogResourceStoreFactory"/>
         <argument ref="historyService"/>
         <argument ref="replicationPersistentStore"/>
-        <argument ref="replicationSitePersistentStore"/>
+        <argument ref="siteManager"/>
         <argument ref="replicatorImplExecutor"/>
         <argument ref="filterBuilder"/>
     </bean>
@@ -128,7 +129,7 @@
     <bean id="runner" class="org.codice.ditto.replication.api.impl.ReplicatorRunner" init-method="init" destroy-method="destroy">
         <argument ref="replicatorRunnerExecutor"/>
         <argument ref="replicator"/>
-        <argument ref="configLoader"/>
+        <argument ref="configManager"/>
     </bean>
 
     <bean id="replicatorRunnerExecutor" class="java.util.concurrent.Executors"

@@ -18,14 +18,16 @@ import static org.apache.commons.lang3.Validate.notNull;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.security.service.SecurityServiceException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,7 @@ public class ReplicatorRunner {
 
   private final Replicator replicator;
 
-  private final ReplicatorConfigLoader replicatorConfigLoader;
+  private final ReplicatorConfigManager replicatorConfigManager;
 
   private final ScheduledExecutorService scheduledExecutor;
 
@@ -53,19 +55,19 @@ public class ReplicatorRunner {
   public ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
-      ReplicatorConfigLoader replicatorConfigLoader) {
-    this(scheduledExecutor, replicator, replicatorConfigLoader, Security.getInstance());
+      ReplicatorConfigManager replicatorConfigManager) {
+    this(scheduledExecutor, replicator, replicatorConfigManager, Security.getInstance());
   }
 
   /*Visible for testing only*/
   ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
-      ReplicatorConfigLoader replicatorConfigLoader,
+      ReplicatorConfigManager replicatorConfigManager,
       Security security) {
     this.scheduledExecutor = notNull(scheduledExecutor);
     this.replicator = notNull(replicator);
-    this.replicatorConfigLoader = notNull(replicatorConfigLoader);
+    this.replicatorConfigManager = notNull(replicatorConfigManager);
     this.security = security;
   }
 
@@ -101,11 +103,13 @@ public class ReplicatorRunner {
 
   @VisibleForTesting
   void scheduleReplication() {
+    List<ReplicatorConfig> configsToSchedule =
+        replicatorConfigManager
+            .objects()
+            .filter(c -> !c.isSuspended())
+            .collect(Collectors.toList());
     try {
-      for (ReplicatorConfig config : replicatorConfigLoader.getAllConfigs()) {
-        if (config.isSuspended()) {
-          continue;
-        }
+      for (ReplicatorConfig config : configsToSchedule) {
         replicator.submitSyncRequest(
             new SyncRequestImpl(config, new ReplicationStatus(config.getName())));
       }

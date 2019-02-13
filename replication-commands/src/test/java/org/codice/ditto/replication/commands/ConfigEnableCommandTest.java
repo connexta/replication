@@ -22,11 +22,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.Optional;
+import java.util.stream.Stream;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +38,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class ConfigEnableCommandTest {
   ConfigEnableCommand command;
 
-  @Mock ReplicatorConfigLoader replicatorConfigLoader;
+  @Mock ReplicatorConfigManager replicatorConfigManager;
 
   @Mock Replicator replicator;
 
@@ -46,7 +46,7 @@ public class ConfigEnableCommandTest {
   public void setUp() throws Exception {
     command = new ConfigEnableCommand();
     command.replicator = replicator;
-    command.replicatorConfigLoader = replicatorConfigLoader;
+    command.replicatorConfigManager = replicatorConfigManager;
   }
 
   @Test
@@ -56,12 +56,12 @@ public class ConfigEnableCommandTest {
     config.setId("id");
     command.configNames = Collections.singletonList(config.getName());
     command.suspend = true;
-    when(replicatorConfigLoader.getConfig("test")).thenReturn(Optional.of(config));
+    when(replicatorConfigManager.objects()).thenReturn(Stream.of(config));
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
     when(replicator.getPendingSyncRequests()).thenReturn(new ArrayDeque<>());
     command.executeWithSubject();
     ArgumentCaptor<ReplicatorConfig> captor = ArgumentCaptor.forClass(ReplicatorConfig.class);
-    verify(replicatorConfigLoader).saveConfig(captor.capture());
+    verify(replicatorConfigManager).save(captor.capture());
     assertThat(captor.getValue().isSuspended(), is(true));
   }
 
@@ -72,10 +72,10 @@ public class ConfigEnableCommandTest {
     config.setId("id");
     command.configNames = Collections.singletonList(config.getName());
     command.suspend = false;
-    when(replicatorConfigLoader.getConfig("test")).thenReturn(Optional.of(config));
+    when(replicatorConfigManager.objects()).thenReturn(Stream.of(config));
     command.executeWithSubject();
     ArgumentCaptor<ReplicatorConfig> captor = ArgumentCaptor.forClass(ReplicatorConfig.class);
-    verify(replicatorConfigLoader).saveConfig(captor.capture());
+    verify(replicatorConfigManager).save(captor.capture());
     assertThat(captor.getValue().isSuspended(), is(false));
   }
 
@@ -84,9 +84,9 @@ public class ConfigEnableCommandTest {
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setName("test");
     config.setId("id");
-    command.configNames = Collections.singletonList(config.getName());
-    when(replicatorConfigLoader.getConfig("test")).thenReturn(Optional.empty());
+    command.configNames = Collections.singletonList("name");
+    when(replicatorConfigManager.objects()).thenReturn(Stream.of(config));
     command.executeWithSubject();
-    verify(replicatorConfigLoader, never()).saveConfig(any(ReplicatorConfig.class));
+    verify(replicatorConfigManager, never()).save(any(ReplicatorConfig.class));
   }
 }

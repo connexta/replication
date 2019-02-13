@@ -15,6 +15,10 @@ package org.codice.ditto.replication.api;
 
 import java.util.Date;
 
+/**
+ * A ReplicationItem is a representation of a resource that replication has replicated or attempted
+ * to replicate.
+ */
 public interface ReplicationItem {
 
   String getMetacardId();

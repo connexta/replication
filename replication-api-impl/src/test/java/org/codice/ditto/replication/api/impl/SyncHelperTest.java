@@ -37,8 +37,8 @@ import ddf.catalog.operation.UpdateRequest;
 import java.util.Collections;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.ReplicatorConfig;
 import org.codice.ditto.replication.api.ReplicatorHistory;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,7 +66,7 @@ public class SyncHelperTest {
   public void cancel() throws Exception {
     helper.cancel();
     when(config.getName()).thenReturn("test");
-    when(config.getCql()).thenReturn("title like '*'");
+    when(config.getFilter()).thenReturn("title like '*'");
     when(config.getFailureRetryCount()).thenReturn(5);
     when(destination.getRemoteName()).thenReturn("remote");
     SourceResponse response = mock(SourceResponse.class);

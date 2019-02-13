@@ -28,22 +28,21 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import javax.ws.rs.NotFoundException;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.ReplicationType;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
-import org.codice.ditto.replication.api.modern.ReplicationSite;
-import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MetacardConfigLoader implements ReplicatorConfigLoader {
+public class MetacardConfigLoader {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MetacardConfigLoader.class);
 
@@ -57,23 +56,26 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
 
   private final MetacardType configMetacardType;
 
-  private final ReplicationSitePersistentStore siteStore;
+  private final SiteManager siteManager;
 
   public MetacardConfigLoader(
       CatalogFramework framework,
       FilterBuilder filterBuilder,
       MetacardHelper helper,
       MetacardType configMetacardType,
-      ReplicationSitePersistentStore siteStore) {
+      SiteManager siteManager) {
     this.framework = framework;
     this.filterBuilder = filterBuilder;
     this.helper = helper;
     this.configMetacardType = configMetacardType;
-    this.siteStore = siteStore;
+    this.siteManager = siteManager;
   }
 
-  @Override
-  public Optional<ReplicatorConfig> getConfig(final String id) {
+  public ReplicatorConfig createConfig() {
+    return new ReplicatorConfigImpl();
+  }
+
+  public ReplicatorConfig getConfig(final String id) {
     List<ReplicatorConfig> configs =
         helper.getTypeForFilter(
             filterBuilder.allOf(
@@ -87,23 +89,21 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
 
     final int count = configs.size();
     if (count == 1) {
-      return Optional.of(configs.get(0));
+      return configs.get(0);
     } else if (count > 1) {
       throw new IllegalStateException(
           "Found more than one replication config for id {}. This should never happen");
     } else {
-      return Optional.empty();
+      throw new NotFoundException("Unable to find replication config for id " + id);
     }
   }
 
-  @Override
   public List<ReplicatorConfig> getAllConfigs() {
     return helper.getTypeForFilter(
         filterBuilder.attribute(Metacard.TAGS).is().like().text(ReplicationConfig.METACARD_TAG),
         this::getConfigFromMetacard);
   }
 
-  @Override
   public void saveConfig(ReplicatorConfig replicationConfig) {
     Metacard mcard = null;
     if (replicationConfig.getId() != null) {
@@ -144,7 +144,6 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
     }
   }
 
-  @Override
   public void removeConfig(ReplicatorConfig replicationConfig) {
     try {
       framework.delete(new DeleteRequestImpl(replicationConfig.getId()));
@@ -159,7 +158,7 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
   Metacard getMetacardFromConfig(ReplicatorConfig config, Metacard existingMetacard) {
     if (config.getDestination() == null
         || config.getSource() == null
-        || config.getCql() == null
+        || config.getFilter() == null
         || config.getName() == null) {
       LOGGER.warn(
           "Invalid replication configuration found. {} is missing one or more required fields. {}, {}, {}, {}",
@@ -185,7 +184,7 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
     helper.setIfPresent(mcard, ReplicationConfig.DESCRIPTION, config.getDescription());
     helper.setIfPresent(mcard, ReplicationConfig.DESTINATION, config.getDestination());
     helper.setIfPresent(mcard, ReplicationConfig.SOURCE, config.getSource());
-    helper.setIfPresent(mcard, ReplicationConfig.CQL, config.getCql());
+    helper.setIfPresent(mcard, ReplicationConfig.CQL, config.getFilter());
     helper.setIfPresentOrDefault(
         mcard,
         ReplicationConfig.TYPE,
@@ -252,11 +251,11 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
       LOGGER.warn("Could not lookup or create site for {}", config.getName());
       return null;
     }
-    config.setCql(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.CQL, null));
+    config.setFilter(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.CQL, null));
 
     if (config.getDestination() == null
         || config.getSource() == null
-        || config.getCql() == null
+        || config.getFilter() == null
         || config.getName() == null) {
       LOGGER.warn(
           "Invalid replication configuration found. {} is missing one or more required fields. {}, {}, {}, {}",
@@ -276,17 +275,14 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
   @VisibleForTesting
   ReplicationSite getOrCreateSite(String siteUrl) throws MalformedURLException {
     ReplicationSite replicationSite =
-        siteStore
-            .getSites()
-            .stream()
-            .filter(s -> s.getUrl().toString().equals(siteUrl))
-            .findFirst()
-            .orElse(null);
+        siteManager.objects().filter(s -> s.getUrl().equals(siteUrl)).findFirst().orElse(null);
     if (replicationSite != null) {
       return replicationSite;
     } else {
       URL url = new URL(siteUrl);
-      return siteStore.saveSite(url.getHost(), siteUrl);
+      ReplicationSite site = siteManager.createSite(url.getHost(), siteUrl);
+      siteManager.save(site);
+      return site;
     }
   }
 }

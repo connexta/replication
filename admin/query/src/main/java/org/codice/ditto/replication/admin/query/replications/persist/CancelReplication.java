@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import java.util.Set;
+import javax.ws.rs.NotFoundException;
 import org.codice.ddf.admin.api.Field;
 import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
@@ -79,7 +80,9 @@ public class CancelReplication extends BaseFunctionField<BooleanField> {
     if (containsErrorMsgs()) {
       return;
     }
-    if (replicationUtils.getConfigForId(id.getValue()) == null) {
+    try {
+      replicationUtils.getConfigForId(id.getValue());
+    } catch (NotFoundException e) {
       addErrorMessage(ReplicationMessages.configDoesNotExist());
     }
   }

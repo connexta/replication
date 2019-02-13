@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.karaf.shell.api.action.Argument;
@@ -44,11 +45,11 @@ import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.mcard.Replication;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
 import org.codice.ditto.replication.api.mcard.ReplicationHistory;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.opengis.filter.Filter;
 import org.opengis.filter.sort.SortOrder;
 import org.slf4j.Logger;
@@ -101,7 +102,7 @@ public class ConfigDeleteCommand extends SubjectCommands {
   @Nullable
   List<String> configNames;
 
-  @Reference ReplicatorConfigLoader replicatorConfigLoader;
+  @Reference ReplicatorConfigManager replicatorConfigManager;
 
   @Reference CatalogFramework framework;
 
@@ -128,16 +129,25 @@ public class ConfigDeleteCommand extends SubjectCommands {
       }
 
       if (deleteConfig) {
-        replicatorConfigLoader.getAllConfigs().forEach(replicatorConfigLoader::removeConfig);
+        replicatorConfigManager
+            .objects()
+            .map(ReplicatorConfig::getId)
+            .forEach(replicatorConfigManager::remove);
       }
     } else {
+      List<ReplicatorConfig> configs =
+          replicatorConfigManager.objects().collect(Collectors.toList());
       configNames
           .stream()
           .distinct()
           .forEach(
               configName -> {
                 final ReplicatorConfig config =
-                    replicatorConfigLoader.getConfig(configName).orElse(null);
+                    configs
+                        .stream()
+                        .filter(c -> c.getName().equals(configName))
+                        .findFirst()
+                        .orElse(null);
 
                 if (config != null) {
                   executeWithExistingConfig(configName, config);
@@ -166,7 +176,7 @@ public class ConfigDeleteCommand extends SubjectCommands {
 
     if (deleteConfig && (force || success)) {
       try {
-        replicatorConfigLoader.removeConfig(config);
+        replicatorConfigManager.remove(config.getId());
         printSuccessMessage(
             "The replication configuration with the name \"" + configName + "\" was deleted.");
       } catch (ReplicationException e) {

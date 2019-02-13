@@ -35,25 +35,23 @@ import ddf.catalog.operation.DeleteRequest;
 import ddf.catalog.operation.UpdateRequest;
 import ddf.catalog.source.IngestException;
 import java.io.Serializable;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import javax.ws.rs.NotFoundException;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationType;
-import org.codice.ditto.replication.api.ReplicatorConfig;
+import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.impl.mcard.ReplicationConfigAttributes;
-import org.codice.ditto.replication.api.impl.modern.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
-import org.codice.ditto.replication.api.modern.ReplicationSite;
-import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.codice.junit.rules.RestoreSystemProperties;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,7 +59,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.opengis.filter.Filter;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -76,7 +76,7 @@ public class MetacardConfigLoaderTest {
 
   @Mock MetacardHelper helper;
 
-  @Mock ReplicationSitePersistentStore siteStore;
+  @Mock SiteManager siteManager;
 
   MetacardType type;
 
@@ -99,7 +99,7 @@ public class MetacardConfigLoaderTest {
             any(Serializable.class));
     when(helper.getAttributeValueOrDefault(any(Metacard.class), anyString(), any(Object.class)))
         .thenCallRealMethod();
-    configLoader = new MetacardConfigLoader(framework, builder, helper, type, siteStore);
+    configLoader = new MetacardConfigLoader(framework, builder, helper, type, siteManager);
     System.setProperty(SystemBaseUrl.INTERNAL_HOST, "localhost");
     System.setProperty(SystemBaseUrl.INTERNAL_HTTPS_PORT, "5678");
   }
@@ -108,16 +108,16 @@ public class MetacardConfigLoaderTest {
   public void getConfig() {
     when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(Collections.singletonList(newReplicatorConfig("test")));
-    Optional<ReplicatorConfig> config = configLoader.getConfig("test");
-    assertThat(config.isPresent(), is(true));
+    ReplicatorConfig config = configLoader.getConfig("test");
+    assertThat(config.getName(), is("test"));
   }
 
-  @Test
+  @Test(expected = NotFoundException.class)
   public void getConfigNoConfigPresent() {
     when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(Collections.emptyList());
-    Optional<ReplicatorConfig> config = configLoader.getConfig("test");
-    assertThat(config.isPresent(), is(false));
+    ReplicatorConfig config = configLoader.getConfig("test");
+    assertThat(config.getName(), is("test"));
   }
 
   @Test(expected = IllegalStateException.class)
@@ -145,7 +145,7 @@ public class MetacardConfigLoaderTest {
     assertThat(mcard.getAttribute(ReplicationConfig.DIRECTION).getValue(), is("PUSH"));
     assertThat(mcard.getAttribute(ReplicationConfig.CQL).getValue(), is("cql"));
     assertThat(mcard.getAttribute(ReplicationConfig.SUSPEND).getValue(), is(true));
-    assertThat(mcard.getAttribute(ReplicationConfig.VERSION).getValue(), is(2));
+    assertThat(mcard.getAttribute(ReplicationConfig.VERSION).getValue(), is(1));
   }
 
   @Test(expected = ReplicationException.class)
@@ -224,7 +224,7 @@ public class MetacardConfigLoaderTest {
     assertThat(config.getDestination(), is("dest"));
     assertThat(config.getDirection(), is(Direction.PUSH));
     assertThat(config.getReplicationType(), is(ReplicationType.RESOURCE));
-    assertThat(config.getCql(), is("cql"));
+    assertThat(config.getFilter(), is("cql"));
   }
 
   @Test
@@ -252,11 +252,22 @@ public class MetacardConfigLoaderTest {
     mcard.setAttribute(ReplicationConfig.VERSION, 3);
     mcard.setAttribute(ReplicationConfig.SUSPEND, true);
 
-    Set<ReplicationSite> sites = new HashSet<>();
-    sites.add(new ReplicationSiteImpl("siteid", "mysite", new URL("https://host:1234")));
-    sites.add(new ReplicationSiteImpl("localid", "anothersite", new URL("https://localhost:5678")));
+    ReplicationSite site1 = new ReplicationSiteImpl();
+    site1.setId("siteid");
+    site1.setName("mysite");
+    site1.setUrl("https://host:1234");
+    ReplicationSite site2 = new ReplicationSiteImpl();
+    site2.setId("localid");
+    site2.setName("anothersite");
+    site2.setUrl("https://localhost:5678");
 
-    when(siteStore.getSites()).thenReturn(sites);
+    when(siteManager.objects())
+        .thenAnswer(
+            new Answer() {
+              public Stream<ReplicationSite> answer(InvocationOnMock invocation) {
+                return Stream.of(site1, site2);
+              }
+            });
     ReplicatorConfig config = configLoader.getConfigFromMetacard(mcard);
     assertThat(config.getSource(), is("localid"));
     assertThat(config.getDestination(), is("siteid"));
@@ -275,11 +286,22 @@ public class MetacardConfigLoaderTest {
     mcard.setAttribute(ReplicationConfig.CQL, "cql");
     mcard.setAttribute(ReplicationConfig.TYPE, "RESOURCE");
 
-    Set<ReplicationSite> sites = new HashSet<>();
-    sites.add(new ReplicationSiteImpl("siteid", "mysite", new URL("https://host:1234")));
-    sites.add(new ReplicationSiteImpl("localid", "anothersite", new URL("https://localhost:5678")));
+    ReplicationSite site1 = new ReplicationSiteImpl();
+    site1.setId("siteid");
+    site1.setName("mysite");
+    site1.setUrl("https://host:1234");
+    ReplicationSite site2 = new ReplicationSiteImpl();
+    site2.setId("localid");
+    site2.setName("anothersite");
+    site2.setUrl("https://localhost:5678");
 
-    when(siteStore.getSites()).thenReturn(sites);
+    when(siteManager.objects())
+        .thenAnswer(
+            new Answer() {
+              public Stream<ReplicationSite> answer(InvocationOnMock invocation) {
+                return Stream.of(site1, site2);
+              }
+            });
     ReplicatorConfig config = configLoader.getConfigFromMetacard(mcard);
     assertThat(config.getSource(), is("siteid"));
     assertThat(config.getDestination(), is("localid"));
@@ -298,7 +320,7 @@ public class MetacardConfigLoaderTest {
     mcard.setAttribute(ReplicationConfig.CQL, "cql");
     mcard.setAttribute(ReplicationConfig.TYPE, "RESOURCE");
 
-    when(siteStore.getSites()).thenReturn(new HashSet<>());
+    when(siteManager.objects()).thenReturn(Stream.empty());
     ReplicatorConfig config = configLoader.getConfigFromMetacard(mcard);
     assertThat(config, is(nullValue()));
   }
@@ -313,12 +335,24 @@ public class MetacardConfigLoaderTest {
     mcard.setAttribute(ReplicationConfig.CQL, "cql");
     mcard.setAttribute(ReplicationConfig.TYPE, "RESOURCE");
 
-    Set<ReplicationSite> sites = new HashSet<>();
-    sites.add(new ReplicationSiteImpl("localid", "anothersite", new URL("https://localhost:5678")));
+    ReplicationSite site = new ReplicationSiteImpl();
+    site.setId("localid");
+    site.setName("anothersite");
+    site.setUrl("https://localhost:5678");
 
-    when(siteStore.getSites()).thenReturn(sites);
-    when(siteStore.saveSite(anyString(), anyString()))
-        .thenReturn(new ReplicationSiteImpl("newid", "host", new URL("https://host:1234")));
+    ReplicationSite newSite = new ReplicationSiteImpl();
+    newSite.setId("newid");
+    newSite.setName("host");
+    newSite.setUrl("https://host:1234");
+
+    when(siteManager.objects())
+        .thenAnswer(
+            new Answer() {
+              public Stream<ReplicationSite> answer(InvocationOnMock invocation) {
+                return Stream.of(site);
+              }
+            });
+    when(siteManager.createSite(anyString(), anyString())).thenReturn(newSite);
     ReplicatorConfig config = configLoader.getConfigFromMetacard(mcard);
     assertThat(config.getSource(), is("newid"));
     assertThat(config.getDestination(), is("localid"));
@@ -336,7 +370,7 @@ public class MetacardConfigLoaderTest {
     config.setSource(src);
     config.setDestination(dest);
     config.setDirection(dir);
-    config.setCql(cql);
+    config.setFilter(cql);
     config.setReplicationType(ReplicationType.RESOURCE);
     config.setDescription("description");
     config.setFailureRetryCount(5);
