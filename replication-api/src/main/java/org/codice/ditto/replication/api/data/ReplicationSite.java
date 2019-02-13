@@ -11,23 +11,36 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api;
+package org.codice.ditto.replication.api.data;
 
-import org.codice.ditto.replication.api.data.ReplicatorConfig;
-
-public interface SyncRequest {
-
-  /**
-   * Get the configuration for this request
-   *
-   * @return The configuration of this request
-   */
-  ReplicatorConfig getConfig();
+/** A ReplicationSite holds information about a system to be replicated to/from */
+public interface ReplicationSite extends Persistable {
 
   /**
-   * Get the status of this request. Status will be updated during processing.
+   * Get the human readable name of this site
    *
-   * @return The status of this request
+   * @return site name
    */
-  ReplicationStatus getStatus();
+  String getName();
+
+  /**
+   * Set the name of this site
+   *
+   * @param name the name to give this site
+   */
+  void setName(String name);
+
+  /**
+   * Get the URL of this site
+   *
+   * @return site URL
+   */
+  String getUrl();
+
+  /**
+   * Set the URL of this site
+   *
+   * @param url the URL to give this site
+   */
+  void setUrl(String url);
 }

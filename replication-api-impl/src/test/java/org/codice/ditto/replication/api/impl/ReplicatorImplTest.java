@@ -27,7 +27,6 @@ import ddf.catalog.filter.proxy.builder.GeotoolsFilterBuilder;
 import ddf.security.Subject;
 import java.net.URL;
 import java.security.PrivilegedAction;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import org.codice.ddf.security.common.Security;
@@ -36,15 +35,15 @@ import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.ReplicationType;
-import org.codice.ditto.replication.api.ReplicatorConfig;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
-import org.codice.ditto.replication.api.modern.ReplicationSite;
-import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,7 +60,7 @@ public class ReplicatorImplTest {
   @Mock ReplicatorStoreFactory replicatorStoreFactory;
   @Mock ReplicatorHistory history;
   @Mock ReplicationPersistentStore persistentStore;
-  @Mock ReplicationSitePersistentStore siteStore;
+  @Mock SiteManager siteManager;
   @Mock ExecutorService executor;
   @Mock Security security;
 
@@ -79,7 +78,7 @@ public class ReplicatorImplTest {
             replicatorStoreFactory,
             history,
             persistentStore,
-            siteStore,
+            siteManager,
             executor,
             builder,
             security) {
@@ -105,7 +104,7 @@ public class ReplicatorImplTest {
     config.setDestination("destId");
     config.setId("id");
     config.setDirection(Direction.BOTH);
-    config.setCql("cql");
+    config.setFilter("cql");
     config.setReplicationType(ReplicationType.RESOURCE);
     config.setVersion(0);
   }
@@ -114,10 +113,10 @@ public class ReplicatorImplTest {
   public void executeSyncRequest() throws Exception {
     ReplicationSite site1 = mock(ReplicationSite.class);
     ReplicationSite site2 = mock(ReplicationSite.class);
-    when(site1.getUrl()).thenReturn(new URL("https://site1:1234"));
-    when(site2.getUrl()).thenReturn(new URL("https://site2:1234"));
-    when(siteStore.getSite("srcId")).thenReturn(Optional.of(site1));
-    when(siteStore.getSite("destId")).thenReturn(Optional.of(site2));
+    when(site1.getUrl()).thenReturn("https://site1:1234");
+    when(site2.getUrl()).thenReturn("https://site2:1234");
+    when(siteManager.get("srcId")).thenReturn(site1);
+    when(siteManager.get("destId")).thenReturn(site2);
     when(replicatorStoreFactory.createReplicatorStore(new URL("https://site1:1234")))
         .thenReturn(store1);
     when(replicatorStoreFactory.createReplicatorStore(new URL("https://site2:1234")))
@@ -130,8 +129,8 @@ public class ReplicatorImplTest {
     SyncRequest request = new SyncRequestImpl(config, status);
     replicator.executeSyncRequest(request);
     verify(history).addReplicationEvent(status);
-    verify(siteStore).getSite("srcId");
-    verify(siteStore).getSite("destId");
+    verify(siteManager).get("srcId");
+    verify(siteManager).get("destId");
     verify(helper, times(2)).sync();
     assertThat(request.getStatus().getPullCount(), is(1L));
     assertThat(request.getStatus().getPullBytes(), is(10L));
@@ -156,10 +155,10 @@ public class ReplicatorImplTest {
   public void cancelActiveSyncRequest() throws Exception {
     ReplicationSite site1 = mock(ReplicationSite.class);
     ReplicationSite site2 = mock(ReplicationSite.class);
-    when(site1.getUrl()).thenReturn(new URL("https://site1:1234"));
-    when(site2.getUrl()).thenReturn(new URL("https://site2:1234"));
-    when(siteStore.getSite("srcId")).thenReturn(Optional.of(site1));
-    when(siteStore.getSite("destId")).thenReturn(Optional.of(site2));
+    when(site1.getUrl()).thenReturn("https://site1:1234");
+    when(site2.getUrl()).thenReturn("https://site2:1234");
+    when(siteManager.get("srcId")).thenReturn(site1);
+    when(siteManager.get("destId")).thenReturn(site2);
     when(replicatorStoreFactory.createReplicatorStore(new URL("https://site1:1234")))
         .thenReturn(store1);
     when(replicatorStoreFactory.createReplicatorStore(new URL("https://site2:1234")))

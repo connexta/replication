@@ -32,6 +32,10 @@ public class ReplicationMessages {
 
   public static final String SITE_IN_USE = "SITE_IN_USE";
 
+  public static final String SOURCE_DOES_NOT_EXIST = "SOURCE_DOES_NOT_EXIST";
+
+  public static final String DESTINATION_DOES_NOT_EXIST = "DESTINATION_DOES_NOT_EXIST";
+
   public static final String CONFIG_DOES_NOT_EXIST = "CONFIG_DOES_NOT_EXIST";
 
   private ReplicationMessages() {}
@@ -58,5 +62,13 @@ public class ReplicationMessages {
 
   public static ErrorMessage configDoesNotExist() {
     return new ErrorMessageImpl(CONFIG_DOES_NOT_EXIST);
+  }
+
+  public static ErrorMessage sourceDoesNotExist() {
+    return new ErrorMessageImpl(SOURCE_DOES_NOT_EXIST);
+  }
+
+  public static ErrorMessage destinationDoesNotExist() {
+    return new ErrorMessageImpl(DESTINATION_DOES_NOT_EXIST);
   }
 }

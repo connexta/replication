@@ -94,7 +94,9 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
     return ImmutableSet.of(
         ReplicationMessages.DUPLICATE_CONFIGURATION,
         ReplicationMessages.SAME_SITE,
-        ReplicationMessages.INVALID_FILTER);
+        ReplicationMessages.INVALID_FILTER,
+        ReplicationMessages.SOURCE_DOES_NOT_EXIST,
+        ReplicationMessages.DESTINATION_DOES_NOT_EXIST);
   }
 
   @Override
@@ -106,7 +108,12 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
     if (replicationUtils.replicationConfigExists(name.getValue())) {
       addErrorMessage(ReplicationMessages.duplicateConfigurations());
     }
-
+    if (!replicationUtils.siteIdExists(source.getValue())) {
+      addErrorMessage(ReplicationMessages.sourceDoesNotExist());
+    }
+    if (!replicationUtils.siteIdExists(destination.getValue())) {
+      addErrorMessage(ReplicationMessages.destinationDoesNotExist());
+    }
     if (source.getValue().equals(destination.getValue())) {
       addErrorMessage(ReplicationMessages.sameSite());
     }

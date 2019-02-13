@@ -38,15 +38,16 @@ pipeline {
                         }
                     }
                 }
-                stage ('Windows') {
-                    agent { label 'server-2016-small' }
-                    steps {
-                        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
-                            bat 'mvn install -B -DskipStatic=true -DskipTests=true  %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                            bat 'mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/%CHANGE_TARGET% %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                        }
-                    }
-                }
+                //Commenting this out for now as the windows build is currently failing due to external environment issues and we may no longer need windows builds going forward
+                //stage ('Windows') {
+                //    agent { label 'server-2016-small' }
+                //    steps {
+                //        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
+               //             bat 'mvn install -B -DskipStatic=true -DskipTests=true  %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
+               //             bat 'mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/%CHANGE_TARGET% %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
+              //          }
+               //     }
+               // }
             }
         }
         stage('Full Build') {

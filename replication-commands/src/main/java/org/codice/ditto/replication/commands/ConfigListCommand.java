@@ -13,16 +13,15 @@
  */
 package org.codice.ditto.replication.commands;
 
-import java.net.URL;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.apache.karaf.shell.support.table.ShellTable;
 import org.codice.ddf.commands.catalog.SubjectCommands;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
-import org.codice.ditto.replication.api.modern.ReplicationSite;
-import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
+import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 
 @Service
 @Command(
@@ -32,9 +31,9 @@ import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
 )
 public class ConfigListCommand extends SubjectCommands {
 
-  @Reference ReplicatorConfigLoader replicatorConfigLoader;
+  @Reference ReplicatorConfigManager replicatorConfigManager;
 
-  @Reference ReplicationSitePersistentStore siteStore;
+  @Reference SiteManager siteManager;
 
   @Override
   protected Object executeWithSubject() {
@@ -52,29 +51,31 @@ public class ConfigListCommand extends SubjectCommands {
 
     shellTable.emptyTableText("There are no current replication configurations.");
 
-    for (ReplicatorConfig replicatorConfig : replicatorConfigLoader.getAllConfigs()) {
-      shellTable
-          .addRow()
-          .addContent(
-              replicatorConfig.getName(),
-              !replicatorConfig.isSuspended(),
-              replicatorConfig.getDirection(),
-              replicatorConfig.getReplicationType(),
-              replicatorConfig.getFailureRetryCount(),
-              getUrlFromSite(replicatorConfig.getSource()),
-              getUrlFromSite(replicatorConfig.getDestination()),
-              replicatorConfig.getCql(),
-              replicatorConfig.getDescription(),
-              replicatorConfig.getVersion());
-    }
+    replicatorConfigManager.objects().forEach(config -> addConfigRow(config, shellTable));
 
     shellTable.print(console);
 
     return null;
   }
 
-  private URL getUrlFromSite(String id) {
-    ReplicationSite site = siteStore.getSite(id).orElse(null);
+  private void addConfigRow(ReplicatorConfig replicatorConfig, ShellTable shellTable) {
+    shellTable
+        .addRow()
+        .addContent(
+            replicatorConfig.getName(),
+            !replicatorConfig.isSuspended(),
+            replicatorConfig.getDirection(),
+            replicatorConfig.getReplicationType(),
+            replicatorConfig.getFailureRetryCount(),
+            getUrlFromSite(replicatorConfig.getSource()),
+            getUrlFromSite(replicatorConfig.getDestination()),
+            replicatorConfig.getFilter(),
+            replicatorConfig.getDescription(),
+            replicatorConfig.getVersion());
+  }
+
+  private String getUrlFromSite(String id) {
+    ReplicationSite site = siteManager.get(id);
     if (site != null) {
       return site.getUrl();
     }

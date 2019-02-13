@@ -16,11 +16,12 @@ package org.codice.ditto.replication.commands;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.karaf.shell.api.action.Argument;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.codice.ddf.commands.catalog.SubjectCommands;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 
 abstract class ExistingConfigsCommands extends SubjectCommands {
 
@@ -32,12 +33,14 @@ abstract class ExistingConfigsCommands extends SubjectCommands {
   )
   List<String> configNames;
 
-  @Reference ReplicatorConfigLoader replicatorConfigLoader;
+  @Reference ReplicatorConfigManager replicatorConfigManager;
 
   @Override
   protected final Object executeWithSubject() throws Exception {
+    List<ReplicatorConfig> configs = replicatorConfigManager.objects().collect(Collectors.toList());
     for (final String configName : new HashSet<>(configNames)) {
-      final Optional<ReplicatorConfig> config = replicatorConfigLoader.getConfig(configName);
+      final Optional<ReplicatorConfig> config =
+          configs.stream().filter(c -> c.getName().equals(configName)).findFirst();
 
       if (config.isPresent()) {
         executeWithExistingConfig(configName, config.get());

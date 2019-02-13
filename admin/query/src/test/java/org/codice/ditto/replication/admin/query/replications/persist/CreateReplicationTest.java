@@ -56,12 +56,14 @@ public class CreateReplicationTest {
 
   @Test
   public void validate() {
+    when(utils.siteIdExists(anyString())).thenReturn(true);
     FunctionReport report = create.execute(input, null);
     assertThat(report.getErrorMessages().size(), is(0));
   }
 
   @Test
   public void validateDupConfig() {
+    when(utils.siteIdExists(anyString())).thenReturn(true);
     when(utils.replicationConfigExists(anyString())).thenReturn(true);
     FunctionReport report = create.execute(input, null);
     assertThat(report.getErrorMessages().size(), is(1));
@@ -72,6 +74,7 @@ public class CreateReplicationTest {
 
   @Test
   public void validateSameSource() {
+    when(utils.siteIdExists(anyString())).thenReturn(true);
     input.put("destinationId", "srcId");
     FunctionReport report = create.execute(input, null);
     assertThat(report.getErrorMessages().size(), is(1));
@@ -82,11 +85,34 @@ public class CreateReplicationTest {
 
   @Test
   public void validateBadCql() {
+    when(utils.siteIdExists(anyString())).thenReturn(true);
     input.put("filter", "asdf");
     FunctionReport report = create.execute(input, null);
     assertThat(report.getErrorMessages().size(), is(1));
     assertThat(
         ((ErrorMessage) report.getErrorMessages().get(0)).getCode(),
         is(ReplicationMessages.INVALID_FILTER));
+  }
+
+  @Test
+  public void validateUnknownSource() {
+    when(utils.siteIdExists("srcId")).thenReturn(false);
+    when(utils.siteIdExists("destId")).thenReturn(true);
+    FunctionReport report = create.execute(input, null);
+    assertThat(report.getErrorMessages().size(), is(1));
+    assertThat(
+        ((ErrorMessage) report.getErrorMessages().get(0)).getCode(),
+        is(ReplicationMessages.SOURCE_DOES_NOT_EXIST));
+  }
+
+  @Test
+  public void validateUnknownDestination() {
+    when(utils.siteIdExists("srcId")).thenReturn(true);
+    when(utils.siteIdExists("destId")).thenReturn(false);
+    FunctionReport report = create.execute(input, null);
+    assertThat(report.getErrorMessages().size(), is(1));
+    assertThat(
+        ((ErrorMessage) report.getErrorMessages().get(0)).getCode(),
+        is(ReplicationMessages.DESTINATION_DOES_NOT_EXIST));
   }
 }

@@ -23,16 +23,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorConfig;
-import org.codice.ditto.replication.api.ReplicatorConfigLoader;
 import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,11 +49,11 @@ public class ReplicatorRunnerTest {
 
   @Mock Replicator replicator;
 
-  @Mock ReplicatorConfigLoader configLoader;
+  @Mock ReplicatorConfigManager configManager;
 
   @Mock ScheduledExecutorService scheduledExecutor;
 
-  List<ReplicatorConfig> configList = new ArrayList<>();
+  Stream<ReplicatorConfig> configStream;
 
   @Mock ReplicatorConfig config;
 
@@ -64,8 +63,8 @@ public class ReplicatorRunnerTest {
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call());
     when(security.runAsAdmin(any(PrivilegedAction.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, PrivilegedAction.class).run());
-    runner = new ReplicatorRunner(scheduledExecutor, replicator, configLoader, security);
-    configList.add(config);
+    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, security);
+    configStream = Stream.of(config);
   }
 
   @After
@@ -102,7 +101,7 @@ public class ReplicatorRunnerTest {
   public void scheduleReplication() throws Exception {
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
     when(config.getName()).thenReturn("test");
-    when(configLoader.getAllConfigs()).thenReturn(configList);
+    when(configManager.objects()).thenReturn(configStream);
     runner.scheduleReplication();
     verify(replicator).submitSyncRequest(request.capture());
     assertThat(request.getValue().getConfig().getName(), is("test"));
@@ -113,7 +112,7 @@ public class ReplicatorRunnerTest {
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
     when(config.getName()).thenReturn("test");
     when(config.isSuspended()).thenReturn(true);
-    when(configLoader.getAllConfigs()).thenReturn(configList);
+    when(configManager.objects()).thenReturn(configStream);
     runner.scheduleReplication();
     verify(replicator, never()).submitSyncRequest(request.capture());
   }
@@ -122,7 +121,7 @@ public class ReplicatorRunnerTest {
   public void scheduleReplicationInterruptException() throws Exception {
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
     when(config.getName()).thenReturn("test");
-    when(configLoader.getAllConfigs()).thenReturn(configList);
+    when(configManager.objects()).thenReturn(configStream);
     doThrow(new InterruptedException()).when(replicator).submitSyncRequest(any(SyncRequest.class));
     runner.scheduleReplication();
     verify(replicator).submitSyncRequest(request.capture());
@@ -131,6 +130,7 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void scheduleReplicationAsSystemUser() throws Exception {
+    when(configManager.objects()).thenReturn(Stream.empty());
     runner.replicateAsSystemUser();
     verify(security).runAsAdmin(any(PrivilegedAction.class));
     verify(security).runWithSubjectOrElevate(any(Callable.class));

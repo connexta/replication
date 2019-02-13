@@ -13,59 +13,87 @@
  */
 package org.codice.ditto.replication.api.impl.data;
 
+import java.util.Map;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationType;
-import org.codice.ditto.replication.api.ReplicatorConfig;
+import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
-public class ReplicatorConfigImpl implements ReplicatorConfig {
+/**
+ * ReplicatorConfigImpl represents a replication config and has methods that allow it to easily be
+ * converted to, or from, a map.
+ */
+public class ReplicatorConfigImpl extends AbstractPersistable implements ReplicatorConfig {
 
-  public static final int CURRENT_VERSION = 2;
+  // public so that the persistent store can access it using reflection
+  public static final String PERSISTENCE_TYPE = "replication_config";
 
-  private String id;
+  private static final String NAME_KEY = "name";
+
+  private static final String SOURCE_KEY = "source";
+
+  private static final String DESTINATION_KEY = "destination";
+
+  private static final String FILTER_KEY = "filter";
+
+  private static final String RETRY_COUNT_KEY = "retry_count";
+
+  private static final String BIDIRECTIONAL_KEY = "bidirectional";
+
+  private static final String DESCRIPTION_KEY = "description";
+
+  private static final String SUSPENDED_KEY = "suspended";
+
+  /**
+   * 0/No Version - initial version of configs which were saved in the catalog framework. 1 - the
+   * first version of configs to be saved in the replication persistent store.
+   */
+  public static final int CURRENT_VERSION = 1;
 
   private String name;
 
   private Direction direction;
 
-  private ReplicationType type;
-
   private String source;
 
   private String destination;
 
-  private String cql;
-
-  private String description;
+  private String filter;
 
   private int failureRetryCount;
 
+  private String description;
+
   private boolean suspended;
 
-  private int version;
-
-  public ReplicatorConfigImpl() {}
-
-  public ReplicatorConfigImpl(ReplicatorConfig config) {
-    this.id = config.getId();
-    this.name = config.getName();
-    this.direction = config.getDirection();
-    this.type = config.getReplicationType();
-    this.source = config.getSource();
-    this.destination = config.getDestination();
-    this.cql = config.getCql();
-    this.description = config.getDescription();
-    this.failureRetryCount = config.getFailureRetryCount();
-    this.suspended = config.isSuspended();
-    this.version = config.getVersion();
+  public ReplicatorConfigImpl() {
+    super.setVersion(CURRENT_VERSION);
   }
 
   @Override
-  public String getId() {
-    return id;
+  public Map<String, Object> toMap() {
+    Map<String, Object> result = super.toMap();
+    result.put(NAME_KEY, getName());
+    result.put(SOURCE_KEY, getSource());
+    result.put(DESTINATION_KEY, getDestination());
+    result.put(FILTER_KEY, getFilter());
+    result.put(BIDIRECTIONAL_KEY, Boolean.toString(isBiDirectional()));
+    result.put(RETRY_COUNT_KEY, getFailureRetryCount());
+    result.put(DESCRIPTION_KEY, getDescription());
+    result.put(SUSPENDED_KEY, Boolean.toString(isSuspended()));
+    return result;
   }
 
-  public void setId(String id) {
-    this.id = id;
+  @Override
+  public void fromMap(Map<String, Object> properties) {
+    super.fromMap(properties);
+    setName((String) properties.get(NAME_KEY));
+    setSource((String) properties.get(SOURCE_KEY));
+    setDestination((String) properties.get(DESTINATION_KEY));
+    setFilter((String) properties.get(FILTER_KEY));
+    setBiDirectional(Boolean.valueOf((String) properties.get(BIDIRECTIONAL_KEY)));
+    setFailureRetryCount((int) properties.get(RETRY_COUNT_KEY));
+    setDescription((String) properties.get(DESCRIPTION_KEY));
+    setSuspended(Boolean.valueOf((String) properties.get(SUSPENDED_KEY)));
   }
 
   @Override
@@ -73,6 +101,7 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     return name;
   }
 
+  @Override
   public void setName(String name) {
     this.name = name;
   }
@@ -82,13 +111,19 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     return direction;
   }
 
+  @Override
   public void setDirection(Direction direction) {
     this.direction = direction;
   }
 
   @Override
   public ReplicationType getReplicationType() {
-    return type;
+    return ReplicationType.RESOURCE;
+  }
+
+  @Override
+  public void setReplicationType(ReplicationType type) {
+    // no op
   }
 
   @Override
@@ -96,6 +131,7 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     return source;
   }
 
+  @Override
   public void setSource(String source) {
     this.source = source;
   }
@@ -105,21 +141,29 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     return destination;
   }
 
+  @Override
   public void setDestination(String destination) {
     this.destination = destination;
   }
 
-  public void setReplicationType(ReplicationType type) {
-    this.type = type;
+  @Override
+  public String getFilter() {
+    return filter;
   }
 
   @Override
-  public String getCql() {
-    return cql;
+  public void setFilter(String filter) {
+    this.filter = filter;
   }
 
-  public void setCql(String cql) {
-    this.cql = cql;
+  @Override
+  public boolean isBiDirectional() {
+    return direction == Direction.BOTH;
+  }
+
+  @Override
+  public void setBiDirectional(boolean biDirectional) {
+    direction = biDirectional ? Direction.BOTH : Direction.PUSH;
   }
 
   @Override
@@ -127,6 +171,7 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     return description;
   }
 
+  @Override
   public void setDescription(String description) {
     this.description = description;
   }
@@ -136,6 +181,7 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     return failureRetryCount;
   }
 
+  @Override
   public void setFailureRetryCount(int count) {
     failureRetryCount = count;
   }
@@ -145,16 +191,8 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     return suspended;
   }
 
+  @Override
   public void setSuspended(boolean suspended) {
     this.suspended = suspended;
-  }
-
-  @Override
-  public int getVersion() {
-    return version;
-  }
-
-  public void setVersion(int version) {
-    this.version = version;
   }
 }
