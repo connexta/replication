@@ -105,6 +105,13 @@ public class ConfigAddCommand extends SubjectCommands {
   )
   int failureRetryCount = 5;
 
+  @Option(
+    name = "--suspend",
+    description =
+        "Suspend this configuration. Suspended configurations will not be run. Defaults to false"
+  )
+  boolean suspend = false;
+
   @Reference ReplicatorConfigLoader replicatorConfigLoader;
 
   @Reference ReplicationSitePersistentStore siteStore;
@@ -154,6 +161,7 @@ public class ConfigAddCommand extends SubjectCommands {
         config.setDirection(Direction.valueOf(directionString.toUpperCase()));
       }
       config.setFailureRetryCount(failureRetryCount);
+      config.setSuspended(suspend);
 
       replicatorConfigLoader.saveConfig(config);
       printSuccessMessage(

@@ -38,6 +38,7 @@ public class ConfigListCommand extends SubjectCommands {
   protected Object executeWithSubject() {
     final ShellTable shellTable = new ShellTable();
     shellTable.column("Name");
+    shellTable.column("Enabled");
     shellTable.column("Direction");
     shellTable.column("Type");
     shellTable.column("Failure Retry Count");
@@ -45,6 +46,8 @@ public class ConfigListCommand extends SubjectCommands {
     shellTable.column("Destination");
     shellTable.column("CQL");
     shellTable.column("Description");
+    shellTable.column("Version");
+
     shellTable.emptyTableText("There are no current replication configurations.");
 
     for (ReplicatorConfig replicatorConfig : replicatorConfigLoader.getAllConfigs()) {
@@ -52,13 +55,15 @@ public class ConfigListCommand extends SubjectCommands {
           .addRow()
           .addContent(
               replicatorConfig.getName(),
+              !replicatorConfig.isSuspended(),
               replicatorConfig.getDirection(),
               replicatorConfig.getReplicationType(),
               replicatorConfig.getFailureRetryCount(),
               siteStore.getSite(replicatorConfig.getSource()).get().getUrl(),
               siteStore.getSite(replicatorConfig.getDestination()).get().getUrl(),
               replicatorConfig.getCql(),
-              replicatorConfig.getDescription());
+              replicatorConfig.getDescription(),
+              replicatorConfig.getVersion());
     }
 
     shellTable.print(console);

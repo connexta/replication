@@ -19,9 +19,11 @@ import ddf.catalog.filter.FilterBuilder;
 import ddf.security.Subject;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -67,6 +69,8 @@ public class ReplicatorImpl implements Replicator {
 
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
+
+  private final Map<String, SyncHelper> syncHelperMap = new ConcurrentHashMap<>();
 
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
@@ -155,8 +159,11 @@ public class ReplicatorImpl implements Replicator {
             if (Direction.PULL.equals(config.getDirection())
                 || Direction.BOTH.equals(config.getDirection())) {
               status.setStatus(Status.PULL_IN_PROGRESS);
-              SyncResponse response =
-                  SyncHelper.performSync(store2, store1, config, persistentStore, history, builder);
+              SyncHelper syncHelper =
+                  new SyncHelper(store2, store1, config, persistentStore, history, builder);
+              syncHelperMap.put(config.getId(), syncHelper);
+              SyncResponse response = syncHelper.sync();
+              syncHelperMap.remove(config.getId());
               status.setPullCount(response.getItemsReplicated());
               status.setPullFailCount(response.getItemsFailed());
               status.setPullBytes(response.getBytesTransferred());
@@ -168,8 +175,11 @@ public class ReplicatorImpl implements Replicator {
                 && (Direction.PUSH.equals(config.getDirection())
                     || Direction.BOTH.equals(config.getDirection()))) {
               status.setStatus(Status.PUSH_IN_PROGRESS);
-              SyncResponse response =
-                  SyncHelper.performSync(store1, store2, config, persistentStore, history, builder);
+              SyncHelper syncHelper =
+                  new SyncHelper(store1, store2, config, persistentStore, history, builder);
+              syncHelperMap.put(config.getId(), syncHelper);
+              SyncResponse response = syncHelper.sync();
+              syncHelperMap.remove(config.getId());
               status.setPushCount(response.getItemsReplicated());
               status.setPushFailCount(response.getItemsFailed());
               status.setPushBytes(response.getBytesTransferred());
@@ -186,6 +196,7 @@ public class ReplicatorImpl implements Replicator {
             status.setStatus(failureStatus);
           } finally {
             completeActiveSyncRequest(syncRequest, status);
+            syncHelperMap.remove(syncRequest.getConfig().getId());
           }
         });
   }
@@ -242,6 +253,16 @@ public class ReplicatorImpl implements Replicator {
           syncRequest);
     } else {
       pendingSyncRequests.put(syncRequest);
+    }
+  }
+
+  @Override
+  public void cancelSyncRequest(SyncRequest syncRequest) {
+    pendingSyncRequests.remove(syncRequest);
+
+    SyncHelper helper = syncHelperMap.get(syncRequest.getConfig().getId());
+    if (helper != null) {
+      helper.cancel();
     }
   }
 

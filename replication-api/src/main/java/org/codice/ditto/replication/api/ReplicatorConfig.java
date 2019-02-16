@@ -82,4 +82,18 @@ public interface ReplicatorConfig {
    * @return failure retry count
    */
   int getFailureRetryCount();
+
+  /**
+   * Gets the suspended state of this config. Suspended configs will not be run.
+   *
+   * @return boolean indicating if this config is suspended.
+   */
+  boolean isSuspended();
+
+  /**
+   * Get the version of this configuration
+   *
+   * @return integer version of the configuration
+   */
+  int getVersion();
 }

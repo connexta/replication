@@ -103,6 +103,9 @@ public class ReplicatorRunner {
   void scheduleReplication() {
     try {
       for (ReplicatorConfig config : replicatorConfigLoader.getAllConfigs()) {
+        if (config.isSuspended()) {
+          continue;
+        }
         replicator.submitSyncRequest(
             new SyncRequestImpl(config, new ReplicationStatus(config.getName())));
       }

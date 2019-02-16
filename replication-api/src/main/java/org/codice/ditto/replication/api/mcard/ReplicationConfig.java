@@ -34,4 +34,8 @@ public interface ReplicationConfig {
   String TYPE = "replication-config.type";
 
   String FAILURE_RETRY_COUNT = "replication-config.failure-retry-count";
+
+  String SUSPEND = "replication-config.suspend";
+
+  String VERSION = "replication-config.version";
 }

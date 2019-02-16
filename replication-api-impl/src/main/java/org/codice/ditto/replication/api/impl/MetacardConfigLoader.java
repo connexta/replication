@@ -121,6 +121,8 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
               + replicationConfig.getName());
     }
 
+    // we always save in the latest config version so
+    helper.setIfPresent(mcard, ReplicationConfig.VERSION, ReplicatorConfigImpl.CURRENT_VERSION);
     if (create) { // create
       try {
         framework.create(new CreateRequestImpl(mcard));
@@ -199,6 +201,8 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
         ReplicationConfig.FAILURE_RETRY_COUNT,
         config.getFailureRetryCount(),
         DEFAULT_FAILURE_RETRY_COUNT);
+    helper.setIfPresentOrDefault(mcard, ReplicationConfig.VERSION, config.getVersion(), 1);
+    helper.setIfPresentOrDefault(mcard, ReplicationConfig.SUSPEND, config.isSuspended(), false);
 
     return mcard;
   }
@@ -263,6 +267,9 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
           ReplicationConfig.CQL);
       return null;
     }
+    config.setVersion(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.VERSION, 1));
+    config.setSuspended(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.SUSPEND, false));
+
     return config;
   }
 

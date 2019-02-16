@@ -101,6 +101,12 @@ public class ReplicationConfigAttributes implements ReplicationConfig, MetacardT
             false,
             false,
             BasicTypes.INTEGER_TYPE));
+    descriptors.add(
+        new AttributeDescriptorImpl(
+            ReplicationConfig.VERSION, true, true, false, false, BasicTypes.INTEGER_TYPE));
+    descriptors.add(
+        new AttributeDescriptorImpl(
+            ReplicationConfig.SUSPEND, true, true, false, false, BasicTypes.BOOLEAN_TYPE));
     DESCRIPTORS = Collections.unmodifiableSet(descriptors);
   }
 
