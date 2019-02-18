@@ -23,6 +23,10 @@ public interface ReplicationConfig {
 
   String URL = "replication-config.url";
 
+  String SOURCE = "replication-config.source-id";
+
+  String DESTINATION = "replication-config.destination-id";
+
   String CQL = "replication-config.cql";
 
   String DIRECTION = "replication-config.direction";

@@ -21,10 +21,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
+import org.codice.ddf.configuration.SystemBaseUrl;
+import org.codice.ddf.configuration.SystemInfo;
 import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ddf.persistence.PersistentItem;
 import org.codice.ddf.persistence.PersistentStore;
+import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.modern.ReplicationSite;
 import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
 import org.slf4j.Logger;
@@ -43,6 +49,8 @@ public class ReplicationSitePersistentStoreImpl implements ReplicationSitePersis
 
   private static final String PERSISTENCE_TYPE = "replication";
 
+  private static final String LOCAL_SITE_ID = "local-site-id-1234567890";
+
   private static final int DEFAULT_PAGE_SIZE = 100;
 
   private static final int DEFAULT_START_INDEX = 0;
@@ -51,6 +59,28 @@ public class ReplicationSitePersistentStoreImpl implements ReplicationSitePersis
 
   public ReplicationSitePersistentStoreImpl(PersistentStore persistentStore) {
     this.persistentStore = persistentStore;
+  }
+
+  public void init() {
+    RetryPolicy retryPolicy =
+        new RetryPolicy()
+            .withDelay(5, TimeUnit.SECONDS)
+            .withMaxDuration(5, TimeUnit.MINUTES)
+            .retryOn(ReplicationPersistenceException.class);
+
+    Failsafe.with(retryPolicy).run(this::createLocalSite);
+  }
+
+  private void createLocalSite() throws MalformedURLException {
+    ReplicationSite site = getSite(LOCAL_SITE_ID).orElse(null);
+    if (site != null
+        && site.getName().equals(SystemInfo.getSiteName())
+        && site.getUrl().toString().equals(SystemBaseUrl.EXTERNAL.getBaseUrl())) {
+      return;
+    }
+    saveSite(
+        new ReplicationSiteImpl(
+            LOCAL_SITE_ID, SystemInfo.getSiteName(), new URL(SystemBaseUrl.EXTERNAL.getBaseUrl())));
   }
 
   @Override
@@ -62,7 +92,7 @@ public class ReplicationSitePersistentStoreImpl implements ReplicationSitePersis
       matchingPersistedSites = persistentStore.get(PERSISTENCE_TYPE, ecql);
     } catch (PersistenceException e) {
       LOGGER.debug("failed to retrieve site with id: {}", id, e);
-      return Optional.empty();
+      throw new ReplicationPersistenceException("Failed to retrieve site", e);
     }
 
     if (matchingPersistedSites == null || matchingPersistedSites.isEmpty()) {
@@ -80,9 +110,11 @@ public class ReplicationSitePersistentStoreImpl implements ReplicationSitePersis
     List<Map<String, Object>> persistedSites = new ArrayList<>();
 
     try {
-      persistedSites = persistentStore.get(PERSISTENCE_TYPE, "", 0, 100);
+      persistedSites =
+          persistentStore.get(PERSISTENCE_TYPE, "", DEFAULT_START_INDEX, DEFAULT_PAGE_SIZE);
     } catch (PersistenceException e) {
-      LOGGER.debug("failed to retrieve sites", e);
+      LOGGER.debug("Failed to retrieve sites", e);
+      throw new ReplicationPersistenceException("Failed to retrieve sites", e);
     }
 
     return persistedSites.stream().map(this::mapToSite).collect(Collectors.toSet());
@@ -112,6 +144,7 @@ public class ReplicationSitePersistentStoreImpl implements ReplicationSitePersis
       persistentStore.add(PERSISTENCE_TYPE, item);
     } catch (PersistenceException e) {
       LOGGER.debug("error persisting site with id: {}", site.getId(), e);
+      throw new ReplicationPersistenceException("Failed to save site.", e);
     }
     return site;
   }

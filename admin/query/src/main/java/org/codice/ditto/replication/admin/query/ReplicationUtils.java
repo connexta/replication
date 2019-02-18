@@ -13,64 +13,71 @@
  */
 package org.codice.ditto.replication.admin.query;
 
-import java.net.URL;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.UUID;
+import javax.annotation.Nullable;
 import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
+import org.codice.ditto.replication.api.Direction;
+import org.codice.ditto.replication.api.ReplicationException;
+import org.codice.ditto.replication.api.ReplicationStatus;
+import org.codice.ditto.replication.api.ReplicationType;
+import org.codice.ditto.replication.api.Replicator;
+import org.codice.ditto.replication.api.ReplicatorConfig;
+import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.ReplicatorHistory;
+import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.modern.ReplicationSite;
 import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-// TODO: replace static methods as we replace the mock with real solutions
+/** Utility class that does all the heavy lifting for the graphql operations */
 public class ReplicationUtils {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationUtils.class);
 
-  private static final int TEST_ENTRIES = 3;
+  private static final long BYTES_PER_MB = 1024L * 1024L;
 
   private final ReplicationSitePersistentStore persistentStore;
 
-  public ReplicationUtils(ReplicationSitePersistentStore persistentStore) {
+  private final ReplicatorConfigLoader configLoader;
+
+  private final ReplicatorHistory history;
+
+  private final Replicator replicator;
+
+  public ReplicationUtils(
+      ReplicationSitePersistentStore persistentStore,
+      ReplicatorConfigLoader configLoader,
+      ReplicatorHistory history,
+      Replicator replicator) {
     this.persistentStore = persistentStore;
+    this.configLoader = configLoader;
+    this.history = history;
+    this.replicator = replicator;
   }
 
   // mutator methods
-  // TODO: likely need to make these thread safe in the future
-  // TODO: reject site if a site with that name already exists
   public ReplicationSiteField createSite(String name, AddressField address) {
+    if (siteExists(name)) {
+      throw new ReplicationException(
+          "Cannot create site with name " + name + ". Site already exists.");
+    }
     String urlString = addressFieldToUrlString(address);
     ReplicationSite newSite = persistentStore.saveSite(name, urlString);
 
-    ReplicationSiteField siteField = new ReplicationSiteField();
-    AddressField addressField = new AddressField();
-    addressField.url(newSite.getUrl().toString());
-    addressField.hostname(newSite.getUrl().getHost());
-    addressField.port((newSite.getUrl().getPort()));
-    siteField.address(addressField);
-    siteField.id(newSite.getId());
-    siteField.name(newSite.getName());
+    return getSiteFieldForSite(newSite);
+  }
 
-    return siteField;
+  public boolean siteExists(String name) {
+    return persistentStore.getSites().stream().anyMatch(site -> site.getName().equals(name));
   }
 
   public ReplicationSiteField updateSite(String id, String name, AddressField address) {
     String urlString = addressFieldToUrlString(address);
     ReplicationSite site = persistentStore.editSite(id, name, urlString);
-    ReplicationSiteField siteField = new ReplicationSiteField();
-    AddressField addressField = new AddressField();
-    URL siteUrl = site.getUrl();
-    addressField.url(siteUrl.toString());
-    addressField.hostname(siteUrl.getHost());
-    addressField.port(siteUrl.getPort());
-
-    siteField.address(addressField);
-    siteField.id(site.getId());
-    siteField.name(site.getName());
-
-    return siteField;
+    return getSiteFieldForSite(site);
   }
 
   private String addressFieldToUrlString(AddressField address) {
@@ -83,36 +90,139 @@ public class ReplicationUtils {
     return persistentStore.deleteSite(id);
   }
 
-  public static ReplicationField createReplication(
-      String name, String sourceId, String destinationId, String filter) {
-    ReplicationField config = new ReplicationField();
-    String id = "id" + gen();
-    config.id(id);
-    config.name(name);
-    config.source(createSite(0));
-    config.destination(createSite(1));
-    config.filter(filter);
-    config.itemsTransferred(0);
-    config.dataTransferred("0 MB");
-
-    return config;
+  public boolean replicationConfigExists(String name) {
+    return configLoader.getConfig(name).isPresent();
   }
 
-  public static ReplicationField updateReplication(
-      String id, String name, String sourceId, String destinationId, String filter) {
-    ReplicationField config = new ReplicationField();
-    config.id(id);
-    config.name(name);
-    config.source(createSite(0));
-    config.destination(createSite(1));
-    config.filter(filter);
-    config.itemsTransferred(gen());
-    config.dataTransferred(gen() + " MB");
+  public ReplicationField createReplication(
+      String name, String sourceId, String destinationId, String filter, Boolean biDirectional) {
+    if (replicationConfigExists(name)) {
+      throw new ReplicationException(
+          "Cannot create replication config for "
+              + name
+              + ". Existing configuration already exists");
+    }
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setId(UUID.randomUUID().toString().replaceAll("-", ""));
+    config.setName(name);
+    config.setSource(sourceId);
+    config.setDestination(destinationId);
+    config.setCql(filter);
+    config.setReplicationType(ReplicationType.RESOURCE);
+    config.setDirection(biDirectional ? Direction.BOTH : Direction.PUSH);
+    configLoader.saveConfig(config);
 
-    return config;
+    return getReplicationFieldForConfig(config);
   }
 
-  public static boolean deleteConfig(String id) {
+  public ReplicationField updateReplication(
+      String id,
+      String name,
+      String sourceId,
+      String destinationId,
+      String filter,
+      Boolean biDirectional) {
+    ReplicatorConfig existingConfig =
+        configLoader
+            .getConfig(id)
+            .orElseThrow(
+                () ->
+                    new ReplicationException(
+                        "Could not update replication config for "
+                            + name
+                            + ". No configuration found."));
+
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl(existingConfig);
+    config.setName(name);
+    config.setSource(sourceId);
+    config.setDestination(destinationId);
+    config.setCql(filter);
+    config.setDirection(biDirectional ? Direction.BOTH : Direction.PUSH);
+    configLoader.saveConfig(config);
+    return getReplicationFieldForConfig(config);
+  }
+
+  private ReplicationField getReplicationFieldForConfig(ReplicatorConfig config) {
+    ReplicationField field = new ReplicationField();
+    field.id(config.getId());
+    field.name(config.getName());
+    field.source(
+        getSiteFieldForSite(
+            persistentStore
+                .getSite(config.getSource())
+                .orElseThrow(
+                    () ->
+                        new ReplicationException(
+                            "Could not find site for " + config.getSource()))));
+    field.destination(
+        getSiteFieldForSite(
+            persistentStore
+                .getSite(config.getDestination())
+                .orElseThrow(
+                    () ->
+                        new ReplicationException(
+                            "Could not find site for " + config.getDestination()))));
+    field.filter(config.getCql());
+    field.biDirectional(Direction.BOTH.equals(config.getDirection()));
+    List<ReplicationStatus> statusList = history.getReplicationEvents(config.getName());
+    if (!statusList.isEmpty()) {
+      ReplicationStatus lastStatus = statusList.get(0);
+      field.lastRun(lastStatus.getLastRun());
+      field.firstRun(lastStatus.getStartTime());
+      field.lastSuccess(lastStatus.getLastSuccess());
+    }
+
+    replicator
+        .getActiveSyncRequests()
+        .stream()
+        .filter(sync -> sync.getConfig().getId().equals(config.getId()))
+        .map(SyncRequest::getStatus)
+        .forEach(status -> statusList.add(0, status));
+
+    long bytesTransferred = 0;
+    long itemsTransferred = 0;
+    for (ReplicationStatus status : statusList) {
+      bytesTransferred += status.getPullBytes() + status.getPushBytes();
+      itemsTransferred += status.getPullCount() + status.getPushCount();
+    }
+    if (statusList.isEmpty()) {
+      field.status("NOT_RUN");
+    } else {
+      field.status(statusList.get(0).getStatus().name());
+    }
+
+    field.dataTransferred(String.format("%d MB", bytesTransferred / BYTES_PER_MB));
+    field.itemsTransferred((int) itemsTransferred);
+    return field;
+  }
+
+  private @Nullable ReplicationSiteField getSiteFieldForSite(ReplicationSite site) {
+    if (site == null) {
+      return null;
+    }
+    ReplicationSiteField field = new ReplicationSiteField();
+    field.id(site.getId());
+    field.name(site.getName());
+    AddressField address = new AddressField();
+    address.url(site.getUrl().toString());
+    address.hostname(site.getUrl().getHost());
+    address.port(site.getUrl().getPort());
+    field.address(address);
+    return field;
+  }
+
+  public boolean deleteConfig(String id) {
+    ReplicatorConfig config =
+        configLoader
+            .getAllConfigs()
+            .stream()
+            .filter(c -> c.getId().equals(id))
+            .findFirst()
+            .orElse(null);
+    if (config == null) {
+      return false;
+    }
+    configLoader.removeConfig(config);
     return true;
   }
 
@@ -121,62 +231,19 @@ public class ReplicationUtils {
     Set<ReplicationSite> sites = persistentStore.getSites();
 
     for (ReplicationSite site : sites) {
-      ReplicationSiteField field = new ReplicationSiteField();
-      AddressField address = new AddressField();
-      URL siteUrl = site.getUrl();
-      address.url(siteUrl.toString());
-      address.hostname(siteUrl.getHost());
-      address.port(siteUrl.getPort());
-
-      field.id(site.getId());
-      field.name(site.getName());
-      field.address(address);
-      siteFields.add(field);
+      siteFields.add(getSiteFieldForSite(site));
     }
 
     return siteFields;
   }
 
-  public static ListField<ReplicationField> getReplications() {
-    ListField<ReplicationField> configs = new ReplicationField.ListImpl();
-    for (int i = 0; i < TEST_ENTRIES; i++) {
-      configs.add(createReplication(i));
-    }
-    return configs;
-  }
-
-  private static ReplicationSiteField createSite(int num) {
-    ReplicationSiteField site = new ReplicationSiteField();
-    AddressField address = new AddressField();
-    address.hostname("site");
-    address.port(num);
-    site.address(address);
-    site.id("id" + num);
-    site.name("site" + num);
-
-    return site;
-  }
-
-  private static ReplicationField createReplication(int num) {
-    ReplicationField config = new ReplicationField();
-    String id = "id" + num;
-    config.id(id);
-    config.name("config" + num);
-    config.source(createSite(num));
-    config.destination(createSite(num + 1));
-    config.filter("config is like " + num);
-    config.itemsTransferred(gen());
-    config.dataTransferred(gen() + " MB");
-
-    return config;
-  }
-
-  // generates a random int
-  private static int gen() {
-    return gen(10000);
-  }
-
-  private static int gen(int bound) {
-    return ThreadLocalRandom.current().nextInt(0, bound);
+  public ListField<ReplicationField> getReplications() {
+    ListField<ReplicationField> fields = new ReplicationField.ListImpl();
+    configLoader
+        .getAllConfigs()
+        .stream()
+        .map(this::getReplicationFieldForConfig)
+        .forEach(fields::add);
+    return fields;
   }
 }

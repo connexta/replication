@@ -13,16 +13,31 @@
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
     <reference id="replicationSitePersistentStore" interface="org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore"/>
+    <reference id="configLoader" interface="org.codice.ditto.replication.api.ReplicatorConfigLoader"/>
+    <reference id="history" interface="org.codice.ditto.replication.api.ReplicatorHistory"/>
+    <reference id="replicator" interface="org.codice.ditto.replication.api.Replicator"/>
+
     <bean id="replicationUtils" class="org.codice.ditto.replication.admin.query.ReplicationUtils">
         <argument ref="replicationSitePersistentStore"/>
+        <argument ref="configLoader"/>
+        <argument ref="history"/>
+        <argument ref="replicator"/>
     </bean>
-    <bean id="getReplications" class="org.codice.ditto.replication.admin.query.replications.discover.GetReplications"/>
+    <bean id="getReplications" class="org.codice.ditto.replication.admin.query.replications.discover.GetReplications">
+        <argument ref="replicationUtils"/>
+    </bean>
     <bean id="getReplicationSites" class="org.codice.ditto.replication.admin.query.sites.discover.GetReplicationSites">
         <argument ref="replicationUtils"/>
     </bean>
-    <bean id="createReplication" class="org.codice.ditto.replication.admin.query.replications.persist.CreateReplication"/>
-    <bean id="updateReplication" class="org.codice.ditto.replication.admin.query.replications.persist.UpdateReplication"/>
-    <bean id="deleteReplication" class="org.codice.ditto.replication.admin.query.replications.persist.DeleteReplication"/>
+    <bean id="createReplication" class="org.codice.ditto.replication.admin.query.replications.persist.CreateReplication">
+        <argument ref="replicationUtils"/>
+    </bean>
+    <bean id="updateReplication" class="org.codice.ditto.replication.admin.query.replications.persist.UpdateReplication">
+        <argument ref="replicationUtils"/>
+    </bean>
+    <bean id="deleteReplication" class="org.codice.ditto.replication.admin.query.replications.persist.DeleteReplication">
+        <argument ref="replicationUtils"/>
+    </bean>
     <bean id="createReplicationSite" class="org.codice.ditto.replication.admin.query.sites.persist.CreateReplicationSite">
         <argument ref="replicationUtils"/>
     </bean>

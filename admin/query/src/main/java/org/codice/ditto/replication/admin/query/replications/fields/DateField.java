@@ -49,7 +49,11 @@ public class DateField extends StringField {
   }
 
   public void setValue(Instant instant) {
-    super.setValue(instant.toString());
+    if (instant != null) {
+      super.setValue(instant.toString());
+    } else {
+      super.setValue(null);
+    }
   }
 
   @Override

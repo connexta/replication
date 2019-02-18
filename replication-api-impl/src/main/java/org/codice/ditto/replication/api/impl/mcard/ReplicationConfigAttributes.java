@@ -55,6 +55,22 @@ public class ReplicationConfigAttributes implements ReplicationConfig, MetacardT
             BasicTypes.STRING_TYPE));
     descriptors.add(
         new AttributeDescriptorImpl(
+            ReplicationConfig.SOURCE,
+            true /* indexed */,
+            true /* stored */,
+            false /* tokenized */,
+            false /* multivalued */,
+            BasicTypes.STRING_TYPE));
+    descriptors.add(
+        new AttributeDescriptorImpl(
+            ReplicationConfig.DESTINATION,
+            true /* indexed */,
+            true /* stored */,
+            false /* tokenized */,
+            false /* multivalued */,
+            BasicTypes.STRING_TYPE));
+    descriptors.add(
+        new AttributeDescriptorImpl(
             ReplicationConfig.CQL,
             true /* indexed */,
             true /* stored */,

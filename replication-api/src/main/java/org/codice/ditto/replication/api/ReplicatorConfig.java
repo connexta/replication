@@ -13,7 +13,6 @@
  */
 package org.codice.ditto.replication.api;
 
-import java.net.URL;
 import javax.annotation.Nullable;
 
 public interface ReplicatorConfig {
@@ -48,11 +47,18 @@ public interface ReplicatorConfig {
   ReplicationType getReplicationType();
 
   /**
-   * Get the URL endpoint associated with this configuration
+   * Get the source site id associated with this configuration
    *
-   * @return configuration url
+   * @return source id
    */
-  URL getUrl();
+  String getSource();
+
+  /**
+   * Get the destination site id associated with this configuration
+   *
+   * @return destination id
+   */
+  String getDestination();
 
   /**
    * Get the cql filter used for determining the data set to replicate

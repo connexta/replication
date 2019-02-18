@@ -289,6 +289,7 @@
                         <Export-Package>
                             org.codice.ditto.replication.api.impl.data,
                             org.codice.ditto.replication.api.impl.mcard,
+                            org.codice.ditto.replication.api.impl.modern
                         </Export-Package>
                         <Embed-Dependency>
                             spatial-csw-source-common,
@@ -326,20 +327,20 @@
                                 <rule>
                                     <element>BUNDLE</element>
                                     <limits>
-                                        <limit>
+                                        <limit implementation="org.codice.jacoco.LenientLimit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.0</minimum>
+                                            <minimum>0.31</minimum>
                                         </limit>
-                                        <limit>
+                                        <limit implementation="org.codice.jacoco.LenientLimit">
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.0</minimum>
+                                            <minimum>0.26</minimum>
                                         </limit>
-                                        <limit>
+                                        <limit implementation="org.codice.jacoco.LenientLimit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.0</minimum>
+                                            <minimum>0.27</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

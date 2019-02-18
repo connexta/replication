@@ -13,8 +13,6 @@
  */
 package org.codice.ditto.replication.admin.query.replications.persist;
 
-import static org.codice.ditto.replication.admin.query.ReplicationUtils.deleteConfig;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
@@ -24,6 +22,7 @@ import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ditto.replication.admin.query.ReplicationUtils;
 
 public class DeleteReplication extends BaseFunctionField<BooleanField> {
 
@@ -35,16 +34,18 @@ public class DeleteReplication extends BaseFunctionField<BooleanField> {
 
   private PidField id;
 
-  public DeleteReplication() {
-    super(FIELD_NAME, DESCRIPTION);
+  private ReplicationUtils replicationUtils;
 
+  public DeleteReplication(ReplicationUtils replicationUtils) {
+    super(FIELD_NAME, DESCRIPTION);
+    this.replicationUtils = replicationUtils;
     id = new PidField("id");
   }
 
   @Override
   public BooleanField performFunction() {
     BooleanField successful = new BooleanField();
-    successful.setValue(deleteConfig(id.getValue()));
+    successful.setValue(replicationUtils.deleteConfig(id.getValue()));
 
     return successful;
   }
@@ -61,7 +62,7 @@ public class DeleteReplication extends BaseFunctionField<BooleanField> {
 
   @Override
   public FunctionField<BooleanField> newInstance() {
-    return new DeleteReplication();
+    return new DeleteReplication(replicationUtils);
   }
 
   @Override

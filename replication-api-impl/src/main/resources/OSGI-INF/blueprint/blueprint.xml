@@ -35,7 +35,7 @@
         <argument ref="persistentStore"/>
     </bean>
 
-    <bean id="replicationSitePersistentStore" class="org.codice.ditto.replication.api.impl.modern.ReplicationSitePersistentStoreImpl">
+    <bean id="replicationSitePersistentStore" class="org.codice.ditto.replication.api.impl.modern.ReplicationSitePersistentStoreImpl"  init-method="init">
         <argument ref="persistentStore"/>
     </bean>
 
@@ -68,6 +68,7 @@
         </property>
         <property name="securityManager" ref="securityManager"/>
         <property name="encryptionService" ref="encryptionService"/>
+        <property name="catalogFramework" ref="catalog"/>
         <!-- CSW Store Properties -->
         <property name="schemaTransformerManager" ref="metacardTransformerManager"/>
         <property name="cswTransactionWriter" ref="cswTransactionWriter"/>
@@ -88,13 +89,10 @@
         <argument ref="filterBuilder"/>
         <argument ref="metacardHelper"/>
         <argument ref="replicationConfig"/>
+        <argument ref="replicationSitePersistentStore"/>
     </bean>
 
     <service ref="configLoader" interface="org.codice.ditto.replication.api.ReplicatorConfigLoader"/>
-
-    <bean id="localResourceStore" class="org.codice.ditto.replication.api.impl.LocalCatalogResourceStore">
-        <argument ref="catalog"/>
-    </bean>
 
     <bean id="historyService" class="org.codice.ditto.replication.api.impl.ReplicatorHistoryImpl" init-method="init">
         <argument ref="catalog"/>
@@ -109,9 +107,9 @@
     <bean id="replicator" class="org.codice.ditto.replication.api.impl.ReplicatorImpl" init-method="init"
           destroy-method="cleanUp">
         <argument ref="catalogResourceStoreFactory"/>
-        <argument ref="localResourceStore"/>
         <argument ref="historyService"/>
         <argument ref="replicationPersistentStore"/>
+        <argument ref="replicationSitePersistentStore"/>
         <argument ref="replicatorImplExecutor"/>
         <argument ref="filterBuilder"/>
     </bean>

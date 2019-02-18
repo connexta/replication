@@ -14,11 +14,14 @@
 package org.codice.ditto.replication.admin.query.replications.fields;
 
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import org.codice.ddf.admin.api.Field;
 import org.codice.ddf.admin.common.fields.base.BaseListField;
 import org.codice.ddf.admin.common.fields.base.BaseObjectField;
+import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.base.scalar.IntegerField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.PidField;
@@ -43,8 +46,18 @@ public class ReplicationField extends BaseObjectField {
 
   private StringField dataTransferred;
 
+  private BooleanField biDirectional;
+
+  private ReplicationStatus status;
+
+  private DateField lastRun;
+
+  private DateField firstRun;
+
+  private DateField lastSuccess;
+
   public ReplicationField() {
-    super("replication", "Replication", DESCRIPTION);
+    super("replication", "ReplicationConfig", DESCRIPTION);
     id = new PidField("id");
     name = new StringField("name");
     source = new ReplicationSiteField("source");
@@ -52,6 +65,11 @@ public class ReplicationField extends BaseObjectField {
     filter = new CqlExpressionField("filter");
     itemsTransferred = new IntegerField("itemsTransferred");
     dataTransferred = new StringField("dataTransferred");
+    biDirectional = new BooleanField("biDirectional");
+    status = new ReplicationStatus();
+    lastRun = new DateField("lastRun");
+    firstRun = new DateField("firstRun");
+    lastSuccess = new DateField("lastSuccess");
   }
 
   // setters
@@ -80,6 +98,11 @@ public class ReplicationField extends BaseObjectField {
     return this;
   }
 
+  public ReplicationField biDirectional(Boolean biDirectional) {
+    this.biDirectional.setValue(biDirectional);
+    return this;
+  }
+
   public ReplicationField itemsTransferred(int itemsTransferred) {
     this.itemsTransferred.setValue(itemsTransferred);
     return this;
@@ -88,6 +111,48 @@ public class ReplicationField extends BaseObjectField {
   public ReplicationField dataTransferred(String dataTransferred) {
     this.dataTransferred.setValue(dataTransferred);
     return this;
+  }
+
+  public ReplicationField status(String status) {
+    this.status.setValue(status);
+    return this;
+  }
+
+  public ReplicationField lastRun(String last) {
+    this.lastRun.setValue(last);
+    return this;
+  }
+
+  public ReplicationField lastRun(Date last) {
+    this.lastRun.setValue(getInstantOrNull(last));
+    return this;
+  }
+
+  public ReplicationField firstRun(String first) {
+    this.firstRun.setValue(first);
+    return this;
+  }
+
+  public ReplicationField firstRun(Date first) {
+    this.firstRun.setValue(getInstantOrNull(first));
+    return this;
+  }
+
+  public ReplicationField lastSuccess(String success) {
+    this.lastSuccess.setValue(success);
+    return this;
+  }
+
+  public ReplicationField lastSuccess(Date success) {
+    this.lastSuccess.setValue(getInstantOrNull(success));
+    return this;
+  }
+
+  private Instant getInstantOrNull(Date date) {
+    if (date != null) {
+      return date.toInstant();
+    }
+    return null;
   }
 
   // getters
@@ -123,6 +188,10 @@ public class ReplicationField extends BaseObjectField {
     return filter;
   }
 
+  public Boolean biDirectional() {
+    return biDirectional.getValue();
+  }
+
   public int itemsTransferred() {
     return itemsTransferred.getValue();
   }
@@ -139,10 +208,37 @@ public class ReplicationField extends BaseObjectField {
     return dataTransferred;
   }
 
+  public ReplicationStatus status() {
+    return status;
+  }
+
+  public DateField lastRun() {
+    return lastRun;
+  }
+
+  public DateField lastSuccess() {
+    return lastSuccess;
+  }
+
+  public DateField firstRun() {
+    return firstRun;
+  }
+
   @Override
   public List<Field> getFields() {
     return ImmutableList.of(
-        id, name, source, destination, filter, itemsTransferred, dataTransferred);
+        id,
+        name,
+        source,
+        destination,
+        filter,
+        itemsTransferred,
+        dataTransferred,
+        biDirectional,
+        status,
+        lastRun,
+        lastSuccess,
+        firstRun);
   }
 
   public static class ListImpl extends BaseListField<ReplicationField> {

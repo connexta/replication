@@ -32,13 +32,16 @@ public class GetReplications extends BaseFunctionField<ListField<ReplicationFiel
 
   private static final ListField<ReplicationField> RETURN_TYPE = new ReplicationField.ListImpl();
 
-  public GetReplications() {
+  private ReplicationUtils replicationUtils;
+
+  public GetReplications(ReplicationUtils replicationUtils) {
     super(FIELD_NAME, DESCRIPTION);
+    this.replicationUtils = replicationUtils;
   }
 
   @Override
   public ListField<ReplicationField> performFunction() {
-    return ReplicationUtils.getReplications();
+    return replicationUtils.getReplications();
   }
 
   @Override
@@ -58,6 +61,6 @@ public class GetReplications extends BaseFunctionField<ListField<ReplicationFiel
 
   @Override
   public FunctionField<ListField<ReplicationField>> newInstance() {
-    return new GetReplications();
+    return new GetReplications(replicationUtils);
   }
 }

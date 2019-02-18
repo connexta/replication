@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.api.impl;
 
+import com.google.common.annotations.VisibleForTesting;
 import ddf.catalog.CatalogFramework;
 import ddf.catalog.data.Metacard;
 import ddf.catalog.data.MetacardType;
@@ -28,13 +29,17 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
+import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.ReplicatorConfig;
 import org.codice.ditto.replication.api.ReplicatorConfigLoader;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
+import org.codice.ditto.replication.api.modern.ReplicationSite;
+import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,15 +57,19 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
 
   private final MetacardType configMetacardType;
 
+  private final ReplicationSitePersistentStore siteStore;
+
   public MetacardConfigLoader(
       CatalogFramework framework,
       FilterBuilder filterBuilder,
       MetacardHelper helper,
-      MetacardType configMetacardType) {
+      MetacardType configMetacardType,
+      ReplicationSitePersistentStore siteStore) {
     this.framework = framework;
     this.filterBuilder = filterBuilder;
     this.helper = helper;
     this.configMetacardType = configMetacardType;
+    this.siteStore = siteStore;
   }
 
   @Override
@@ -144,13 +153,18 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
     }
   }
 
-  private Metacard getMetacardFromConfig(ReplicatorConfig config, Metacard existingMetacard) {
-    if (config.getUrl() == null || config.getCql() == null || config.getName() == null) {
+  @VisibleForTesting
+  Metacard getMetacardFromConfig(ReplicatorConfig config, Metacard existingMetacard) {
+    if (config.getDestination() == null
+        || config.getSource() == null
+        || config.getCql() == null
+        || config.getName() == null) {
       LOGGER.warn(
-          "Invalid replication configuration found. {} is missing one or more required fields. {}, {}, {}",
+          "Invalid replication configuration found. {} is missing one or more required fields. {}, {}, {}, {}",
           config.getName(),
           ReplicationConfig.NAME,
-          ReplicationConfig.URL,
+          ReplicationConfig.SOURCE,
+          ReplicationConfig.DESTINATION,
           ReplicationConfig.CQL);
       return null;
     }
@@ -159,11 +173,16 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
     if (mcard == null) {
       mcard = new MetacardImpl(configMetacardType);
       ((MetacardImpl) mcard).setTags(Collections.singleton(ReplicationConfig.METACARD_TAG));
+    } else {
+      // needed to handle potentially new attributes that old metacardtypes from old configs don't
+      // have
+      mcard = new MetacardImpl(mcard, configMetacardType);
     }
 
     helper.setIfPresent(mcard, ReplicationConfig.NAME, config.getName());
     helper.setIfPresent(mcard, ReplicationConfig.DESCRIPTION, config.getDescription());
-    helper.setIfPresent(mcard, ReplicationConfig.URL, config.getUrl().toString());
+    helper.setIfPresent(mcard, ReplicationConfig.DESTINATION, config.getDestination());
+    helper.setIfPresent(mcard, ReplicationConfig.SOURCE, config.getSource());
     helper.setIfPresent(mcard, ReplicationConfig.CQL, config.getCql());
     helper.setIfPresentOrDefault(
         mcard,
@@ -171,7 +190,10 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
         config.getReplicationType(),
         ReplicationType.METACARD.toString());
     helper.setIfPresentOrDefault(
-        mcard, ReplicationConfig.DIRECTION, config.getDirection(), Direction.PULL.toString());
+        mcard,
+        ReplicationConfig.DIRECTION,
+        config.getDirection().toString(),
+        Direction.PUSH.toString());
     helper.setIfPresentOrDefault(
         mcard,
         ReplicationConfig.FAILURE_RETRY_COUNT,
@@ -181,7 +203,8 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
     return mcard;
   }
 
-  private ReplicatorConfig getConfigFromMetacard(Metacard mcard) {
+  @VisibleForTesting
+  ReplicatorConfig getConfigFromMetacard(Metacard mcard) {
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setId(mcard.getId());
     config.setName(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.NAME, null));
@@ -190,7 +213,7 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
     config.setDirection(
         Direction.valueOf(
             helper.getAttributeValueOrDefault(
-                mcard, ReplicationConfig.DIRECTION, Direction.PULL.name())));
+                mcard, ReplicationConfig.DIRECTION, Direction.PUSH.name())));
     config.setReplicationType(
         ReplicationType.valueOf(
             helper.getAttributeValueOrDefault(
@@ -200,24 +223,63 @@ public class MetacardConfigLoader implements ReplicatorConfigLoader {
             mcard, ReplicationConfig.FAILURE_RETRY_COUNT, DEFAULT_FAILURE_RETRY_COUNT));
 
     try {
-      config.setUrl(new URL(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.URL, null)));
+      String oldUrl = helper.getAttributeValueOrDefault(mcard, ReplicationConfig.URL, null);
+      if (oldUrl != null) {
+        if (config.getDirection().equals(Direction.PULL)) {
+          config.setSource(getOrCreateSite(oldUrl).getId());
+          config.setDestination(getOrCreateSite(SystemBaseUrl.INTERNAL.getBaseUrl()).getId());
+          config.setDirection(Direction.PUSH);
+        } else {
+          config.setDestination(getOrCreateSite(oldUrl).getId());
+          config.setSource(getOrCreateSite(SystemBaseUrl.INTERNAL.getBaseUrl()).getId());
+        }
+      } else {
+        config.setDestination(
+            helper.getAttributeValueOrDefault(mcard, ReplicationConfig.DESTINATION, null));
+        config.setSource(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.SOURCE, null));
+      }
+
     } catch (MalformedURLException e) {
       LOGGER.warn(
           "Could not create URL from {}. Unable to create ReplicatorConfig from metacard.",
-          helper.getAttributeValueOrDefault(mcard, ReplicationConfig.URL, null),
-          e);
+          (String) helper.getAttributeValueOrDefault(mcard, ReplicationConfig.URL, null));
+      return null;
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.warn("Could not lookup or create site for {}", config.getName());
+      return null;
     }
     config.setCql(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.CQL, null));
 
-    if (config.getUrl() == null || config.getCql() == null || config.getName() == null) {
+    if (config.getDestination() == null
+        || config.getSource() == null
+        || config.getCql() == null
+        || config.getName() == null) {
       LOGGER.warn(
-          "Invalid replication configuration found. {} is missing one or more required fields. {}, {}, {}",
+          "Invalid replication configuration found. {} is missing one or more required fields. {}, {}, {}, {}",
           mcard.getId(),
           ReplicationConfig.NAME,
-          ReplicationConfig.URL,
+          ReplicationConfig.SOURCE,
+          ReplicationConfig.DESTINATION,
           ReplicationConfig.CQL);
       return null;
     }
     return config;
+  }
+
+  @VisibleForTesting
+  ReplicationSite getOrCreateSite(String siteUrl) throws MalformedURLException {
+    ReplicationSite replicationSite =
+        siteStore
+            .getSites()
+            .stream()
+            .filter(s -> s.getUrl().toString().equals(siteUrl))
+            .findFirst()
+            .orElse(null);
+    if (replicationSite != null) {
+      return replicationSite;
+    } else {
+      URL url = new URL(siteUrl);
+      return siteStore.saveSite(url.getHost(), siteUrl);
+    }
   }
 }
