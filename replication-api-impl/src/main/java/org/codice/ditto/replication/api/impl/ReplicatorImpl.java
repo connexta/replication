@@ -106,6 +106,7 @@ public class ReplicatorImpl implements Replicator {
             } catch (InterruptedException e) {
               LOGGER.trace("InterruptedException in executor. This is expected during shutdown.");
               Thread.currentThread().interrupt();
+              break;
             }
           }
         });

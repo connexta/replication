@@ -15,6 +15,7 @@ package org.codice.ditto.replication.api;
 
 import java.util.Date;
 import java.util.UUID;
+import javax.annotation.Nullable;
 
 public class ReplicationStatus {
 
@@ -23,6 +24,10 @@ public class ReplicationStatus {
   private final String replicatorName;
 
   private Date startTime;
+
+  @Nullable private Date lastSuccess;
+
+  @Nullable private Date lastRun;
 
   private long duration = -1;
 
@@ -64,6 +69,22 @@ public class ReplicationStatus {
 
   public void setStartTime(Date startTime) {
     this.startTime = startTime;
+  }
+
+  public @Nullable Date getLastRun() {
+    return lastRun;
+  }
+
+  public void setLastRun(@Nullable Date lastRun) {
+    this.lastRun = lastRun;
+  }
+
+  public @Nullable Date getLastSuccess() {
+    return lastSuccess;
+  }
+
+  public void setLastSuccess(@Nullable Date lastSuccess) {
+    this.lastSuccess = lastSuccess;
   }
 
   public void markStartTime() {

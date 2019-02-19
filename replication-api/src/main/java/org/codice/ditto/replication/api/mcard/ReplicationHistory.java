@@ -34,4 +34,8 @@ public interface ReplicationHistory {
   String PULL_BYTES = "replication-history.pull-bytes";
 
   String STATUS = "replication-history.status";
+
+  String LAST_RUN = "replication-history.last-run";
+
+  String LAST_SUCCESS = "replication-history.last-success";
 }

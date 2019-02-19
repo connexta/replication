@@ -57,12 +57,13 @@ public class StatusCommand extends SubjectCommands {
     shellTable.column("Status");
     shellTable.column("Duration");
     shellTable.column("# Pulled");
-    shellTable.column("# Pull Ingests Failed");
+    shellTable.column("# Pulls Failed");
     shellTable.column("MB Pulled");
     shellTable.column("# Pushed");
-    shellTable.column("# Push Ingests Failed");
+    shellTable.column("# Pushes Failed");
     shellTable.column("MB Pushed");
-    shellTable.column("Start Time");
+    shellTable.column("Last Run");
+    shellTable.column("Last Success");
     shellTable.emptyTableText("There are no running, pending, or completed replication jobs.");
 
     final List<ReplicationStatus> replicationStatuses = new ArrayList<>();
@@ -100,7 +101,8 @@ public class StatusCommand extends SubjectCommands {
               replicationStatus.getPushCount(),
               replicationStatus.getPushFailCount(),
               String.format("%.2f", (double) replicationStatus.getPushBytes() / MB_PER_BYTE),
-              replicationStatus.getStartTime());
+              replicationStatus.getLastRun(),
+              replicationStatus.getLastSuccess());
     }
 
     shellTable.print(console);

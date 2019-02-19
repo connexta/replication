@@ -14,7 +14,9 @@
 package org.codice.ditto.replication.api;
 
 import java.util.List;
+import java.util.Set;
 
+/** Persistence interface for storing, retrieving, and deleting history items */
 public interface ReplicatorHistory {
 
   /**
@@ -38,4 +40,18 @@ public interface ReplicatorHistory {
    * @param replicationStatus ReplicationConfig event to store
    */
   void addReplicationEvent(ReplicationStatus replicationStatus);
+
+  /**
+   * Remove a replication event from the history
+   *
+   * @param replicationStatus replication event to remove
+   */
+  void removeReplicationEvent(ReplicationStatus replicationStatus);
+
+  /**
+   * Remove set of replication events from the history
+   *
+   * @param ids replication event ids
+   */
+  void removeReplicationEvents(Set<String> ids);
 }
