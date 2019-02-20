@@ -125,6 +125,7 @@ const defaultFormState = {
   filter: '',
   biDirectional: false,
   filterErrorText: '',
+  nameErrorText: '',
 }
 
 class AddReplication extends React.Component {
@@ -171,6 +172,12 @@ class AddReplication extends React.Component {
     })
   }
 
+  handleInvalidName() {
+    this.setState({
+      nameErrorText: 'Name already in use!',
+    })
+  }
+
   render() {
     const { Button: AddButton, classes } = this.props
     const {
@@ -181,6 +188,7 @@ class AddReplication extends React.Component {
       filter,
       biDirectional,
       filterErrorText,
+      nameErrorText,
     } = this.state
 
     return (
@@ -202,6 +210,8 @@ class AddReplication extends React.Component {
               cursor={this.handleChange({
                 id: 'name',
               })}
+              helperText={nameErrorText ? nameErrorText : ''}
+              error={nameErrorText ? true : false}
             />
             <Query query={sitesQuery}>
               {({ loading, error, data }) => {
@@ -286,6 +296,8 @@ class AddReplication extends React.Component {
                   error.graphQLErrors.forEach(e => {
                     if (e.message === 'INVALID_FILTER') {
                       this.handleInvalidFilter()
+                    } else if (e.message === 'DUPLICATE_CONFIGURATION') {
+                      this.handleInvalidName()
                     }
                   })
               }}

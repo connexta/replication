@@ -13,6 +13,7 @@ import AddIcon from '@material-ui/icons/Add'
 import sitesQuery from './gql/sitesQuery'
 import styled from 'styled-components'
 import addSite from './gql/addSite'
+import { CircularProgress } from '@material-ui/core'
 
 const CenteredCardContent = styled(CardContent)`
   margin: auto;
@@ -26,6 +27,7 @@ const defaultState = {
   name: '',
   hostname: '',
   port: 0,
+  nameErrorText: '',
 }
 
 export default class AddSite extends React.Component {
@@ -43,8 +45,14 @@ export default class AddSite extends React.Component {
     this.setState({ [key]: event.target.value })
   }
 
+  handleInvalidName() {
+    this.setState({
+      nameErrorText: 'Name already in use!',
+    })
+  }
+
   render() {
-    const { open, name, hostname, port } = this.state
+    const { open, name, hostname, port, nameErrorText } = this.state
 
     return (
       <div>
@@ -72,6 +80,8 @@ export default class AddSite extends React.Component {
               type='text'
               onChange={this.handleChange('name')}
               fullWidth
+              helperText={nameErrorText ? nameErrorText : ''}
+              error={nameErrorText ? true : false}
             />
             <TextField
               margin='dense'
@@ -95,8 +105,21 @@ export default class AddSite extends React.Component {
               Cancel
             </Button>
 
-            <Mutation mutation={addSite}>
-              {(createReplicationSite, { loading, error }) => (
+            <Mutation
+              mutation={addSite}
+              onError={error => {
+                error.graphQLErrors &&
+                  error.graphQLErrors.forEach(e => {
+                    if (e.message === 'DUPLICATE_SITE') {
+                      this.handleInvalidName()
+                    }
+                  })
+              }}
+              onCompleted={() => {
+                this.setState(defaultState)
+              }}
+            >
+              {(createReplicationSite, { loading }) => (
                 <div>
                   <Button
                     color='primary'
@@ -125,13 +148,10 @@ export default class AddSite extends React.Component {
                           })
                         },
                       })
-                      this.setState(defaultState)
                     }}
                   >
-                    Save
+                    Save {loading && <CircularProgress size={10} />}
                   </Button>
-                  {error && <p>Error...:(</p>}
-                  {loading && <p>Loading...</p>}
                 </div>
               )}
             </Mutation>
