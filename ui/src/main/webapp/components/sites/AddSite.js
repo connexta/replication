@@ -76,7 +76,7 @@ export default class AddSite extends React.Component {
               autoFocus
               margin='dense'
               id='name'
-              label='Name'
+              label='Name *'
               type='text'
               onChange={this.handleChange('name')}
               fullWidth
@@ -86,7 +86,7 @@ export default class AddSite extends React.Component {
             <TextField
               margin='dense'
               id='hostname'
-              label='Hostname'
+              label='Hostname *'
               type='text'
               onChange={this.handleChange('hostname')}
               fullWidth
@@ -94,7 +94,7 @@ export default class AddSite extends React.Component {
             <TextField
               margin='dense'
               id='port'
-              label='Port'
+              label='Port *'
               type='number'
               onChange={this.handleChange('port')}
               fullWidth
@@ -122,6 +122,7 @@ export default class AddSite extends React.Component {
               {(createReplicationSite, { loading }) => (
                 <div>
                   <Button
+                    disabled={!(name && hostname && port)}
                     color='primary'
                     onClick={() => {
                       createReplicationSite({
