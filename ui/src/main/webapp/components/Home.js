@@ -1,12 +1,9 @@
 import React from 'react'
+import ReplicationsContainer from './replications/ReplicationsContainer'
 
 class Home extends React.Component {
   render() {
-    return (
-      <div>
-        <p>Home</p>
-      </div>
-    )
+    return <ReplicationsContainer />
   }
 }
 

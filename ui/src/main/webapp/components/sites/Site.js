@@ -1,32 +1,95 @@
 import React from 'react'
-import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
-import PowerIcon from '@material-ui/icons/Power'
-import PowerOffIcon from '@material-ui/icons/PowerOff'
-import { expandingTile, siteHeader, siteContent } from './styles.css'
-import { CardHeader } from '@material-ui/core'
+import {
+  CardHeader,
+  IconButton,
+  Card,
+  Typography,
+  withStyles,
+} from '@material-ui/core'
+import DeleteForever from '@material-ui/icons/DeleteForever'
+import CardActions from '@material-ui/core/CardActions'
+import gql from 'graphql-tag'
+import { Mutation } from 'react-apollo'
+import sitesQuery from './gql/sitesQuery'
 import PropTypes from 'prop-types'
 
-export default function Site(props) {
-  const { name, connected, onClick } = props
-
-  let status
-  if (connected) {
-    status = <PowerIcon fontSize='large' />
-  } else {
-    status = <PowerOffIcon fontSize='large' color='error' />
+const DELETE_SITE = gql`
+  mutation deleteReplicationSite($id: Pid!) {
+    deleteReplicationSite(id: $id)
   }
+`
+
+const styles = {
+  centered: {
+    'text-align': 'center',
+    'margin-top': -15,
+    clear: 'both',
+  },
+  right: {
+    float: 'right',
+    'margin-bottom': -15,
+  },
+  card: {
+    margin: 20,
+    width: 200,
+    height: 200,
+  },
+}
+
+function Site(props) {
+  const { name, content, id, classes } = props
 
   return (
-    <Card onClick={onClick} className={expandingTile}>
-      <CardHeader title={name} className={siteHeader} />
-      <CardContent className={siteContent}>{status}</CardContent>
+    <Card className={classes.card}>
+      <CardActions className={classes.right}>
+        <Mutation mutation={DELETE_SITE}>
+          {(deleteReplicationSite, { loading, error }) => (
+            <div>
+              <IconButton
+                color='primary'
+                onClick={() => {
+                  deleteReplicationSite({
+                    variables: {
+                      id: id,
+                    },
+                    update: store => {
+                      const data = store.readQuery({
+                        query: sitesQuery,
+                      })
+
+                      data.replication.sites = data.replication.sites.filter(
+                        site => site.id !== id
+                      )
+
+                      store.writeQuery({
+                        query: sitesQuery,
+                        data,
+                      })
+                    },
+                  })
+                }}
+              >
+                <DeleteForever />
+              </IconButton>
+              {error && <Typography>Error...</Typography>}
+              {loading && <Typography>Loading...</Typography>}
+            </div>
+          )}
+        </Mutation>
+      </CardActions>
+      <CardHeader title={name} className={classes.centered} />
+      <CardContent className={classes.centered}>
+        <Typography>{content}</Typography>
+      </CardContent>
     </Card>
   )
 }
 
 Site.propTypes = {
   name: PropTypes.string.isRequired,
-  connected: PropTypes.bool.isRequired,
-  onClick: PropTypes.func.isRequired,
+  content: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
 }
+
+export default withStyles(styles)(Site)

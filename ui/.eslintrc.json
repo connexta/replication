@@ -15,11 +15,17 @@
   "plugins": ["prettier", "react", "eslint-plugin-html"],
   "rules": {
     "prettier/prettier": "error",
-    "no-unused-vars": "error"
+    "no-unused-vars": "error",
+    "react/prop-types": "off"
   },
   "settings": {
     "react": {
       "version": "detect"
     }
+  },
+  "globals": {
+    "test": false,
+    "mount": false,
+    "expect": false
   }
 }

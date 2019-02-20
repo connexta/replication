@@ -16,30 +16,6 @@ let config = {
         exclude: /node_modules/,
         use: ['babel-loader'],
       },
-      {
-        test: /\.html$/,
-        use: [
-          {
-            loader: 'html-loader',
-            options: { minimize: true },
-          },
-        ],
-      },
-      {
-        test: /\.css$/,
-        use: [
-          'style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              sourceMap: true,
-              modules: true,
-              importLoaders: 1,
-              localIdentName: '[name]__[local]___[hash:base64:5]',
-            },
-          },
-        ],
-      },
     ],
   },
   plugins: [

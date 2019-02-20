@@ -1,7 +1,5 @@
 import React from 'react'
 import { Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
-
 import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
 import Dialog from '@material-ui/core/Dialog'
@@ -9,31 +7,29 @@ import DialogActions from '@material-ui/core/DialogActions'
 import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
-import Card from '@material-ui/core/Card'
+import ExpandingCard from '../common/ExpandingCard'
 import CardContent from '@material-ui/core/CardContent'
 import AddIcon from '@material-ui/icons/Add'
-import sitesQuery from './sitesQuery'
-import { expandingTile, centered } from './styles.css'
+import sitesQuery from './gql/sitesQuery'
+import styled from 'styled-components'
+import addSite from './gql/addSite'
 
-const ADD_SITE = gql`
-  mutation createReplicationSite($name: String!, $address: Address!) {
-    createReplicationSite(name: $name, address: $address) {
-      id
-      name
-      address {
-        url
-      }
-    }
-  }
+const CenteredCardContent = styled(CardContent)`
+  margin: auto;
+  margin-top: 30%;
+  display: flex;
+  justify-content: center;
 `
 
+const defaultState = {
+  open: false,
+  name: '',
+  hostname: '',
+  port: 0,
+}
+
 export default class AddSite extends React.Component {
-  state = {
-    open: false,
-    name: '',
-    hostname: '',
-    port: 0,
-  }
+  state = defaultState
 
   handleClickOpen = () => {
     this.setState({ open: true })
@@ -48,23 +44,25 @@ export default class AddSite extends React.Component {
   }
 
   render() {
+    const { open, name, hostname, port } = this.state
+
     return (
       <div>
-        <Card className={expandingTile} onClick={this.handleClickOpen}>
-          <CardContent className={centered}>
+        <ExpandingCard onClick={this.handleClickOpen}>
+          <CenteredCardContent>
             <AddIcon fontSize={'large'} />
-          </CardContent>
-        </Card>
+          </CenteredCardContent>
+        </ExpandingCard>
 
         <Dialog
-          open={this.state.open}
+          open={open}
           onClose={this.handleClose}
           aria-labelledby='form-dialog-title'
         >
-          <DialogTitle id='form-dialog-title'>Create new Site</DialogTitle>
+          <DialogTitle id='form-dialog-title'>Create new Node</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Create a new Site to allow replication to and from.
+              Create a new Node to allow replication to and from.
             </DialogContentText>
             <TextField
               autoFocus
@@ -97,7 +95,7 @@ export default class AddSite extends React.Component {
               Cancel
             </Button>
 
-            <Mutation mutation={ADD_SITE}>
+            <Mutation mutation={addSite}>
               {(createReplicationSite, { loading, error }) => (
                 <div>
                   <Button
@@ -105,11 +103,11 @@ export default class AddSite extends React.Component {
                     onClick={() => {
                       createReplicationSite({
                         variables: {
-                          name: this.state.name,
+                          name: name,
                           address: {
                             host: {
-                              hostname: this.state.hostname,
-                              port: this.state.port,
+                              hostname: hostname,
+                              port: port,
                             },
                           },
                         },
@@ -127,12 +125,7 @@ export default class AddSite extends React.Component {
                           })
                         },
                       })
-                      this.setState({
-                        name: '',
-                        hostname: '',
-                        port: 0,
-                        open: false,
-                      })
+                      this.setState(defaultState)
                     }}
                   >
                     Save
