@@ -22,6 +22,7 @@ import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
+import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 
@@ -70,5 +71,16 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
   @Override
   public Set<String> getFunctionErrorCodes() {
     return ImmutableSet.of();
+  }
+
+  @Override
+  public void validate() {
+    super.validate();
+    if (containsErrorMsgs()) {
+      return;
+    }
+    if (replicationUtils.siteExists(name.getValue())) {
+      addErrorMessage(ReplicationMessages.duplicateSites());
+    }
   }
 }

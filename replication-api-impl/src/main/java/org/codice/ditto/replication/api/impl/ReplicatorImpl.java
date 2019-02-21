@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
+import org.apache.commons.io.IOUtils;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
@@ -40,6 +41,8 @@ import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.modern.ReplicationSite;
+import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,11 +52,11 @@ public class ReplicatorImpl implements Replicator {
 
   private final ReplicatorStoreFactory replicatorStoreFactory;
 
-  private final ReplicationStore localStore;
-
   private final ReplicatorHistory history;
 
   private final ReplicationPersistentStore persistentStore;
+
+  private final ReplicationSitePersistentStore siteStore;
 
   private final ExecutorService executor;
 
@@ -67,17 +70,17 @@ public class ReplicatorImpl implements Replicator {
 
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
-      ReplicationStore localStore,
       ReplicatorHistory history,
       ReplicationPersistentStore persistentStore,
+      ReplicationSitePersistentStore siteStore,
       ExecutorService executor,
       FilterBuilder builder) {
     this.replicatorStoreFactory = notNull(replicatorStoreFactory);
-    this.localStore = notNull(localStore);
     this.history = notNull(history);
     this.persistentStore = notNull(persistentStore);
     this.executor = notNull(executor);
     this.builder = notNull(builder);
+    this.siteStore = notNull(siteStore);
   }
 
   public void init() {
@@ -126,29 +129,34 @@ public class ReplicatorImpl implements Replicator {
           status.markStartTime();
 
           ReplicatorConfig config = syncRequest.getConfig();
-          ReplicationStore store;
+          ReplicationStore node1 = null;
+          ReplicationStore node2 = null;
 
           try {
-            store = getStoreForConfig(config);
+            node1 = getStoreForId(config.getSource());
+            node2 = getStoreForId(config.getDestination());
           } catch (Exception e) {
             final Status connectionUnavailable = Status.CONNECTION_UNAVAILABLE;
             LOGGER.warn(
-                "Error getting store for config {}. Setting status to {}",
+                "Error getting store for source config {}. Setting status to {}",
                 config.getName(),
                 connectionUnavailable,
                 e);
             status.setStatus(connectionUnavailable);
             completeActiveSyncRequest(syncRequest, status);
+            IOUtils.closeQuietly(node1);
+            IOUtils.closeQuietly(node2);
             return;
           }
-          try (ReplicationStore remoteStore = store) {
+
+          try (ReplicationStore store1 = node1;
+              ReplicationStore store2 = node2) {
             Status pullStatus = Status.SUCCESS;
             if (Direction.PULL.equals(config.getDirection())
                 || Direction.BOTH.equals(config.getDirection())) {
               status.setStatus(Status.PULL_IN_PROGRESS);
               SyncResponse response =
-                  SyncHelper.performSync(
-                      remoteStore, localStore, config, persistentStore, history, builder);
+                  SyncHelper.performSync(store2, store1, config, persistentStore, history, builder);
               status.setPullCount(response.getItemsReplicated());
               status.setPullFailCount(response.getItemsFailed());
               status.setPullBytes(response.getBytesTransferred());
@@ -161,8 +169,7 @@ public class ReplicatorImpl implements Replicator {
                     || Direction.BOTH.equals(config.getDirection()))) {
               status.setStatus(Status.PUSH_IN_PROGRESS);
               SyncResponse response =
-                  SyncHelper.performSync(
-                      localStore, remoteStore, config, persistentStore, history, builder);
+                  SyncHelper.performSync(store1, store2, config, persistentStore, history, builder);
               status.setPushCount(response.getItemsReplicated());
               status.setPushFailCount(response.getItemsFailed());
               status.setPushBytes(response.getBytesTransferred());
@@ -248,15 +255,19 @@ public class ReplicatorImpl implements Replicator {
     return Collections.unmodifiableSet(new HashSet<>(activeSyncRequests));
   }
 
-  private ReplicationStore getStoreForConfig(ReplicatorConfig config) {
+  private ReplicationStore getStoreForId(String siteId) {
     ReplicationStore store;
+    ReplicationSite site =
+        siteStore
+            .getSite(siteId)
+            .orElseThrow(() -> new ReplicationException("Could not find site " + siteId));
     try {
-      store = replicatorStoreFactory.createReplicatorStore(config.getUrl());
+      store = replicatorStoreFactory.createReplicatorStore(site.getUrl());
     } catch (Exception e) {
-      throw new ReplicationException("Error connecting to remote system at " + config.getUrl(), e);
+      throw new ReplicationException("Error connecting to node at " + site.getUrl(), e);
     }
     if (!store.isAvailable()) {
-      throw new ReplicationException("System at " + config.getUrl() + " is currently unavailable");
+      throw new ReplicationException("System at " + site.getUrl() + " is currently unavailable");
     }
     return store;
   }

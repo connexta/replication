@@ -18,16 +18,19 @@ See http://codice.org/ddf/documentation.html#_console_command_help[Console Comma
 
 === Adding a Replication Configuration
 
-To add a new replication configuration, use the `replication:config-add` command. It has this syntax:
+The preferred method of configuring replication is through the replication UI found at https://<host>:<port>/admin/replication
 
-`replication:config-add --url "<remote-URL>" --cql "<query-filter>" --replicationType
-<METACARD|RESOURCE> --direction <PUSH|PULL|BOTH> "<name>"`
+Configuration can still be created and managed via the commandline as detailed below.
+
+To add a new replication configuration, use the `replication:config-add` command. It has this syntax:`
+
+`replication:config-add --cql "<query-filter>" --direction <PUSH|BOTH> -t <METACARD|RESOURCE> --destination "<URL>" --source "<URL>" "<name>"`
 
 For example, the following command will add a replication configuration with the name "bostonCards" that
 will PUSH any local METACARDs with the word "Boston" in the title, to a remote ${platform} with the URL
 "https://hostname:7777".
 
-`replication:config-add --url "https://hostname:7777" --cql "title like 'Boston'" --replicationType METACARD --direction PUSH "bostonCards"`
+`replication:config-add --destination "https://hostname:7777" --cql "title like 'Boston'" --replicationType METACARD --direction PUSH "bostonCards"`
 
 The `replicationType` option can have a value of `METACARD` or `RESOURCE`. Setting the value to `METACARD`
 will replicate only the metacards that match those filters. With this setting the ${platform} that receives the replicated
@@ -36,9 +39,9 @@ Setting the value to `RESOURCE` will replicate both the metacards that match the
 resources. This setting will store a copy of the resource on the receiving ${platform}, allowing users
 to download and export the resource.
 
-The `direction` option can be set to `PUSH`, `PULL`, or `BOTH`. The `PUSH` setting replicates local
-records to the ${platform} at the given url, `PULL` replicates records from the ${platform} at the
-given url to the local ${platform}, and `BOTH`, of course, does both.
+The `direction` option can be set to `PUSH`, `PULL`, or `BOTH`. The PULL option has been deprecated. The `PUSH` setting replicates source
+records to the ${platform} at the given destination url, `PULL` replicates records from the destination ${platform} at the
+given url to the source ${platform}, and `BOTH`, does PUSH and PULL.
 
 The `cql` field can accept any
 cql query, allowing the user to add a variety of filters to a replication configuration. Here are some examples:

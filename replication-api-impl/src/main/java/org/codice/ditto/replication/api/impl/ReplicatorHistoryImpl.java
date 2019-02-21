@@ -233,14 +233,14 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
     base.setPullFailCount(base.getPullFailCount() + status.getPullFailCount());
     if (base.getLastRun() == null || status.getStartTime().after(base.getLastRun())) {
       base.setLastRun(status.getStartTime());
+      base.setStatus(status.getStatus());
     }
-    base.setStatus(status.getStatus());
+
     if (base.getStartTime().after(status.getStartTime())) {
       base.setStartTime(status.getStartTime());
     }
-    if (status.getPushCount() > 0 || status.getPullCount() > 0) {
-      base.setDuration(base.getDuration() + status.getDuration());
-    }
+
+    base.setDuration(base.getDuration() + status.getDuration());
 
     if (status.getStatus().equals(Status.SUCCESS)
         && (base.getLastSuccess() == null || status.getStartTime().after(base.getLastSuccess()))) {
@@ -288,6 +288,7 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
         condensedStatus = new ReplicationStatus(status.getReplicatorName());
         condensedStatus.setStartTime(status.getStartTime());
         condensedStatus.setStatus(status.getStatus());
+        condensedStatus.setDuration(0L);
       }
       addStats(condensedStatus, status);
     }

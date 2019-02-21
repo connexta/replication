@@ -20,6 +20,7 @@ import org.apache.karaf.shell.support.table.ShellTable;
 import org.codice.ddf.commands.catalog.SubjectCommands;
 import org.codice.ditto.replication.api.ReplicatorConfig;
 import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
 
 @Service
 @Command(
@@ -31,6 +32,8 @@ public class ConfigListCommand extends SubjectCommands {
 
   @Reference ReplicatorConfigLoader replicatorConfigLoader;
 
+  @Reference ReplicationSitePersistentStore siteStore;
+
   @Override
   protected Object executeWithSubject() {
     final ShellTable shellTable = new ShellTable();
@@ -38,7 +41,8 @@ public class ConfigListCommand extends SubjectCommands {
     shellTable.column("Direction");
     shellTable.column("Type");
     shellTable.column("Failure Retry Count");
-    shellTable.column("URL");
+    shellTable.column("Source");
+    shellTable.column("Destination");
     shellTable.column("CQL");
     shellTable.column("Description");
     shellTable.emptyTableText("There are no current replication configurations.");
@@ -51,7 +55,8 @@ public class ConfigListCommand extends SubjectCommands {
               replicatorConfig.getDirection(),
               replicatorConfig.getReplicationType(),
               replicatorConfig.getFailureRetryCount(),
-              replicatorConfig.getUrl(),
+              siteStore.getSite(replicatorConfig.getSource()).get().getUrl(),
+              siteStore.getSite(replicatorConfig.getDestination()).get().getUrl(),
               replicatorConfig.getCql(),
               replicatorConfig.getDescription());
     }

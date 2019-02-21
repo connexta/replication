@@ -13,7 +13,6 @@
  */
 package org.codice.ditto.replication.api.impl.data;
 
-import java.net.URL;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.ReplicatorConfig;
@@ -28,7 +27,9 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
 
   private ReplicationType type;
 
-  private URL url;
+  private String source;
+
+  private String destination;
 
   private String cql;
 
@@ -43,7 +44,8 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     this.name = config.getName();
     this.direction = config.getDirection();
     this.type = config.getReplicationType();
-    this.url = config.getUrl();
+    this.source = config.getSource();
+    this.destination = config.getDestination();
     this.cql = config.getCql();
     this.description = config.getDescription();
     this.failureRetryCount = config.getFailureRetryCount();
@@ -81,17 +83,26 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     return type;
   }
 
-  public void setReplicationType(ReplicationType type) {
-    this.type = type;
+  @Override
+  public String getSource() {
+    return source;
+  }
+
+  public void setSource(String source) {
+    this.source = source;
   }
 
   @Override
-  public URL getUrl() {
-    return url;
+  public String getDestination() {
+    return destination;
   }
 
-  public void setUrl(URL url) {
-    this.url = url;
+  public void setDestination(String destination) {
+    this.destination = destination;
+  }
+
+  public void setReplicationType(ReplicationType type) {
+    this.type = type;
   }
 
   @Override

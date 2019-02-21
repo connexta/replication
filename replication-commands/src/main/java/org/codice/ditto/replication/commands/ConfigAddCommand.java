@@ -22,10 +22,13 @@ import org.apache.karaf.shell.api.action.Option;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.codice.ddf.commands.catalog.SubjectCommands;
+import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.ReplicatorConfigLoader;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
+import org.codice.ditto.replication.api.modern.ReplicationSite;
+import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
 import org.codice.ditto.replication.commands.completers.DirectionStringCompleter;
 import org.codice.ditto.replication.commands.completers.ReplicationTypeCompleter;
 
@@ -48,8 +51,8 @@ public class ConfigAddCommand extends SubjectCommands {
     name = "--direction",
     description =
         "Valid values are \"PUSH\", \"PULL\", or \"BOTH\", where\n\t"
-            + "\"PUSH\" indicates that records in the local catalog will be replicated to the remote system,\n\t"
-            + "\"PULL\" indicates that records from the remote system will be replicated to the local catalog, and\n\t"
+            + "\"PUSH\" indicates that records in the source catalog will be replicated to the destination system,\n\t"
+            + "\"PULL\" (Deprecated) indicates that records from the destination system will be replicated to the source catalog, and\n\t"
             + "\"BOTH\" indicates that records from each system will be replicated to the other.",
     required = true
   )
@@ -69,11 +72,15 @@ public class ConfigAddCommand extends SubjectCommands {
   String replicationType = null;
 
   @Option(
-    name = "--url",
-    description = "URL of a remote system to/from which to replicate",
+    name = "--destination",
+    aliases = "--url", // for backwards compatibility
+    description = "URL of a destination system to which to replicate",
     required = true
   )
-  String url = null;
+  String destination = null;
+
+  @Option(name = "--source", description = "URL of a source system from which to replicate")
+  String source = null;
 
   @Option(
     name = "--cql",
@@ -100,6 +107,8 @@ public class ConfigAddCommand extends SubjectCommands {
 
   @Reference ReplicatorConfigLoader replicatorConfigLoader;
 
+  @Reference ReplicationSitePersistentStore siteStore;
+
   @Override
   @SuppressWarnings(
       "squid:S3516" /*Method signature requires a return value but none is needed here*/)
@@ -114,16 +123,36 @@ public class ConfigAddCommand extends SubjectCommands {
       config.setCql(cqlFilter);
 
       try {
-        config.setUrl(new URL(url));
+        config.setDestination(getOrCreateSite(destination).getId());
       } catch (MalformedURLException e) {
-        printErrorMessage("The URL \"" + url + "\" is malformed: " + e.getMessage());
+        printErrorMessage("The URL \"" + destination + "\" is malformed: " + e.getMessage());
         printErrorMessage("A new replication configuration was not added.");
         return null;
       }
 
+      try {
+        if (source == null) {
+          source = SystemBaseUrl.INTERNAL.getBaseUrl();
+        }
+        config.setSource(getOrCreateSite(source).getId());
+      } catch (MalformedURLException e) {
+        printErrorMessage("The URL \"" + source + "\" is malformed: " + e.getMessage());
+        printErrorMessage("A new replication configuration was not added.");
+        return null;
+      }
       config.setDescription(description);
       config.setReplicationType(ReplicationType.valueOf(replicationType.toUpperCase()));
-      config.setDirection(Direction.valueOf(directionString.toUpperCase()));
+
+      if (Direction.PULL.equals(Direction.valueOf(directionString.toUpperCase()))) {
+        printErrorMessage(
+            "The PULL direction is deprecated. PULL can be achieved with a PUSH and switching the source/destination. Switching source/destination and changing direction to PUSH.");
+        String tmpDest = config.getDestination();
+        config.setDestination(config.getSource());
+        config.setSource(tmpDest);
+        config.setDirection(Direction.PUSH);
+      } else {
+        config.setDirection(Direction.valueOf(directionString.toUpperCase()));
+      }
       config.setFailureRetryCount(failureRetryCount);
 
       replicatorConfigLoader.saveConfig(config);
@@ -132,5 +161,21 @@ public class ConfigAddCommand extends SubjectCommands {
     }
 
     return null;
+  }
+
+  private ReplicationSite getOrCreateSite(String site) throws MalformedURLException {
+    ReplicationSite replicationSite =
+        siteStore
+            .getSites()
+            .stream()
+            .filter(s -> s.getUrl().toString().equals(site))
+            .findFirst()
+            .orElse(null);
+    if (replicationSite != null) {
+      return replicationSite;
+    } else {
+      URL url = new URL(site);
+      return siteStore.saveSite(url.getHost(), site);
+    }
   }
 }

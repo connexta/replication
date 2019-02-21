@@ -7,8 +7,8 @@
 
 == {title}
 
-After replication has been configured, it can be run manually or it can be scheduled to run at
-specified intervals.
+After replication has been configured, it will automatically run every 5 minutes. Configurations can also be run via
+the command line on demand.
 
 === Running Manually
 
@@ -32,10 +32,6 @@ Items that failed to be replicated for any reason other than connection loss wil
 a configurable amount of times, except for deletion, which is only tried once. Use the `replication:config-add
 --help` in the ${command-console} for more information on configuring failure retries.
 
-=== Scheduling
-
-The Command Scheduler can be used to run replication using the command above at specified intervals.
-See http://codice.org/ddf/documentation.html#_command_scheduler[Command Scheduler].
 
 === Viewing Replication Status
 

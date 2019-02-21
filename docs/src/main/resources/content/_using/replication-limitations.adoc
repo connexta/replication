@@ -10,6 +10,10 @@
 Replication is still at an early stage in its lifecycle, so there are a few details that
 the user should be aware of.
 
+=== Federation and Replication
+When mixing replication and federation there is the chance that duplicate results will appear in search results. It is recommended
+that systems do not setup replication to systems they are also federated with.
+
 === Fanout Proxies
 
 Replicating from a ${platform} that is configured as a http://codice.org/ddf/documentation.html#_configuring_for_a_fanout_proxy[Fanout Proxy]

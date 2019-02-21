@@ -16,12 +16,14 @@ package org.codice.ditto.replication.api.impl;
 import static org.codice.ddf.spatial.ogc.csw.catalog.common.CswAxisOrder.LON_LAT;
 
 import com.thoughtworks.xstream.converters.Converter;
+import ddf.catalog.CatalogFramework;
 import ddf.catalog.filter.FilterAdapter;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.catalog.resource.ResourceReader;
 import ddf.security.encryption.EncryptionService;
 import ddf.security.service.SecurityManager;
 import java.net.URL;
+import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswAxisOrder;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswSourceConfiguration;
@@ -77,7 +79,15 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   private ClientFactoryFactory clientFactoryFactory;
 
+  private CatalogFramework framework;
+
   public ReplicationStore createReplicatorStore(URL url) {
+
+    if (url.toString().startsWith(SystemBaseUrl.INTERNAL.getBaseUrl())
+        || url.toString().startsWith(SystemBaseUrl.EXTERNAL.getBaseUrl())) {
+      return new LocalCatalogResourceStore(framework);
+    }
+
     CswSourceConfiguration cswConfiguration = new CswSourceConfiguration(encryptionService);
     cswConfiguration.setCswUrl(url.toString() + "/services/csw");
     cswConfiguration.setConnectionTimeout(CONNECTION_TIMEOUT);
@@ -140,6 +150,10 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   public void setSecurityManager(SecurityManager securityManager) {
     this.securityManager = securityManager;
+  }
+
+  public void setCatalogFramework(CatalogFramework framework) {
+    this.framework = framework;
   }
 
   public void setSchemaTransformerManager(TransformerManager transformerManager) {
