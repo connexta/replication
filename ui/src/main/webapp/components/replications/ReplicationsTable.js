@@ -18,12 +18,20 @@ import gql from 'graphql-tag'
 import { AllReplications } from './gql/queries'
 import moment from 'moment'
 import Immutable from 'immutable'
+import { withStyles } from '@material-ui/core/styles'
 
 const DELETE_REPLICATION = gql`
   mutation deleteReplication($id: Pid!) {
     deleteReplication(id: $id)
   }
 `
+
+const styles = {
+  root: {
+    width: '100%',
+    overflowX: 'auto',
+  },
+}
 
 const repStatusMapping = {
   SUCCESS: 'Success',
@@ -98,7 +106,7 @@ const format = utc => {
   return utc ? moment.utc(utc, 'YYYY-MM-DD HH:mm').toString() : '-'
 }
 
-export default class ReplicationsTable extends React.Component {
+class ReplicationsTable extends React.Component {
   state = {
     anchor: null,
   }
@@ -118,7 +126,7 @@ export default class ReplicationsTable extends React.Component {
     const sorted = Immutable.List(replications).sort(repSort)
 
     return (
-      <Paper>
+      <Paper className={this.props.classes.root}>
         <Table>
           <TableHead>
             <TableRow>
@@ -187,3 +195,5 @@ export default class ReplicationsTable extends React.Component {
 ReplicationsTable.propTypes = {
   replications: PropTypes.array.isRequired,
 }
+
+export default withStyles(styles)(ReplicationsTable)
