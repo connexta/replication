@@ -6,6 +6,9 @@ import {
   Card,
   Typography,
   withStyles,
+  SnackbarContent,
+  Snackbar,
+  CircularProgress,
 } from '@material-ui/core'
 import DeleteForever from '@material-ui/icons/DeleteForever'
 import CardActions from '@material-ui/core/CardActions'
@@ -72,8 +75,26 @@ function Site(props) {
               >
                 <DeleteForever />
               </IconButton>
-              {error && <Typography>Error...</Typography>}
-              {loading && <Typography>Loading...</Typography>}
+              {error && (
+                <Snackbar
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                  }}
+                  open
+                >
+                  <SnackbarContent
+                    message={
+                      <Typography style={{ color: '#fff' }}>
+                        Failed to delete node {name}. It is used by a configured
+                        Replication.
+                      </Typography>
+                    }
+                    style={{ backgroundColor: '#d32f2f' }}
+                  />
+                </Snackbar>
+              )}
+              {loading && <CircularProgress size={10} />}
             </div>
           )}
         </Mutation>
