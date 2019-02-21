@@ -1,4 +1,3 @@
-/*global alert */
 import React, { Fragment } from 'react'
 import Site from './Site'
 import PropTypes from 'prop-types'
@@ -13,11 +12,8 @@ export default function Sites(props) {
           <Site
             key={site.id}
             name={site.name}
-            connected={true}
-            onClick={() =>
-              // todo: route to site specific page if clicked
-              alert(site.id + '\n' + site.name + '\n' + site.address.url)
-            }
+            content={site.address.url}
+            id={site.id}
           />
         ))}
     </Fragment>

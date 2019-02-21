@@ -30,6 +30,8 @@ public class ReplicationMessages {
 
   public static final String INVALID_FILTER = "INVALID_FILTER";
 
+  public static final String SITE_IN_USE = "SITE_IN_USE";
+
   private ReplicationMessages() {}
 
   public static ErrorMessage duplicateConfigurations() {
@@ -46,5 +48,9 @@ public class ReplicationMessages {
 
   public static ErrorMessage invalidFilter() {
     return new ErrorMessageImpl(INVALID_FILTER);
+  }
+
+  public static ErrorMessage siteInUse() {
+    return new ErrorMessageImpl(SITE_IN_USE);
   }
 }

@@ -19,10 +19,13 @@ import java.util.List;
 import java.util.Set;
 import org.codice.ddf.admin.api.Field;
 import org.codice.ddf.admin.api.fields.FunctionField;
+import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
+import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 
 public class DeleteReplicationSite extends BaseFunctionField<BooleanField> {
 
@@ -48,6 +51,24 @@ public class DeleteReplicationSite extends BaseFunctionField<BooleanField> {
     BooleanField success = new BooleanField();
     success.setValue(replicationUtils.deleteSite(id.getValue()));
     return success;
+  }
+
+  @Override
+  public void validate() {
+    super.validate();
+    if (containsErrorMsgs()) {
+      return;
+    }
+
+    ListField<ReplicationField> repFields = replicationUtils.getReplications();
+    String idToDelete = id.getValue();
+    for (ReplicationField repField : repFields.getList()) {
+      if (idToDelete.equals(repField.source().id())
+          || idToDelete.equals(repField.destination().id())) {
+        addErrorMessage(ReplicationMessages.siteInUse());
+        return;
+      }
+    }
   }
 
   @Override

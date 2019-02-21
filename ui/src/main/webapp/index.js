@@ -1,9 +1,6 @@
 /*global document, require, process, module */
 import React from 'react'
 import ReactDOM from 'react-dom'
-import client from './client'
-
-import { ApolloProvider } from 'react-apollo'
 import { AppContainer } from 'react-hot-loader'
 
 import App from './app'
@@ -11,9 +8,7 @@ import App from './app'
 const render = function(Component) {
   ReactDOM.render(
     <AppContainer>
-      <ApolloProvider client={client}>
-        <Component />
-      </ApolloProvider>
+      <Component />
     </AppContainer>,
     document.getElementById('app')
   )
