@@ -16,9 +16,10 @@
     "pretest": "yarn lint",
     "test": "jest",
     "posttest": "yarn test:coverage",
-    "test:coverage": "jest --coverage --coverageDirectory ./target/coverage",
+    "test:coverage": "jest --coverage",
     "format": "prettier \"**/*+(.tsx|.js|.less|.json|.css)\"",
     "fmt": "yarn format --write",
+    "prebuild": "yarn audit",
     "build": "webpack --mode production"
   },
   "dependencies": {
@@ -44,7 +45,7 @@
     "@babel/preset-react": "7.0.0",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "10.0.1",
-    "babel-jest": "23.6.0",
+    "babel-jest": "24.1.0",
     "babel-loader": "8.0.4",
     "css-loader": "2.1.0",
     "enzyme": "3.8.0",
@@ -57,7 +58,7 @@
     "html-loader": "0.5.5",
     "html-webpack-plugin": "3.2.0",
     "identity-obj-proxy": "3.0.0",
-    "jest": "23.6.0",
+    "jest": "24.1.0",
     "prettier": "1.15.3",
     "react-hot-loader": "4.6.3",
     "react-test-renderer": "16.7.0",
@@ -68,22 +69,23 @@
     "webpack-merge": "4.1.5"
   },
   "jest": {
-    "moduleNameMapper": {
-      "\\.(css|less)$": "identity-obj-proxy"
-    },
     "setupFiles": [
       "./jestsetup.js"
     ],
     "coverageThreshold": {
       "global": {
-        "statements": 0,
+        "statements": 1,
         "branches": 0,
-        "functions": 0,
-        "lines": 0
+        "lines": 1,
+        "functions": 0
       }
     },
+    "collectCoverage": true,
+    "coverageDirectory": "./target/coverage",
     "collectCoverageFrom": [
-      "**/webapp/**/*.{js}",
+      "**/*.{js,jsx}",
+      "!**/gql/*.js",
+      "!webpack.config.js",
       "!**/node_modules/**",
       "!**/node/**",
       "!**/target/**"
