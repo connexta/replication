@@ -52,7 +52,7 @@ public class ConfigEnableCommand extends SubjectCommands {
     for (String config : configNames) {
       ReplicatorConfig replicatorConfig = replicatorConfigLoader.getConfig(config).orElse(null);
       if (replicatorConfig == null) {
-        printErrorMessage("No config found for name" + config);
+        printErrorMessage("No config found for name " + config);
         continue;
       }
       ReplicatorConfigImpl newConfig = new ReplicatorConfigImpl(replicatorConfig);

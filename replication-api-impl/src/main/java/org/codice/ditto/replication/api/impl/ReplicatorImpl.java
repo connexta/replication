@@ -15,6 +15,7 @@ package org.codice.ditto.replication.api.impl;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.security.Subject;
 import java.util.Collections;
@@ -72,6 +73,8 @@ public class ReplicatorImpl implements Replicator {
 
   private final Map<String, SyncHelper> syncHelperMap = new ConcurrentHashMap<>();
 
+  private final Security security;
+
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
@@ -79,12 +82,31 @@ public class ReplicatorImpl implements Replicator {
       ReplicationSitePersistentStore siteStore,
       ExecutorService executor,
       FilterBuilder builder) {
+    this(
+        replicatorStoreFactory,
+        history,
+        persistentStore,
+        siteStore,
+        executor,
+        builder,
+        Security.getInstance());
+  }
+
+  public ReplicatorImpl(
+      ReplicatorStoreFactory replicatorStoreFactory,
+      ReplicatorHistory history,
+      ReplicationPersistentStore persistentStore,
+      ReplicationSitePersistentStore siteStore,
+      ExecutorService executor,
+      FilterBuilder builder,
+      Security security) {
     this.replicatorStoreFactory = notNull(replicatorStoreFactory);
     this.history = notNull(history);
     this.persistentStore = notNull(persistentStore);
     this.executor = notNull(executor);
     this.builder = notNull(builder);
     this.siteStore = notNull(siteStore);
+    this.security = security;
   }
 
   public void init() {
@@ -122,8 +144,8 @@ public class ReplicatorImpl implements Replicator {
         "Successfully configured the single-thread scheduler to execute sync requests from the queue");
   }
 
-  private void executeSyncRequest(final SyncRequest syncRequest) {
-    final Security security = Security.getInstance();
+  @VisibleForTesting
+  void executeSyncRequest(final SyncRequest syncRequest) {
     final Subject systemSubject = security.runAsAdmin(security::getSystemSubject);
     systemSubject.execute(
         () -> {
@@ -160,7 +182,7 @@ public class ReplicatorImpl implements Replicator {
                 || Direction.BOTH.equals(config.getDirection())) {
               status.setStatus(Status.PULL_IN_PROGRESS);
               SyncHelper syncHelper =
-                  new SyncHelper(store2, store1, config, persistentStore, history, builder);
+                  getSyncHelper(store2, store1, config, persistentStore, history, builder);
               syncHelperMap.put(config.getId(), syncHelper);
               SyncResponse response = syncHelper.sync();
               syncHelperMap.remove(config.getId());
@@ -176,7 +198,7 @@ public class ReplicatorImpl implements Replicator {
                     || Direction.BOTH.equals(config.getDirection()))) {
               status.setStatus(Status.PUSH_IN_PROGRESS);
               SyncHelper syncHelper =
-                  new SyncHelper(store1, store2, config, persistentStore, history, builder);
+                  getSyncHelper(store1, store2, config, persistentStore, history, builder);
               syncHelperMap.put(config.getId(), syncHelper);
               SyncResponse response = syncHelper.sync();
               syncHelperMap.remove(config.getId());
@@ -199,6 +221,16 @@ public class ReplicatorImpl implements Replicator {
             syncHelperMap.remove(syncRequest.getConfig().getId());
           }
         });
+  }
+
+  SyncHelper getSyncHelper(
+      ReplicationStore source,
+      ReplicationStore destination,
+      ReplicatorConfig config,
+      ReplicationPersistentStore persistentStore,
+      ReplicatorHistory history,
+      FilterBuilder builder) {
+    return new SyncHelper(source, destination, config, persistentStore, history, builder);
   }
 
   private void completeActiveSyncRequest(SyncRequest syncRequest, ReplicationStatus status) {
@@ -260,7 +292,7 @@ public class ReplicatorImpl implements Replicator {
   public void cancelSyncRequest(SyncRequest syncRequest) {
     pendingSyncRequests.remove(syncRequest);
 
-    SyncHelper helper = syncHelperMap.get(syncRequest.getConfig().getId());
+    SyncHelper helper = syncHelperMap.remove(syncRequest.getConfig().getId());
     if (helper != null) {
       helper.cancel();
     }

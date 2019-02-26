@@ -110,20 +110,20 @@
                                 <rule>
                                     <element>BUNDLE</element>
                                     <limits>
-                                        <limit>
-                                            <counter>INSTRUCTION</counter>
+                                        <limit implementation="org.codice.jacoco.LenientLimit">
+                                        <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.0</minimum>
+                                            <minimum>0.05</minimum>
                                         </limit>
-                                        <limit>
-                                            <counter>BRANCH</counter>
+                                        <limit implementation="org.codice.jacoco.LenientLimit">
+                                        <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.0</minimum>
+                                            <minimum>0.07</minimum>
                                         </limit>
-                                        <limit>
-                                            <counter>COMPLEXITY</counter>
+                                        <limit implementation="org.codice.jacoco.LenientLimit">
+                                        <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.0</minimum>
+                                            <minimum>0.06</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

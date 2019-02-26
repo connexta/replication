@@ -149,12 +149,10 @@ class SyncHelper {
       try {
         if (isDeletedMetacard()) {
           processDeletedMetacard();
+        } else if (isUpdatable()) {
+          processUpdate(existingReplicationItem.get());
         } else {
-          if (isUpdatable()) {
-            processUpdate(existingReplicationItem.get());
-          } else {
-            processCreate();
-          }
+          processCreate();
         }
       } catch (Exception e) {
         if (causedByConnectionLoss(e)) {

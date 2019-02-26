@@ -131,8 +131,9 @@ public class MetacardConfigLoaderTest {
 
   @Test
   public void saveConfig() throws Exception {
-    ReplicatorConfig config =
+    ReplicatorConfigImpl config =
         newReplicatorConfig("test", null, "src", "dest", Direction.PUSH, "cql");
+    config.setSuspended(true);
     configLoader.saveConfig(config);
     ArgumentCaptor<CreateRequest> captor = ArgumentCaptor.forClass(CreateRequest.class);
     verify(framework).create(captor.capture());
@@ -143,6 +144,8 @@ public class MetacardConfigLoaderTest {
     assertThat(mcard.getAttribute(ReplicationConfig.NAME).getValue(), is("test"));
     assertThat(mcard.getAttribute(ReplicationConfig.DIRECTION).getValue(), is("PUSH"));
     assertThat(mcard.getAttribute(ReplicationConfig.CQL).getValue(), is("cql"));
+    assertThat(mcard.getAttribute(ReplicationConfig.SUSPEND).getValue(), is(true));
+    assertThat(mcard.getAttribute(ReplicationConfig.VERSION).getValue(), is(2));
   }
 
   @Test(expected = ReplicationException.class)
@@ -246,6 +249,8 @@ public class MetacardConfigLoaderTest {
     mcard.setAttribute(ReplicationConfig.DIRECTION, "PUSH");
     mcard.setAttribute(ReplicationConfig.CQL, "cql");
     mcard.setAttribute(ReplicationConfig.TYPE, "RESOURCE");
+    mcard.setAttribute(ReplicationConfig.VERSION, 3);
+    mcard.setAttribute(ReplicationConfig.SUSPEND, true);
 
     Set<ReplicationSite> sites = new HashSet<>();
     sites.add(new ReplicationSiteImpl("siteid", "mysite", new URL("https://host:1234")));
@@ -256,6 +261,8 @@ public class MetacardConfigLoaderTest {
     assertThat(config.getSource(), is("localid"));
     assertThat(config.getDestination(), is("siteid"));
     assertThat(config.getDirection(), is(Direction.PUSH));
+    assertThat(config.getVersion(), is(3));
+    assertThat(config.isSuspended(), is(true));
   }
 
   @Test
@@ -277,6 +284,8 @@ public class MetacardConfigLoaderTest {
     assertThat(config.getSource(), is("siteid"));
     assertThat(config.getDestination(), is("localid"));
     assertThat(config.getDirection(), is(Direction.PUSH));
+    assertThat(config.getVersion(), is(1));
+    assertThat(config.isSuspended(), is(false));
   }
 
   @Test
@@ -319,7 +328,7 @@ public class MetacardConfigLoaderTest {
     return newReplicatorConfig(name, null, "source", "destination", Direction.PUSH, "empty");
   }
 
-  private ReplicatorConfig newReplicatorConfig(
+  private ReplicatorConfigImpl newReplicatorConfig(
       String name, String id, String src, String dest, Direction dir, String cql) {
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setName(name);
