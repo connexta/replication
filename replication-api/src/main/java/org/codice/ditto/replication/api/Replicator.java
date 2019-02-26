@@ -33,6 +33,13 @@ public interface Replicator {
   void cancelSyncRequest(final SyncRequest syncRequest);
 
   /**
+   * Cancel a pending or active {@link SyncRequest} based on the request configuration id
+   *
+   * @param configId The id of the configuration in the request
+   */
+  void cancelSyncRequest(final String configId);
+
+  /**
    * Gets the {@link Queue<SyncRequest>} that have been submitted but have not yet been executed.
    * Does not contain duplicates.
    *

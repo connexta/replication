@@ -82,13 +82,8 @@ public class ReplicatorImplTest {
             executor,
             builder,
             security) {
-          SyncHelper getSyncHelper(
-              ReplicationStore source,
-              ReplicationStore destination,
-              ReplicatorConfig config,
-              ReplicationPersistentStore persistentStore,
-              ReplicatorHistory history,
-              FilterBuilder builder) {
+          SyncHelper createSyncHelper(
+              ReplicationStore source, ReplicationStore destination, ReplicatorConfig config) {
             return helper;
           }
         };
@@ -113,9 +108,6 @@ public class ReplicatorImplTest {
     config.setReplicationType(ReplicationType.RESOURCE);
     config.setVersion(0);
   }
-
-  @Test
-  public void init() {}
 
   @Test
   public void executeSyncRequest() throws Exception {
@@ -146,12 +138,6 @@ public class ReplicatorImplTest {
     assertThat(request.getStatus().getPushBytes(), is(10L));
     assertThat(request.getStatus().getStatus(), is(Status.SUCCESS));
   }
-
-  @Test
-  public void cleanUp() {}
-
-  @Test
-  public void submitSyncRequest() {}
 
   @Test
   public void cancelPendingSyncRequest() throws Exception {
@@ -193,10 +179,4 @@ public class ReplicatorImplTest {
     replicator.executeSyncRequest(request);
     verify(helper).cancel();
   }
-
-  @Test
-  public void getPendingSyncRequests() {}
-
-  @Test
-  public void getActiveSyncRequests() {}
 }

@@ -59,16 +59,7 @@ public class ConfigEnableCommand extends SubjectCommands {
       newConfig.setSuspended(suspend);
       replicatorConfigLoader.saveConfig(newConfig);
       if (suspend) {
-        replicator
-            .getPendingSyncRequests()
-            .stream()
-            .filter(req -> req.getConfig().getId().equals(newConfig.getId()))
-            .forEach(replicator::cancelSyncRequest);
-        replicator
-            .getActiveSyncRequests()
-            .stream()
-            .filter(req -> req.getConfig().getId().equals(newConfig.getId()))
-            .forEach(replicator::cancelSyncRequest);
+        replicator.cancelSyncRequest(newConfig.getId());
       }
     }
     return null;
