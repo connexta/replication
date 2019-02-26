@@ -187,6 +187,8 @@ public class ReplicationUtils {
     }
     if (statusList.isEmpty()) {
       field.status("NOT_RUN");
+    } else if (config.isSuspended()) {
+      field.status("SUSPENDED");
     } else {
       field.status(statusList.get(0).getStatus().name());
     }
@@ -212,6 +214,35 @@ public class ReplicationUtils {
   }
 
   public boolean deleteConfig(String id) {
+    ReplicatorConfig config = getConfigForId(id);
+    if (config == null) {
+      return false;
+    }
+    configLoader.removeConfig(config);
+    return true;
+  }
+
+  public boolean cancelConfig(String id) {
+    replicator.cancelSyncRequest(id);
+    return true;
+  }
+
+  public boolean setConfigSuspended(String id, boolean suspended) {
+    ReplicatorConfig config = getConfigForId(id);
+    if (config == null || config.isSuspended() == suspended) {
+      return false;
+    }
+
+    ReplicatorConfigImpl newConfig = new ReplicatorConfigImpl(config);
+    newConfig.setSuspended(suspended);
+    configLoader.saveConfig(newConfig);
+    if (suspended) {
+      replicator.cancelSyncRequest(id);
+    }
+    return true;
+  }
+
+  private ReplicatorConfig getConfigForId(String id) {
     ReplicatorConfig config =
         configLoader
             .getAllConfigs()
@@ -220,10 +251,9 @@ public class ReplicationUtils {
             .findFirst()
             .orElse(null);
     if (config == null) {
-      return false;
+      return null;
     }
-    configLoader.removeConfig(config);
-    return true;
+    return config;
   }
 
   public ListField<ReplicationSiteField> getSites() {
