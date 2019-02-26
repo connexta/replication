@@ -40,6 +40,7 @@ import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -246,6 +247,58 @@ public class ReplicationUtilsTest {
     assertThat(field.biDirectional(), is(false));
     assertThat(field.itemsTransferred(), is(3));
     assertThat(field.dataTransferred(), is("15 MB"));
+  }
+
+  @Test
+  public void cancelConfig() {
+    assertThat(utils.cancelConfig("test"), is(true));
+    verify(replicator).cancelSyncRequest("test");
+  }
+
+  @Test
+  public void suspendConfig() {
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setId("id");
+    config.setName("test");
+    config.setSuspended(false);
+    when(configLoader.getAllConfigs()).thenReturn(Collections.singletonList(config));
+    assertThat(utils.setConfigSuspended("id", true), is(true));
+    ArgumentCaptor<ReplicatorConfig> captor = ArgumentCaptor.forClass(ReplicatorConfig.class);
+    verify(configLoader).saveConfig(captor.capture());
+    assertThat(captor.getValue().isSuspended(), is(true));
+    verify(replicator).cancelSyncRequest("id");
+  }
+
+  @Test
+  public void suspendConfigBadId() {
+    when(configLoader.getAllConfigs()).thenReturn(Collections.emptyList());
+    assertThat(utils.setConfigSuspended("id", true), is(false));
+    verify(configLoader, never()).saveConfig(any(ReplicatorConfig.class));
+  }
+
+  @Test
+  public void suspendConfigAlreadySuspended() {
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setId("id");
+    config.setName("test");
+    config.setSuspended(true);
+    when(configLoader.getAllConfigs()).thenReturn(Collections.singletonList(config));
+    assertThat(utils.setConfigSuspended("id", true), is(false));
+    verify(configLoader, never()).saveConfig(any(ReplicatorConfig.class));
+  }
+
+  @Test
+  public void enableConfig() {
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setId("id");
+    config.setName("test");
+    config.setSuspended(true);
+    when(configLoader.getAllConfigs()).thenReturn(Collections.singletonList(config));
+    assertThat(utils.setConfigSuspended("id", false), is(true));
+    ArgumentCaptor<ReplicatorConfig> captor = ArgumentCaptor.forClass(ReplicatorConfig.class);
+    verify(configLoader).saveConfig(captor.capture());
+    assertThat(captor.getValue().isSuspended(), is(false));
+    verify(replicator, never()).cancelSyncRequest("id");
   }
 
   private AddressField getAddress(URL url) {

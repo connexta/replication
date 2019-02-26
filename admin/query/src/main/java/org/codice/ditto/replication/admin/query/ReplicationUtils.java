@@ -242,7 +242,7 @@ public class ReplicationUtils {
     return true;
   }
 
-  private ReplicatorConfig getConfigForId(String id) {
+  public ReplicatorConfig getConfigForId(String id) {
     ReplicatorConfig config =
         configLoader
             .getAllConfigs()

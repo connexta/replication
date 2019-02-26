@@ -22,6 +22,7 @@ import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
 
 public class SuspendReplication extends BaseFunctionField<BooleanField> {
@@ -44,6 +45,8 @@ public class SuspendReplication extends BaseFunctionField<BooleanField> {
     this.replicationUtils = replicationUtils;
     id = new PidField("id");
     suspend = new BooleanField("suspend");
+    id.isRequired(true);
+    suspend.isRequired(true);
   }
 
   @Override
@@ -71,6 +74,17 @@ public class SuspendReplication extends BaseFunctionField<BooleanField> {
 
   @Override
   public Set<String> getFunctionErrorCodes() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(ReplicationMessages.CONFIG_DOES_NOT_EXIST);
+  }
+
+  @Override
+  public void validate() {
+    super.validate();
+    if (containsErrorMsgs()) {
+      return;
+    }
+    if (replicationUtils.getConfigForId(id.getValue()) == null) {
+      addErrorMessage(ReplicationMessages.configDoesNotExist());
+    }
   }
 }

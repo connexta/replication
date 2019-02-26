@@ -26,14 +26,14 @@ public interface Replicator {
   void submitSyncRequest(final SyncRequest syncRequest) throws InterruptedException;
 
   /**
-   * Cancel a pending or active {@link SyncRequest}
+   * Cancel all pending or active {@link SyncRequest}
    *
-   * @param syncRequest
+   * @param syncRequest The syncRequest to cancel
    */
   void cancelSyncRequest(final SyncRequest syncRequest);
 
   /**
-   * Cancel a pending or active {@link SyncRequest} based on the request configuration id
+   * Cancel all pending or active {@link SyncRequest} based on the request configuration id
    *
    * @param configId The id of the configuration in the request
    */
