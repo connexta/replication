@@ -187,12 +187,11 @@ public class ReplicationUtils {
     }
     if (statusList.isEmpty()) {
       field.status("NOT_RUN");
-    } else if (config.isSuspended()) {
-      field.status("SUSPENDED");
     } else {
       field.status(statusList.get(0).getStatus().name());
     }
 
+    field.suspended(config.isSuspended());
     field.dataTransferred(String.format("%d MB", bytesTransferred / BYTES_PER_MB));
     field.itemsTransferred((int) itemsTransferred);
     return field;
