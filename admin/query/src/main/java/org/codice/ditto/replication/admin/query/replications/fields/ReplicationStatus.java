@@ -50,8 +50,6 @@ public class ReplicationStatus extends BaseEnumField<String> {
                 Status.CONNECTION_UNAVAILABLE.name(),
                 "Network connection unavailable for replication run"),
             new ReplicationStatusEnum(Status.CANCELED.name(), "Replication run was canceled"),
-            new ReplicationStatusEnum(
-                "SUSPENDED", "Replication for this configuration has been suspended"),
             new ReplicationStatusEnum("NOT_RUN", "Replication has not been run")),
         status);
   }
