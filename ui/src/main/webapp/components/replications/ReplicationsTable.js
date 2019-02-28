@@ -41,6 +41,7 @@ const repStatusMapping = {
   FAILURE: 'Failure',
   CONNECTION_LOST: 'Connection Lost',
   CONNECTION_UNAVAILABLE: 'Connection Unavailable',
+  CANCELED: 'Canceled',
   NOT_RUN: 'Not run',
 }
 

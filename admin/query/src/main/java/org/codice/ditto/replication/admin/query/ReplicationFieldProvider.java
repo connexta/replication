@@ -18,8 +18,10 @@ import java.util.List;
 import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.function.BaseFieldProvider;
 import org.codice.ditto.replication.admin.query.replications.discover.GetReplications;
+import org.codice.ditto.replication.admin.query.replications.persist.CancelReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.CreateReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.DeleteReplication;
+import org.codice.ditto.replication.admin.query.replications.persist.SuspendReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.UpdateReplication;
 import org.codice.ditto.replication.admin.query.sites.discover.GetReplicationSites;
 import org.codice.ditto.replication.admin.query.sites.persist.CreateReplicationSite;
@@ -51,12 +53,18 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
 
   private DeleteReplicationSite deleteReplicationSite;
 
+  private CancelReplication cancelReplication;
+
+  private SuspendReplication suspendReplication;
+
   public ReplicationFieldProvider(
       GetReplications getReplications,
       GetReplicationSites getReplicationSites,
       CreateReplication createReplication,
       UpdateReplication updateReplication,
       DeleteReplication deleteReplication,
+      CancelReplication cancelReplication,
+      SuspendReplication suspendReplication,
       CreateReplicationSite createReplicationSite,
       UpdateReplicationSite updateReplicationSite,
       DeleteReplicationSite deleteReplicationSite) {
@@ -66,6 +74,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
     this.createReplication = createReplication;
     this.updateReplication = updateReplication;
     this.deleteReplication = deleteReplication;
+    this.cancelReplication = cancelReplication;
+    this.suspendReplication = suspendReplication;
     this.createReplicationSite = createReplicationSite;
     this.updateReplicationSite = updateReplicationSite;
     this.deleteReplicationSite = deleteReplicationSite;
@@ -84,6 +94,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
         deleteReplication,
         createReplicationSite,
         updateReplicationSite,
-        deleteReplicationSite);
+        deleteReplicationSite,
+        cancelReplication,
+        suspendReplication);
   }
 }

@@ -38,6 +38,12 @@
     <bean id="deleteReplication" class="org.codice.ditto.replication.admin.query.replications.persist.DeleteReplication">
         <argument ref="replicationUtils"/>
     </bean>
+    <bean id="cancelReplication" class="org.codice.ditto.replication.admin.query.replications.persist.CancelReplication">
+        <argument ref="replicationUtils"/>
+    </bean>
+    <bean id="suspendReplication" class="org.codice.ditto.replication.admin.query.replications.persist.SuspendReplication">
+        <argument ref="replicationUtils"/>
+    </bean>
     <bean id="createReplicationSite" class="org.codice.ditto.replication.admin.query.sites.persist.CreateReplicationSite">
         <argument ref="replicationUtils"/>
     </bean>
@@ -55,6 +61,8 @@
             <argument ref="createReplication"/>
             <argument ref="updateReplication"/>
             <argument ref="deleteReplication"/>
+            <argument ref="cancelReplication"/>
+            <argument ref="suspendReplication"/>
             <argument ref="createReplicationSite"/>
             <argument ref="updateReplicationSite"/>
             <argument ref="deleteReplicationSite"/>

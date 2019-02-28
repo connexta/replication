@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.commands;
 
+import java.net.URL;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
@@ -20,6 +21,7 @@ import org.apache.karaf.shell.support.table.ShellTable;
 import org.codice.ddf.commands.catalog.SubjectCommands;
 import org.codice.ditto.replication.api.ReplicatorConfig;
 import org.codice.ditto.replication.api.ReplicatorConfigLoader;
+import org.codice.ditto.replication.api.modern.ReplicationSite;
 import org.codice.ditto.replication.api.modern.ReplicationSitePersistentStore;
 
 @Service
@@ -38,6 +40,7 @@ public class ConfigListCommand extends SubjectCommands {
   protected Object executeWithSubject() {
     final ShellTable shellTable = new ShellTable();
     shellTable.column("Name");
+    shellTable.column("Enabled");
     shellTable.column("Direction");
     shellTable.column("Type");
     shellTable.column("Failure Retry Count");
@@ -45,6 +48,8 @@ public class ConfigListCommand extends SubjectCommands {
     shellTable.column("Destination");
     shellTable.column("CQL");
     shellTable.column("Description");
+    shellTable.column("Version");
+
     shellTable.emptyTableText("There are no current replication configurations.");
 
     for (ReplicatorConfig replicatorConfig : replicatorConfigLoader.getAllConfigs()) {
@@ -52,17 +57,27 @@ public class ConfigListCommand extends SubjectCommands {
           .addRow()
           .addContent(
               replicatorConfig.getName(),
+              !replicatorConfig.isSuspended(),
               replicatorConfig.getDirection(),
               replicatorConfig.getReplicationType(),
               replicatorConfig.getFailureRetryCount(),
-              siteStore.getSite(replicatorConfig.getSource()).get().getUrl(),
-              siteStore.getSite(replicatorConfig.getDestination()).get().getUrl(),
+              getUrlFromSite(replicatorConfig.getSource()),
+              getUrlFromSite(replicatorConfig.getDestination()),
               replicatorConfig.getCql(),
-              replicatorConfig.getDescription());
+              replicatorConfig.getDescription(),
+              replicatorConfig.getVersion());
     }
 
     shellTable.print(console);
 
+    return null;
+  }
+
+  private URL getUrlFromSite(String id) {
+    ReplicationSite site = siteStore.getSite(id).orElse(null);
+    if (site != null) {
+      return site.getUrl();
+    }
     return null;
   }
 }

@@ -19,6 +19,8 @@ import org.codice.ditto.replication.api.ReplicatorConfig;
 
 public class ReplicatorConfigImpl implements ReplicatorConfig {
 
+  public static final int CURRENT_VERSION = 2;
+
   private String id;
 
   private String name;
@@ -37,6 +39,10 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
 
   private int failureRetryCount;
 
+  private boolean suspended;
+
+  private int version;
+
   public ReplicatorConfigImpl() {}
 
   public ReplicatorConfigImpl(ReplicatorConfig config) {
@@ -49,6 +55,8 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
     this.cql = config.getCql();
     this.description = config.getDescription();
     this.failureRetryCount = config.getFailureRetryCount();
+    this.suspended = config.isSuspended();
+    this.version = config.getVersion();
   }
 
   @Override
@@ -130,5 +138,23 @@ public class ReplicatorConfigImpl implements ReplicatorConfig {
 
   public void setFailureRetryCount(int count) {
     failureRetryCount = count;
+  }
+
+  @Override
+  public boolean isSuspended() {
+    return suspended;
+  }
+
+  public void setSuspended(boolean suspended) {
+    this.suspended = suspended;
+  }
+
+  @Override
+  public int getVersion() {
+    return version;
+  }
+
+  public void setVersion(int version) {
+    this.version = version;
   }
 }

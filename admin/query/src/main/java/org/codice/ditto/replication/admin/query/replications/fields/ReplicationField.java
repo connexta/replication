@@ -50,6 +50,8 @@ public class ReplicationField extends BaseObjectField {
 
   private ReplicationStatus status;
 
+  private BooleanField suspended;
+
   private DateField lastRun;
 
   private DateField firstRun;
@@ -67,6 +69,7 @@ public class ReplicationField extends BaseObjectField {
     dataTransferred = new StringField("dataTransferred");
     biDirectional = new BooleanField("biDirectional");
     status = new ReplicationStatus();
+    suspended = new BooleanField("suspended");
     lastRun = new DateField("lastRun");
     firstRun = new DateField("firstRun");
     lastSuccess = new DateField("lastSuccess");
@@ -115,6 +118,11 @@ public class ReplicationField extends BaseObjectField {
 
   public ReplicationField status(String status) {
     this.status.setValue(status);
+    return this;
+  }
+
+  public ReplicationField suspended(Boolean suspended) {
+    this.suspended.setValue(suspended);
     return this;
   }
 
@@ -212,6 +220,10 @@ public class ReplicationField extends BaseObjectField {
     return status;
   }
 
+  public Boolean suspended() {
+    return suspended.getValue();
+  }
+
   public DateField lastRun() {
     return lastRun;
   }
@@ -236,6 +248,7 @@ public class ReplicationField extends BaseObjectField {
         dataTransferred,
         biDirectional,
         status,
+        suspended,
         lastRun,
         lastSuccess,
         firstRun);

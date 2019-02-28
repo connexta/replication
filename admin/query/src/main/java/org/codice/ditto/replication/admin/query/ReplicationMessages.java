@@ -32,6 +32,8 @@ public class ReplicationMessages {
 
   public static final String SITE_IN_USE = "SITE_IN_USE";
 
+  public static final String CONFIG_DOES_NOT_EXIST = "CONFIG_DOES_NOT_EXIST";
+
   private ReplicationMessages() {}
 
   public static ErrorMessage duplicateConfigurations() {
@@ -52,5 +54,9 @@ public class ReplicationMessages {
 
   public static ErrorMessage siteInUse() {
     return new ErrorMessageImpl(SITE_IN_USE);
+  }
+
+  public static ErrorMessage configDoesNotExist() {
+    return new ErrorMessageImpl(CONFIG_DOES_NOT_EXIST);
   }
 }

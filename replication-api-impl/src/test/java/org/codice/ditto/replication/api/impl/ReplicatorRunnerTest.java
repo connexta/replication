@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -105,6 +106,16 @@ public class ReplicatorRunnerTest {
     runner.scheduleReplication();
     verify(replicator).submitSyncRequest(request.capture());
     assertThat(request.getValue().getConfig().getName(), is("test"));
+  }
+
+  @Test
+  public void scheduleReplicationWithSuspend() throws Exception {
+    ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
+    when(config.getName()).thenReturn("test");
+    when(config.isSuspended()).thenReturn(true);
+    when(configLoader.getAllConfigs()).thenReturn(configList);
+    runner.scheduleReplication();
+    verify(replicator, never()).submitSyncRequest(request.capture());
   }
 
   @Test

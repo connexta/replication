@@ -114,17 +114,9 @@ class SyncHelper {
 
   private long bytesTransferred;
 
-  static SyncResponse performSync(
-      ReplicationStore source,
-      ReplicationStore destination,
-      ReplicatorConfig config,
-      ReplicationPersistentStore persistentStore,
-      ReplicatorHistory history,
-      FilterBuilder builder) {
-    return new SyncHelper(source, destination, config, persistentStore, history, builder).sync();
-  }
+  private boolean canceled = false;
 
-  private SyncHelper(
+  public SyncHelper(
       ReplicationStore source,
       ReplicationStore destination,
       ReplicatorConfig config,
@@ -146,20 +138,21 @@ class SyncHelper {
   }
 
   @SuppressWarnings("squid:S3655" /*isUpdatable performs the needed optional check*/)
-  private SyncResponse sync() {
+  public SyncResponse sync() {
     for (Result metacardResult : getMetacardChangeSet()) {
+      if (canceled) {
+        break;
+      }
       mcard = metacardResult.getMetacard();
       existingReplicationItem = persistentStore.getItem(mcard.getId(), sourceName, destinationName);
 
       try {
         if (isDeletedMetacard()) {
           processDeletedMetacard();
+        } else if (isUpdatable()) {
+          processUpdate(existingReplicationItem.get());
         } else {
-          if (isUpdatable()) {
-            processUpdate(existingReplicationItem.get());
-          } else {
-            processCreate();
-          }
+          processCreate();
         }
       } catch (Exception e) {
         if (causedByConnectionLoss(e)) {
@@ -170,7 +163,20 @@ class SyncHelper {
         }
       }
     }
-    return new SyncResponse(syncCount, failCount, bytesTransferred, Status.SUCCESS);
+    return new SyncResponse(
+        syncCount, failCount, bytesTransferred, canceled ? Status.CANCELED : Status.SUCCESS);
+  }
+
+  /**
+   * Cancels the currently running sync job. It will wait till the current processing item is
+   * finished.
+   */
+  public void cancel() {
+    this.canceled = true;
+  }
+
+  public boolean isCanceled() {
+    return this.canceled;
   }
 
   private Iterable<Result> getMetacardChangeSet() {

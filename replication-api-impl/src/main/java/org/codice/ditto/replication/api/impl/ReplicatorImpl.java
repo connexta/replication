@@ -15,16 +15,21 @@ package org.codice.ditto.replication.api.impl;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.security.Subject;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
@@ -68,6 +73,10 @@ public class ReplicatorImpl implements Replicator {
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
 
+  private final Map<String, SyncHelper> syncHelperMap = new ConcurrentHashMap<>();
+
+  private final Security security;
+
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
@@ -75,12 +84,31 @@ public class ReplicatorImpl implements Replicator {
       ReplicationSitePersistentStore siteStore,
       ExecutorService executor,
       FilterBuilder builder) {
+    this(
+        replicatorStoreFactory,
+        history,
+        persistentStore,
+        siteStore,
+        executor,
+        builder,
+        Security.getInstance());
+  }
+
+  public ReplicatorImpl(
+      ReplicatorStoreFactory replicatorStoreFactory,
+      ReplicatorHistory history,
+      ReplicationPersistentStore persistentStore,
+      ReplicationSitePersistentStore siteStore,
+      ExecutorService executor,
+      FilterBuilder builder,
+      Security security) {
     this.replicatorStoreFactory = notNull(replicatorStoreFactory);
     this.history = notNull(history);
     this.persistentStore = notNull(persistentStore);
     this.executor = notNull(executor);
     this.builder = notNull(builder);
     this.siteStore = notNull(siteStore);
+    this.security = security;
   }
 
   public void init() {
@@ -97,7 +125,7 @@ public class ReplicatorImpl implements Replicator {
                   syncRequest,
                   pendingSyncRequests.size());
 
-              if (activeSyncRequests.contains(syncRequest)) { // TODO improve comparing syncRequests
+              if (activeSyncRequests.contains(syncRequest)) {
                 LOGGER.debug(
                     "activeSyncRequests already contains sync request {}. Not executing again.",
                     syncRequest);
@@ -118,8 +146,8 @@ public class ReplicatorImpl implements Replicator {
         "Successfully configured the single-thread scheduler to execute sync requests from the queue");
   }
 
-  private void executeSyncRequest(final SyncRequest syncRequest) {
-    final Security security = Security.getInstance();
+  @VisibleForTesting
+  void executeSyncRequest(final SyncRequest syncRequest) {
     final Subject systemSubject = security.runAsAdmin(security::getSystemSubject);
     systemSubject.execute(
         () -> {
@@ -155,8 +183,10 @@ public class ReplicatorImpl implements Replicator {
             if (Direction.PULL.equals(config.getDirection())
                 || Direction.BOTH.equals(config.getDirection())) {
               status.setStatus(Status.PULL_IN_PROGRESS);
-              SyncResponse response =
-                  SyncHelper.performSync(store2, store1, config, persistentStore, history, builder);
+              SyncHelper syncHelper = createSyncHelper(store2, store1, config);
+              syncHelperMap.put(config.getId(), syncHelper);
+              SyncResponse response = syncHelper.sync();
+              syncHelperMap.remove(config.getId());
               status.setPullCount(response.getItemsReplicated());
               status.setPullFailCount(response.getItemsFailed());
               status.setPullBytes(response.getBytesTransferred());
@@ -168,8 +198,10 @@ public class ReplicatorImpl implements Replicator {
                 && (Direction.PUSH.equals(config.getDirection())
                     || Direction.BOTH.equals(config.getDirection()))) {
               status.setStatus(Status.PUSH_IN_PROGRESS);
-              SyncResponse response =
-                  SyncHelper.performSync(store1, store2, config, persistentStore, history, builder);
+              SyncHelper syncHelper = createSyncHelper(store1, store2, config);
+              syncHelperMap.put(config.getId(), syncHelper);
+              SyncResponse response = syncHelper.sync();
+              syncHelperMap.remove(config.getId());
               status.setPushCount(response.getItemsReplicated());
               status.setPushFailCount(response.getItemsFailed());
               status.setPushBytes(response.getBytesTransferred());
@@ -186,8 +218,14 @@ public class ReplicatorImpl implements Replicator {
             status.setStatus(failureStatus);
           } finally {
             completeActiveSyncRequest(syncRequest, status);
+            syncHelperMap.remove(syncRequest.getConfig().getId());
           }
         });
+  }
+
+  SyncHelper createSyncHelper(
+      ReplicationStore source, ReplicationStore destination, ReplicatorConfig config) {
+    return new SyncHelper(source, destination, config, persistentStore, history, builder);
   }
 
   private void completeActiveSyncRequest(SyncRequest syncRequest, ReplicationStatus status) {
@@ -236,13 +274,31 @@ public class ReplicatorImpl implements Replicator {
   @Override
   public void submitSyncRequest(final SyncRequest syncRequest) throws InterruptedException {
     LOGGER.trace("Submitting sync request for name = {}", syncRequest.getConfig().getName());
-    if (pendingSyncRequests.contains(syncRequest)) { // TODO improve comparing syncRequests
+    if (pendingSyncRequests.contains(syncRequest)) {
       LOGGER.debug(
           "The pendingSyncRequests already contains sync request {}. Not adding again.",
           syncRequest);
     } else {
       pendingSyncRequests.put(syncRequest);
     }
+  }
+
+  @Override
+  public void cancelSyncRequest(SyncRequest syncRequest) {
+    pendingSyncRequests.remove(syncRequest);
+
+    SyncHelper helper = syncHelperMap.remove(syncRequest.getConfig().getId());
+    if (helper != null) {
+      helper.cancel();
+    }
+  }
+
+  @Override
+  public void cancelSyncRequest(String configId) {
+    Stream.of(getPendingSyncRequests(), getActiveSyncRequests())
+        .flatMap(Collection::stream)
+        .filter(req -> req.getConfig().getId().equals(configId))
+        .forEach(this::cancelSyncRequest);
   }
 
   @Override
