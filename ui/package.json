@@ -15,8 +15,6 @@
     "lint": "eslint src",
     "pretest": "yarn lint",
     "test": "jest",
-    "posttest": "yarn test:coverage",
-    "test:coverage": "jest --coverage",
     "format": "prettier \"**/*+(.tsx|.js|.less|.json|.css)\"",
     "fmt": "yarn format --write",
     "prebuild": "yarn audit",
@@ -74,10 +72,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "statements": 1,
-        "branches": 0,
-        "lines": 1,
-        "functions": 0
+        "statements": 8,
+        "branches": 8,
+        "lines": 8,
+        "functions": 2
       }
     },
     "collectCoverage": true,

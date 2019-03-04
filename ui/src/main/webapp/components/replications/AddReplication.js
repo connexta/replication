@@ -17,53 +17,10 @@ import {
 import HelpIcon from '@material-ui/icons/Help'
 import sitesQuery from '../sites/gql/sitesQuery'
 import { Query, Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
 import Immutable from 'immutable'
-import { AllReplications } from './gql/queries'
+import { allReplications } from './gql/queries'
+import { addReplication } from './gql/mutations'
 import { withStyles } from '@material-ui/core/styles'
-
-const ADD_REPLICATION = gql`
-  mutation createReplication(
-    $name: String!
-    $sourceId: Pid!
-    $destinationId: Pid!
-    $filter: String!
-    $biDirectional: Boolean
-  ) {
-    createReplication(
-      name: $name
-      sourceId: $sourceId
-      destinationId: $destinationId
-      filter: $filter
-      biDirectional: $biDirectional
-    ) {
-      name
-      id
-      source {
-        id
-        name
-        address {
-          url
-        }
-      }
-      destination {
-        id
-        name
-        address {
-          url
-        }
-      }
-      lastRun
-      lastSuccess
-      firstRun
-      biDirectional
-      replicationStatus
-      filter
-      itemsTransferred
-      dataTransferred
-    }
-  }
-`
 
 const styles = {
   tooltip: {
@@ -290,7 +247,7 @@ class AddReplication extends React.Component {
               Cancel
             </Button>
             <Mutation
-              mutation={ADD_REPLICATION}
+              mutation={addReplication}
               onError={error => {
                 error.graphQLErrors &&
                   error.graphQLErrors.forEach(e => {
@@ -321,11 +278,11 @@ class AddReplication extends React.Component {
                         },
                         update: (store, { data: { createReplication } }) => {
                           const data = store.readQuery({
-                            query: AllReplications,
+                            query: allReplications,
                           })
                           data.replication.replications.push(createReplication)
                           store.writeQuery({
-                            query: AllReplications,
+                            query: allReplications,
                             data,
                           })
                         },
