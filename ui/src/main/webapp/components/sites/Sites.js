@@ -8,7 +8,7 @@ export default function Sites(props) {
   return (
     <Fragment>
       {sites &&
-        props.sites.map(site => (
+        sites.map(site => (
           <Site
             key={site.id}
             name={site.name}

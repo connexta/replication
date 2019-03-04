@@ -8,99 +8,24 @@ import {
   TableBody,
   TableRow,
   IconButton,
-  Menu,
-  MenuItem,
   Typography,
+  Toolbar,
 } from '@material-ui/core'
 import { MoreVert } from '@material-ui/icons'
-import { Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
-import { AllReplications } from './gql/queries'
 import moment from 'moment'
 import Immutable from 'immutable'
 import { withStyles } from '@material-ui/core/styles'
-
-const DELETE_REPLICATION = gql`
-  mutation deleteReplication($id: Pid!) {
-    deleteReplication(id: $id)
-  }
-`
+import ActionsMenu from './ActionsMenu'
+import Replications from './replications'
 
 const styles = {
   root: {
     width: '100%',
     overflowX: 'auto',
   },
-}
-
-const repStatusMapping = {
-  SUCCESS: 'Success',
-  PENDING: 'Pending',
-  PULL_IN_PROGRESS: 'Pulling resources...',
-  PUSH_IN_PROGRESS: 'Pushing resources...',
-  FAILURE: 'Failure',
-  CONNECTION_LOST: 'Connection Lost',
-  CONNECTION_UNAVAILABLE: 'Connection Unavailable',
-  CANCELED: 'Canceled',
-  NOT_RUN: 'Not run',
-}
-
-function isInProgress(replication) {
-  return (
-    replication.replicationStatus === 'PULL_IN_PROGRESS' ||
-    replication.replicationStatus === 'PUSH_IN_PROGRESS'
-  )
-}
-
-function repSort(a, b) {
-  if (isInProgress(a) || isInProgress(b)) {
-    return 1
-  }
-
-  if (a.name.toLowerCase() < b.name.toLowerCase()) {
-    return -1
-  }
-  if (a.name.toLowerCase() > b.name.toLowerCase()) {
-    return 1
-  }
-  return 0
-}
-
-const DeleteReplication = props => {
-  const { id, onClose } = props
-
-  return (
-    <Mutation mutation={DELETE_REPLICATION}>
-      {deleteReplication => (
-        <MenuItem
-          key={'Delete'}
-          onClick={() => {
-            deleteReplication({
-              variables: {
-                id: id,
-              },
-              update: store => {
-                const data = store.readQuery({
-                  query: AllReplications,
-                })
-
-                data.replication.replications = data.replication.replications.filter(
-                  r => r.id !== id
-                )
-                store.writeQuery({
-                  query: AllReplications,
-                  data,
-                })
-              },
-            })
-            onClose()
-          }}
-        >
-          <Typography>Delete</Typography>
-        </MenuItem>
-      )}
-    </Mutation>
-  )
+  title: {
+    flex: '0 0 auto',
+  },
 }
 
 const format = utc => {
@@ -112,8 +37,8 @@ class ReplicationsTable extends React.Component {
     anchor: null,
   }
 
-  handleClickOpen = id => event => {
-    this.setState({ id, anchor: event.currentTarget })
+  handleClickOpen = replication => event => {
+    this.setState({ replication, anchor: event.currentTarget })
   }
 
   handleClose = () => {
@@ -121,13 +46,16 @@ class ReplicationsTable extends React.Component {
   }
 
   render() {
-    const { replications } = this.props
-    const open = Boolean(this.state.anchor)
-
-    const sorted = Immutable.List(replications).sort(repSort)
+    const { replications, title, classes } = this.props
+    const sorted = Immutable.List(replications.sort(Replications.repSort))
 
     return (
-      <Paper className={this.props.classes.root}>
+      <Paper className={classes.root}>
+        <Toolbar>
+          <Typography variant='h6' id='tableTitle' className={classes.title}>
+            {title}
+          </Typography>
+        </Toolbar>
         <Table>
           <TableHead>
             <TableRow>
@@ -150,7 +78,7 @@ class ReplicationsTable extends React.Component {
                 <TableRow key={replication.id}>
                   <TableCell component='th'>{replication.name}</TableCell>
                   <TableCell>
-                    {repStatusMapping[replication.replicationStatus]}
+                    {Replications.statusDisplayName(replication)}
                   </TableCell>
                   <TableCell>{replication.source.name}</TableCell>
                   <TableCell>{replication.destination.name}</TableCell>
@@ -164,28 +92,24 @@ class ReplicationsTable extends React.Component {
                   <TableCell>{format(replication.lastSuccess)}</TableCell>
                   <TableCell>
                     <IconButton
-                      onClick={this.handleClickOpen(replication.id)}
+                      onClick={this.handleClickOpen(replication)}
                       aria-label='More'
-                      aria-owns={open ? 'actions-menu' : undefined}
+                      aria-owns={
+                        this.state.anchor !== null ? 'actions-menu' : undefined
+                      }
                     >
                       <MoreVert />
                     </IconButton>
+
+                    <ActionsMenu
+                      menuId='actions-menu'
+                      replication={this.state.replication}
+                      anchorEl={this.state.anchor}
+                      onClose={this.handleClose}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
-            <Menu
-              open={open}
-              id='actions-menu'
-              anchorEl={this.state.anchor}
-              onClose={this.handleClose}
-            >
-              <DeleteReplication
-                id={this.state.id}
-                onClose={() => {
-                  this.setState({ anchor: null })
-                }}
-              />
-            </Menu>
           </TableBody>
         </Table>
       </Paper>
@@ -194,7 +118,7 @@ class ReplicationsTable extends React.Component {
 }
 
 ReplicationsTable.propTypes = {
-  replications: PropTypes.array.isRequired,
+  replications: PropTypes.object.isRequired,
 }
 
 export default withStyles(styles)(ReplicationsTable)

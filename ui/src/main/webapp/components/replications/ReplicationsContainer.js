@@ -1,10 +1,11 @@
 import React, { Fragment } from 'react'
 import { Query } from 'react-apollo'
-import { AllReplications } from './gql/queries'
+import { allReplications } from './gql/queries'
 import ReplicationsTable from './ReplicationsTable'
 import AddReplication from './AddReplication'
 import { Typography, CardContent, Card, Button } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
+import Immutable from 'immutable'
 
 const styles = {
   expandingCard: {
@@ -58,7 +59,7 @@ function ReplicationsContainer(props) {
   const { classes } = props
 
   return (
-    <Query query={AllReplications} pollInterval={10000}>
+    <Query query={allReplications} pollInterval={10000}>
       {({ data, loading, error }) => {
         if (loading) return <Typography>Loading...</Typography>
         if (error) return <Typography>Error...</Typography>
@@ -68,12 +69,34 @@ function ReplicationsContainer(props) {
           data.replication.replications &&
           data.replication.replications.length > 0
         ) {
+          const activeReplications = Immutable.List(
+            data.replication.replications.filter(r => !r.suspended)
+          )
+          const inactiveReplications = Immutable.List(
+            data.replication.replications.filter(r => r.suspended)
+          )
+
           return (
             <Fragment>
               <div className={classes.right}>
                 <AddReplication Button={AddButton} />
               </div>
-              <ReplicationsTable replications={data.replication.replications} />
+
+              {activeReplications.size > 0 && (
+                <ReplicationsTable
+                  title='Active Replications'
+                  replications={activeReplications}
+                />
+              )}
+
+              {inactiveReplications.size > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <ReplicationsTable
+                    title='Inactive Replications'
+                    replications={inactiveReplications}
+                  />
+                </div>
+              )}
             </Fragment>
           )
         }

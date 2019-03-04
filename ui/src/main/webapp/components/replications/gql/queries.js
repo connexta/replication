@@ -1,6 +1,6 @@
 import gql from 'graphql-tag'
 
-export const AllReplications = gql`
+export const allReplications = gql`
   {
     replication {
       replications {
@@ -28,6 +28,7 @@ export const AllReplications = gql`
         itemsTransferred
         dataTransferred
         filter
+        suspended
       }
     }
   }
