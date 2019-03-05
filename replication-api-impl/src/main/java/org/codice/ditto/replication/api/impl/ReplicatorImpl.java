@@ -68,7 +68,7 @@ public class ReplicatorImpl implements Replicator {
   private final FilterBuilder builder;
 
   /** Does not contain duplicates */
-  private final BlockingQueue<SyncRequest> pendingSyncRequests = new LinkedBlockingQueue<>();
+  private BlockingQueue<SyncRequest> pendingSyncRequests = new LinkedBlockingQueue<>();
 
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
@@ -326,5 +326,10 @@ public class ReplicatorImpl implements Replicator {
       throw new ReplicationException("System at " + site.getUrl() + " is currently unavailable");
     }
     return store;
+  }
+
+  @VisibleForTesting
+  void setPendingSyncRequestsQueue(BlockingQueue<SyncRequest> queue) {
+    pendingSyncRequests = queue;
   }
 }

@@ -28,6 +28,7 @@ import ddf.security.Subject;
 import java.net.URL;
 import java.security.PrivilegedAction;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Direction;
@@ -141,12 +142,14 @@ public class ReplicatorImplTest {
 
   @Test
   public void cancelPendingSyncRequest() throws Exception {
+    BlockingQueue<SyncRequest> queue = mock(BlockingQueue.class);
+    replicator.setPendingSyncRequestsQueue(queue);
     ReplicationStatus status = new ReplicationStatus("test");
     SyncRequest request = new SyncRequestImpl(config, status);
     replicator.submitSyncRequest(request);
-    assertThat(replicator.getPendingSyncRequests().size(), is(1));
+    verify(queue, times(1)).put(request);
     replicator.cancelSyncRequest(request);
-    assertThat(replicator.getPendingSyncRequests().size(), is(0));
+    verify(queue, times(1)).remove(request);
   }
 
   @Test
