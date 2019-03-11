@@ -6,6 +6,7 @@ import { HashRouter, Route, Switch } from 'react-router-dom'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import client from './client'
 import { ApolloProvider } from 'react-apollo'
+import { SnackbarProvider } from 'notistack'
 
 const theme = createMuiTheme({
   // see: https://material-ui.com/style/typography/#migration-to-typography-v2
@@ -18,22 +19,24 @@ const App = () => {
   return (
     <MuiThemeProvider theme={theme}>
       <ApolloProvider client={client}>
-        <HashRouter>
-          <div>
-            <Navbar />
-            <div style={{ margin: 10 }}>
-              <Switch>
-                <Route exact path='/' component={Home} />
-                <Route exact path='/nodes' component={SitesPage} />
-                <Route
-                  render={function() {
-                    return <p>Not Found</p>
-                  }}
-                />
-              </Switch>
+        <SnackbarProvider>
+          <HashRouter>
+            <div>
+              <Navbar />
+              <div style={{ margin: 10 }}>
+                <Switch>
+                  <Route exact path='/' component={Home} />
+                  <Route exact path='/nodes' component={SitesPage} />
+                  <Route
+                    render={function() {
+                      return <p>Not Found</p>
+                    }}
+                  />
+                </Switch>
+              </div>
             </div>
-          </div>
-        </HashRouter>
+          </HashRouter>
+        </SnackbarProvider>
       </ApolloProvider>
     </MuiThemeProvider>
   )

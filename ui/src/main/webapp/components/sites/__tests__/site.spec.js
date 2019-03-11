@@ -1,6 +1,6 @@
 /*global test, shallow, expect */
 import React from 'react'
-import Site from './Site'
+import Site from '../Site'
 
 test('site renders correctly', () => {
   const wrapper = shallow(

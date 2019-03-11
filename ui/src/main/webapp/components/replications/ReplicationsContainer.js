@@ -3,7 +3,13 @@ import { Query } from 'react-apollo'
 import { allReplications } from './gql/queries'
 import ReplicationsTable from './ReplicationsTable'
 import AddReplication from './AddReplication'
-import { Typography, CardContent, Card, Button } from '@material-ui/core'
+import {
+  Typography,
+  CardContent,
+  Card,
+  Button,
+  CircularProgress,
+} from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import Immutable from 'immutable'
 
@@ -61,7 +67,7 @@ function ReplicationsContainer(props) {
   return (
     <Query query={allReplications} pollInterval={10000}>
       {({ data, loading, error }) => {
-        if (loading) return <Typography>Loading...</Typography>
+        if (loading) return <CircularProgress />
         if (error) return <Typography>Error...</Typography>
 
         if (

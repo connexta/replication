@@ -12,6 +12,8 @@ import HomeIcon from '@material-ui/icons/Home'
 import LanguageIcon from '@material-ui/icons/Language'
 import HelpIcon from '@material-ui/icons/Help'
 import { Link } from 'react-router-dom'
+import { Tooltip } from '@material-ui/core'
+import { withTheme } from '@material-ui/core/styles'
 
 class Navbar extends React.Component {
   state = {
@@ -35,23 +37,36 @@ class Navbar extends React.Component {
   }
 
   render() {
+    const { theme } = this.props
+
     return (
       <AppBar
         position='static'
-        // todo theme this
-        style={{ backgroundColor: 'rgb(24, 188, 156)' }}
+        style={
+          { backgroundColor: 'rgb(24, 188, 156)' } // todo theme this
+        }
       >
         <Toolbar>
           <Typography variant='h6' color='inherit' noWrap>
             Project Charleston BETA
           </Typography>
           <div className='navIcons'>
-            <IconButton component={Link} to='/' color='inherit'>
-              <HomeIcon />
-            </IconButton>
-            <IconButton component={Link} to='/nodes' color='inherit'>
-              <LanguageIcon />
-            </IconButton>
+            <Tooltip
+              title='Manage Replications'
+              enterDelay={theme.transitions.duration.standard}
+            >
+              <IconButton component={Link} to='/' color='inherit'>
+                <HomeIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip
+              title='Manage Nodes'
+              enterDelay={theme.transitions.duration.standard}
+            >
+              <IconButton component={Link} to='/nodes' color='inherit'>
+                <LanguageIcon />
+              </IconButton>
+            </Tooltip>
             <IconButton onClick={this.handleOpen} color='inherit'>
               <HelpIcon />
             </IconButton>
@@ -86,4 +101,4 @@ class Navbar extends React.Component {
   }
 }
 
-export default Navbar
+export default withTheme()(Navbar)

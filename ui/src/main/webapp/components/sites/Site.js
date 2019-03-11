@@ -6,8 +6,6 @@ import {
   Card,
   Typography,
   withStyles,
-  SnackbarContent,
-  Snackbar,
   CircularProgress,
 } from '@material-ui/core'
 import DeleteForever from '@material-ui/icons/DeleteForever'
@@ -16,6 +14,7 @@ import gql from 'graphql-tag'
 import { Mutation } from 'react-apollo'
 import sitesQuery from './gql/sitesQuery'
 import PropTypes from 'prop-types'
+import { withSnackbar } from 'notistack'
 
 const DELETE_SITE = gql`
   mutation deleteReplicationSite($id: Pid!) {
@@ -25,13 +24,13 @@ const DELETE_SITE = gql`
 
 const styles = {
   centered: {
-    'text-align': 'center',
-    'margin-top': -15,
+    textAlign: 'center',
+    marginTop: -15,
     clear: 'both',
   },
   right: {
     float: 'right',
-    'margin-bottom': -15,
+    marginBottom: -15,
   },
   card: {
     margin: 20,
@@ -40,71 +39,72 @@ const styles = {
   },
 }
 
-function Site(props) {
-  const { name, content, id, classes } = props
+class Site extends React.Component {
+  render() {
+    const { name, content, id, classes, enqueueSnackbar } = this.props
 
-  return (
-    <Card className={classes.card}>
-      <CardActions className={classes.right}>
-        <Mutation mutation={DELETE_SITE}>
-          {(deleteReplicationSite, { loading, error }) => (
-            <div>
-              <IconButton
-                color='primary'
-                onClick={() => {
-                  deleteReplicationSite({
-                    variables: {
-                      id: id,
-                    },
-                    update: store => {
-                      const data = store.readQuery({
-                        query: sitesQuery,
-                      })
+    return (
+      <Card className={classes.card}>
+        <CardActions className={classes.right}>
+          <Mutation
+            mutation={DELETE_SITE}
+            onError={error => {
+              error.graphQLErrors &&
+                error.graphQLErrors.forEach(e => {
+                  if (e.message === 'SITE_IN_USE') {
+                    enqueueSnackbar(
+                      'Failed to delete ' +
+                        name +
+                        '. It is used by a Replication.',
+                      {
+                        variant: 'error',
+                        preventDuplicate: true,
+                      }
+                    )
+                  }
+                })
+            }}
+          >
+            {(deleteReplicationSite, { loading }) => (
+              <div>
+                <IconButton
+                  color='primary'
+                  onClick={() => {
+                    deleteReplicationSite({
+                      variables: {
+                        id: id,
+                      },
+                      update: store => {
+                        const data = store.readQuery({
+                          query: sitesQuery,
+                        })
 
-                      data.replication.sites = data.replication.sites.filter(
-                        site => site.id !== id
-                      )
+                        data.replication.sites = data.replication.sites.filter(
+                          site => site.id !== id
+                        )
 
-                      store.writeQuery({
-                        query: sitesQuery,
-                        data,
-                      })
-                    },
-                  })
-                }}
-              >
-                <DeleteForever />
-              </IconButton>
-              {error && (
-                <Snackbar
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left',
+                        store.writeQuery({
+                          query: sitesQuery,
+                          data,
+                        })
+                      },
+                    })
                   }}
-                  open
                 >
-                  <SnackbarContent
-                    message={
-                      <Typography style={{ color: '#fff' }}>
-                        Failed to delete node {name}. It is used by a configured
-                        Replication.
-                      </Typography>
-                    }
-                    style={{ backgroundColor: '#d32f2f' }}
-                  />
-                </Snackbar>
-              )}
-              {loading && <CircularProgress size={10} />}
-            </div>
-          )}
-        </Mutation>
-      </CardActions>
-      <CardHeader title={name} className={classes.centered} />
-      <CardContent className={classes.centered}>
-        <Typography>{content}</Typography>
-      </CardContent>
-    </Card>
-  )
+                  <DeleteForever />
+                </IconButton>
+                {loading && <CircularProgress size={10} />}
+              </div>
+            )}
+          </Mutation>
+        </CardActions>
+        <CardHeader title={name} className={classes.centered} />
+        <CardContent className={classes.centered}>
+          <Typography>{content}</Typography>
+        </CardContent>
+      </Card>
+    )
+  }
 }
 
 Site.propTypes = {
@@ -113,4 +113,4 @@ Site.propTypes = {
   id: PropTypes.string.isRequired,
 }
 
-export default withStyles(styles)(Site)
+export default withStyles(styles)(withSnackbar(Site))
