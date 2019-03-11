@@ -1,7 +1,7 @@
 /*global test, shallow, expect */
 import React from 'react'
-import ActionsMenu from './ActionsMenu'
-import Replications from './replications'
+import ActionsMenu from '../ActionsMenu'
+import Replications from '../replications'
 
 test('empty replication property causes no render', () => {
   const wrapper = shallow(
