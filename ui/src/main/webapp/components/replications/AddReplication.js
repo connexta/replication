@@ -100,11 +100,17 @@ class AddReplication extends React.Component {
   sitesToMenuItems = function(sites, siteFilterId) {
     const filteredSites = sites.filter(site => site.id !== siteFilterId)
     const sorted = Immutable.List(filteredSites).sort(alphabetical)
-    return sorted.map(site => (
-      <MenuItem key={site.id} value={site.id}>
-        {site.name}
-      </MenuItem>
-    ))
+    return sorted
+      .map(site => (
+        <MenuItem key={site.id} value={site.id}>
+          {site.name}
+        </MenuItem>
+      ))
+      .unshift(
+        <MenuItem key='blank-reset' value=''>
+          <Typography color='textSecondary'>None</Typography>
+        </MenuItem>
+      )
   }
 
   handleChange = map => name => event => {
@@ -178,7 +184,7 @@ class AddReplication extends React.Component {
                 return (
                   <div>
                     <WrappedTextField
-                      label='Source *'
+                      label='Source Node *'
                       value={sourceId}
                       cursor={this.handleChange({
                         id: 'sourceId',
@@ -192,7 +198,7 @@ class AddReplication extends React.Component {
                     </WrappedTextField>
 
                     <WrappedTextField
-                      label='Destination *'
+                      label='Destination Node *'
                       value={destinationId}
                       cursor={this.handleChange({
                         id: 'destinationId',
@@ -216,7 +222,7 @@ class AddReplication extends React.Component {
                         />
                         <Tooltip
                           className={classes.tooltip}
-                          title='If checked, resources will be synchronized between the selected Source and Destination sites based on the filter.'
+                          title='If checked, resources will be synchronized between the selected Source and Destination nodes based on the filter.'
                           placement='right'
                         >
                           <HelpIcon fontSize='small' />
