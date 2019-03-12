@@ -7,20 +7,31 @@ import DialogActions from '@material-ui/core/DialogActions'
 import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
-import ExpandingCard from '../common/ExpandingCard'
 import CardContent from '@material-ui/core/CardContent'
 import AddIcon from '@material-ui/icons/Add'
 import sitesQuery from './gql/sitesQuery'
-import styled from 'styled-components'
 import addSite from './gql/addSite'
-import { CircularProgress } from '@material-ui/core'
+import { CircularProgress, Card, withStyles } from '@material-ui/core'
 
-const CenteredCardContent = styled(CardContent)`
-  margin: auto;
-  margin-top: 30%;
-  display: flex;
-  justify-content: center;
-`
+const styles = {
+  expandingCard: {
+    margin: 20,
+    width: 200,
+    height: 200,
+    '&:hover': {
+      margin: 15,
+      width: 210,
+      height: 210,
+      cursor: 'pointer',
+    },
+  },
+  centered: {
+    margin: 'auto',
+    marginTop: '30%',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+}
 
 const defaultState = {
   open: false,
@@ -30,7 +41,7 @@ const defaultState = {
   nameErrorText: '',
 }
 
-export default class AddSite extends React.Component {
+const AddSite = class extends React.Component {
   state = defaultState
 
   handleClickOpen = () => {
@@ -53,14 +64,15 @@ export default class AddSite extends React.Component {
 
   render() {
     const { open, name, hostname, port, nameErrorText } = this.state
+    const { classes } = this.props
 
     return (
       <div>
-        <ExpandingCard onClick={this.handleClickOpen}>
-          <CenteredCardContent>
+        <Card className={classes.expandingCard} onClick={this.handleClickOpen}>
+          <CardContent className={classes.centered}>
             <AddIcon fontSize={'large'} />
-          </CenteredCardContent>
-        </ExpandingCard>
+          </CardContent>
+        </Card>
 
         <Dialog
           open={open}
@@ -162,3 +174,5 @@ export default class AddSite extends React.Component {
     )
   }
 }
+
+export default withStyles(styles)(AddSite)
