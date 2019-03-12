@@ -34,6 +34,13 @@ const styles = {
     textAlign: 'right',
     marginBottom: 10,
   },
+  centeredLoading: {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    marginTop: -30,
+    marginLeft: -30,
+  },
 }
 
 const AddButton = props => {
@@ -67,7 +74,10 @@ function ReplicationsContainer(props) {
   return (
     <Query query={allReplications} pollInterval={10000}>
       {({ data, loading, error }) => {
-        if (loading) return <CircularProgress />
+        if (loading)
+          return (
+            <CircularProgress className={classes.centeredLoading} size={60} />
+          )
         if (error) return <Typography>Error...</Typography>
 
         if (
