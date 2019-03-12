@@ -3,7 +3,7 @@ import sitesQuery from './gql/sitesQuery'
 import { Query } from 'react-apollo'
 import Sites from './Sites'
 import Immutable from 'immutable'
-import { CircularProgress } from '@material-ui/core'
+import { CircularProgress, Typography } from '@material-ui/core'
 
 function alphabetical(a, b) {
   if (a.name.toLowerCase() < b.name.toLowerCase()) {
@@ -21,7 +21,7 @@ export default class SitesContainer extends React.Component {
       <Query query={sitesQuery}>
         {({ data, loading, error }) => {
           if (loading) return <CircularProgress />
-          if (error) return <p>Error...</p>
+          if (error) return <Typography>Error...</Typography>
 
           const sites = Immutable.List(data.replication.sites).sort(
             alphabetical

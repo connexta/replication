@@ -1,20 +1,22 @@
 import React from 'react'
 import AddSite from './AddSite'
 import SitesContainer from './SitesContainer'
-import { Grid } from '@material-ui/core'
+import { Grid, withStyles } from '@material-ui/core'
 import Typography from '@material-ui/core/Typography'
 
-import styled from 'styled-components'
+const styles = {
+  root: {
+    width: '90%',
+    margin: 'auto',
+  },
+}
 
-const Container = styled.div`
-  width: 90%;
-  margin: auto;
-`
-
-export default class SitesPage extends React.Component {
+const SitePages = class extends React.Component {
   render() {
+    const { classes } = this.props
+
     return (
-      <Container>
+      <div className={classes.root}>
         <Typography variant='h5' color='inherit' noWrap>
           Nodes
         </Typography>
@@ -22,7 +24,9 @@ export default class SitesPage extends React.Component {
           <AddSite />
           <SitesContainer />
         </Grid>
-      </Container>
+      </div>
     )
   }
 }
+
+export default withStyles(styles)(SitePages)
