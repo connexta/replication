@@ -3,10 +3,11 @@ import sitesQuery from './gql/sitesQuery'
 import { Query } from 'react-apollo'
 import Sites from './Sites'
 import Immutable from 'immutable'
-import { CircularProgress, Typography, Grid } from '@material-ui/core'
+import { Typography, Grid } from '@material-ui/core'
 import AddSite from './AddSite'
 import ServerError from '../common/ServerError'
 import { withStyles } from '@material-ui/core/styles'
+import CenteredCircularProgress from '../common/CenteredCircularProgress'
 
 const styles = {
   root: {
@@ -31,7 +32,7 @@ function SitesContainer(props) {
   return (
     <Query query={sitesQuery}>
       {({ data, loading, error }) => {
-        if (loading) return <CircularProgress />
+        if (loading) return <CenteredCircularProgress />
         if (error) return <ServerError />
 
         const sites = Immutable.List(data.replication.sites).sort(alphabetical)

@@ -3,16 +3,11 @@ import { Query } from 'react-apollo'
 import { allReplications } from './gql/queries'
 import ReplicationsTable from './ReplicationsTable'
 import AddReplication from './AddReplication'
-import {
-  Typography,
-  CardContent,
-  Card,
-  Button,
-  CircularProgress,
-} from '@material-ui/core'
+import { Typography, CardContent, Card, Button } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import Immutable from 'immutable'
 import ServerError from '../common/ServerError'
+import CenteredCircularProgress from '../common/CenteredCircularProgress'
 
 const styles = {
   expandingCard: {
@@ -35,13 +30,6 @@ const styles = {
   right: {
     textAlign: 'right',
     marginBottom: 10,
-  },
-  centeredLoading: {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    marginTop: -30,
-    marginLeft: -30,
   },
 }
 
@@ -76,10 +64,7 @@ function ReplicationsContainer(props) {
   return (
     <Query query={allReplications} pollInterval={10000}>
       {({ data, loading, error }) => {
-        if (loading)
-          return (
-            <CircularProgress className={classes.centeredLoading} size={60} />
-          )
+        if (loading) return <CenteredCircularProgress />
         if (error) return <ServerError />
 
         if (
