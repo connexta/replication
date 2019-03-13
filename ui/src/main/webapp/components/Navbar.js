@@ -12,8 +12,50 @@ import HomeIcon from '@material-ui/icons/Home'
 import LanguageIcon from '@material-ui/icons/Language'
 import HelpIcon from '@material-ui/icons/Help'
 import { Link } from 'react-router-dom'
-import { Tooltip } from '@material-ui/core'
+import { Tooltip, ListItem, ListItemText } from '@material-ui/core'
 import { withTheme } from '@material-ui/core/styles'
+import { List } from '@material-ui/core'
+
+const Nodes = () => {
+  return <LanguageIcon />
+}
+
+const Home = () => {
+  return <HomeIcon />
+}
+
+const HelpDialog = props => {
+  const { open, handleClose } = props
+
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth='md'>
+      <DialogTitle variant='h6' id='help-dialog-title'>
+        {'Welcome to the Project Charleston BETA'}
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText id='help-dialog-description'>
+          Replication is a tool that enables resources to be replicated
+          efficiently between <b>Nodes</b>. Once a Node is created, it can be
+          used by <b>Replications</b> to start transferring resources. To begin:
+        </DialogContentText>
+        <List>
+          <ListItem>
+            <ListItemText>
+              1. Add new Nodes by clicking the <Nodes /> icon on the navigation
+              menu. The local Node has already been created.
+            </ListItemText>
+          </ListItem>
+          <ListItem>
+            <ListItemText>
+              2. Return to the home page (<Home />) and click the{' '}
+              <b>Add Replication</b> button.
+            </ListItemText>
+          </ListItem>
+        </List>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 class Navbar extends React.Component {
   state = {
@@ -56,7 +98,7 @@ class Navbar extends React.Component {
               enterDelay={theme.transitions.duration.standard}
             >
               <IconButton component={Link} to='/' color='inherit'>
-                <HomeIcon />
+                <Home />
               </IconButton>
             </Tooltip>
             <Tooltip
@@ -64,36 +106,13 @@ class Navbar extends React.Component {
               enterDelay={theme.transitions.duration.standard}
             >
               <IconButton component={Link} to='/nodes' color='inherit'>
-                <LanguageIcon />
+                <Nodes />
               </IconButton>
             </Tooltip>
             <IconButton onClick={this.handleOpen} color='inherit'>
               <HelpIcon />
             </IconButton>
-            <Dialog
-              open={this.state.open}
-              keepMounted
-              onClose={this.handleClose}
-            >
-              <DialogTitle variant='h6' id='help-dialog-title'>
-                {'Welcome to the Project Charleston BETA'}
-              </DialogTitle>
-              <DialogContent>
-                <DialogContentText
-                  variant='subtitle1'
-                  id='help-dialog-description'
-                >
-                  Replication is a tool that enables products to be replicated
-                  efficiently between DDF based nodes.
-                </DialogContentText>
-                <DialogContentText variant='subtitle1' gutterBottom>
-                  1. Click the Globe Icon at the top to add nodes.
-                </DialogContentText>
-                <DialogContentText variant='subtitle1' gutterBottom>
-                  2. Click ADD REPLICATION to configure a new Replication task.
-                </DialogContentText>
-              </DialogContent>
-            </Dialog>
+            <HelpDialog open={this.state.open} handleClose={this.handleClose} />
           </div>
         </Toolbar>
       </AppBar>
