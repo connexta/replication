@@ -12,6 +12,7 @@ import {
 } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import Immutable from 'immutable'
+import ServerError from '../common/ServerError'
 
 const styles = {
   expandingCard: {
@@ -79,7 +80,7 @@ function ReplicationsContainer(props) {
           return (
             <CircularProgress className={classes.centeredLoading} size={60} />
           )
-        if (error) return <Typography>Error...</Typography>
+        if (error) return <ServerError />
 
         if (
           data.replication &&
