@@ -22,6 +22,7 @@ const styles = {
       margin: 15,
       width: 370,
       height: 370,
+      cursor: 'pointer',
     },
   },
   centered: {
