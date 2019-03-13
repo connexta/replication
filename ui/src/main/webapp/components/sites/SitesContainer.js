@@ -3,7 +3,17 @@ import sitesQuery from './gql/sitesQuery'
 import { Query } from 'react-apollo'
 import Sites from './Sites'
 import Immutable from 'immutable'
-import { CircularProgress, Typography } from '@material-ui/core'
+import { CircularProgress, Typography, Grid } from '@material-ui/core'
+import AddSite from './AddSite'
+import ServerError from '../common/ServerError'
+import { withStyles } from '@material-ui/core/styles'
+
+const styles = {
+  root: {
+    width: '90%',
+    margin: 'auto',
+  },
+}
 
 function alphabetical(a, b) {
   if (a.name.toLowerCase() < b.name.toLowerCase()) {
@@ -15,21 +25,31 @@ function alphabetical(a, b) {
   return 0
 }
 
-export default class SitesContainer extends React.Component {
-  render() {
-    return (
-      <Query query={sitesQuery}>
-        {({ data, loading, error }) => {
-          if (loading) return <CircularProgress />
-          if (error) return <Typography>Error...</Typography>
+function SitesContainer(props) {
+  const { classes } = props
 
-          const sites = Immutable.List(data.replication.sites).sort(
-            alphabetical
-          )
+  return (
+    <Query query={sitesQuery}>
+      {({ data, loading, error }) => {
+        if (loading) return <CircularProgress />
+        if (error) return <ServerError />
 
-          return <Sites sites={sites} />
-        }}
-      </Query>
-    )
-  }
+        const sites = Immutable.List(data.replication.sites).sort(alphabetical)
+
+        return (
+          <div className={classes.root}>
+            <Typography variant='h5' color='inherit' noWrap>
+              Nodes
+            </Typography>
+            <Grid container>
+              <AddSite />
+              <Sites sites={sites} />
+            </Grid>
+          </div>
+        )
+      }}
+    </Query>
+  )
 }
+
+export default withStyles(styles)(SitesContainer)
