@@ -53,7 +53,7 @@ public class ReplicatorConfigImplTest {
     config.setSource("source");
     config.setDestination("destination");
     config.setFilter("filter");
-    config.setBiDirectional(true);
+    config.setBidirectional(true);
     config.setFailureRetryCount(5);
 
     Map<String, Object> props = config.toMap();
@@ -87,7 +87,7 @@ public class ReplicatorConfigImplTest {
     assertThat(config.getSource(), is("source"));
     assertThat(config.getDestination(), is("destination"));
     assertThat(config.getFilter(), is("filter"));
-    assertThat(config.isBiDirectional(), is(true));
+    assertThat(config.isBidirectional(), is(true));
     assertThat(config.getFailureRetryCount(), is(5));
     assertThat(config.getVersion(), is(1));
   }

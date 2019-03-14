@@ -36,8 +36,19 @@
     </bean>
 
     <bean id="newReplicationPersistentStore"
-        class="org.codice.ditto.replication.api.impl.persistence.ReplicationPersistentStore">
+            class="org.codice.ditto.replication.api.impl.persistence.ReplicationPersistentStore">
         <argument ref="persistentStore"/>
+    </bean>
+
+    <bean id="metacardConfigLoader"
+        class="org.codice.ditto.replication.api.impl.legacy.LegacyDataConverter"
+        init-method="init">
+        <argument ref="catalog"/>
+        <argument ref="filterBuilder"/>
+        <argument ref="metacardHelper"/>
+        <argument ref="siteManager"/>
+        <argument ref="configManager"/>
+        <argument ref="newReplicationPersistentStore" />
     </bean>
 
     <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl"  init-method="init">

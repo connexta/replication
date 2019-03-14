@@ -23,10 +23,8 @@ import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
-import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationStatus;
-import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.SyncRequest;
@@ -117,8 +115,7 @@ public class ReplicationUtils {
     config.setSource(sourceId);
     config.setDestination(destinationId);
     config.setFilter(filter);
-    config.setReplicationType(ReplicationType.RESOURCE);
-    config.setBiDirectional(biDirectional);
+    config.setBidirectional(biDirectional);
     config.setFailureRetryCount(5);
     configManager.save(config);
 
@@ -138,7 +135,7 @@ public class ReplicationUtils {
     setIfPresent(config::setSource, sourceId);
     setIfPresent(config::setDestination, destinationId);
     setIfPresent(config::setFilter, filter);
-    setIfPresent(config::setBiDirectional, biDirectional);
+    setIfPresent(config::setBidirectional, biDirectional);
 
     configManager.save(config);
     return getReplicationFieldForConfig(config);
@@ -157,7 +154,7 @@ public class ReplicationUtils {
     field.source(getSiteFieldForSite(siteManager.get(config.getSource())));
     field.destination(getSiteFieldForSite(siteManager.get(config.getDestination())));
     field.filter(config.getFilter());
-    field.biDirectional(Direction.BOTH.equals(config.getDirection()));
+    field.biDirectional(config.isBidirectional());
     List<ReplicationStatus> statusList = history.getReplicationEvents(config.getName());
     if (!statusList.isEmpty()) {
       ReplicationStatus lastStatus = statusList.get(0);

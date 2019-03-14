@@ -28,11 +28,9 @@ import java.security.PrivilegedAction;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import org.codice.ddf.security.common.Security;
-import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.codice.ditto.replication.api.Status;
@@ -105,9 +103,8 @@ public class ReplicatorImplTest {
     config.setSource("srcId");
     config.setDestination("destId");
     config.setId("id");
-    config.setDirection(Direction.BOTH);
+    config.setBidirectional(true);
     config.setFilter("cql");
-    config.setReplicationType(ReplicationType.RESOURCE);
     config.setVersion(0);
   }
 

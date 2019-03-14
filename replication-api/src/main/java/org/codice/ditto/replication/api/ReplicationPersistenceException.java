@@ -14,6 +14,10 @@
 package org.codice.ditto.replication.api;
 
 public class ReplicationPersistenceException extends RuntimeException {
+  public ReplicationPersistenceException() {
+    super();
+  }
+
   public ReplicationPersistenceException(String message) {
     super(message);
   }
