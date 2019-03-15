@@ -29,7 +29,12 @@ const styles = {
 }
 
 const format = utc => {
-  return utc ? moment.utc(utc, 'YYYY-MM-DD HH:mm').toString() : '-'
+  return utc
+    ? moment
+        .utc(utc)
+        .format('MMM DD YYYY HH:mm zZ')
+        .toString()
+    : '-'
 }
 
 class ReplicationsTable extends React.Component {

@@ -9,8 +9,8 @@ import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import CardContent from '@material-ui/core/CardContent'
 import AddIcon from '@material-ui/icons/Add'
-import sitesQuery from './gql/sitesQuery'
-import addSite from './gql/addSite'
+import { allSites } from './gql/queries'
+import { addSite } from './gql/mutations'
 import { CircularProgress, Card, withStyles } from '@material-ui/core'
 
 const styles = {
@@ -152,11 +152,11 @@ const AddSite = class extends React.Component {
                           { data: { createReplicationSite } }
                         ) => {
                           const data = store.readQuery({
-                            query: sitesQuery,
+                            query: allSites,
                           })
                           data.replication.sites.push(createReplicationSite)
                           store.writeQuery({
-                            query: sitesQuery,
+                            query: allSites,
                             data,
                           })
                         },

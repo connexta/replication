@@ -10,17 +10,11 @@ import {
 } from '@material-ui/core'
 import DeleteForever from '@material-ui/icons/DeleteForever'
 import CardActions from '@material-ui/core/CardActions'
-import gql from 'graphql-tag'
 import { Mutation } from 'react-apollo'
-import sitesQuery from './gql/sitesQuery'
+import { allSites} from './gql/queries'
 import PropTypes from 'prop-types'
 import { withSnackbar } from 'notistack'
-
-const DELETE_SITE = gql`
-  mutation deleteReplicationSite($id: Pid!) {
-    deleteReplicationSite(id: $id)
-  }
-`
+import { deleteSite } from './gql/mutations'
 
 const styles = {
   centered: {
@@ -47,7 +41,7 @@ class Site extends React.Component {
       <Card className={classes.card}>
         <CardActions className={classes.right}>
           <Mutation
-            mutation={DELETE_SITE}
+            mutation={deleteSite}
             onError={error => {
               error.graphQLErrors &&
                 error.graphQLErrors.forEach(e => {
@@ -76,7 +70,7 @@ class Site extends React.Component {
                       },
                       update: store => {
                         const data = store.readQuery({
-                          query: sitesQuery,
+                          query: allSites,
                         })
 
                         data.replication.sites = data.replication.sites.filter(
@@ -84,8 +78,12 @@ class Site extends React.Component {
                         )
 
                         store.writeQuery({
-                          query: sitesQuery,
+                          query: allSites,
                           data,
+                        })
+
+                        enqueueSnackbar('Deleted node ' + name + '.', {
+                          variant: 'success',
                         })
                       },
                     })
