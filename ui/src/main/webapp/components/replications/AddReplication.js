@@ -15,7 +15,7 @@ import {
   Button,
 } from '@material-ui/core'
 import HelpIcon from '@material-ui/icons/Help'
-import sitesQuery from '../sites/gql/sitesQuery'
+import { allSites } from '../sites/gql/queries'
 import { Query, Mutation } from 'react-apollo'
 import Immutable from 'immutable'
 import { allReplications } from './gql/queries'
@@ -176,7 +176,7 @@ class AddReplication extends React.Component {
               helperText={nameErrorText ? nameErrorText : ''}
               error={nameErrorText ? true : false}
             />
-            <Query query={sitesQuery}>
+            <Query query={allSites}>
               {({ loading, error, data }) => {
                 if (loading) return <Typography>Loading...</Typography>
                 if (error) return <Typography>Error...</Typography>

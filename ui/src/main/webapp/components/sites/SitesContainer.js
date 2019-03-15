@@ -1,5 +1,5 @@
 import React from 'react'
-import sitesQuery from './gql/sitesQuery'
+import { allSites } from './gql/queries'
 import { Query } from 'react-apollo'
 import Sites from './Sites'
 import Immutable from 'immutable'
@@ -30,7 +30,7 @@ function SitesContainer(props) {
   const { classes } = props
 
   return (
-    <Query query={sitesQuery}>
+    <Query query={allSites} pollInterval={10000}>
       {({ data, loading, error }) => {
         if (loading) return <CenteredCircularProgress />
         if (error) return <ServerError />

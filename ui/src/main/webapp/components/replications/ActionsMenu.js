@@ -8,9 +8,10 @@ import {
 import { allReplications } from './gql/queries'
 import { Mutation } from 'react-apollo'
 import Replications from './replications'
+import { withSnackbar } from 'notistack'
 
-const DeleteReplication = props => {
-  const { id, onClose } = props
+const DeleteReplication = withSnackbar(props => {
+  const { id, onClose, name, enqueueSnackbar } = props
 
   return (
     <Mutation mutation={deleteReplication}>
@@ -34,6 +35,8 @@ const DeleteReplication = props => {
                   query: allReplications,
                   data,
                 })
+
+                enqueueSnackbar('Deleted ' + name + '.', { variant: 'success' })
               },
             })
             onClose()
@@ -44,35 +47,60 @@ const DeleteReplication = props => {
       )}
     </Mutation>
   )
-}
+})
 
-const SuspendReplication = props => {
-  const { id, suspend, key, label, onClose } = props
+const SuspendReplication = withSnackbar(props => {
+  const { id, suspend, key, label, onClose, enqueueSnackbar, name } = props
 
   return (
     <Mutation mutation={suspendReplication}>
       {suspendReplication => (
-        <MenuItem
-          key={key}
-          onClick={() => {
-            suspendReplication({
-              variables: {
-                id: id,
-                suspend: suspend,
-              },
-            })
-            onClose()
-          }}
-        >
-          <Typography>{label}</Typography>
-        </MenuItem>
+        <div>
+          <MenuItem
+            key={key}
+            onClick={() => {
+              suspendReplication({
+                variables: { id: id, suspend: suspend },
+                update: (store, { data }) => {
+                  if (data && data.suspendReplication) {
+                    const data = store.readQuery({
+                      query: allReplications,
+                    })
+
+                    const suspendedRep = data.replication.replications.find(
+                      r => r.id === id
+                    )
+                    const index = data.replication.replications.indexOf(
+                      suspendedRep
+                    )
+                    suspendedRep.suspended = suspend
+                    data.replication.replications[index] = suspendedRep
+
+                    store.writeQuery({
+                      query: allReplications,
+                      data,
+                    })
+
+                    const msg = suspend ? 'Suspended ' : 'Enabled '
+                    enqueueSnackbar(msg + 'replication ' + name + '.', {
+                      variant: 'success',
+                    })
+                  }
+                },
+              })
+              onClose()
+            }}
+          >
+            <Typography>{label}</Typography>
+          </MenuItem>
+        </div>
       )}
     </Mutation>
   )
-}
+})
 
-const CancelReplication = props => {
-  const { id, onClose } = props
+const CancelReplication = withSnackbar(props => {
+  const { id, onClose, name, enqueueSnackbar } = props
 
   return (
     <Mutation mutation={cancelReplication}>
@@ -84,6 +112,32 @@ const CancelReplication = props => {
               variables: {
                 id: id,
               },
+              update: (store, { data }) => {
+                if (data && data.cancelReplication) {
+                  const data = store.readQuery({
+                    query: allReplications,
+                  })
+
+                  const canceledRep = data.replication.replications.find(
+                    r => r.id === id
+                  )
+                  const index = data.replication.replications.indexOf(
+                    canceledRep
+                  )
+                  canceledRep.replicationStatus = Replications.Status.CANCELED
+                  data.replication.replications[index] = canceledRep
+
+                  store.writeQuery({
+                    query: allReplications,
+                    data,
+                  })
+
+                  enqueueSnackbar(
+                    'Canceled currently running replication for ' + name + '.',
+                    { variant: 'success' }
+                  )
+                }
+              },
             })
             onClose()
           }}
@@ -93,7 +147,7 @@ const CancelReplication = props => {
       )}
     </Mutation>
   )
-}
+})
 
 const ActionsMenu = function(props) {
   const { menuId, anchorEl = null, onClose, replication } = props
@@ -102,7 +156,7 @@ const ActionsMenu = function(props) {
     return null
   }
 
-  const { id } = replication
+  const { id, name } = replication
 
   return (
     <Menu
@@ -113,13 +167,14 @@ const ActionsMenu = function(props) {
       onClose={onClose}
     >
       {Replications.cancelable(replication) && (
-        <CancelReplication id={id} onClose={onClose} />
+        <CancelReplication id={id} onClose={onClose} name={name} />
       )}
 
-      <DeleteReplication id={id} onClose={onClose} />
+      <DeleteReplication id={id} onClose={onClose} name={name} />
       {replication.suspended ? (
         <SuspendReplication
           id={id}
+          name={name}
           onClose={onClose}
           suspend={false}
           key='Enable'
@@ -128,6 +183,7 @@ const ActionsMenu = function(props) {
       ) : (
         <SuspendReplication
           id={id}
+          name={name}
           onClose={onClose}
           suspend={true}
           key='Disable'
