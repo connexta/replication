@@ -11,7 +11,7 @@ import {
 import DeleteForever from '@material-ui/icons/DeleteForever'
 import CardActions from '@material-ui/core/CardActions'
 import { Mutation } from 'react-apollo'
-import { allSites} from './gql/queries'
+import { allSites } from './gql/queries'
 import PropTypes from 'prop-types'
 import { withSnackbar } from 'notistack'
 import { deleteSite } from './gql/mutations'
