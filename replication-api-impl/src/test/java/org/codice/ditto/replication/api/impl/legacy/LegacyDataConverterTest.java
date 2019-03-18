@@ -210,24 +210,6 @@ public class LegacyDataConverterTest {
     verify(newConfigManager, never()).save(any(ReplicatorConfig.class));
   }
 
-  // this test will throw an exception which should cause failsafe to retry.
-  @Test
-  public void initThrowsRetryException() throws Exception {
-    ReplicatorConfig config =
-        newReplicatorConfig("test", "id", "src", "dest", Direction.PUSH, "cql");
-    when(siteManager.objects()).thenReturn(Stream.empty(), Stream.empty());
-    when(newConfigManager.objects())
-        .thenThrow(new ReplicationPersistenceException())
-        .thenReturn(Stream.empty());
-    when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
-        .thenReturn(Collections.singletonList(config));
-    converter.init();
-    verify(siteManager, times(2)).save(any(ReplicationSite.class));
-    verify(persistentStore, times(2)).delete(OldSite.class, "oldSiteId");
-    verify(newConfigManager).save(config);
-    verify(framework).delete(any(DeleteRequest.class));
-  }
-
   @Test
   public void removeConfig() throws Exception {
     converter.removeConfig(newReplicatorConfig("test", "id", "src", "dest", Direction.PUSH, "cql"));
