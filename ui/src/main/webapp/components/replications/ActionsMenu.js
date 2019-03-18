@@ -48,6 +48,7 @@ const DeleteReplication = withSnackbar(props => {
     </Mutation>
   )
 })
+DeleteReplication.displayName = 'DeleteReplication'
 
 const SuspendReplication = withSnackbar(props => {
   const { id, suspend, key, label, onClose, enqueueSnackbar, name } = props
@@ -98,6 +99,7 @@ const SuspendReplication = withSnackbar(props => {
     </Mutation>
   )
 })
+SuspendReplication.displayName = 'SuspendReplication'
 
 const CancelReplication = withSnackbar(props => {
   const { id, onClose, name, enqueueSnackbar } = props
@@ -148,6 +150,7 @@ const CancelReplication = withSnackbar(props => {
     </Mutation>
   )
 })
+CancelReplication.displayName = 'CancelReplication'
 
 const ActionsMenu = function(props) {
   const { menuId, anchorEl = null, onClose, replication } = props
