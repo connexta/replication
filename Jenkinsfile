@@ -43,11 +43,11 @@ pipeline {
                 //    agent { label 'server-2016-small' }
                 //    steps {
                 //        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
-               //             bat 'mvn install -B -DskipStatic=true -DskipTests=true  %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-               //             bat 'mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/%CHANGE_TARGET% %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-              //          }
-               //     }
-               // }
+                //             bat 'mvn install -B -DskipStatic=true -DskipTests=true  %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
+                //             bat 'mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/%CHANGE_TARGET% %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
+                //        }
+                //    }
+                //}
             }
         }
         stage('Full Build') {
@@ -61,14 +61,14 @@ pipeline {
                         }
                     }
                 }
-                stage ('Windows') {
-                    agent { label 'server-2016-small' }
-                    steps {
-                        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
-                            bat 'mvn clean install -B %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                        }
-                    }
-                }
+                //stage ('Windows') {
+                //    agent { label 'server-2016-small' }
+                //    steps {
+                //        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
+                //            bat 'mvn clean install -B %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
+                //        }
+                //    }
+                //}
             }
         }
         stage('Security Analysis') {
