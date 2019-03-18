@@ -3,11 +3,14 @@ import Home from './components/Home'
 import Navbar from './components/Navbar'
 import { HashRouter, Route, Switch, Link } from 'react-router-dom'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import AppBar from '@material-ui/core/AppBar'
 import client from './client'
-import { ApolloProvider } from 'react-apollo'
+import { ApolloProvider, Query } from 'react-apollo'
 import { SnackbarProvider } from 'notistack'
 import { Grid, Typography } from '@material-ui/core'
+import CenteredCircularProgress from './components/common/CenteredCircularProgress'
 import SitesContainer from './components/sites/SitesContainer'
+import gql from 'graphql-tag'
 
 const theme = createMuiTheme({
   // see: https://material-ui.com/style/typography/#migration-to-typography-v2
@@ -15,6 +18,67 @@ const theme = createMuiTheme({
     useNextVariants: true,
   },
 })
+
+const Banner = props => {
+  const { children } = props
+
+  return (
+    <Query query={getUiConfig}>
+      {({ data, loading }) => {
+        if (loading) return <CenteredCircularProgress />
+
+        return (
+          <div>
+            <AppBar
+              position='static'
+              style={{
+                backgroundColor: data.replication.getUiConfig.background,
+                textAlign: 'center',
+              }}
+            >
+              <Typography
+                variant='subtitle1'
+                style={{ color: data.replication.getUiConfig.color }}
+              >
+                {data.replication.getUiConfig.header}
+              </Typography>
+            </AppBar>
+            {children}
+            <AppBar
+              position='fixed'
+              style={{
+                backgroundColor: data.replication.getUiConfig.background,
+                textAlign: 'center',
+                top: 'auto',
+                bottom: 0,
+              }}
+            >
+              <Typography
+                variant='subtitle1'
+                style={{ color: data.replication.getUiConfig.color }}
+              >
+                {data.replication.getUiConfig.footer}
+              </Typography>
+            </AppBar>
+          </div>
+        )
+      }}
+    </Query>
+  )
+}
+
+const getUiConfig = gql`
+  {
+    replication {
+      getUiConfig {
+        header
+        footer
+        color
+        background
+      }
+    }
+  }
+`
 
 const NotFoundPage = () => {
   return (
@@ -45,7 +109,7 @@ const App = () => {
       <ApolloProvider client={client}>
         <SnackbarProvider>
           <HashRouter>
-            <div>
+            <Banner>
               <Navbar />
               <div style={{ margin: 10 }}>
                 <Switch>
@@ -58,7 +122,7 @@ const App = () => {
                   />
                 </Switch>
               </div>
-            </div>
+            </Banner>
           </HashRouter>
         </SnackbarProvider>
       </ApolloProvider>

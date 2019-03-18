@@ -27,6 +27,7 @@ import org.codice.ditto.replication.admin.query.sites.discover.GetReplicationSit
 import org.codice.ditto.replication.admin.query.sites.persist.CreateReplicationSite;
 import org.codice.ditto.replication.admin.query.sites.persist.DeleteReplicationSite;
 import org.codice.ditto.replication.admin.query.sites.persist.UpdateReplicationSite;
+import org.codice.ditto.replication.admin.query.ui.GetUiConfig;
 
 public class ReplicationFieldProvider extends BaseFieldProvider {
 
@@ -57,6 +58,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
 
   private SuspendReplication suspendReplication;
 
+  private GetUiConfig getUiConfig;
+
   public ReplicationFieldProvider(
       GetReplications getReplications,
       GetReplicationSites getReplicationSites,
@@ -67,7 +70,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
       SuspendReplication suspendReplication,
       CreateReplicationSite createReplicationSite,
       UpdateReplicationSite updateReplicationSite,
-      DeleteReplicationSite deleteReplicationSite) {
+      DeleteReplicationSite deleteReplicationSite,
+      GetUiConfig getUiConfig) {
     super(DEFAULT_FIELD_NAME, TYPE_NAME, DESCRIPTION);
     this.getReplications = getReplications;
     this.getReplicationSites = getReplicationSites;
@@ -79,11 +83,12 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
     this.createReplicationSite = createReplicationSite;
     this.updateReplicationSite = updateReplicationSite;
     this.deleteReplicationSite = deleteReplicationSite;
+    this.getUiConfig = getUiConfig;
   }
 
   @Override
   public List<FunctionField> getDiscoveryFunctions() {
-    return ImmutableList.of(getReplications, getReplicationSites);
+    return ImmutableList.of(getReplications, getReplicationSites, getUiConfig);
   }
 
   @Override

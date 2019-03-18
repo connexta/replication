@@ -16,6 +16,7 @@
     <reference id="configManager" interface="org.codice.ditto.replication.api.persistence.ReplicatorConfigManager"/>
     <reference id="history" interface="org.codice.ditto.replication.api.ReplicatorHistory"/>
     <reference id="replicator" interface="org.codice.ditto.replication.api.Replicator"/>
+    <reference id="configurationAdmin" interface="org.osgi.service.cm.ConfigurationAdmin"/>
 
     <bean id="replicationUtils" class="org.codice.ditto.replication.admin.query.ReplicationUtils">
         <argument ref="siteManager"/>
@@ -53,6 +54,12 @@
     <bean id="deleteReplicationSite" class="org.codice.ditto.replication.admin.query.sites.persist.DeleteReplicationSite">
             <argument ref="replicationUtils"/>
     </bean>
+    <bean id="uiConfigurationFactory" class="org.codice.ditto.replication.admin.query.ui.UiConfigurationFactory">
+        <argument ref="configurationAdmin"/>
+    </bean>
+    <bean id="getUiConfig" class="org.codice.ditto.replication.admin.query.ui.GetUiConfig">
+        <argument ref="uiConfigurationFactory"/>
+    </bean>
 
     <service id="replicationFieldProvider" interface="org.codice.ddf.admin.api.FieldProvider">
         <bean class="org.codice.ditto.replication.admin.query.ReplicationFieldProvider">
@@ -66,6 +73,7 @@
             <argument ref="createReplicationSite"/>
             <argument ref="updateReplicationSite"/>
             <argument ref="deleteReplicationSite"/>
+            <argument ref="getUiConfig"/>
         </bean>
     </service>
 </blueprint>
