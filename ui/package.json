@@ -21,10 +21,12 @@
     "build": "webpack --mode production"
   },
   "dependencies": {
+    "@babel/polyfill": "7.2.5",
     "@material-ui/core": "3.9.2",
     "@material-ui/icons": "3.0.2",
-    "apollo-boost": "0.1.23",
-    "apollo-client": "2.4.8",
+    "apollo-cache-inmemory": "1.5.1",
+    "apollo-client": "2.5.1",
+    "apollo-link-http": "1.5.14",
     "graphql": "14.0.2",
     "graphql-tag": "2.10.0",
     "immutable": "3.8.2",
@@ -34,7 +36,8 @@
     "react": "16.8.3",
     "react-apollo": "2.3.3",
     "react-dom": "16.8.3",
-    "react-router-dom": "4.3.1"
+    "react-router-dom": "4.3.1",
+    "unfetch": "4.1.0"
   },
   "devDependencies": {
     "@babel/core": "7.2.0",

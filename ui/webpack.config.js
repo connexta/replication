@@ -4,7 +4,7 @@ const merge = require('webpack-merge')
 const webpack = require('webpack')
 
 let config = {
-  entry: ['./src/main/webapp/index.js'],
+  entry: ['@babel/polyfill', './src/main/webapp/index.js'],
   output: {
     filename: 'replication.bundle.js',
     path: path.resolve(__dirname, 'target', 'webapp'),
