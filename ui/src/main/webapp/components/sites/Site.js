@@ -1,12 +1,12 @@
 import React from 'react'
 import CardContent from '@material-ui/core/CardContent'
 import {
-  CardHeader,
   IconButton,
   Card,
   Typography,
   withStyles,
   CircularProgress,
+  Tooltip,
 } from '@material-ui/core'
 import DeleteForever from '@material-ui/icons/DeleteForever'
 import CardActions from '@material-ui/core/CardActions'
@@ -28,8 +28,17 @@ const styles = {
   },
   card: {
     margin: 20,
-    width: 200,
-    height: 200,
+    width: 220,
+    height: 220,
+  },
+  multilineOverflow: {
+    display: '-webkit-box',
+    maxHeight: '3.2rem',
+    '-webkit-box-orient': 'vertical',
+    overflow: 'hidden',
+    'text-overflow': 'ellipsis',
+    '-webkit-line-clamp': 2,
+    lineHeight: '1.6rem',
   },
 }
 
@@ -96,9 +105,19 @@ class Site extends React.Component {
             )}
           </Mutation>
         </CardActions>
-        <CardHeader title={name} className={classes.centered} />
         <CardContent className={classes.centered}>
-          <Typography>{content}</Typography>
+          <Tooltip title={name}>
+            <Typography variant='h5' className={classes.multilineOverflow}>
+              {name}
+            </Typography>
+          </Tooltip>
+        </CardContent>
+        <CardContent className={classes.centered}>
+          <Tooltip title={content}>
+            <Typography className={classes.multilineOverflow}>
+              {content}
+            </Typography>
+          </Tooltip>
         </CardContent>
       </Card>
     )
