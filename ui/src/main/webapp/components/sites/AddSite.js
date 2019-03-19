@@ -16,12 +16,12 @@ import { CircularProgress, Card, withStyles } from '@material-ui/core'
 const styles = {
   expandingCard: {
     margin: 20,
-    width: 200,
-    height: 200,
+    width: 220,
+    height: 220,
     '&:hover': {
       margin: 15,
-      width: 210,
-      height: 210,
+      width: 230,
+      height: 230,
       cursor: 'pointer',
     },
   },
