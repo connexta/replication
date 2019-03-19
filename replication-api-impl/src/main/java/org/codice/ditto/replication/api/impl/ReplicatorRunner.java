@@ -23,9 +23,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.codice.ddf.security.common.Security;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.slf4j.Logger;
@@ -111,7 +111,7 @@ public class ReplicatorRunner {
     try {
       for (ReplicatorConfig config : configsToSchedule) {
         replicator.submitSyncRequest(
-            new SyncRequestImpl(config, new ReplicationStatus(config.getName())));
+            new SyncRequestImpl(config, new ReplicationStatusImpl(config.getName())));
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

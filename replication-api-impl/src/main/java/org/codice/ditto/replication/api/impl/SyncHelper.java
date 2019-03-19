@@ -116,16 +116,20 @@ class SyncHelper {
 
   private boolean canceled = false;
 
+  private ReplicationStatus status;
+
   public SyncHelper(
       ReplicationStore source,
       ReplicationStore destination,
       ReplicatorConfig config,
+      ReplicationStatus status,
       ReplicationPersistentStore persistentStore,
       ReplicatorHistory history,
       FilterBuilder builder) {
     this.source = source;
     this.destination = destination;
     this.config = config;
+    this.status = status;
     this.persistentStore = persistentStore;
     this.history = history;
     this.builder = builder;
@@ -157,14 +161,15 @@ class SyncHelper {
       } catch (Exception e) {
         if (causedByConnectionLoss(e)) {
           logConnectionLoss();
-          return new SyncResponse(syncCount, failCount, bytesTransferred, Status.CONNECTION_LOST);
+          status.setStatus(Status.CONNECTION_LOST);
+          return new SyncResponse(syncCount, failCount, bytesTransferred, status.getStatus());
         } else {
           recordItemFailure(e);
         }
       }
     }
-    return new SyncResponse(
-        syncCount, failCount, bytesTransferred, canceled ? Status.CANCELED : Status.SUCCESS);
+    status.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
+    return new SyncResponse(syncCount, failCount, bytesTransferred, status.getStatus());
   }
 
   /**
@@ -202,7 +207,7 @@ class SyncHelper {
         history
             .getReplicationEvents(config.getName())
             .stream()
-            .filter(status -> status.getStatus().equals(Status.SUCCESS))
+            .filter(s -> s.getStatus().equals(Status.SUCCESS))
             .findFirst()
             .orElse(null);
     Filter finalFilter;
@@ -287,6 +292,7 @@ class SyncHelper {
       // remove oldReplicationItem from the store if the deleteRequest is successful
       persistentStore.deleteItem(mcardId, sourceName, destinationName);
       syncCount++;
+      status.incrementCount();
     } else {
       LOGGER.trace(
           "No replication item for deleted metacard (id = {}). Not sending a delete request.",
@@ -339,8 +345,10 @@ class SyncHelper {
         destination.update(
             new UpdateStorageRequestImpl(Collections.singletonList(contentItem), new HashMap<>()));
     checkForProcessingErrors(updateResponse, "UpdateStorageRequest");
-    bytesTransferred += Long.parseLong(mcard.getResourceSize());
+    long bytes = Long.parseLong(mcard.getResourceSize());
+    bytesTransferred += bytes;
     recordSuccessfulReplication();
+    status.incrementBytesTransferred(bytes);
   }
 
   private boolean metacardShouldBeUpdated(ReplicationItem replicationItem) {
@@ -392,7 +400,9 @@ class SyncHelper {
         destination.create(
             new CreateStorageRequestImpl(Collections.singletonList(contentItem), new HashMap<>()));
     checkForProcessingErrors(createResponse, "CreateStorageRequest");
-    bytesTransferred += Long.parseLong(mcard.getResourceSize());
+    long bytes = Long.parseLong(mcard.getResourceSize());
+    bytesTransferred += bytes;
+    status.incrementBytesTransferred(bytes);
   }
 
   private void performMetacardCreate() throws IngestException {
@@ -493,6 +503,7 @@ class SyncHelper {
   private void recordSuccessfulReplication() {
     persistentStore.saveItem(createReplicationItem());
     syncCount++;
+    status.incrementCount();
   }
 
   private void checkForProcessingErrors(Response response, String requestType)
@@ -527,6 +538,7 @@ class SyncHelper {
     newReplicationItem.incrementFailureCount();
     persistentStore.saveItem(newReplicationItem);
     failCount++;
+    status.incrementFailure();
   }
 
   private ReplicationItem createReplicationItem() {

@@ -13,8 +13,6 @@
  */
 package org.codice.ditto.replication.api.impl;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -41,6 +39,7 @@ import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.SiteManager;
@@ -83,7 +82,10 @@ public class ReplicatorImplTest {
             builder,
             security) {
           SyncHelper createSyncHelper(
-              ReplicationStore source, ReplicationStore destination, ReplicatorConfig config) {
+              ReplicationStore source,
+              ReplicationStore destination,
+              ReplicatorConfig config,
+              ReplicationStatus status) {
             return helper;
           }
         };
@@ -125,25 +127,20 @@ public class ReplicatorImplTest {
     when(store2.isAvailable()).thenReturn(true);
     SyncResponse response = new SyncResponse(1L, 0L, 10L, Status.SUCCESS);
     when(helper.sync()).thenReturn(response);
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
     SyncRequest request = new SyncRequestImpl(config, status);
     replicator.executeSyncRequest(request);
     verify(history).addReplicationEvent(status);
     verify(siteManager).get("srcId");
     verify(siteManager).get("destId");
     verify(helper, times(2)).sync();
-    assertThat(request.getStatus().getPullCount(), is(1L));
-    assertThat(request.getStatus().getPullBytes(), is(10L));
-    assertThat(request.getStatus().getPushCount(), is(1L));
-    assertThat(request.getStatus().getPushBytes(), is(10L));
-    assertThat(request.getStatus().getStatus(), is(Status.SUCCESS));
   }
 
   @Test
   public void cancelPendingSyncRequest() throws Exception {
     BlockingQueue<SyncRequest> queue = mock(BlockingQueue.class);
     replicator.setPendingSyncRequestsQueue(queue);
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
     SyncRequest request = new SyncRequestImpl(config, status);
     replicator.submitSyncRequest(request);
     verify(queue, times(1)).put(request);
@@ -167,7 +164,7 @@ public class ReplicatorImplTest {
     when(store2.isAvailable()).thenReturn(true);
     SyncResponse response = new SyncResponse(1L, 0L, 10L, Status.CANCELED);
 
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
     SyncRequest request = new SyncRequestImpl(config, status);
     Answer answer =
         new Answer() {

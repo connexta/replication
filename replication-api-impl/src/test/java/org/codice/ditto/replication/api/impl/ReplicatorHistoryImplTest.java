@@ -48,6 +48,7 @@ import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.mcard.ReplicationHistoryAttributes;
 import org.codice.ditto.replication.api.mcard.ReplicationHistory;
 import org.junit.Before;
@@ -134,7 +135,7 @@ public class ReplicatorHistoryImplTest {
   @Test
   public void initPreviouslyCondensedEvents() throws Exception {
     Date origTime = new Date(0);
-    ReplicationStatus oldStatus = new ReplicationStatus("test");
+    ReplicationStatus oldStatus = new ReplicationStatusImpl("test");
     oldStatus.setStartTime(origTime);
     oldStatus.setLastRun(origTime);
     oldStatus.setLastSuccess(origTime);
@@ -151,7 +152,7 @@ public class ReplicatorHistoryImplTest {
     when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(new ArrayList());
     Date start = new Date();
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setStartTime(start);
     status.setStatus(Status.SUCCESS);
     history.addReplicationEvent(status);
@@ -168,7 +169,7 @@ public class ReplicatorHistoryImplTest {
     when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(new ArrayList());
     Date start = new Date();
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setStartTime(start);
     status.setStatus(Status.FAILURE);
     history.addReplicationEvent(status);
@@ -183,7 +184,7 @@ public class ReplicatorHistoryImplTest {
   @Test
   public void addReplicationEventPreviousEvents() throws Exception {
     Date origTime = new Date(0);
-    ReplicationStatus oldStatus = new ReplicationStatus("test");
+    ReplicationStatus oldStatus = new ReplicationStatusImpl("test");
     oldStatus.setStartTime(origTime);
     oldStatus.setLastRun(origTime);
     oldStatus.setLastSuccess(origTime);
@@ -192,7 +193,7 @@ public class ReplicatorHistoryImplTest {
     when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(Collections.singletonList(oldStatus));
     Date start = new Date();
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setStartTime(start);
     status.setStatus(Status.SUCCESS);
     history.addReplicationEvent(status);
@@ -213,7 +214,7 @@ public class ReplicatorHistoryImplTest {
         .thenReturn(new ArrayList());
     when(framework.create(any(CreateRequest.class))).thenThrow(new IngestException());
     Date start = new Date();
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setStartTime(start);
     status.setStatus(Status.SUCCESS);
     history.addReplicationEvent(status);
@@ -221,7 +222,7 @@ public class ReplicatorHistoryImplTest {
 
   @Test
   public void removeReplicationEvent() throws Exception {
-    ReplicationStatus event = new ReplicationStatus("myid", "myname");
+    ReplicationStatus event = new ReplicationStatusImpl("myid", "myname");
     history.removeReplicationEvent(event);
     verify(provider).delete(any(DeleteRequest.class));
     verify(framework, never()).delete(any(DeleteRequest.class));
@@ -230,7 +231,7 @@ public class ReplicatorHistoryImplTest {
   @Test(expected = ReplicationPersistenceException.class)
   public void removeReplicationEventError() throws Exception {
     when(provider.delete(any(DeleteRequest.class))).thenThrow(new IngestException());
-    ReplicationStatus event = new ReplicationStatus("myid", "myname");
+    ReplicationStatus event = new ReplicationStatusImpl("myid", "myname");
     history.removeReplicationEvent(event);
   }
 
@@ -253,7 +254,7 @@ public class ReplicatorHistoryImplTest {
     Date current = end;
     Status s = Status.SUCCESS;
     while (current.after(start) || current.getTime() == start.getTime()) {
-      ReplicationStatus status = new ReplicationStatus(configName);
+      ReplicationStatus status = new ReplicationStatusImpl(configName);
       status.setStartTime(current);
       status.setStatus(s);
       status.setDuration(10L);

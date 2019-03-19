@@ -39,6 +39,7 @@ import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
 import org.codice.ditto.replication.api.mcard.ReplicationHistory;
 import org.slf4j.Logger;
@@ -172,7 +173,7 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
 
   private ReplicationStatus getStatusFromMetacard(Metacard metacard) {
     ReplicationStatus status =
-        new ReplicationStatus(
+        new ReplicationStatusImpl(
             metacard.getId(),
             helper.getAttributeValueOrDefault(metacard, ReplicationConfig.NAME, null));
     status.setDuration(
@@ -285,7 +286,7 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
     for (ReplicationStatus status : events) {
       idsToRemove.add(status.getId());
       if (condensedStatus == null) {
-        condensedStatus = new ReplicationStatus(status.getReplicatorName());
+        condensedStatus = new ReplicationStatusImpl(status.getReplicatorName());
         condensedStatus.setStartTime(status.getStartTime());
         condensedStatus.setStatus(status.getStatus());
         condensedStatus.setDuration(0L);
