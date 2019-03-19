@@ -39,6 +39,8 @@ const defaultState = {
   hostname: '',
   port: 0,
   nameErrorText: '',
+  hostnameErrorText: '',
+  portErrorText: '',
 }
 
 const AddSite = class extends React.Component {
@@ -49,7 +51,7 @@ const AddSite = class extends React.Component {
   }
 
   handleClose = () => {
-    this.setState({ open: false })
+    this.setState(defaultState)
   }
 
   handleChange = key => event => {
@@ -58,12 +60,31 @@ const AddSite = class extends React.Component {
 
   handleInvalidName() {
     this.setState({
-      nameErrorText: 'Name already in use!',
+      nameErrorText: 'Name already in use. Please choose a new one.',
+    })
+  }
+
+  handleInvalidHostname() {
+    this.setState({ hostnameErrorText: 'Not a valid hostname.' })
+  }
+
+  handleInvalidPort() {
+    this.setState({
+      portErrorText:
+        'Port is not in valid range. Valid range is between 0 and 65535.',
     })
   }
 
   render() {
-    const { open, name, hostname, port, nameErrorText } = this.state
+    const {
+      open,
+      name,
+      hostname,
+      port,
+      nameErrorText,
+      hostnameErrorText,
+      portErrorText,
+    } = this.state
     const { classes } = this.props
 
     return (
@@ -102,6 +123,8 @@ const AddSite = class extends React.Component {
               type='text'
               onChange={this.handleChange('hostname')}
               fullWidth
+              helperText={hostnameErrorText ? hostnameErrorText : ''}
+              error={hostnameErrorText ? true : false}
             />
             <TextField
               margin='dense'
@@ -110,6 +133,8 @@ const AddSite = class extends React.Component {
               type='number'
               onChange={this.handleChange('port')}
               fullWidth
+              helperText={portErrorText ? portErrorText : ''}
+              error={portErrorText ? true : false}
             />
           </DialogContent>
           <DialogActions>
@@ -124,6 +149,12 @@ const AddSite = class extends React.Component {
                   error.graphQLErrors.forEach(e => {
                     if (e.message === 'DUPLICATE_SITE') {
                       this.handleInvalidName()
+                    }
+                    if (e.message === 'INVALID_HOSTNAME') {
+                      this.handleInvalidHostname()
+                    }
+                    if (e.message === 'INVALID_PORT_RANGE') {
+                      this.handleInvalidPort()
                     }
                   })
               }}
