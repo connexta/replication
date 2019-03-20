@@ -21,11 +21,29 @@ import static org.hamcrest.core.Is.is;
 
 import com.jayway.restassured.specification.RequestSpecification;
 import java.net.MalformedURLException;
+import org.codice.ddf.dominion.commons.options.DDFCommonOptions;
+import org.codice.ditto.replication.dominion.options.ReplicationOptions;
+import org.codice.dominion.Dominion;
+import org.codice.dominion.interpolate.Interpolate;
+import org.codice.junit.TestDelimiter;
+import org.codice.pax.exam.junit.ConfigurationAdmin;
+import org.codice.pax.exam.junit.ServiceAdmin;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@DDFCommonOptions.ConfigureVMOptionsForTesting
+@DDFCommonOptions.ConfigureDebugging
+@DDFCommonOptions.ConfigurePorts
+@DDFCommonOptions.ConfigureLogging
+@ReplicationOptions.Install
+@TestDelimiter(stdout = true, elapsed = true)
+@ServiceAdmin
+@ConfigurationAdmin
+@RunWith(Dominion.class)
 public class ITReplicationQuery {
 
-  private static final String GRAPHQL_ENDPOINT = "https://localhost:8993/admin/hub/graphql";
+  @Interpolate
+  private static String GRAPHQL_ENDPOINT = "https://localhost:{port.https}/admin/hub/graphql";
 
   private static final String URL = "https://localhost:9999";
 

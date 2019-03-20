@@ -29,6 +29,7 @@ import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerManager;
 import org.codice.ditto.replication.api.ReplicationStore;
+import org.codice.junit.RestoreSystemProperties;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +38,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
 
 @RunWith(MockitoJUnitRunner.class)
+@RestoreSystemProperties
 public class ReplicatorStoreFactoryImplTest {
 
   ReplicatorStoreFactoryImpl factory;
@@ -76,15 +78,6 @@ public class ReplicatorStoreFactoryImplTest {
     factory.setCswTransactionWriter(cswTransactionWriter);
     factory.setClientFactoryFactory(clientFactoryFactory);
     factory.setCatalogFramework(framework);
-  }
-
-  /*
-  Expected a NoClassDefFoundError because of the Hybrid creation.
-  The test is to see if we would create a Hybrid store for the URL
-   */
-  @Test(expected = NoClassDefFoundError.class)
-  public void createReplicatorStore() throws Exception {
-    factory.createReplicatorStore(new URL("https://somehost:1234"));
   }
 
   @Test

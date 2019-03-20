@@ -13,17 +13,37 @@
  **/
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>distributions</artifactId>
         <groupId>replication.distributions</groupId>
+        <artifactId>distributions</artifactId>
         <version>0.2.2-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <name>DITTO :: Admin Console :: Test</name>
+
+    <groupId>replication.test</groupId>
     <artifactId>test</artifactId>
+    <name>Replication :: Test</name>
     <packaging>pom</packaging>
 
     <modules>
         <module>itests</module>
     </modules>
+
+    <build>
+        <plugins>
+            <!-- Disable vulnerability checks since this project only contains tests -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <executions>
+                    <execution>
+                        <phase>none</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

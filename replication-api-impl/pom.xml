@@ -19,9 +19,11 @@
         <artifactId>replication</artifactId>
         <version>0.2.2-SNAPSHOT</version>
     </parent>
+
     <artifactId>replication-api-impl</artifactId>
     <name>Replication :: API Impl</name>
     <packaging>bundle</packaging>
+
     <dependencies>
         <dependency>
             <groupId>replication</groupId>
@@ -216,11 +218,6 @@
             <version>${ddf.version}</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-        </dependency>
-        <dependency>
             <groupId>ddf.catalog.core</groupId>
             <artifactId>catalog-core-urlresourcereader</artifactId>
             <version>${ddf.version}</version>
@@ -331,17 +328,17 @@
                                         <limit implementation="org.codice.jacoco.LenientLimit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.57</minimum>
+                                            <minimum>0.56</minimum>
                                         </limit>
                                         <limit implementation="org.codice.jacoco.LenientLimit">
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.49</minimum>
+                                            <minimum>0.48</minimum>
                                         </limit>
                                         <limit implementation="org.codice.jacoco.LenientLimit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.52</minimum>
+                                            <minimum>0.53</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
