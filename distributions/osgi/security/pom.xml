@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /**
- * Copyright (c) Codice Foundation
+ * Copyright (c) Connexta
  *
  * This is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or any later version.
@@ -16,34 +16,16 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>replication.distributions</groupId>
-        <artifactId>distributions</artifactId>
+        <artifactId>osgi</artifactId>
         <version>0.2.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>replication.test</groupId>
-    <artifactId>test</artifactId>
-    <name>Replication :: Test</name>
+    <groupId>replication.distributions.security</groupId>
+    <artifactId>security</artifactId>
+    <name>Replication :: OSGI :: Security</name>
     <packaging>pom</packaging>
 
     <modules>
-        <module>itests</module>
+        <module>replication</module>
     </modules>
-
-    <build>
-        <plugins>
-            <!-- Disable vulnerability checks since this project only contains tests -->
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <executions>
-                    <execution>
-                        <phase>none</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

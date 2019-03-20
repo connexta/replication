@@ -19,10 +19,13 @@
         <artifactId>replication</artifactId>
         <version>0.2.1-SNAPSHOT</version>
     </parent>
+
     <groupId>replication.distributions</groupId>
     <artifactId>distributions</artifactId>
     <name>Replication :: Distributions</name>
+
     <packaging>pom</packaging>
+
     <modules>
         <module>osgi</module>
         <module>test</module>
