@@ -19,9 +19,11 @@
         <artifactId>replication</artifactId>
         <version>0.2.1-SNAPSHOT</version>
     </parent>
+
     <artifactId>replication-api</artifactId>
     <name>Replication :: API</name>
     <packaging>bundle</packaging>
+
     <dependencies>
         <dependency>
             <groupId>ddf.catalog.core</groupId>
@@ -32,12 +34,6 @@
             <groupId>ddf.persistence.core</groupId>
             <artifactId>persistence-core-api</artifactId>
             <version>${ddf.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.servicemix.bundles</groupId>
-            <artifactId>org.apache.servicemix.bundles.jsr305</artifactId>
-            <version>${jsr305.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
     <build>
