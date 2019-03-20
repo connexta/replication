@@ -19,9 +19,11 @@
         <artifactId>replication</artifactId>
         <version>0.2.2-SNAPSHOT</version>
     </parent>
+
     <artifactId>replication-commands</artifactId>
     <name>Replication :: Commands</name>
     <packaging>bundle</packaging>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.karaf.shell</groupId>

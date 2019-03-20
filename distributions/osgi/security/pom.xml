@@ -12,20 +12,20 @@
  *
  **/
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>replication.distributions</groupId>
-        <artifactId>distributions</artifactId>
+        <artifactId>osgi</artifactId>
         <version>0.2.2-SNAPSHOT</version>
     </parent>
-    <artifactId>osgi</artifactId>
-    <name>Replication :: OSGI</name>
+
+    <groupId>replication.distributions.security</groupId>
+    <artifactId>security</artifactId>
+    <name>Replication :: OSGI :: Security</name>
     <packaging>pom</packaging>
+
     <modules>
-        <module>features</module>
-        <module>security</module>
+        <module>replication</module>
     </modules>
 </project>
