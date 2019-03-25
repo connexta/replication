@@ -18,6 +18,8 @@ import static org.apache.commons.lang3.Validate.notNull;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.security.Subject;
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +36,6 @@ import java.util.stream.Stream;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
-import org.apache.commons.io.IOUtils;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
@@ -173,8 +174,8 @@ public class ReplicatorImpl implements Replicator {
                 e);
             status.setStatus(connectionUnavailable);
             completeActiveSyncRequest(syncRequest, status);
-            IOUtils.closeQuietly(node1);
-            IOUtils.closeQuietly(node2);
+            closeQuietly(node1);
+            closeQuietly(node2);
             return;
           }
 
@@ -184,29 +185,14 @@ public class ReplicatorImpl implements Replicator {
             if (Direction.PULL.equals(config.getDirection())
                 || Direction.BOTH.equals(config.getDirection())) {
               status.setStatus(Status.PULL_IN_PROGRESS);
-              SyncHelper syncHelper = createSyncHelper(store2, store1, config);
-              syncHelperMap.put(config.getId(), syncHelper);
-              SyncResponse response = syncHelper.sync();
-              syncHelperMap.remove(config.getId());
-              status.setPullCount(response.getItemsReplicated());
-              status.setPullFailCount(response.getItemsFailed());
-              status.setPullBytes(response.getBytesTransferred());
-              pullStatus = response.getStatus();
-              status.setStatus(pullStatus);
+              pullStatus = sync(store2, store1, config, status);
             }
 
             if (pullStatus.equals(Status.SUCCESS)
                 && (Direction.PUSH.equals(config.getDirection())
                     || Direction.BOTH.equals(config.getDirection()))) {
               status.setStatus(Status.PUSH_IN_PROGRESS);
-              SyncHelper syncHelper = createSyncHelper(store1, store2, config);
-              syncHelperMap.put(config.getId(), syncHelper);
-              SyncResponse response = syncHelper.sync();
-              syncHelperMap.remove(config.getId());
-              status.setPushCount(response.getItemsReplicated());
-              status.setPushFailCount(response.getItemsFailed());
-              status.setPushBytes(response.getBytesTransferred());
-              status.setStatus(response.getStatus());
+              sync(store1, store2, config, status);
             }
 
           } catch (Exception e) {
@@ -224,9 +210,24 @@ public class ReplicatorImpl implements Replicator {
         });
   }
 
+  private Status sync(
+      ReplicationStore source,
+      ReplicationStore destination,
+      ReplicatorConfig config,
+      ReplicationStatus status) {
+    SyncHelper syncHelper = createSyncHelper(source, destination, config, status);
+    syncHelperMap.put(config.getId(), syncHelper);
+    SyncResponse response = syncHelper.sync();
+    syncHelperMap.remove(config.getId());
+    return response.getStatus();
+  }
+
   SyncHelper createSyncHelper(
-      ReplicationStore source, ReplicationStore destination, ReplicatorConfig config) {
-    return new SyncHelper(source, destination, config, persistentStore, history, builder);
+      ReplicationStore source,
+      ReplicationStore destination,
+      ReplicatorConfig config,
+      ReplicationStatus status) {
+    return new SyncHelper(source, destination, config, status, persistentStore, history, builder);
   }
 
   private void completeActiveSyncRequest(SyncRequest syncRequest, ReplicationStatus status) {
@@ -286,7 +287,9 @@ public class ReplicatorImpl implements Replicator {
 
   @Override
   public void cancelSyncRequest(SyncRequest syncRequest) {
-    pendingSyncRequests.remove(syncRequest);
+    if (pendingSyncRequests.remove(syncRequest)) {
+      LOGGER.debug("Removed pending request with name: {}", syncRequest.getConfig().getName());
+    }
 
     SyncHelper helper = syncHelperMap.remove(syncRequest.getConfig().getId());
     if (helper != null) {
@@ -329,5 +332,15 @@ public class ReplicatorImpl implements Replicator {
   @VisibleForTesting
   void setPendingSyncRequestsQueue(BlockingQueue<SyncRequest> queue) {
     pendingSyncRequests = queue;
+  }
+
+  private void closeQuietly(Closeable c) {
+    try {
+      if (c != null) {
+        c.close();
+      }
+    } catch (IOException e) {
+      LOGGER.trace("Could not close closable. This is not an error.");
+    }
   }
 }

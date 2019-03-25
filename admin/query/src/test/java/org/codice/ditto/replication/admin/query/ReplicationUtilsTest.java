@@ -40,6 +40,7 @@ import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
@@ -129,7 +130,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get("srcId")).thenReturn(src);
     when(siteManager.get("destId")).thenReturn(dest);
 
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
     status.setPullCount(2L);
@@ -195,7 +196,7 @@ public class ReplicationUtilsTest {
     config.setFilter("oldCql");
     config.setFailureRetryCount(7);
     when(configManager.get(anyString())).thenReturn(config);
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
     status.setPullCount(2L);
@@ -236,7 +237,7 @@ public class ReplicationUtilsTest {
     config.setBiDirectional(true);
     config.setFailureRetryCount(7);
     when(configManager.get(anyString())).thenReturn(config);
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
     status.setPullCount(2L);
@@ -274,7 +275,7 @@ public class ReplicationUtilsTest {
     config.setFilter("oldCql");
     config.setFailureRetryCount(7);
     when(configManager.get(anyString())).thenReturn(config);
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
     status.setStatus(Status.PUSH_IN_PROGRESS);
     when(history.getReplicationEvents("test")).thenReturn(new ArrayList<>());
     SyncRequestImpl syncRequest = new SyncRequestImpl(config, status);
@@ -321,7 +322,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get("srcId")).thenReturn(src);
     when(siteManager.get("destId")).thenReturn(dest);
 
-    ReplicationStatus status = new ReplicationStatus("test");
+    ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
     status.setPullCount(2L);

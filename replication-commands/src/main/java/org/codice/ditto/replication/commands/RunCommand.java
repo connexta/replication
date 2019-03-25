@@ -16,9 +16,9 @@ package org.codice.ditto.replication.commands;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 
 @Service
@@ -30,7 +30,7 @@ public class RunCommand extends ExistingConfigsCommands {
   @Override
   void executeWithExistingConfig(final String configName, ReplicatorConfig config) {
     final SyncRequestImpl syncRequest =
-        new SyncRequestImpl(config, new ReplicationStatus(configName));
+        new SyncRequestImpl(config, new ReplicationStatusImpl(configName));
     try {
       replicator.submitSyncRequest(syncRequest);
       printSuccessMessage(

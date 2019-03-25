@@ -14,169 +14,141 @@
 package org.codice.ditto.replication.api;
 
 import java.util.Date;
-import java.util.UUID;
 import javax.annotation.Nullable;
 
-public class ReplicationStatus {
+/**
+ * Represents the status of a replication config run including metrics. This can represent a single
+ * run instance or a summation of many runs
+ */
+public interface ReplicationStatus {
 
-  private final String id;
+  /**
+   * Get the status instance ID. Will be globally unique.
+   *
+   * @return The string ID
+   */
+  String getId();
 
-  private final String replicatorName;
+  /**
+   * Get the name of the associated replication configuration
+   *
+   * @return The replicator name
+   */
+  String getReplicatorName();
 
-  private Date startTime;
+  /**
+   * Get the time this configuration was first run
+   *
+   * @return
+   */
+  Date getStartTime();
 
-  @Nullable private Date lastSuccess;
+  void setStartTime(Date startTime);
 
-  @Nullable private Date lastRun;
+  /** Sets the start time to now */
+  void markStartTime();
 
-  private long duration = -1;
+  /**
+   * Get the Date of the last time the referenced configuration was run
+   *
+   * @return
+   */
+  @Nullable
+  Date getLastRun();
 
-  private Status status = Status.PENDING;
+  void setLastRun(@Nullable Date lastRun);
 
-  private long pushCount = 0;
+  /**
+   * Get the Date of the last time the referenced configuration was successfully run
+   *
+   * @return
+   */
+  @Nullable
+  Date getLastSuccess();
 
-  private long pullCount = 0;
+  void setLastSuccess(@Nullable Date lastSuccess);
 
-  private long pushFailCount = 0;
+  /**
+   * Gets the runtime duration of the referenced configuration in seconds
+   *
+   * @return
+   */
+  long getDuration();
 
-  private long pullFailCount = 0;
+  void setDuration(long duration);
 
-  private long pushBytes = 0;
+  /** Sets the duration based on the start time and the current time */
+  void setDuration();
 
-  private long pullBytes = 0;
+  /**
+   * Gets the {@link Status} of the referenced configuration
+   *
+   * @return
+   */
+  Status getStatus();
 
-  public ReplicationStatus(String replicatorName) {
-    this.replicatorName = replicatorName;
-    this.id = UUID.randomUUID().toString();
-  }
+  void setStatus(Status status);
 
-  public ReplicationStatus(String id, String replicatorName) {
-    this.id = id;
-    this.replicatorName = replicatorName;
-  }
+  /**
+   * Get the total number of items push (source -> destination)
+   *
+   * @return
+   */
+  long getPushCount();
 
-  public String getId() {
-    return id;
-  }
+  void setPushCount(long count);
 
-  public String getReplicatorName() {
-    return replicatorName;
-  }
+  /**
+   * Get the total number of items pulled (destination -> source)
+   *
+   * @return
+   */
+  long getPullCount();
 
-  public Date getStartTime() {
-    return startTime;
-  }
+  void setPullCount(long count);
 
-  public void setStartTime(Date startTime) {
-    this.startTime = startTime;
-  }
+  /**
+   * Get the number of items that failed to be pushed
+   *
+   * @return
+   */
+  long getPushFailCount();
 
-  public @Nullable Date getLastRun() {
-    return lastRun;
-  }
+  void setPushFailCount(long count);
 
-  public void setLastRun(@Nullable Date lastRun) {
-    this.lastRun = lastRun;
-  }
+  /**
+   * Get the number of items that failed to be pulled
+   *
+   * @return
+   */
+  long getPullFailCount();
 
-  public @Nullable Date getLastSuccess() {
-    return lastSuccess;
-  }
+  void setPullFailCount(long count);
 
-  public void setLastSuccess(@Nullable Date lastSuccess) {
-    this.lastSuccess = lastSuccess;
-  }
+  /**
+   * Get the number of bytes pushed
+   *
+   * @return
+   */
+  long getPushBytes();
 
-  public void markStartTime() {
-    this.startTime = new Date();
-  }
+  void setPushBytes(long pushBytes);
 
-  /** @return the duration of the replication in seconds */
-  public long getDuration() {
-    if (startTime != null && duration < 0) {
-      return (System.currentTimeMillis() - startTime.getTime()) / 1000;
-    }
-    return duration;
-  }
+  /**
+   * Get the number of bytes pulled
+   *
+   * @return
+   */
+  long getPullBytes();
 
-  public void setDuration(long duration) {
-    this.duration = duration;
-  }
+  void setPullBytes(long pullBytes);
 
-  public void setDuration() {
-    duration = (System.currentTimeMillis() - startTime.getTime()) / 1000;
-  }
+  /** Increment the pull/push count based on the current {@link Status} */
+  void incrementCount();
 
-  public Status getStatus() {
-    return status;
-  }
+  /** Increment the pull/push failure count based on the current {@link Status} */
+  void incrementFailure();
 
-  public void setStatus(Status status) {
-    this.status = status;
-  }
-
-  public long getPushCount() {
-    return pushCount;
-  }
-
-  public void setPushCount(long count) {
-    this.pushCount = count;
-  }
-
-  public long getPullCount() {
-    return pullCount;
-  }
-
-  public void setPullCount(long count) {
-    this.pullCount = count;
-  }
-
-  public long getPushFailCount() {
-    return pushFailCount;
-  }
-
-  public void setPushFailCount(long count) {
-    this.pushFailCount = count;
-  }
-
-  public long getPullFailCount() {
-    return pullFailCount;
-  }
-
-  public void setPullFailCount(long count) {
-    this.pullFailCount = count;
-  }
-
-  public long getPushBytes() {
-    return pushBytes;
-  }
-
-  public void setPushBytes(long pushBytes) {
-    this.pushBytes = pushBytes;
-  }
-
-  public long getPullBytes() {
-    return pullBytes;
-  }
-
-  public void setPullBytes(long pullBytes) {
-    this.pullBytes = pullBytes;
-  }
-
-  @Override
-  public String toString() {
-    return String.format(
-        "ReplicationStatus{id='%s', replicatorName='%s', startTime=%s, duration=%d, status=%s, pushCount=%d, pullCount=%d, pushFailCount=%d, pullFailCount=%d, pushBytes=%d, pullBytes=%d}",
-        id,
-        replicatorName,
-        startTime,
-        duration,
-        status,
-        pushCount,
-        pullCount,
-        pushFailCount,
-        pullFailCount,
-        pushBytes,
-        pullBytes);
-  }
+  /** Increment the pull/push bytes based on the current {@link Status} */
+  void incrementBytesTransferred(long numBytes);
 }
