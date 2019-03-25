@@ -14,13 +14,15 @@
 package org.codice.ditto.replication.itests;
 
 import org.codice.ddf.dominion.commons.options.DDFCommonOptions;
-import org.codice.ddf.dominion.options.DDFOptions;
+import org.codice.ditto.replication.dominion.options.ReplicationOptions;
 import org.codice.dominion.Dominion;
 import org.codice.dominion.________________________________Dominion;
 import org.codice.junit.___________________________________JUnit;
 import org.codice.maven.MavenUrl;
 import org.codice.pax.exam.junit.ConfigurationAdmin;
 import org.codice.pax.exam.junit.ServiceAdmin;
+import org.codice.pax.exam.junit.__________________________Configurations;
+import org.codice.pax.exam.junit.________________________________Services;
 import org.codice.pax.exam.service.Feature;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -34,44 +36,22 @@ import org.junit.runner.RunWith;
 @DDFCommonOptions.ConfigureDebugging
 @DDFCommonOptions.ConfigurePorts
 @DDFCommonOptions.ConfigureLogging
-@DDFCommonOptions.AddPolicyFile(
-  name = "replication",
-  artifact =
-      @MavenUrl(
-        groupId = "replication.distributions.security",
-        artifactId = "replication",
-        version = MavenUrl.AS_IN_PROJECT,
-        type = "policy"
-      )
-)
-// @KarafOptions.Feature(
-//  repository =
-//      @MavenUrl(
-//        groupId = "replication.distributions.features",
-//        artifactId = "replication",
-//        version = MavenUrl.AS_IN_PROJECT,
-//        type = "xml",
-//        classifier = "features"
-//      ),
-//  names = "replication"
-// )
-// @DDFOptions.InstallKernel(solr = true)
-@DDFOptions.InstallDistribution(solr = true)
+@ReplicationOptions.Install
 @___________________________________JUnit
+@RunWith(Dominion.class)
+@________________________________Services
 @ServiceAdmin
 @Feature.Start(
-  repository =
-      @MavenUrl(
-        groupId = "replication.distributions.features",
-        artifactId = "replication",
-        version = MavenUrl.AS_IN_PROJECT,
-        type = "xml",
-        classifier = "features"
-      ),
-  name = "replication"
-)
+    repository =
+        @MavenUrl(
+            groupId = "replication.distributions.features",
+            artifactId = "replication",
+            version = MavenUrl.AS_IN_PROJECT,
+            type = "xml",
+            classifier = "features"),
+    name = "replication")
+@__________________________Configurations
 @ConfigurationAdmin
-@RunWith(Dominion.class)
 public class ITStart {
   @BeforeClass
   public static void setupClass() {

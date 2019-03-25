@@ -28,25 +28,18 @@
             <groupId>replication</groupId>
             <artifactId>replication-api</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>replication</groupId>
             <artifactId>replication-api-impl</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>replication.distributions.features</groupId>
-            <artifactId>replication</artifactId>
-            <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>replication.distributions.security</groupId>
-            <artifactId>replication</artifactId>
+            <groupId>replication.distributions</groupId>
+            <artifactId>replication-dominion</artifactId>
             <version>${project.version}</version>
-            <type>policy</type>
             <scope>test</scope>
         </dependency>
 
@@ -78,6 +71,12 @@
             <groupId>org.codice.ddf</groupId>
             <artifactId>ddf-dominion-pax-exam</artifactId>
             <version>${ddf.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>replication.distributions</groupId>
+            <artifactId>replication-dominion-pax-exam</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
