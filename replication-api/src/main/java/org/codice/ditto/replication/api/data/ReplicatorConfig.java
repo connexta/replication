@@ -14,9 +14,7 @@
 package org.codice.ditto.replication.api.data;
 
 import javax.annotation.Nullable;
-import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationItem;
-import org.codice.ditto.replication.api.ReplicationType;
 
 /**
  * A ReplicatorConfig holds information about how replication should be performed such as the sites
@@ -37,38 +35,6 @@ public interface ReplicatorConfig extends Persistable {
    * @param name the new configuration name
    */
   void setName(String name);
-
-  /**
-   * Get the direction of this replication (push/pull/both)
-   *
-   * @return The replication direction
-   */
-  @Deprecated
-  Direction getDirection();
-
-  /**
-   * Set the direction of this replication (push/pull/both)
-   *
-   * @param direction the new direction
-   */
-  @Deprecated
-  void setDirection(Direction direction);
-
-  /**
-   * Get the type of replication to be performed metacard or resource. Resource replication includes
-   * metacard replication.
-   *
-   * @return The replication type
-   */
-  ReplicationType getReplicationType();
-
-  /**
-   * Set the type of replication to be performed metacard or resource. Resource replication includes
-   * metacard replication.
-   *
-   * @param replicationType the new replication type
-   */
-  void setReplicationType(ReplicationType replicationType);
 
   /**
    * Get the source site id associated with this configuration
@@ -117,14 +83,14 @@ public interface ReplicatorConfig extends Persistable {
    *
    * @return True if this replication is bidirectional, otherwise, False.
    */
-  boolean isBiDirectional();
+  boolean isBidirectional();
 
   /**
    * Set whether or not this configuration is bidirectional
    *
-   * @param biDirectional boolean indicating whether this configuration is bidirectional or not
+   * @param bidirectional boolean indicating whether this configuration is bidirectional or not
    */
-  void setBiDirectional(boolean biDirectional);
+  void setBidirectional(boolean bidirectional);
 
   /**
    * Get a short description for this configuration

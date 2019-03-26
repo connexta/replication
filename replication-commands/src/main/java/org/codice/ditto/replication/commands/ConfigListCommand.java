@@ -18,6 +18,8 @@ import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.apache.karaf.shell.support.table.ShellTable;
 import org.codice.ddf.commands.catalog.SubjectCommands;
+import org.codice.ditto.replication.api.Direction;
+import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
@@ -64,8 +66,8 @@ public class ConfigListCommand extends SubjectCommands {
         .addContent(
             replicatorConfig.getName(),
             !replicatorConfig.isSuspended(),
-            replicatorConfig.getDirection(),
-            replicatorConfig.getReplicationType(),
+            replicatorConfig.isBidirectional() ? Direction.BOTH : Direction.PUSH,
+            ReplicationType.RESOURCE,
             replicatorConfig.getFailureRetryCount(),
             getUrlFromSite(replicatorConfig.getSource()),
             getUrlFromSite(replicatorConfig.getDestination()),

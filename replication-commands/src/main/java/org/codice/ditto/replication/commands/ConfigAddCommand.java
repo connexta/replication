@@ -24,7 +24,6 @@ import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.codice.ddf.commands.catalog.SubjectCommands;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ditto.replication.api.Direction;
-import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
@@ -150,7 +149,6 @@ public class ConfigAddCommand extends SubjectCommands {
         return null;
       }
       config.setDescription(description);
-      config.setReplicationType(ReplicationType.valueOf(replicationType.toUpperCase()));
 
       if (Direction.PULL.equals(Direction.valueOf(directionString.toUpperCase()))) {
         printErrorMessage(
@@ -158,10 +156,8 @@ public class ConfigAddCommand extends SubjectCommands {
         String tmpDest = config.getDestination();
         config.setDestination(config.getSource());
         config.setSource(tmpDest);
-        config.setDirection(Direction.PUSH);
-      } else {
-        config.setDirection(Direction.valueOf(directionString.toUpperCase()));
       }
+      config.setBidirectional(Direction.valueOf(directionString.toUpperCase()) == Direction.BOTH);
       config.setFailureRetryCount(failureRetryCount);
       config.setSuspended(suspend);
 

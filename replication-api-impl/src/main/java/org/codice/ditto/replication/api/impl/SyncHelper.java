@@ -70,7 +70,6 @@ import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
@@ -106,8 +105,6 @@ class SyncHelper {
 
   private Optional<ReplicationItem> existingReplicationItem;
 
-  private final boolean isResourceReplication;
-
   private long syncCount;
 
   private long failCount;
@@ -135,7 +132,6 @@ class SyncHelper {
     this.builder = builder;
     this.sourceName = source.getRemoteName();
     this.destinationName = destination.getRemoteName();
-    this.isResourceReplication = ReplicationType.RESOURCE.equals(config.getReplicationType());
     syncCount = 0;
     failCount = 0;
     bytesTransferred = 0;
@@ -333,8 +329,7 @@ class SyncHelper {
   private boolean resourceShouldBeUpdated(ReplicationItem replicationItem) {
     boolean hasResource = mcard.getResourceURI() != null;
     Date resourceModified = mcard.getModifiedDate();
-    return isResourceReplication
-        && hasResource
+    return hasResource
         && (resourceModified.after(replicationItem.getResourceModified())
             || replicationItem.getFailureCount() > 0);
   }
@@ -373,10 +368,9 @@ class SyncHelper {
 
   private void logMetacardSkipped() {
     LOGGER.trace(
-        "Not updating product (id = {}, hasResource = {}, replicationType = {}, metacard modified = {}, resource modified = {}, existing replication item: {})",
+        "Not updating product (id = {}, hasResource = {}, metacard modified = {}, resource modified = {}, existing replication item: {})",
         mcard.getId(),
         mcard.getResourceURI() != null,
-        config.getReplicationType(),
         mcard.getAttribute(Core.METACARD_MODIFIED).getValue(),
         mcard.getModifiedDate(),
         existingReplicationItem);
@@ -386,7 +380,7 @@ class SyncHelper {
     boolean hasResource = mcard.getResourceURI() != null;
     prepMetacard();
 
-    if (isResourceReplication && hasResource) {
+    if (hasResource) {
       performResourceCreate();
     } else {
       performMetacardCreate();
@@ -431,11 +425,6 @@ class SyncHelper {
     mcard.setAttribute(
         new AttributeImpl(Metacard.DERIVED_RESOURCE_DOWNLOAD_URL, (Serializable) null));
     mcard.setAttribute(new AttributeImpl(Metacard.DERIVED_RESOURCE_URI, (Serializable) null));
-
-    if (!isResourceReplication) {
-      mcard.setAttribute(new AttributeImpl(Metacard.RESOURCE_DOWNLOAD_URL, (Serializable) null));
-      mcard.setAttribute(new AttributeImpl(Metacard.RESOURCE_URI, (Serializable) null));
-    }
   }
 
   private ContentItem getResourceContentForMetacard() throws IngestException {

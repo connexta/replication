@@ -14,8 +14,6 @@
 package org.codice.ditto.replication.api.impl.data;
 
 import java.util.Map;
-import org.codice.ditto.replication.api.Direction;
-import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
 /**
@@ -51,7 +49,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   private String name;
 
-  private Direction direction;
+  private boolean bidirectional;
 
   private String source;
 
@@ -76,7 +74,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     result.put(SOURCE_KEY, getSource());
     result.put(DESTINATION_KEY, getDestination());
     result.put(FILTER_KEY, getFilter());
-    result.put(BIDIRECTIONAL_KEY, Boolean.toString(isBiDirectional()));
+    result.put(BIDIRECTIONAL_KEY, Boolean.toString(isBidirectional()));
     result.put(RETRY_COUNT_KEY, getFailureRetryCount());
     result.put(DESCRIPTION_KEY, getDescription());
     result.put(SUSPENDED_KEY, Boolean.toString(isSuspended()));
@@ -90,7 +88,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     setSource((String) properties.get(SOURCE_KEY));
     setDestination((String) properties.get(DESTINATION_KEY));
     setFilter((String) properties.get(FILTER_KEY));
-    setBiDirectional(Boolean.valueOf((String) properties.get(BIDIRECTIONAL_KEY)));
+    setBidirectional(Boolean.valueOf((String) properties.get(BIDIRECTIONAL_KEY)));
     setFailureRetryCount((int) properties.get(RETRY_COUNT_KEY));
     setDescription((String) properties.get(DESCRIPTION_KEY));
     setSuspended(Boolean.valueOf((String) properties.get(SUSPENDED_KEY)));
@@ -104,26 +102,6 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public void setName(String name) {
     this.name = name;
-  }
-
-  @Override
-  public Direction getDirection() {
-    return direction;
-  }
-
-  @Override
-  public void setDirection(Direction direction) {
-    this.direction = direction;
-  }
-
-  @Override
-  public ReplicationType getReplicationType() {
-    return ReplicationType.RESOURCE;
-  }
-
-  @Override
-  public void setReplicationType(ReplicationType type) {
-    // no op
   }
 
   @Override
@@ -157,13 +135,13 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   }
 
   @Override
-  public boolean isBiDirectional() {
-    return direction == Direction.BOTH;
+  public boolean isBidirectional() {
+    return bidirectional;
   }
 
   @Override
-  public void setBiDirectional(boolean biDirectional) {
-    direction = biDirectional ? Direction.BOTH : Direction.PUSH;
+  public void setBidirectional(boolean bidirectional) {
+    this.bidirectional = bidirectional;
   }
 
   @Override

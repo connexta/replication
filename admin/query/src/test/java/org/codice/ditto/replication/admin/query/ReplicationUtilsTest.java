@@ -32,7 +32,6 @@ import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
-import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
@@ -234,7 +233,7 @@ public class ReplicationUtilsTest {
     config.setSource("srcId");
     config.setDestination("destId");
     config.setFilter("cql");
-    config.setBiDirectional(true);
+    config.setBidirectional(true);
     config.setFailureRetryCount(7);
     when(configManager.get(anyString())).thenReturn(config);
     ReplicationStatus status = new ReplicationStatusImpl("test");
@@ -335,7 +334,7 @@ public class ReplicationUtilsTest {
     config.setFilter("cql");
     config.setSource("srcId");
     config.setDestination("destId");
-    config.setDirection(Direction.PUSH);
+    config.setBidirectional(false);
     when(configManager.objects()).thenReturn(Stream.of(config));
     ReplicationField field = utils.getReplications().getList().get(0);
     assertThat(field.name(), is("test"));

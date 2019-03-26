@@ -37,7 +37,6 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
 import org.codice.ddf.security.common.Security;
-import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicationStatus;
@@ -182,15 +181,12 @@ public class ReplicatorImpl implements Replicator {
           try (ReplicationStore store1 = node1;
               ReplicationStore store2 = node2) {
             Status pullStatus = Status.SUCCESS;
-            if (Direction.PULL.equals(config.getDirection())
-                || Direction.BOTH.equals(config.getDirection())) {
+            if (config.isBidirectional()) {
               status.setStatus(Status.PULL_IN_PROGRESS);
               pullStatus = sync(store2, store1, config, status);
             }
 
-            if (pullStatus.equals(Status.SUCCESS)
-                && (Direction.PUSH.equals(config.getDirection())
-                    || Direction.BOTH.equals(config.getDirection()))) {
+            if (pullStatus.equals(Status.SUCCESS)) {
               status.setStatus(Status.PUSH_IN_PROGRESS);
               sync(store1, store2, config, status);
             }
