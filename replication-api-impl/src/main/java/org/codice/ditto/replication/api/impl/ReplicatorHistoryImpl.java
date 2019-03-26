@@ -113,7 +113,7 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
   }
 
   @Override
-  public List<ReplicationStatus> getReplicationEvents(String replicatorid) {
+  public List<ReplicationStatus> getReplicationEvents(String replicationConfigId) {
     return helper.getTypeForFilter(
         filterBuilder.allOf(
             filterBuilder
@@ -121,7 +121,11 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
                 .is()
                 .equalTo()
                 .text(ReplicationHistory.METACARD_TAG),
-            filterBuilder.attribute(ReplicationConfig.NAME).is().equalTo().text(replicatorid)),
+            filterBuilder
+                .attribute(ReplicationConfig.NAME)
+                .is()
+                .equalTo()
+                .text(replicationConfigId)),
         this::getStatusFromMetacard);
   }
 
@@ -164,7 +168,7 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
   @Override
   public void removeReplicationEvents(Set<String> ids) {
     try {
-      provider.delete(new DeleteRequestImpl(ids.toArray(new String[ids.size()])));
+      provider.delete(new DeleteRequestImpl(ids.toArray(new String[0])));
     } catch (IngestException e) {
       throw new ReplicationPersistenceException(
           "Error deleting replication history items " + ids, e);

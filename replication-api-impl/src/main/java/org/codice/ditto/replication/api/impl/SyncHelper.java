@@ -65,14 +65,8 @@ import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.shiro.SecurityUtils;
-import org.codice.ditto.replication.api.ReplicationException;
-import org.codice.ditto.replication.api.ReplicationItem;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicationStatus;
-import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.ReplicationType;
-import org.codice.ditto.replication.api.ReplicatorHistory;
-import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.*;
+import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.mcard.Replication;
 import org.geotools.filter.text.cql2.CQLException;
@@ -96,7 +90,7 @@ class SyncHelper {
 
   private final ReplicatorConfig config;
 
-  private final ReplicationPersistentStore persistentStore;
+  private final ReplicationItemManager persistentStore;
 
   private final ReplicatorHistory history;
 
@@ -123,7 +117,7 @@ class SyncHelper {
       ReplicationStore destination,
       ReplicatorConfig config,
       ReplicationStatus status,
-      ReplicationPersistentStore persistentStore,
+      ReplicationItemManager persistentStore,
       ReplicatorHistory history,
       FilterBuilder builder) {
     this.source = source;

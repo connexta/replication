@@ -29,15 +29,17 @@ public interface ReplicatorHistory {
   /**
    * Get all replication events for a given replication configuration
    *
-   * @param replicatorid replication configuration id
+   * @param replicationConfigId replication configuration id
    * @return List of associated replication events
    */
-  List<ReplicationStatus> getReplicationEvents(String replicatorid);
+  List<ReplicationStatus> getReplicationEvents(String replicationConfigId);
 
   /**
    * Add a replication event to the history
    *
    * @param replicationStatus ReplicationConfig event to store
+   * @throws ReplicationPersistenceException if there is an error adding the {@link
+   *     ReplicationStatus}
    */
   void addReplicationEvent(ReplicationStatus replicationStatus);
 
@@ -45,6 +47,8 @@ public interface ReplicatorHistory {
    * Remove a replication event from the history
    *
    * @param replicationStatus replication event to remove
+   * @throws ReplicationPersistenceException if there is an error deleting the {@link
+   *     ReplicationStatus}
    */
   void removeReplicationEvent(ReplicationStatus replicationStatus);
 
@@ -52,6 +56,7 @@ public interface ReplicatorHistory {
    * Remove set of replication events from the history
    *
    * @param ids replication event ids
+   * @throws ReplicationPersistenceException if there is an error deleting 1 or more provided ids.
    */
   void removeReplicationEvents(Set<String> ids);
 }

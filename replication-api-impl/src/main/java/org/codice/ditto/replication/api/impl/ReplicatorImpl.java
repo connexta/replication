@@ -37,16 +37,8 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
 import org.codice.ddf.security.common.Security;
-import org.codice.ditto.replication.api.Direction;
-import org.codice.ditto.replication.api.ReplicationException;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicationStatus;
-import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorHistory;
-import org.codice.ditto.replication.api.ReplicatorStoreFactory;
-import org.codice.ditto.replication.api.Status;
-import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.*;
+import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.SiteManager;
@@ -61,7 +53,7 @@ public class ReplicatorImpl implements Replicator {
 
   private final ReplicatorHistory history;
 
-  private final ReplicationPersistentStore persistentStore;
+  private final ReplicationItemManager persistentStore;
 
   private final SiteManager siteManager;
 
@@ -82,7 +74,7 @@ public class ReplicatorImpl implements Replicator {
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
-      ReplicationPersistentStore persistentStore,
+      ReplicationItemManager persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
       FilterBuilder builder) {
@@ -99,7 +91,7 @@ public class ReplicatorImpl implements Replicator {
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
-      ReplicationPersistentStore persistentStore,
+      ReplicationItemManager persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
       FilterBuilder builder,

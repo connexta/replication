@@ -30,17 +30,41 @@
     <reference id="persistentStore" interface="org.codice.ddf.persistence.PersistentStore"/>
     <reference id="clientFactoryFactory" interface="org.codice.ddf.cxf.client.ClientFactoryFactory"/>
 
-    <bean id="replicationPersistentStore"
-          class="org.codice.ditto.replication.api.impl.ReplicationPersistentStoreImpl">
+    <bean id="metacards" class="org.codice.ditto.replication.api.impl.persistence.Metacards">
+        <argument ref="catalog"/>
+        <argument ref="filterBuilder"/>
+    </bean>
+
+    <bean id="replicatorDeleterExecutorThreadFactory"
+          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          factory-method="newThreadFactory">
+        <argument value="replicatorDeleterThread"/>
+    </bean>
+    <bean id="replicatorDeleterExecutor" class="java.util.concurrent.Executors"
+          factory-method="newSingleThreadScheduledExecutor">
+        <argument ref="replicatorDeleterExecutorThreadFactory"/>
+    </bean>
+
+    <bean id="scheduleReplicatorDeleter"
+          class="org.codice.ditto.replication.api.impl.persistence.ScheduledReplicatorDeleter" destroy-method="destroy">
+        <argument ref="configManager"/>
+        <argument ref="replicatorDeleterExecutor"/>
+        <argument ref="replicationItemManager"/>
+        <argument ref="historyService"/>
+        <argument ref="metacards"/>
+    </bean>
+
+    <bean id="replicationItemManager"
+          class="org.codice.ditto.replication.api.impl.ReplicationItemManagerImpl">
         <argument ref="persistentStore"/>
     </bean>
 
     <bean id="newReplicationPersistentStore"
-        class="org.codice.ditto.replication.api.impl.persistence.ReplicationPersistentStore">
+          class="org.codice.ditto.replication.api.impl.persistence.ReplicationPersistentStore">
         <argument ref="persistentStore"/>
     </bean>
 
-    <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl"  init-method="init">
+    <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl" init-method="init">
         <argument ref="newReplicationPersistentStore"/>
     </bean>
 
@@ -81,7 +105,7 @@
     </bean>
 
     <service ref="catalogResourceStoreFactory" interface="org.codice.ditto.replication.api.ReplicatorStoreFactory"/>
-    <service ref="replicationPersistentStore" interface="org.codice.ditto.replication.api.ReplicationPersistentStore"/>
+    <service ref="replicationItemManager" interface="org.codice.ditto.replication.api.ReplicationItemManager"/>
     <service ref="siteManager" interface="org.codice.ditto.replication.api.persistence.SiteManager"/>
 
     <bean id="metacardHelper" class="org.codice.ditto.replication.api.impl.MetacardHelper">
@@ -109,7 +133,7 @@
           destroy-method="cleanUp">
         <argument ref="catalogResourceStoreFactory"/>
         <argument ref="historyService"/>
-        <argument ref="replicationPersistentStore"/>
+        <argument ref="replicationItemManager"/>
         <argument ref="siteManager"/>
         <argument ref="replicatorImplExecutor"/>
         <argument ref="filterBuilder"/>
@@ -126,7 +150,8 @@
         <argument value="replicatorImplProcessorThread"/>
     </bean>
 
-    <bean id="runner" class="org.codice.ditto.replication.api.impl.ReplicatorRunner" init-method="init" destroy-method="destroy">
+    <bean id="runner" class="org.codice.ditto.replication.api.impl.ReplicatorRunner" init-method="init"
+          destroy-method="destroy">
         <argument ref="replicatorRunnerExecutor"/>
         <argument ref="replicator"/>
         <argument ref="configManager"/>

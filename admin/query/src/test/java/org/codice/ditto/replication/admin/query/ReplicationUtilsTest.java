@@ -18,10 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,12 +29,7 @@ import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
-import org.codice.ditto.replication.api.Direction;
-import org.codice.ditto.replication.api.ReplicationException;
-import org.codice.ditto.replication.api.ReplicationStatus;
-import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorHistory;
-import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.*;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
@@ -297,14 +289,14 @@ public class ReplicationUtilsTest {
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setId("id");
     config.setName("name");
-    assertThat(utils.deleteConfig("id"), is(true));
+    assertThat(utils.markConfigDeleted("id", true), is(true));
     verify(configManager).remove(anyString());
   }
 
   @Test
   public void deleteConfigFailed() {
     doThrow(new NotFoundException()).when(configManager).remove(anyString());
-    assertThat(utils.deleteConfig("id"), is(false));
+    assertThat(utils.markConfigDeleted("id", true), is(false));
   }
 
   @Test
@@ -337,7 +329,7 @@ public class ReplicationUtilsTest {
     config.setDestination("destId");
     config.setDirection(Direction.PUSH);
     when(configManager.objects()).thenReturn(Stream.of(config));
-    ReplicationField field = utils.getReplications().getList().get(0);
+    ReplicationField field = utils.getReplications(false).getList().get(0);
     assertThat(field.name(), is("test"));
     assertThat(field.source().id(), is("srcId"));
     assertThat(field.destination().id(), is("destId"));

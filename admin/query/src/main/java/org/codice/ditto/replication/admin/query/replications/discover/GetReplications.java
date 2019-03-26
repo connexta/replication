@@ -41,7 +41,7 @@ public class GetReplications extends BaseFunctionField<ListField<ReplicationFiel
 
   @Override
   public ListField<ReplicationField> performFunction() {
-    return replicationUtils.getReplications();
+    return replicationUtils.getReplications(true);
   }
 
   @Override
