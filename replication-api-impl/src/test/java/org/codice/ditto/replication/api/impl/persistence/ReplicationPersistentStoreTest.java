@@ -116,6 +116,8 @@ public class ReplicationPersistentStoreTest {
     map.put(RETRY_COUNT, num);
     map.put(BIDIRECTIONAL, "true");
     map.put(SUSPENDED, "false");
+    map.put("deleted", "false");
+    map.put("deleteData", "false");
     map.put(DESCRIPTION, DESCRIPTION + num);
     map.put(VERSION, ReplicatorConfigImpl.CURRENT_VERSION);
     return map;

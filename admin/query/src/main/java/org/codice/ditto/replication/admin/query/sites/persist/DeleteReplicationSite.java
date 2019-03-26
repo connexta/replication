@@ -60,7 +60,7 @@ public class DeleteReplicationSite extends BaseFunctionField<BooleanField> {
       return;
     }
 
-    ListField<ReplicationField> repFields = replicationUtils.getReplications();
+    ListField<ReplicationField> repFields = replicationUtils.getReplications(false);
     String idToDelete = id.getValue();
     for (ReplicationField repField : repFields.getList()) {
       if (idToDelete.equals(repField.source().id())

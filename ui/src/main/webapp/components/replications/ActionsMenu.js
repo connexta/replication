@@ -1,5 +1,27 @@
+/**
+ * Copyright (c) Connexta
+ *
+ * <p>This is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * Lesser General Public License as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
+ *
+ * <p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details. A copy of the GNU Lesser General Public
+ * License is distributed along with this program and can be found at
+ * <http://www.gnu.org/licenses/lgpl.html>.
+ */
 import React from 'react'
-import { Menu, MenuItem, Typography } from '@material-ui/core'
+import {
+  Menu,
+  MenuItem,
+  Typography,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Tooltip,
+} from '@material-ui/core'
+import HelpIcon from '@material-ui/icons/Help'
 import {
   deleteReplication,
   suspendReplication,
@@ -9,45 +31,92 @@ import { allReplications } from './gql/queries'
 import { Mutation } from 'react-apollo'
 import Replications from './replications'
 import { withSnackbar } from 'notistack'
+import Confirmable from '../common/Confirmable'
 
-const DeleteReplication = withSnackbar(props => {
-  const { id, onClose, name, enqueueSnackbar } = props
+const DeleteReplication = withSnackbar(
+  class extends React.Component {
+    state = {
+      deleteData: false,
+    }
 
-  return (
-    <Mutation mutation={deleteReplication}>
-      {deleteReplication => (
-        <MenuItem
-          key={'Delete'}
-          onClick={() => {
-            deleteReplication({
-              variables: {
-                id: id,
-              },
-              update: store => {
-                const data = store.readQuery({
-                  query: allReplications,
+    handleCheck = name => event => {
+      this.setState({ [name]: event.target.checked })
+    }
+
+    render() {
+      const { id, onClose, name, enqueueSnackbar } = this.props
+
+      return (
+        <Mutation mutation={deleteReplication}>
+          {deleteReplication => (
+            <Confirmable
+              onConfirm={() => {
+                deleteReplication({
+                  variables: {
+                    id: id,
+                    deleteData: this.state.deleteData,
+                  },
+                  update: store => {
+                    const data = store.readQuery({
+                      query: allReplications,
+                    })
+
+                    data.replication.replications = data.replication.replications.filter(
+                      r => r.id !== id
+                    )
+                    store.writeQuery({
+                      query: allReplications,
+                      data,
+                    })
+
+                    enqueueSnackbar('Deleted ' + name + '.', {
+                      variant: 'success',
+                    })
+                  },
                 })
-
-                data.replication.replications = data.replication.replications.filter(
-                  r => r.id !== id
+                onClose()
+              }}
+              message={`Are you sure you want to delete ${name}?`}
+              subMessage={
+                'All historical statistics associated with this Replication will be removed in addition to the Replication.'
+              }
+              onClose={onClose}
+              Button={props => {
+                const { onClick } = props
+                return (
+                  <MenuItem key='Delete' onClick={onClick}>
+                    <Typography>Delete</Typography>
+                  </MenuItem>
                 )
-                store.writeQuery({
-                  query: allReplications,
-                  data,
-                })
-
-                enqueueSnackbar('Deleted ' + name + '.', { variant: 'success' })
-              },
-            })
-            onClose()
-          }}
-        >
-          <Typography>Delete</Typography>
-        </MenuItem>
-      )}
-    </Mutation>
-  )
-})
+              }}
+            >
+              <FormGroup>
+                <div style={{ display: 'flex' }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={this.state.deleteData}
+                        onChange={this.handleCheck('deleteData')}
+                        value='deleteData'
+                      />
+                    }
+                    label='Delete Data?'
+                  />
+                  <Tooltip
+                    title='If checked, resources that were copied to this local Node will be deleted along with the Replication.'
+                    placement='right'
+                  >
+                    <HelpIcon fontSize='small' />
+                  </Tooltip>
+                </div>
+              </FormGroup>
+            </Confirmable>
+          )}
+        </Mutation>
+      )
+    }
+  }
+)
 DeleteReplication.displayName = 'DeleteReplication'
 
 const SuspendReplication = withSnackbar(props => {

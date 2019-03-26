@@ -70,7 +70,7 @@ public class ReplicatorHistoryImplTest {
 
   @Mock CatalogProvider provider;
 
-  @Mock MetacardHelper helper;
+  @Mock Metacards metacards;
 
   @Before
   public void setUp() throws Exception {
@@ -80,10 +80,10 @@ public class ReplicatorHistoryImplTest {
     types.add(new ReplicationHistoryAttributes());
     MetacardType type = new MetacardTypeImpl("replication-history", types);
     doCallRealMethod()
-        .when(helper)
+        .when(metacards)
         .setIfPresent(any(Metacard.class), any(String.class), any(Serializable.class));
     doCallRealMethod()
-        .when(helper)
+        .when(metacards)
         .setIfPresentOrDefault(
             any(Metacard.class),
             any(String.class),
@@ -94,7 +94,7 @@ public class ReplicatorHistoryImplTest {
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call());
     when(security.runAsAdmin(any(PrivilegedAction.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, PrivilegedAction.class).run());
-    history = new ReplicatorHistoryImpl(framework, provider, builder, helper, type, security);
+    history = new ReplicatorHistoryImpl(framework, provider, builder, metacards, type, security);
   }
 
   @Test
@@ -103,7 +103,7 @@ public class ReplicatorHistoryImplTest {
         generateOldStatus(
             "test", new Date(0), new Date(TimeUnit.DAYS.toMillis(1)), TimeUnit.MINUTES.toMillis(5));
 
-    when(helper.getTypeForFilter(any(Filter.class), any(Function.class))).thenReturn(events);
+    when(metacards.getTypeForFilter(any(Filter.class), any(Function.class))).thenReturn(events);
     history.init();
     ArgumentCaptor<CreateRequest> captor = ArgumentCaptor.forClass(CreateRequest.class);
     verify(framework).create(captor.capture());
@@ -140,7 +140,7 @@ public class ReplicatorHistoryImplTest {
     oldStatus.setLastRun(origTime);
     oldStatus.setLastSuccess(origTime);
     oldStatus.setStatus(Status.SUCCESS);
-    when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
+    when(metacards.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(Collections.singletonList(oldStatus));
     history.init();
     verify(framework, never()).create(any(CreateRequest.class));
@@ -149,7 +149,7 @@ public class ReplicatorHistoryImplTest {
 
   @Test
   public void addReplicationEventNoPreviousEventsSuccess() throws Exception {
-    when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
+    when(metacards.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(new ArrayList());
     Date start = new Date();
     ReplicationStatus status = new ReplicationStatusImpl("test");
@@ -166,7 +166,7 @@ public class ReplicatorHistoryImplTest {
 
   @Test
   public void addReplicationEventNoPreviousEventsFailure() throws Exception {
-    when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
+    when(metacards.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(new ArrayList());
     Date start = new Date();
     ReplicationStatus status = new ReplicationStatusImpl("test");
@@ -190,7 +190,7 @@ public class ReplicatorHistoryImplTest {
     oldStatus.setLastSuccess(origTime);
     oldStatus.setStatus(Status.SUCCESS);
 
-    when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
+    when(metacards.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(Collections.singletonList(oldStatus));
     Date start = new Date();
     ReplicationStatus status = new ReplicationStatusImpl("test");
@@ -210,7 +210,7 @@ public class ReplicatorHistoryImplTest {
 
   @Test(expected = ReplicationPersistenceException.class)
   public void addReplicationEventStorageException() throws Exception {
-    when(helper.getTypeForFilter(any(Filter.class), any(Function.class)))
+    when(metacards.getTypeForFilter(any(Filter.class), any(Function.class)))
         .thenReturn(new ArrayList());
     when(framework.create(any(CreateRequest.class))).thenThrow(new IngestException());
     Date start = new Date();

@@ -20,18 +20,21 @@ import ddf.catalog.data.Metacard;
 import ddf.catalog.data.Result;
 import ddf.catalog.data.impl.AttributeImpl;
 import ddf.catalog.data.types.Core;
-import ddf.catalog.federation.FederationException;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.catalog.filter.impl.SortByImpl;
 import ddf.catalog.operation.QueryRequest;
+import ddf.catalog.operation.impl.DeleteRequestImpl;
 import ddf.catalog.operation.impl.QueryImpl;
 import ddf.catalog.operation.impl.QueryRequestImpl;
+import ddf.catalog.source.IngestException;
 import ddf.catalog.source.SourceUnavailableException;
-import ddf.catalog.source.UnsupportedQueryException;
 import ddf.catalog.util.impl.ResultIterable;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.opengis.filter.Filter;
@@ -39,14 +42,18 @@ import org.opengis.filter.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MetacardHelper {
-  private static final Logger LOGGER = LoggerFactory.getLogger(MetacardHelper.class);
+/** Provides common operations when dealing with {@link Metacard}s. */
+public class Metacards {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(Metacards.class);
+
+  private static final int DEFAULT_BATCH_SIZE = 250;
 
   private final CatalogFramework framework;
 
   private final FilterBuilder filterBuilder;
 
-  public MetacardHelper(CatalogFramework framework, FilterBuilder filterBuilder) {
+  public Metacards(CatalogFramework framework, FilterBuilder filterBuilder) {
     this.framework = framework;
     this.filterBuilder = filterBuilder;
   }
@@ -78,27 +85,6 @@ public class MetacardHelper {
     return defaultValue;
   }
 
-  public Metacard getMetacardById(String id) {
-    if (id == null) {
-      return null;
-    }
-    QueryRequest request =
-        new QueryRequestImpl(
-            new QueryImpl(
-                filterBuilder.allOf(
-                    filterBuilder.attribute(Core.ID).is().equalTo().text(id),
-                    filterBuilder.attribute(Metacard.TAGS).is().like().text("*"))));
-    try {
-      List<Result> results = framework.query(request).getResults();
-      if (results.size() == 1) {
-        return results.get(0).getMetacard();
-      }
-    } catch (UnsupportedQueryException | SourceUnavailableException | FederationException e) {
-      LOGGER.warn("Unable to retrieve replication metacard for {}", id, e);
-    }
-    return null;
-  }
-
   public <R> List<R> getTypeForFilter(Filter filter, Function<Metacard, R> function) {
     QueryRequest request =
         new QueryRequestImpl(
@@ -117,5 +103,63 @@ public class MetacardHelper {
         .map(function)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
+  }
+
+  public Set<String> getIdsOfMetacardsInCatalog(Set<String> ids) {
+    List<Filter> filters = new ArrayList<>();
+
+    for (String idString : ids) {
+      filters.add(filterBuilder.attribute(Core.ID).is().equalTo().text(idString));
+    }
+    Filter filter = filterBuilder.anyOf(filters);
+
+    QueryRequest request =
+        new QueryRequestImpl(
+            new QueryImpl(
+                filter, 1, ids.size(), new SortByImpl(Core.ID, SortOrder.ASCENDING), false, 0L));
+
+    ResultIterable results = ResultIterable.resultIterable(framework::query, request);
+    return results
+        .stream()
+        .map(Result::getMetacard)
+        .map(Metacard::getId)
+        .collect(Collectors.toSet());
+  }
+
+  public void doDelete(String[] idsToDelete) throws SourceUnavailableException {
+    doDelete(idsToDelete, DEFAULT_BATCH_SIZE);
+  }
+
+  public void doDelete(String[] idsToDelete, int batchSize) throws SourceUnavailableException {
+    if (idsToDelete.length > 0) {
+      int start = 0;
+      int end;
+
+      while (start < idsToDelete.length) {
+        end = start + batchSize;
+        if (end > idsToDelete.length) {
+          end = idsToDelete.length;
+        }
+        deleteBatch(Arrays.copyOfRange(idsToDelete, start, end));
+        start += batchSize;
+      }
+    }
+  }
+
+  private void deleteBatch(String[] idsToDelete) throws SourceUnavailableException {
+    try {
+      framework.delete(new DeleteRequestImpl(idsToDelete));
+    } catch (IngestException ie) {
+
+      // One metacard failing to delete will cause the entire batch to not be deleted. So,
+      // if the batch fails, perform the deletes individually and just skip over the ones that fail.
+      for (String id : idsToDelete) {
+        try {
+          framework.delete(new DeleteRequestImpl(id));
+        } catch (IngestException e) {
+          LOGGER.debug("Failed to delete metacard with id: {}", id, e);
+        }
+      }
+    }
   }
 }

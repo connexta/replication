@@ -136,4 +136,31 @@ public interface ReplicatorConfig extends Persistable {
    * @param suspended the suspended state to give this config
    */
   void setSuspended(boolean suspended);
+
+  /**
+   * See {@link #deleteData()}.
+   *
+   * @return whether or not this {@code ReplicatorConfig} should be considered as deleted
+   */
+  boolean isDeleted();
+
+  /**
+   * Marks this {@code ReplicatorConfig} as deleted.
+   *
+   * @param deleted
+   */
+  void setDeleted(boolean deleted);
+
+  /**
+   * Applies only when {@link #isDeleted()} returns {@code true}.
+   *
+   * <p>Only data that has been replicated to this {@link ReplicationSite} from a remote {@link
+   * ReplicationSite} will be deleted.
+   *
+   * @return if {@code true}, delete the associated data replicated by this {@code
+   *     ReplicatorConfig}, otherwise retain the data.
+   */
+  boolean deleteData();
+
+  void setDeleteData(boolean deleteData);
 }

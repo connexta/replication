@@ -42,7 +42,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 import org.apache.shiro.util.ThreadContext;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.ReplicatorHistory;
@@ -63,7 +63,7 @@ public class SyncHelperTest {
   @Mock ReplicationStore source;
   @Mock ReplicationStore destination;
   @Mock ReplicatorConfig config;
-  @Mock ReplicationPersistentStore persistentStore;
+  @Mock ReplicationItemManager persistentStore;
   @Mock ReplicatorHistory history;
 
   ReplicationStatus status;
