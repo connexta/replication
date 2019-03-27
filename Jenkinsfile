@@ -4,14 +4,14 @@ pipeline {
     agent {
         node {
             label 'linux-small'
-            customWorkspace "/jenkins/workspace/${JOB_NAME}/${BUILD_NUMBER}"
+            customWorkspace "/jenkins/workspace/${env.JOB_NAME}/${env.BUILD_NUMBER}"
         }
     }
     parameters {
             booleanParam(name: 'RELEASE', defaultValue: false, description: 'Perform Release?')
-            string(name: 'RELEASE_VERSION', defaultValue: null, description: 'The version to release. Empty value will release the current version')
-            string(name: 'RELEASE_TAG', defaultValue: null, description: 'The release tag for this version. Empty value will result in replication-RELEASE_VERSION')
-            string(name: 'NEXT_VERSION', defaultValue: null, description: 'The next development version. Empty value will increment the patch version')
+            string(name: 'RELEASE_VERSION', defaultValue: 'NA', description: 'The version to release. An NA value will release the current version')
+            string(name: 'RELEASE_TAG', defaultValue: 'NA', description: 'The release tag for this version. An NA value will result in replication-RELEASE_VERSION')
+            string(name: 'NEXT_VERSION', defaultValue: 'NA', description: 'The next development version. An NA value will increment the patch version')
     }
     options {
         buildDiscarder(logRotator(numToKeepStr:'25'))
@@ -23,7 +23,7 @@ pipeline {
           Restrict nightly builds to master branch, all others will be built on change only.
           Note: The BRANCH_NAME will only work with a multi-branch job using the github-branch-source
         */
-        cron(BRANCH_NAME == "master" ? "H H(21-23) * * *" : "")
+        cron(env.BRANCH_NAME == "master" ? "H H(21-23) * * *" : "")
     }
     environment {
         LINUX_MVN_RANDOM = '-Djava.security.egd=file:/dev/./urandom'
@@ -35,21 +35,21 @@ pipeline {
             steps {
                 script {
                     if(params.RELEASE == true) {
-                        if(params.RELEASE_VERSION){
+                        if(params.RELEASE_VERSION != 'NA'){
                             env.RELEASE_VERSION = params.RELEASE_VERSION
                          } else {
                             echo ("Setting release version to ${getBaseVersion()}")
                             env.RELEASE_VERSION = getBaseVersion()
                         }
 
-                        if(params.RELEASE_TAG){
+                        if(params.RELEASE_TAG != 'NA'){
                             env.RELEASE_TAG = params.RELEASE_TAG
                         } else {
                             echo("Setting release tag")
                             env.RELEASE_TAG = "replication-${env.RELEASE_VERSION}"
                         }
 
-                        if(params.NEXT_VERSION){
+                        if(params.NEXT_VERSION != 'NA'){
                             env.NEXT_VERSION = params.NEXT_VERSION
                         } else {
                             echo("Setting next version")
