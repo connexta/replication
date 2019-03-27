@@ -108,6 +108,10 @@ public class ReplicationUtils {
     return configManager.objects().map(ReplicatorConfig::getName).anyMatch(name::equalsIgnoreCase);
   }
 
+  public boolean configExists(String id) {
+    return configManager.configExists(id);
+  }
+
   public ReplicationField createReplication(
       String name, String sourceId, String destinationId, String filter, Boolean biDirectional) {
     ReplicatorConfig config = configManager.create();
