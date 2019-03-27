@@ -272,9 +272,9 @@ public class ReplicatorImpl implements Replicator {
   @Override
   public void submitSyncRequest(final SyncRequest syncRequest) throws InterruptedException {
     LOGGER.trace("Submitting sync request for name = {}", syncRequest.getConfig().getName());
-    if (pendingSyncRequests.contains(syncRequest)) {
+    if (pendingSyncRequests.contains(syncRequest) || activeSyncRequests.contains(syncRequest)) {
       LOGGER.debug(
-          "The pendingSyncRequests already contains sync request {}. Not adding again.",
+          "The pendingSyncRequests already contains sync request {}, or it is already running. Not adding again to pending requests.",
           syncRequest);
     } else {
       pendingSyncRequests.put(syncRequest);
