@@ -69,6 +69,8 @@
         <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
         <maven-jacoco-plugin.version>0.8.2</maven-jacoco-plugin.version>
 
+        <project.report.output.directory>project-info</project.report.output.directory>
+
         <!-- documentation replacements -->
         <platform>DDF Base</platform>
         <admin-console>Admin Console</admin-console>
