@@ -28,7 +28,7 @@
         <releases.repository.url />
         <admin-query.version>1.2.7</admin-query.version>
         <ddf.support.version>2.3.12</ddf.support.version>
-        <ddf.version>2.13.7-SNAPSHOT</ddf.version>
+        <ddf.version>2.13.7</ddf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <surefire.version>2.20.1</surefire.version>
         <karaf.version>4.2.1</karaf.version>
