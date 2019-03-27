@@ -98,7 +98,9 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
 
   @Override
   public void deleteAllItems() throws PersistenceException {
-    String cql = "'id' = '*'";
+    // passing in empty cql defaults to *:* solr query. proper cql, `id` like `*`, to solr query
+    // translation currently does not work.
+    String cql = "";
     int index = DEFAULT_START_INDEX;
     long itemsDeleted = 0;
     do {
