@@ -67,7 +67,7 @@ public class ReplicationUtils {
   }
 
   public boolean siteExists(String name) {
-    return siteManager.objects().map(ReplicationSite::getName).anyMatch(name::equals);
+    return siteManager.objects().map(ReplicationSite::getName).anyMatch(name::equalsIgnoreCase);
   }
 
   public boolean siteIdExists(String id) {
@@ -105,7 +105,7 @@ public class ReplicationUtils {
   }
 
   public boolean replicationConfigExists(String name) {
-    return configManager.objects().map(ReplicatorConfig::getName).anyMatch(name::equals);
+    return configManager.objects().map(ReplicatorConfig::getName).anyMatch(name::equalsIgnoreCase);
   }
 
   public ReplicationField createReplication(
