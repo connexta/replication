@@ -17,7 +17,7 @@
     <parent>
         <groupId>replication</groupId>
         <artifactId>replication</artifactId>
-        <version>0.2.1-SNAPSHOT</version>
+        <version>0.2.1</version>
     </parent>
     <artifactId>replication-api</artifactId>
     <name>Replication :: API</name>
