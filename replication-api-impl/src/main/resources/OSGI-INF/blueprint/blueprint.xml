@@ -51,7 +51,7 @@
         <argument ref="newReplicationPersistentStore" />
     </bean>
 
-    <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl"  init-method="init">
+    <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl">
         <argument ref="newReplicationPersistentStore"/>
     </bean>
 
@@ -72,7 +72,7 @@
         <argument ref="cswTransformProvider"/>
     </bean>
 
-    <bean id="catalogResourceStoreFactory" class="org.codice.ditto.replication.api.impl.ReplicatorStoreFactoryImpl">
+    <bean id="resourceStoreFactory" class="org.codice.ditto.replication.api.impl.ReplicatorStoreFactoryImpl">
         <property name="bundleContext" ref="blueprintBundleContext"/>
         <property name="filterBuilder" ref="filterBuilder"/>
         <property name="filterAdapter" ref="filterAdapter"/>
@@ -84,14 +84,13 @@
         </property>
         <property name="securityManager" ref="securityManager"/>
         <property name="encryptionService" ref="encryptionService"/>
-        <property name="catalogFramework" ref="catalog"/>
         <!-- CSW Store Properties -->
         <property name="schemaTransformerManager" ref="metacardTransformerManager"/>
         <property name="cswTransactionWriter" ref="cswTransactionWriter"/>
         <property name="clientFactoryFactory" ref="clientFactoryFactory"/>
     </bean>
 
-    <service ref="catalogResourceStoreFactory" interface="org.codice.ditto.replication.api.ReplicatorStoreFactory"/>
+    <service ref="resourceStoreFactory" interface="org.codice.ditto.replication.api.ReplicatorStoreFactory"/>
     <service ref="replicationPersistentStore" interface="org.codice.ditto.replication.api.ReplicationPersistentStore"/>
     <service ref="siteManager" interface="org.codice.ditto.replication.api.persistence.SiteManager"/>
 
@@ -118,7 +117,7 @@
 
     <bean id="replicator" class="org.codice.ditto.replication.api.impl.ReplicatorImpl" init-method="init"
           destroy-method="cleanUp">
-        <argument ref="catalogResourceStoreFactory"/>
+        <argument ref="resourceStoreFactory"/>
         <argument ref="historyService"/>
         <argument ref="replicationPersistentStore"/>
         <argument ref="siteManager"/>

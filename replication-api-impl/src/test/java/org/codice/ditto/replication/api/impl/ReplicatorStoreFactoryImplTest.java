@@ -13,12 +13,10 @@
  */
 package org.codice.ditto.replication.api.impl;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.spy;
 
 import com.thoughtworks.xstream.converters.Converter;
-import ddf.catalog.CatalogFramework;
 import ddf.catalog.filter.FilterAdapter;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.catalog.resource.ResourceReader;
@@ -28,7 +26,6 @@ import java.net.URL;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerManager;
-import org.codice.ditto.replication.api.ReplicationStore;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,8 +57,6 @@ public class ReplicatorStoreFactoryImplTest {
 
   @Mock ClientFactoryFactory clientFactoryFactory;
 
-  @Mock CatalogFramework framework;
-
   @Before
   public void setUp() throws Exception {
     factory = spy(new ReplicatorStoreFactoryImpl());
@@ -75,7 +70,6 @@ public class ReplicatorStoreFactoryImplTest {
     factory.setSchemaTransformerManager(metacardTransformerManager);
     factory.setCswTransactionWriter(cswTransactionWriter);
     factory.setClientFactoryFactory(clientFactoryFactory);
-    factory.setCatalogFramework(framework);
   }
 
   /*
@@ -85,11 +79,5 @@ public class ReplicatorStoreFactoryImplTest {
   @Test(expected = NoClassDefFoundError.class)
   public void createReplicatorStore() throws Exception {
     factory.createReplicatorStore(new URL("https://somehost:1234"));
-  }
-
-  @Test
-  public void createReplicatorStoreLocal() throws Exception {
-    ReplicationStore store = factory.createReplicatorStore(new URL("https://localhost:8993"));
-    assertThat(store.getClass().getName(), is(LocalCatalogResourceStore.class.getName()));
   }
 }
