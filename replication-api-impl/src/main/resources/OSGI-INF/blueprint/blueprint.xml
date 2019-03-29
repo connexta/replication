@@ -40,17 +40,6 @@
         <argument ref="persistentStore"/>
     </bean>
 
-    <bean id="metacardConfigLoader"
-        class="org.codice.ditto.replication.api.impl.legacy.LegacyDataConverter"
-        init-method="init">
-        <argument ref="catalog"/>
-        <argument ref="filterBuilder"/>
-        <argument ref="metacardHelper"/>
-        <argument ref="siteManager"/>
-        <argument ref="configManager"/>
-        <argument ref="newReplicationPersistentStore" />
-    </bean>
-
     <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl">
         <argument ref="newReplicationPersistentStore"/>
     </bean>
@@ -155,10 +144,6 @@
 
     <service ref="replicator" interface="org.codice.ditto.replication.api.Replicator"/>
 
-    <bean id="frameworkPlugin" class="org.codice.ditto.replication.api.impl.ReplicationFrameworkPlugin"/>
-
-    <service ref="frameworkPlugin" interface="ddf.catalog.plugin.AccessPlugin" ranking="100"/>
-
     <bean id="replicationAttributes" class="ddf.catalog.data.impl.MetacardTypeImpl">
         <argument value="replication"/>
         <argument>
@@ -172,22 +157,6 @@
     <service ref="replicationAttributes" interface="ddf.catalog.data.MetacardType">
         <service-properties>
             <entry key="name" value="replication"/>
-        </service-properties>
-    </service>
-
-    <bean id="replicationConfig" class="ddf.catalog.data.impl.MetacardTypeImpl">
-        <argument value="replication-config"/>
-        <argument>
-            <list>
-                <bean class="org.codice.ditto.replication.api.impl.mcard.ReplicationConfigAttributes"/>
-                <bean class="ddf.catalog.data.impl.types.CoreAttributes"/>
-            </list>
-        </argument>
-    </bean>
-
-    <service ref="replicationConfig" interface="ddf.catalog.data.MetacardType">
-        <service-properties>
-            <entry key="name" value="replication-config"/>
         </service-properties>
     </service>
 
@@ -206,17 +175,4 @@
             <entry key="name" value="replication-history"/>
         </service-properties>
     </service>
-
-    <bean id="replicationPolicyPlugin" class="org.codice.ditto.replication.api.impl.ReplicationPolicyPlugin">
-        <cm:managed-properties persistent-id="org.codice.ditto.replication.api.impl.ReplicationPolicyPlugin"
-                               update-strategy="container-managed"/>
-        <property name="replicationPolicyStrings">
-            <array>
-                <value>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role=admin
-                </value>
-            </array>
-        </property>
-    </bean>
-
-    <service ref="replicationPolicyPlugin" auto-export="interfaces"/>
 </blueprint>

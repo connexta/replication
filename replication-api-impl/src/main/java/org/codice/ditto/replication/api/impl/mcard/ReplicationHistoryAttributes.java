@@ -20,7 +20,6 @@ import ddf.catalog.data.impl.BasicTypes;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.codice.ditto.replication.api.mcard.ReplicationConfig;
 import org.codice.ditto.replication.api.mcard.ReplicationHistory;
 
 /**
@@ -123,7 +122,13 @@ public class ReplicationHistoryAttributes implements ReplicationHistory, Metacar
             false /* multivalued */,
             BasicTypes.STRING_TYPE));
     descriptors.add(
-        new ReplicationConfigAttributes().getAttributeDescriptor(ReplicationConfig.NAME));
+        new AttributeDescriptorImpl(
+            ReplicationHistory.CONFIG_NAME,
+            true /* indexed */,
+            true /* stored */,
+            true /* tokenized */,
+            false /* multivalued */,
+            BasicTypes.STRING_TYPE));
     DESCRIPTORS = Collections.unmodifiableSet(descriptors);
   }
 
