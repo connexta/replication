@@ -14,8 +14,8 @@
 package org.codice.ditto.replication.api.impl.data;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
 public class SyncRequestImpl implements SyncRequest {

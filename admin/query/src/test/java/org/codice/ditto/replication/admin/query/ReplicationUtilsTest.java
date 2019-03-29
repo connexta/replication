@@ -24,7 +24,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
@@ -33,16 +32,16 @@ import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 import org.codice.ditto.replication.api.ReplicationException;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +59,7 @@ public class ReplicationUtilsTest {
 
   @Mock ReplicatorConfigManager configManager;
 
-  @Mock ReplicatorHistory history;
+  @Mock ReplicatorHistoryManager history;
 
   @Mock Replicator replicator;
 
@@ -129,12 +128,13 @@ public class ReplicationUtilsTest {
     when(siteManager.get("srcId")).thenReturn(src);
     when(siteManager.get("destId")).thenReturn(dest);
 
-    ReplicationStatus status = new ReplicationStatusImpl("test");
+    ReplicationStatus status = new ReplicationStatusImpl();
+    status.setReplicatorId("id");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
     status.setPullCount(2L);
     status.setPullBytes(1024 * 1024 * 10L);
-    when(history.getReplicationEvents("test")).thenReturn(Collections.singletonList(status));
+    when(history.getByReplicatorId(anyString())).thenReturn(status);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
     ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true);
     assertThat(field.name(), is("test"));
@@ -162,7 +162,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get("srcId")).thenReturn(src);
     when(siteManager.get("destId")).thenReturn(dest);
 
-    when(history.getReplicationEvents("test")).thenReturn(Collections.emptyList());
+    when(history.getByReplicatorId(anyString())).thenThrow(new NotFoundException());
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
     ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true);
     assertThat(field.name(), is("test"));
@@ -195,12 +195,13 @@ public class ReplicationUtilsTest {
     config.setFilter("oldCql");
     config.setFailureRetryCount(7);
     when(configManager.get(anyString())).thenReturn(config);
-    ReplicationStatus status = new ReplicationStatusImpl("test");
+    ReplicationStatus status = new ReplicationStatusImpl();
+    status.setReplicatorId("id");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
     status.setPullCount(2L);
     status.setPullBytes(1024 * 1024 * 10L);
-    when(history.getReplicationEvents("test")).thenReturn(Collections.singletonList(status));
+    when(history.getByReplicatorId("id")).thenReturn(status);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
     ReplicationField field = utils.updateReplication("id", "test", "srcId", "destId", "cql", true);
     assertThat(field.name(), is("test"));
@@ -236,12 +237,13 @@ public class ReplicationUtilsTest {
     config.setBidirectional(true);
     config.setFailureRetryCount(7);
     when(configManager.get(anyString())).thenReturn(config);
-    ReplicationStatus status = new ReplicationStatusImpl("test");
+    ReplicationStatus status = new ReplicationStatusImpl();
+    status.setReplicatorId("id");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
     status.setPullCount(2L);
     status.setPullBytes(1024 * 1024 * 10L);
-    when(history.getReplicationEvents("test")).thenReturn(Collections.singletonList(status));
+    when(history.getByReplicatorId("id")).thenReturn(status);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
     ReplicationField field = utils.updateReplication("id", null, null, null, null, null);
     assertThat(field.name(), is("test"));
@@ -274,9 +276,10 @@ public class ReplicationUtilsTest {
     config.setFilter("oldCql");
     config.setFailureRetryCount(7);
     when(configManager.get(anyString())).thenReturn(config);
-    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
+    ReplicationStatusImpl status = new ReplicationStatusImpl();
+    status.setReplicatorId("id");
     status.setStatus(Status.PUSH_IN_PROGRESS);
-    when(history.getReplicationEvents("test")).thenReturn(new ArrayList<>());
+    when(history.getByReplicatorId("id")).thenThrow(new NotFoundException());
     SyncRequestImpl syncRequest = new SyncRequestImpl(config, status);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.singleton(syncRequest));
     ReplicationField field = utils.updateReplication("id", "test", "srcId", "destId", "cql", true);
@@ -321,12 +324,13 @@ public class ReplicationUtilsTest {
     when(siteManager.get("srcId")).thenReturn(src);
     when(siteManager.get("destId")).thenReturn(dest);
 
-    ReplicationStatus status = new ReplicationStatusImpl("test");
+    ReplicationStatus status = new ReplicationStatusImpl();
+    status.setReplicatorId("id");
     status.setPushCount(1L);
     status.setPushBytes(1024 * 1024 * 5L);
     status.setPullCount(2L);
     status.setPullBytes(1024 * 1024 * 10L);
-    when(history.getReplicationEvents("test")).thenReturn(Collections.singletonList(status));
+    when(history.getByReplicatorId("id")).thenReturn(status);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setId("id");

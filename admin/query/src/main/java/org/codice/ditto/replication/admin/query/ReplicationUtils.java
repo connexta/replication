@@ -15,6 +15,7 @@ package org.codice.ditto.replication.admin.query;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -24,17 +25,21 @@ import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 import org.codice.ditto.replication.api.ReplicationException;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Utility class that does all the heavy lifting for the graphql operations */
 public class ReplicationUtils {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationUtils.class);
 
   private static final long BYTES_PER_MB = 1024L * 1024L;
 
@@ -42,14 +47,14 @@ public class ReplicationUtils {
 
   private final ReplicatorConfigManager configManager;
 
-  private final ReplicatorHistory history;
+  private final ReplicatorHistoryManager history;
 
   private final Replicator replicator;
 
   public ReplicationUtils(
       SiteManager siteManager,
       ReplicatorConfigManager configManager,
-      ReplicatorHistory history,
+      ReplicatorHistoryManager history,
       Replicator replicator) {
     this.siteManager = siteManager;
     this.configManager = configManager;
@@ -159,7 +164,22 @@ public class ReplicationUtils {
     field.destination(getSiteFieldForSite(siteManager.get(config.getDestination())));
     field.filter(config.getFilter());
     field.biDirectional(config.isBidirectional());
-    List<ReplicationStatus> statusList = history.getReplicationEvents(config.getName());
+    field.suspended(config.isSuspended());
+    setStatusRelatedFields(field, config);
+
+    return field;
+  }
+
+  private void setStatusRelatedFields(ReplicationField field, ReplicatorConfig config) {
+    List<ReplicationStatus> statusList = new ArrayList<>();
+    try {
+      statusList.add(history.getByReplicatorId(config.getId()));
+    } catch (NotFoundException e) {
+      LOGGER.trace(
+          "No history for replication config {} found. This config may not have completed a run yet.",
+          config.getId());
+    }
+
     if (!statusList.isEmpty()) {
       ReplicationStatus lastStatus = statusList.get(0);
       field.lastRun(lastStatus.getLastRun());
@@ -186,10 +206,8 @@ public class ReplicationUtils {
       field.status(statusList.get(0).getStatus().name());
     }
 
-    field.suspended(config.isSuspended());
     field.dataTransferred(String.format("%d MB", bytesTransferred / BYTES_PER_MB));
     field.itemsTransferred((int) itemsTransferred);
-    return field;
   }
 
   private @Nullable ReplicationSiteField getSiteFieldForSite(ReplicationSite site) {

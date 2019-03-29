@@ -19,11 +19,11 @@ import org.codice.ditto.replication.api.data.ReplicationSite;
 public interface SiteManager extends DataManager<ReplicationSite> {
 
   /**
-   * Creates a new ReplicationSite implementation with the given name and url
+   * Creates a new {@link ReplicationSite} implementation with the given name and url
    *
-   * @param name the name to give the ReplicationSite
-   * @param url the for the ReplicationSite
-   * @return a new ReplicationSite implementation
+   * @param name the name to give the {@link ReplicationSite}
+   * @param url the for the {@link ReplicationSite}
+   * @return a new {@link ReplicationSite} implementation
    */
   ReplicationSite createSite(String name, String url);
 }

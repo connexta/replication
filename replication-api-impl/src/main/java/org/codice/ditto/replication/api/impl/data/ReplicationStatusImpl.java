@@ -14,16 +14,40 @@
 package org.codice.ditto.replication.api.impl.data;
 
 import java.util.Date;
-import java.util.UUID;
+import java.util.Map;
 import javax.annotation.Nullable;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 
-public class ReplicationStatusImpl implements ReplicationStatus {
+public class ReplicationStatusImpl extends AbstractPersistable implements ReplicationStatus {
 
-  private final String id;
+  public static final String PERSISTENCE_TYPE = "replication_status";
 
-  private final String replicatorName;
+  public static final String REPLICATOR_ID = "replicator-id";
+
+  public static final String START_TIME = "start-time";
+
+  public static final String LAST_SUCCESS = "last-success";
+
+  public static final String LAST_RUN = "last-run";
+
+  public static final String DURATION = "duration";
+
+  public static final String STATUS = "status";
+
+  public static final String PUSH_COUNT = "push-count";
+
+  public static final String PULL_COUNT = "pull-count";
+
+  public static final String PUSH_FAIL_COUNT = "push-fail-count";
+
+  public static final String PULL_FAIL_COUNT = "pull-fail-count";
+
+  public static final String PUSH_BYTES = "push-bytes";
+
+  public static final String PULL_BYTES = "pull-bytes";
+
+  private String replicatorId;
 
   private Date startTime;
 
@@ -47,24 +71,21 @@ public class ReplicationStatusImpl implements ReplicationStatus {
 
   private long pullBytes = 0;
 
-  public ReplicationStatusImpl(String replicatorName) {
-    this.replicatorName = replicatorName;
-    this.id = UUID.randomUUID().toString();
-  }
+  /** 1 - initial version. */
+  public static final int CURRENT_VERSION = 1;
 
-  public ReplicationStatusImpl(String id, String replicatorName) {
-    this.id = id;
-    this.replicatorName = replicatorName;
+  public ReplicationStatusImpl() {
+    super.setVersion(CURRENT_VERSION);
   }
 
   @Override
-  public String getId() {
-    return id;
+  public String getReplicatorId() {
+    return replicatorId;
   }
 
   @Override
-  public String getReplicatorName() {
-    return replicatorName;
+  public void setReplicatorId(String replicatorId) {
+    this.replicatorId = replicatorId;
   }
 
   @Override
@@ -194,9 +215,9 @@ public class ReplicationStatusImpl implements ReplicationStatus {
   @Override
   public String toString() {
     return String.format(
-        "ReplicationStatus{id='%s', replicatorName='%s', startTime=%s, duration=%d, status=%s, pushCount=%d, pullCount=%d, pushFailCount=%d, pullFailCount=%d, pushBytes=%d, pullBytes=%d}",
-        id,
-        replicatorName,
+        "ReplicationStatus{id='%s', replicatorId='%s', startTime=%s, duration=%d, status=%s, pushCount=%d, pullCount=%d, pushFailCount=%d, pullFailCount=%d, pushBytes=%d, pullBytes=%d}",
+        getId(),
+        replicatorId,
         startTime,
         duration,
         status,
@@ -232,6 +253,66 @@ public class ReplicationStatusImpl implements ReplicationStatus {
       pullBytes += numBytes;
     } else {
       pushBytes += numBytes;
+    }
+  }
+
+  @Override
+  public Map<String, Object> toMap() {
+    Map<String, Object> result = super.toMap();
+    result.put(REPLICATOR_ID, getReplicatorId());
+    result.put(START_TIME, getStartTime());
+    result.put(LAST_SUCCESS, getLastSuccess());
+    result.put(LAST_RUN, getLastRun());
+    result.put(DURATION, getDuration());
+    result.put(STATUS, getStatus());
+    result.put(PUSH_COUNT, getPushCount());
+    result.put(PULL_COUNT, getPullCount());
+    result.put(PUSH_FAIL_COUNT, getPushFailCount());
+    result.put(PULL_FAIL_COUNT, getPullFailCount());
+    result.put(PUSH_BYTES, getPushBytes());
+    result.put(PULL_BYTES, getPullBytes());
+    return result;
+  }
+
+  @Override
+  public void fromMap(Map<String, Object> properties) {
+    super.fromMap(properties);
+    setReplicatorId((String) properties.get(REPLICATOR_ID));
+    setStartTime((Date) properties.get(START_TIME));
+    setLastSuccess((Date) properties.get(LAST_SUCCESS));
+    setLastRun((Date) properties.get(LAST_RUN));
+    setDuration((Long) properties.get(DURATION));
+    setStatus(Status.valueOf((String) properties.get(STATUS)));
+    setPushCount((Long) properties.get(PUSH_COUNT));
+    setPullCount((Long) properties.get(PULL_COUNT));
+    setPushFailCount((Long) properties.get(PUSH_FAIL_COUNT));
+    setPullFailCount((Long) properties.get(PULL_FAIL_COUNT));
+    setPushBytes((Long) properties.get(PUSH_BYTES));
+    setPullBytes((Long) properties.get(PULL_BYTES));
+  }
+
+  @Override
+  public void addStats(ReplicationStatus status) {
+    setPushCount(getPushCount() + status.getPushCount());
+    setPushBytes(getPushBytes() + status.getPushBytes());
+    setPushFailCount(getPushFailCount() + status.getPushFailCount());
+    setPullCount(getPullCount() + status.getPullCount());
+    setPullBytes(getPullBytes() + status.getPullBytes());
+    setPullFailCount(getPullFailCount() + status.getPullFailCount());
+    if (getLastRun() == null || status.getStartTime().after(getLastRun())) {
+      setLastRun(status.getStartTime());
+      setStatus(status.getStatus());
+    }
+
+    if (getStartTime().after(status.getStartTime())) {
+      setStartTime(status.getStartTime());
+    }
+
+    setDuration(getDuration() + status.getDuration());
+
+    if (status.getStatus().equals(Status.SUCCESS)
+        && (getLastSuccess() == null || status.getStartTime().after(getLastSuccess()))) {
+      setLastSuccess(status.getStartTime());
     }
   }
 }

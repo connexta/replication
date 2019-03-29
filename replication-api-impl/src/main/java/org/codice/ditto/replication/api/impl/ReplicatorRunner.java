@@ -110,8 +110,9 @@ public class ReplicatorRunner {
             .collect(Collectors.toList());
     try {
       for (ReplicatorConfig config : configsToSchedule) {
-        replicator.submitSyncRequest(
-            new SyncRequestImpl(config, new ReplicationStatusImpl(config.getName())));
+        ReplicationStatusImpl status = new ReplicationStatusImpl();
+        status.setReplicatorId(config.getId());
+        replicator.submitSyncRequest(new SyncRequestImpl(config, status));
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
