@@ -17,11 +17,8 @@
            xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
 
-    <reference id="catalog" interface="ddf.catalog.CatalogFramework"/>
-    <reference id="provider" interface="ddf.catalog.source.CatalogProvider"/>
     <reference id="filterAdapter" interface="ddf.catalog.filter.FilterAdapter"/>
     <reference id="filterBuilder" interface="ddf.catalog.filter.FilterBuilder"/>
-    <reference id="mimeTypeMapper" interface="ddf.mime.MimeTypeMapper"/>
     <reference id="resourceReader" interface="ddf.catalog.resource.ResourceReader"
                filter="(shortname=URLResourceReader)"/>
     <reference id="cswTransformProvider" interface="com.thoughtworks.xstream.converters.Converter"/>
@@ -83,26 +80,17 @@
     <service ref="replicationPersistentStore" interface="org.codice.ditto.replication.api.ReplicationPersistentStore"/>
     <service ref="siteManager" interface="org.codice.ditto.replication.api.persistence.SiteManager"/>
 
-    <bean id="metacardHelper" class="org.codice.ditto.replication.api.impl.MetacardHelper">
-        <argument ref="catalog"/>
-        <argument ref="filterBuilder"/>
-    </bean>
-
     <bean id="configManager" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorConfigManagerImpl">
         <argument ref="newReplicationPersistentStore"/>
     </bean>
 
     <service ref="configManager" interface="org.codice.ditto.replication.api.persistence.ReplicatorConfigManager"/>
 
-    <bean id="historyService" class="org.codice.ditto.replication.api.impl.ReplicatorHistoryImpl" init-method="init">
-        <argument ref="catalog"/>
-        <argument ref="provider"/>
-        <argument ref="filterBuilder"/>
-        <argument ref="metacardHelper"/>
-        <argument ref="replicationHistory"/>
+    <bean id="historyService" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorHistoryManagerImpl">
+        <argument ref="newReplicationPersistentStore"/>
     </bean>
 
-    <service ref="historyService" interface="org.codice.ditto.replication.api.ReplicatorHistory"/>
+    <service ref="historyService" interface="org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager"/>
 
     <bean id="replicator" class="org.codice.ditto.replication.api.impl.ReplicatorImpl" init-method="init"
           destroy-method="cleanUp">
@@ -157,22 +145,6 @@
     <service ref="replicationAttributes" interface="ddf.catalog.data.MetacardType">
         <service-properties>
             <entry key="name" value="replication"/>
-        </service-properties>
-    </service>
-
-    <bean id="replicationHistory" class="ddf.catalog.data.impl.MetacardTypeImpl">
-        <argument value="replication-history"/>
-        <argument>
-            <list>
-                <bean class="org.codice.ditto.replication.api.impl.mcard.ReplicationHistoryAttributes"/>
-                <bean class="ddf.catalog.data.impl.types.CoreAttributes"/>
-            </list>
-        </argument>
-    </bean>
-
-    <service ref="replicationHistory" interface="ddf.catalog.data.MetacardType">
-        <service-properties>
-            <entry key="name" value="replication-history"/>
         </service-properties>
     </service>
 </blueprint>

@@ -11,24 +11,22 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api;
+package org.codice.ditto.replication.api.persistence;
 
+import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
-import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
-public interface SyncRequest {
-
-  /**
-   * Get the configuration for this request
-   *
-   * @return The configuration of this request
-   */
-  ReplicatorConfig getConfig();
+/** Persistence interface for storing, retrieving, and deleting history items */
+public interface ReplicatorHistoryManager extends DataManager<ReplicationStatus> {
 
   /**
-   * Get the status of this request. Status will be updated during processing.
+   * Gets the replication history for a given replication configuration
    *
-   * @return The status of this request
+   * @param replicatorId the replication configuration id
+   * @return the {@link ReplicationStatus} associated with the given
+   * @throws ReplicationPersistenceException if an error occurs while trying to retrieve the object
+   * @throws NotFoundException if a {@link ReplicationStatus} with the given replicator id cannot be
+   *     found
    */
-  ReplicationStatus getStatus();
+  ReplicationStatus getByReplicatorId(String replicatorId);
 }

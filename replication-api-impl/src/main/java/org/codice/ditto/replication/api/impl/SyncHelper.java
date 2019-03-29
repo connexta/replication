@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.api.impl;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteSource;
 import ddf.catalog.Constants;
@@ -63,17 +64,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import javax.ws.rs.NotFoundException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.shiro.SecurityUtils;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.mcard.Replication;
+import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.opengis.filter.Filter;
@@ -97,7 +99,7 @@ class SyncHelper {
 
   private final ReplicationPersistentStore persistentStore;
 
-  private final ReplicatorHistory history;
+  private final ReplicatorHistoryManager history;
 
   private final FilterBuilder builder;
 
@@ -121,7 +123,7 @@ class SyncHelper {
       ReplicatorConfig config,
       ReplicationStatus status,
       ReplicationPersistentStore persistentStore,
-      ReplicatorHistory history,
+      ReplicatorHistoryManager history,
       FilterBuilder builder) {
     this.source = source;
     this.destination = destination;
@@ -199,13 +201,6 @@ class SyncHelper {
     final Filter ecqlFilter;
     final List<Filter> filters = createBasicMetacardFilters();
     final List<Filter> failureFilters = createFailedMetacardFilters();
-    final ReplicationStatus lastSuccessfulRun =
-        history
-            .getReplicationEvents(config.getName())
-            .stream()
-            .filter(s -> s.getStatus().equals(Status.SUCCESS))
-            .findFirst()
-            .orElse(null);
     Filter finalFilter;
 
     try {
@@ -214,12 +209,11 @@ class SyncHelper {
       throw new ReplicationException("Error creating filter from cql: " + config.getFilter(), e);
     }
 
-    if (lastSuccessfulRun != null) {
-      long time = lastSuccessfulRun.getStartTime().getTime();
-      if (lastSuccessfulRun.getLastSuccess() != null) {
-        time = lastSuccessfulRun.getLastSuccess().getTime();
-      }
-      Date timeStamp = new Date(time - 1000);
+    long timeOfLastSuccessfulRun = getTimeOfLastSuccessfulRun();
+    if (timeOfLastSuccessfulRun > 0) {
+      // subtract a second in case something was modified before the run time but didn't finish
+      // ingesting before we queried.
+      Date timeStamp = new Date(timeOfLastSuccessfulRun - 1000);
       List<Filter> deletedFilters = createDeletedMetacardFilters(timeStamp);
       filters.add(builder.attribute(Core.METACARD_MODIFIED).is().after().date(timeStamp));
       finalFilter =
@@ -234,6 +228,26 @@ class SyncHelper {
       finalFilter = builder.anyOf(finalFilter, builder.anyOf(failureFilters));
     }
     return finalFilter;
+  }
+
+  @VisibleForTesting
+  long getTimeOfLastSuccessfulRun() {
+    ReplicationStatus status = null;
+    try {
+      status = history.getByReplicatorId(config.getId());
+    } catch (NotFoundException e) {
+      LOGGER.trace(
+          "no history for replication config {} found. This config may not have completed a run yet.",
+          config.getId());
+      return 0;
+    }
+
+    if (status.getLastSuccess() != null) {
+      return status.getLastSuccess().getTime();
+    } else {
+      LOGGER.trace("no previous successful run for config {} found.", config.getId());
+      return 0;
+    }
   }
 
   private List<Filter> createBasicMetacardFilters() {

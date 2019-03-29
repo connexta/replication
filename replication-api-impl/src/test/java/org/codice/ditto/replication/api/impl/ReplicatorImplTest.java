@@ -29,17 +29,17 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
+import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +55,7 @@ public class ReplicatorImplTest {
   ReplicatorImpl replicator;
 
   @Mock ReplicatorStoreFactory replicatorStoreFactory;
-  @Mock ReplicatorHistory history;
+  @Mock ReplicatorHistoryManager history;
   @Mock ReplicationPersistentStore persistentStore;
   @Mock SiteManager siteManager;
   @Mock ExecutorService executor;
@@ -124,10 +124,11 @@ public class ReplicatorImplTest {
     when(store2.isAvailable()).thenReturn(true);
     SyncResponse response = new SyncResponse(1L, 0L, 10L, Status.SUCCESS);
     when(helper.sync()).thenReturn(response);
-    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
+    ReplicationStatusImpl status = new ReplicationStatusImpl();
+    status.setReplicatorId("test");
     SyncRequest request = new SyncRequestImpl(config, status);
     replicator.executeSyncRequest(request);
-    verify(history).addReplicationEvent(status);
+    verify(history).save(status);
     verify(siteManager).get("srcId");
     verify(siteManager).get("destId");
     verify(helper, times(2)).sync();
@@ -137,7 +138,8 @@ public class ReplicatorImplTest {
   public void cancelPendingSyncRequest() throws Exception {
     BlockingQueue<SyncRequest> queue = mock(BlockingQueue.class);
     replicator.setPendingSyncRequestsQueue(queue);
-    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
+    ReplicationStatusImpl status = new ReplicationStatusImpl();
+    status.setReplicatorId("test");
     SyncRequest request = new SyncRequestImpl(config, status);
     replicator.submitSyncRequest(request);
     verify(queue, times(1)).put(request);
@@ -161,7 +163,8 @@ public class ReplicatorImplTest {
     when(store2.isAvailable()).thenReturn(true);
     SyncResponse response = new SyncResponse(1L, 0L, 10L, Status.CANCELED);
 
-    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
+    ReplicationStatusImpl status = new ReplicationStatusImpl();
+    status.setReplicatorId("test");
     SyncRequest request = new SyncRequestImpl(config, status);
     Answer answer =
         new Answer() {

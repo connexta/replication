@@ -39,15 +39,15 @@ import org.apache.commons.collections4.queue.UnmodifiableQueue;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,7 @@ public class ReplicatorImpl implements Replicator {
 
   private final ReplicatorStoreFactory replicatorStoreFactory;
 
-  private final ReplicatorHistory history;
+  private final ReplicatorHistoryManager history;
 
   private final ReplicationPersistentStore persistentStore;
 
@@ -80,7 +80,7 @@ public class ReplicatorImpl implements Replicator {
 
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
-      ReplicatorHistory history,
+      ReplicatorHistoryManager history,
       ReplicationPersistentStore persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
@@ -97,7 +97,7 @@ public class ReplicatorImpl implements Replicator {
 
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
-      ReplicatorHistory history,
+      ReplicatorHistoryManager history,
       ReplicationPersistentStore persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
@@ -233,7 +233,7 @@ public class ReplicatorImpl implements Replicator {
       LOGGER.debug("Failed to remove sync request {} from the active queue", syncRequest);
     }
     LOGGER.trace("Adding replication event to history: {}", status);
-    history.addReplicationEvent(status);
+    history.save(status);
     LOGGER.trace("Successfully added replication event to history: {}", status);
   }
 

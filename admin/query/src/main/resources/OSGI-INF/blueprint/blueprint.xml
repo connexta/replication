@@ -14,7 +14,7 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
     <reference id="siteManager" interface="org.codice.ditto.replication.api.persistence.SiteManager"/>
     <reference id="configManager" interface="org.codice.ditto.replication.api.persistence.ReplicatorConfigManager"/>
-    <reference id="history" interface="org.codice.ditto.replication.api.ReplicatorHistory"/>
+    <reference id="history" interface="org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager"/>
     <reference id="replicator" interface="org.codice.ditto.replication.api.Replicator"/>
     <reference id="configurationAdmin" interface="org.osgi.service.cm.ConfigurationAdmin"/>
 
