@@ -162,5 +162,11 @@ public interface ReplicatorConfig extends Persistable {
    */
   boolean deleteData();
 
+  /**
+   * See {@link #deleteData()}.
+   *
+   * @param deleteData {@code true} if this {@code ReplicatorConfig}'s data should be deleted,
+   *     otherwise false
+   */
   void setDeleteData(boolean deleteData);
 }

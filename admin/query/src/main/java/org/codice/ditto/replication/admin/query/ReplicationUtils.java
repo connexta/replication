@@ -76,12 +76,7 @@ public class ReplicationUtils {
   }
 
   public boolean siteIdExists(String id) {
-    try {
-      siteManager.get(id);
-      return true;
-    } catch (NotFoundException e) {
-      return false;
-    }
+    return siteManager.exists(id);
   }
 
   public ReplicationSiteField updateSite(String id, String name, AddressField address) {
@@ -114,7 +109,7 @@ public class ReplicationUtils {
   }
 
   public boolean configExists(String id) {
-    return configManager.configExists(id);
+    return configManager.exists(id);
   }
 
   public ReplicationField createReplication(

@@ -54,4 +54,10 @@ public interface DataManager<T extends Persistable> {
    * @throws NotFoundException if an object with the given id cannot be found
    */
   void remove(String id);
+
+  /**
+   * @param id unique id of the {@link Persistable}
+   * @return {@code true} if the {@link Persistable} exists, otherwise {@code false}.
+   */
+  boolean exists(String id);
 }

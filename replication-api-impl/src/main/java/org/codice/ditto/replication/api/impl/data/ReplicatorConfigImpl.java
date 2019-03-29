@@ -52,8 +52,9 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
    *   <li>0 (No version) - initial version of configs which were saved in the catalog framework
    *   <li>1 - The first version of configs to be saved in the replication persistent store
    *       <ul>
-   *         <li>Add <b>suspended</b> field of type boolean
-   *         <li>Add <b>deleted</b> field of type boolean
+   *         <li>Add <b>suspended</b> field of type boolean with default of false
+   *         <li>Add <b>deleted</b> field of type boolean with default of false
+   *         <li>Add <b>deleteData</b> field of type boolean with default of false
    *       </ul>
    * </ol>
    */

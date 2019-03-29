@@ -47,9 +47,9 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
   }
 
   @Override
-  public boolean configExists(String configId) {
+  public boolean exists(String id) {
     try {
-      persistentStore.get(ReplicatorConfigImpl.class, configId);
+      persistentStore.get(ReplicatorConfigImpl.class, id);
     } catch (NotFoundException | ReplicationPersistenceException e) {
       return false;
     }

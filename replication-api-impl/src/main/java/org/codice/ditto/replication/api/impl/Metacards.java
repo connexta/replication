@@ -150,15 +150,17 @@ public class Metacards {
     try {
       framework.delete(new DeleteRequestImpl(idsToDelete));
     } catch (IngestException ie) {
+      // nothing in batch was deleted, so...
+      deleteSequentially(idsToDelete);
+    }
+  }
 
-      // One metacard failing to delete will cause the entire batch to not be deleted. So,
-      // if the batch fails, perform the deletes individually and just skip over the ones that fail.
-      for (String id : idsToDelete) {
-        try {
-          framework.delete(new DeleteRequestImpl(id));
-        } catch (IngestException e) {
-          LOGGER.debug("Failed to delete metacard with id: {}", id, e);
-        }
+  private void deleteSequentially(String[] ids) throws SourceUnavailableException {
+    for (String id : ids) {
+      try {
+        framework.delete(new DeleteRequestImpl(id));
+      } catch (IngestException e) {
+        LOGGER.debug("Failed to delete metacard with id: {}", id, e);
       }
     }
   }

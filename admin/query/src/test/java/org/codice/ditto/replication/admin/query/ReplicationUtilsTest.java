@@ -416,7 +416,7 @@ public class ReplicationUtilsTest {
 
   @Test
   public void siteIdExists() {
-    when(siteManager.get(anyString())).thenReturn(new ReplicationSiteImpl());
+    when(siteManager.exists(anyString())).thenReturn(true);
     assertThat(utils.siteIdExists("id"), is(true));
   }
 

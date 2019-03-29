@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
 import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ddf.persistence.PersistentItem;
 import org.codice.ddf.persistence.PersistentStore;
@@ -78,7 +79,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
       return Optional.empty();
     }
 
-    if (matchingPersistentItems == null || matchingPersistentItems.isEmpty()) {
+    if (CollectionUtils.isEmpty(matchingPersistentItems)) {
       LOGGER.debug(
           "couldn't find persisted item with id: {}, source: {}, and destination: {}. This is expected during initial replication.",
           metacardId,
