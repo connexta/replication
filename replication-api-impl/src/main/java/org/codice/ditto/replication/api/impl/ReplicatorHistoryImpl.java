@@ -40,7 +40,6 @@ import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
-import org.codice.ditto.replication.api.mcard.ReplicationConfig;
 import org.codice.ditto.replication.api.mcard.ReplicationHistory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +120,11 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
                 .is()
                 .equalTo()
                 .text(ReplicationHistory.METACARD_TAG),
-            filterBuilder.attribute(ReplicationConfig.NAME).is().equalTo().text(replicatorid)),
+            filterBuilder
+                .attribute(ReplicationHistory.CONFIG_NAME)
+                .is()
+                .equalTo()
+                .text(replicatorid)),
         this::getStatusFromMetacard);
   }
 
@@ -175,7 +178,7 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
     ReplicationStatus status =
         new ReplicationStatusImpl(
             metacard.getId(),
-            helper.getAttributeValueOrDefault(metacard, ReplicationConfig.NAME, null));
+            helper.getAttributeValueOrDefault(metacard, ReplicationHistory.CONFIG_NAME, null));
     status.setDuration(
         helper.getAttributeValueOrDefault(metacard, ReplicationHistory.DURATION, -1L));
     status.setPushCount(
@@ -206,7 +209,8 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
 
   private Metacard getMetacardFromStatus(ReplicationStatus replicationStatus) {
     MetacardImpl mcard = new MetacardImpl(metacardType);
-    helper.setIfPresent(mcard, ReplicationConfig.NAME, replicationStatus.getReplicatorName());
+    helper.setIfPresent(
+        mcard, ReplicationHistory.CONFIG_NAME, replicationStatus.getReplicatorName());
     helper.setIfPresent(mcard, ReplicationHistory.DURATION, replicationStatus.getDuration());
     helper.setIfPresent(mcard, ReplicationHistory.START_TIME, replicationStatus.getStartTime());
     helper.setIfPresent(mcard, ReplicationHistory.PULL_COUNT, replicationStatus.getPullCount());

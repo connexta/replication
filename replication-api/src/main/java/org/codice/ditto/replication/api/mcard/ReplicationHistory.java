@@ -15,6 +15,8 @@ package org.codice.ditto.replication.api.mcard;
 
 public interface ReplicationHistory {
 
+  String CONFIG_NAME = "replication-config.name";
+
   String METACARD_TAG = "replication-history";
 
   String START_TIME = "replication-history.start-time";
