@@ -670,7 +670,6 @@
     <modules>
         <module>replication-api</module>
         <module>replication-api-impl</module>
-        <module>replication-commands</module>
         <module>admin</module>
         <module>docs</module>
         <module>ui</module>
