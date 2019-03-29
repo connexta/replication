@@ -42,7 +42,7 @@ const HelpDialog = props => {
           <ListItem>
             <ListItemText>
               1. Add new Nodes by clicking the <Nodes /> icon on the navigation
-              menu. The local Node has already been created.
+              menu.
             </ListItemText>
           </ListItem>
           <ListItem>

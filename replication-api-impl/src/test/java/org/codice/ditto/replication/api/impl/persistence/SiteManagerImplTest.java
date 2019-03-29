@@ -15,31 +15,22 @@ package org.codice.ditto.replication.api.impl.persistence;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
-import org.codice.ddf.configuration.SystemBaseUrl;
-import org.codice.ddf.configuration.SystemInfo;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SiteManagerImplTest {
-
-  private static final String LOCAL_SITE_ID = "local-site-id-1234567890";
 
   SiteManagerImpl store;
 
@@ -49,58 +40,6 @@ public class SiteManagerImplTest {
   public void setUp() {
     System.setProperty("org.codice.ddf.system.siteName", "testSite");
     store = new SiteManagerImpl(persistentStore);
-  }
-
-  @Test
-  public void init() {
-    when(persistentStore.get(any(Class.class), anyString())).thenThrow(new NotFoundException());
-    store.init();
-    ArgumentCaptor<ReplicationSiteImpl> captor = ArgumentCaptor.forClass(ReplicationSiteImpl.class);
-    verify(persistentStore).save(captor.capture());
-    ReplicationSite site = captor.getValue();
-    assertThat(site.getName(), is(SystemInfo.getSiteName()));
-    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.getBaseUrl()));
-  }
-
-  @Test
-  public void initUpdateName() {
-    ReplicationSiteImpl orig = new ReplicationSiteImpl();
-    orig.setId(LOCAL_SITE_ID);
-    orig.setName("oldName");
-    orig.setUrl(SystemBaseUrl.EXTERNAL.getBaseUrl());
-    when(persistentStore.get(eq(ReplicationSiteImpl.class), anyString())).thenReturn(orig);
-    store.init();
-    ArgumentCaptor<ReplicationSiteImpl> captor = ArgumentCaptor.forClass(ReplicationSiteImpl.class);
-    verify(persistentStore).save(captor.capture());
-    ReplicationSiteImpl site = captor.getValue();
-    assertThat(site.getName(), is(SystemInfo.getSiteName()));
-    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.getBaseUrl()));
-  }
-
-  @Test
-  public void initUpdateURL() {
-    ReplicationSiteImpl orig = new ReplicationSiteImpl();
-    orig.setId(LOCAL_SITE_ID);
-    orig.setName(SystemInfo.getSiteName());
-    orig.setUrl("https://asdf:1234");
-    when(persistentStore.get(eq(ReplicationSiteImpl.class), anyString())).thenReturn(orig);
-    store.init();
-    ArgumentCaptor<ReplicationSiteImpl> captor = ArgumentCaptor.forClass(ReplicationSiteImpl.class);
-    verify(persistentStore).save(captor.capture());
-    ReplicationSiteImpl site = captor.getValue();
-    assertThat(site.getName(), is(SystemInfo.getSiteName()));
-    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.getBaseUrl()));
-  }
-
-  @Test
-  public void initNoOp() {
-    ReplicationSiteImpl orig = new ReplicationSiteImpl();
-    orig.setId(LOCAL_SITE_ID);
-    orig.setName(SystemInfo.getSiteName());
-    orig.setUrl(SystemBaseUrl.EXTERNAL.getBaseUrl());
-    when(persistentStore.get(eq(ReplicationSiteImpl.class), anyString())).thenReturn(orig);
-    store.init();
-    verify(persistentStore, never()).save(any(ReplicationSiteImpl.class));
   }
 
   @Test
