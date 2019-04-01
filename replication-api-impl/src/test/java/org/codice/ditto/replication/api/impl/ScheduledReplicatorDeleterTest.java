@@ -129,7 +129,7 @@ public class ScheduledReplicatorDeleterTest {
     when(rep2.getConfigurationId()).thenReturn(configId);
     when(rep3.getConfigurationId()).thenReturn(configId);
     when(rep4.getConfigurationId()).thenReturn(configId);
-    when(rep5.getConfigurationId()).thenReturn(configId);
+    when(rep5.getConfigurationId()).thenReturn("noExistingConfigId");
     when(rep6.getConfigurationId()).thenReturn("noExistingConfigId");
 
     when(replicationItemManager.getItemsForConfig("", 0, pageSize))
@@ -140,9 +140,9 @@ public class ScheduledReplicatorDeleterTest {
         .thenReturn(ImmutableList.of(rep5, rep6));
 
     when(metacards.getIdsOfMetacardsInCatalog(ImmutableSet.of(metacardId1)))
-        .thenReturn(Collections.singleton(metacardId1));
-    when(metacards.getIdsOfMetacardsInCatalog(ImmutableSet.of(metacardId6)))
-        .thenReturn(Collections.singleton(metacardId6));
+        .thenReturn(Collections.emptySet());
+    when(metacards.getIdsOfMetacardsInCatalog(ImmutableSet.of(metacardId5, metacardId6)))
+        .thenReturn(Collections.singleton(metacardId5));
 
     scheduledReplicatorDeleter.cleanup();
 
@@ -284,32 +284,6 @@ public class ScheduledReplicatorDeleterTest {
     scheduledReplicatorDeleter.cleanup();
 
     verify(replicationItemManager, never()).deleteItemsForConfig(configId);
-    verify(replicatorHistory, never()).getReplicationEvents(configId);
-    verify(replicatorHistory, never()).removeReplicationEvents(anySet());
-    verify(replicatorConfigManager, never()).remove(configId);
-  }
-
-  @Test
-  public void testFailCleanupReplicationItemsDoesntRemoveConfig()
-      throws PersistenceException, SourceUnavailableException {
-    final String configId = "configId";
-    final String metacardId1 = "mId1";
-    ReplicatorConfig config = mockConfig(configId, "name", true, true);
-    when(replicatorConfigManager.objects()).thenReturn(Stream.of(config));
-
-    List<ReplicationItem> mockItems = new ArrayList<>();
-    mockItems.add(mockRepItem("id", metacardId1, SITE_NAME));
-    when(replicationItemManager.getItemsForConfig(configId, 0, pageSize)).thenReturn(mockItems);
-
-    doThrow(PersistenceException.class).when(replicationItemManager).deleteItemsForConfig(configId);
-
-    Set<String> itemMetacardIds = Collections.singleton(metacardId1);
-    Set<String> idsInCatalog = Collections.singleton(metacardId1);
-    when(metacards.getIdsOfMetacardsInCatalog(itemMetacardIds)).thenReturn(idsInCatalog);
-
-    scheduledReplicatorDeleter.cleanup();
-
-    verify(metacards, times(1)).doDelete(idsInCatalog.toArray(new String[0]));
     verify(replicatorHistory, never()).getReplicationEvents(configId);
     verify(replicatorHistory, never()).removeReplicationEvents(anySet());
     verify(replicatorConfigManager, never()).remove(configId);

@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ddf.persistence.PersistentItem;
 import org.codice.ddf.persistence.PersistentStore;
@@ -115,7 +116,12 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   @Override
   public List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize)
       throws PersistenceException {
-    String cql = String.format("'%s' = '%s'", CONFIGURATION_ID_KEY, configId);
+    String cql;
+    if (StringUtils.isNotEmpty(configId)) {
+      cql = String.format("'%s' = '%s'", CONFIGURATION_ID_KEY, configId);
+    } else {
+      cql = "";
+    }
     List<Map<String, Object>> matchingPersistentItems;
 
     matchingPersistentItems = persistentStore.get(PERSISTENCE_TYPE, cql, startIndex, pageSize);

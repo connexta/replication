@@ -184,7 +184,7 @@ public class ScheduledReplicatorDeleter {
   }
 
   private boolean itemNotInCatalog(ReplicationItem item, Set<String> idsInCatalog) {
-    return !idsInCatalog.contains(item.getId());
+    return !idsInCatalog.contains(item.getMetacardId());
   }
 
   private void cleanupDeletedConfigs(List<ReplicatorConfig> replicatorConfigs) {
@@ -213,27 +213,22 @@ public class ScheduledReplicatorDeleter {
         }
       }
 
-      try {
-        replicationItemManager.deleteItemsForConfig(configId);
-      } catch (PersistenceException e) {
-        LOGGER.debug(
-            "Failed to delete replication items for config: {}. Deletion will be retried next poll interval",
-            configName,
-            e);
-        return;
+      if (deleteHistory(config)) {
+        replicatorConfigManager.remove(configId);
       }
+    }
+  }
 
-      try {
-        deleteReplicatorHistory(config);
-      } catch (ReplicationPersistenceException e) {
-        LOGGER.debug(
-            "History for replicator configuration {} could not be deleted. Deletion will be retried next polling interval.",
-            configName,
-            e);
-        return;
-      }
-
-      replicatorConfigManager.remove(configId);
+  private boolean deleteHistory(ReplicatorConfig config) {
+    try {
+      deleteReplicatorHistory(config);
+      return true;
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.debug(
+          "History for replicator configuration {} could not be deleted. Deletion will be retried next polling interval.",
+          config.getName(),
+          e);
+      return false;
     }
   }
 
