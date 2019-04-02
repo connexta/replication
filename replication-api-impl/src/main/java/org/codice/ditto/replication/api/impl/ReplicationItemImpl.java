@@ -14,7 +14,6 @@
 package org.codice.ditto.replication.api.impl;
 
 import java.util.Date;
-import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.codice.ditto.replication.api.ReplicationItem;
 
@@ -32,8 +31,6 @@ public class ReplicationItemImpl implements ReplicationItem {
 
   private final String configurationId;
 
-  private final String id;
-
   private int failureCount;
 
   public ReplicationItemImpl(
@@ -43,19 +40,10 @@ public class ReplicationItemImpl implements ReplicationItem {
       String source,
       String destination,
       String configId) {
-    this(
-        UUID.randomUUID().toString(),
-        metacardId,
-        resourceModified,
-        metacardModified,
-        source,
-        destination,
-        configId,
-        0);
+    this(metacardId, resourceModified, metacardModified, source, destination, configId, 0);
   }
 
   public ReplicationItemImpl(
-      String id,
       String metacardId,
       Date resourceModified,
       Date metacardModified,
@@ -63,7 +51,6 @@ public class ReplicationItemImpl implements ReplicationItem {
       String destination,
       String configId,
       int failureCount) {
-    this.id = id;
     this.metacardId = notBlank(metacardId);
     // TODO these dates don't matter for delete requests that fail. Need to make a way to
     // instantiate a failed ReplicationItem for failed deletes.
@@ -83,11 +70,6 @@ public class ReplicationItemImpl implements ReplicationItem {
     } else {
       throw new IllegalArgumentException("String argument may not be empty");
     }
-  }
-
-  @Override
-  public String getId() {
-    return id;
   }
 
   @Override

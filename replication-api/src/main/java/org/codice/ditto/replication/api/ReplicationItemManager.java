@@ -30,8 +30,6 @@ public interface ReplicationItemManager {
 
   void deleteItem(String metacardId, String source, String destination);
 
-  void deleteItem(String id);
-
   List<String> getFailureList(int maximumFailureCount, String source, String destination);
 
   void deleteItemsForConfig(String configId) throws PersistenceException;

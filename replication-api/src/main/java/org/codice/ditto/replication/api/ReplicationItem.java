@@ -21,9 +21,6 @@ import java.util.Date;
  */
 public interface ReplicationItem {
 
-  /** @return a globally unique ID */
-  String getId();
-
   String getMetacardId();
 
   Date getResourceModified();

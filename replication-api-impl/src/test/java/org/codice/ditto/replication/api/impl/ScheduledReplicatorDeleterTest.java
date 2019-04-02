@@ -62,6 +62,8 @@ public class ScheduledReplicatorDeleterTest {
 
   private final int pageSize = 1;
 
+  private final String SOURCE = "source";
+
   @Mock ReplicatorConfigManager replicatorConfigManager;
 
   @Mock ScheduledExecutorService scheduledExecutorService;
@@ -119,12 +121,12 @@ public class ScheduledReplicatorDeleterTest {
     final String metacardId5 = "mId5";
     final String metacardId6 = "mId6";
 
-    ReplicationItem rep1 = mockRepItem("id1", metacardId1, SITE_NAME);
-    ReplicationItem rep2 = mockRepItem("id2", metacardId2, SITE_NAME);
-    ReplicationItem rep3 = mockRepItem("id3", metacardId3, SITE_NAME);
-    ReplicationItem rep4 = mockRepItem("id4", metacardId4, SITE_NAME);
-    ReplicationItem rep5 = mockRepItem("id5", metacardId5, SITE_NAME);
-    ReplicationItem rep6 = mockRepItem("id6", metacardId6, SITE_NAME);
+    ReplicationItem rep1 = mockRepItem(metacardId1, SITE_NAME);
+    ReplicationItem rep2 = mockRepItem(metacardId2, SITE_NAME);
+    ReplicationItem rep3 = mockRepItem(metacardId3, SITE_NAME);
+    ReplicationItem rep4 = mockRepItem(metacardId4, SITE_NAME);
+    ReplicationItem rep5 = mockRepItem(metacardId5, SITE_NAME);
+    ReplicationItem rep6 = mockRepItem(metacardId6, SITE_NAME);
     when(rep1.getConfigurationId()).thenReturn("noExistingConfigId");
     when(rep2.getConfigurationId()).thenReturn(configId);
     when(rep3.getConfigurationId()).thenReturn(configId);
@@ -146,12 +148,12 @@ public class ScheduledReplicatorDeleterTest {
 
     scheduledReplicatorDeleter.cleanup();
 
-    verify(replicationItemManager, times(1)).deleteItem("id1");
-    verify(replicationItemManager, never()).deleteItem("id2");
-    verify(replicationItemManager, never()).deleteItem("id3");
-    verify(replicationItemManager, never()).deleteItem("id4");
-    verify(replicationItemManager, never()).deleteItem("id5");
-    verify(replicationItemManager, times(1)).deleteItem("id6");
+    verify(replicationItemManager, times(1)).deleteItem(metacardId1, SOURCE, SITE_NAME);
+    verify(replicationItemManager, never()).deleteItem(metacardId2, SOURCE, SITE_NAME);
+    verify(replicationItemManager, never()).deleteItem(metacardId3, SOURCE, SITE_NAME);
+    verify(replicationItemManager, never()).deleteItem(metacardId4, SOURCE, SITE_NAME);
+    verify(replicationItemManager, never()).deleteItem(metacardId5, SOURCE, SITE_NAME);
+    verify(replicationItemManager, times(1)).deleteItem(metacardId6, SOURCE, SITE_NAME);
   }
 
   @Test
@@ -163,7 +165,7 @@ public class ScheduledReplicatorDeleterTest {
     when(replicatorConfigManager.objects()).thenReturn(Stream.of(config));
 
     doThrow(PersistenceException.class).when(replicationItemManager).getItemsForConfig("", 0, 1);
-    verify(replicationItemManager, never()).deleteItem(anyString());
+    verify(replicationItemManager, never()).deleteItem(anyString(), anyString(), anyString());
 
     scheduledReplicatorDeleter.cleanup();
   }
@@ -183,9 +185,9 @@ public class ScheduledReplicatorDeleterTest {
 
     when(replicatorConfigManager.objects()).thenReturn(Stream.of(config, deletedConfig));
 
-    ReplicationItem rep1 = mockRepItem("id1", metacardId1, SITE_NAME);
-    ReplicationItem rep2 = mockRepItem("id2", metacardId2, "anotherSite");
-    ReplicationItem rep3 = mockRepItem("id3", metacardId3, SITE_NAME);
+    ReplicationItem rep1 = mockRepItem(metacardId1, SITE_NAME);
+    ReplicationItem rep2 = mockRepItem(metacardId2, "anotherSite");
+    ReplicationItem rep3 = mockRepItem(metacardId3, SITE_NAME);
 
     when(replicationItemManager.getItemsForConfig(deletedConfigId, 0, pageSize))
         .thenReturn(Collections.singletonList(rep1));
@@ -218,6 +220,7 @@ public class ScheduledReplicatorDeleterTest {
     // not deleted config
     verify(replicationItemManager, never()).getItemsForConfig(configId, 0, pageSize);
     verify(replicatorHistory, never()).getReplicationEvents(configName);
+    verify(replicationItemManager, times(1)).deleteItemsForConfig(deletedConfigId);
     verify(replicatorConfigManager, times(1)).remove(deletedConfigId);
   }
 
@@ -231,7 +234,7 @@ public class ScheduledReplicatorDeleterTest {
     when(replicatorConfigManager.objects()).thenReturn(Stream.of(config));
 
     List<ReplicationItem> mockItems = new ArrayList<>();
-    mockItems.add(mockRepItem("id", metacardId, SITE_NAME));
+    mockItems.add(mockRepItem(metacardId, SITE_NAME));
     when(replicationItemManager.getItemsForConfig(configId, 0, pageSize)).thenReturn(mockItems);
 
     ReplicationStatus mockStatus = mockRepStatus("id");
@@ -276,7 +279,7 @@ public class ScheduledReplicatorDeleterTest {
     when(replicatorConfigManager.objects()).thenReturn(Stream.of(config));
 
     List<ReplicationItem> mockItems = new ArrayList<>();
-    mockItems.add(mockRepItem("id", "metcardId", SITE_NAME));
+    mockItems.add(mockRepItem("metcardId", SITE_NAME));
     when(replicationItemManager.getItemsForConfig(configId, 0, pageSize)).thenReturn(mockItems);
 
     doThrow(SourceUnavailableException.class).when(metacards).doDelete(any());
@@ -299,7 +302,7 @@ public class ScheduledReplicatorDeleterTest {
     when(replicatorConfigManager.objects()).thenReturn(Stream.of(config));
 
     List<ReplicationItem> mockItems = new ArrayList<>();
-    mockItems.add(mockRepItem("id", metacardId1, SITE_NAME));
+    mockItems.add(mockRepItem(metacardId1, SITE_NAME));
     when(replicationItemManager.getItemsForConfig(configId, 0, pageSize)).thenReturn(mockItems);
 
     Set<String> itemMetacardIds = Collections.singleton(metacardId1);
@@ -340,11 +343,11 @@ public class ScheduledReplicatorDeleterTest {
     return status;
   }
 
-  private ReplicationItem mockRepItem(String itemId, String metacardId, String destination) {
+  private ReplicationItem mockRepItem(String metacardId, String destination) {
     ReplicationItem item = mock(ReplicationItem.class);
-    when(item.getId()).thenReturn(itemId);
     when(item.getMetacardId()).thenReturn(metacardId);
     when(item.getDestination()).thenReturn(destination);
+    when(item.getSource()).thenReturn(SOURCE);
     return item;
   }
 

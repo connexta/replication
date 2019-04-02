@@ -39,8 +39,6 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   private static final String METACARD_MODIFIED_KEY = "metacard-modified";
 
-  private static final String METACARD_ID_KEY = "metacard-id";
-
   private static final String SOURCE_NAME_KEY = "source";
 
   private static final String DESTINATION_NAME_KEY = "destination";
@@ -65,8 +63,8 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   public Optional<ReplicationItem> getItem(String metacardId, String source, String destination) {
     String cqlFilter =
         String.format(
-            "'%s' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
-            METACARD_ID_KEY, metacardId, source, destination);
+            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
+            metacardId, source, destination);
     List<Map<String, Object>> matchingPersistentItems;
 
     try {
@@ -145,8 +143,8 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   public void deleteItem(String metacardId, String source, String destination) {
     String cqlFilter =
         String.format(
-            "'%s' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
-            METACARD_ID_KEY, metacardId, source, destination);
+            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
+            metacardId, source, destination);
     try {
       persistentStore.delete(PERSISTENCE_TYPE, cqlFilter);
     } catch (PersistenceException e) {
@@ -155,16 +153,6 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
           metacardId,
           source,
           destination);
-    }
-  }
-
-  @Override
-  public void deleteItem(String id) {
-    String cqlFilter = String.format("'id' = '%s'", id);
-    try {
-      persistentStore.delete(PERSISTENCE_TYPE, cqlFilter);
-    } catch (PersistenceException e) {
-      LOGGER.debug("Failed to delete item of type {} with id: {}", PERSISTENCE_TYPE, id, e);
     }
   }
 
@@ -206,8 +194,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   private PersistentItem replicationToPersistentItem(ReplicationItem replicationItem) {
     PersistentItem persistentItem = new PersistentItem();
-    persistentItem.addIdProperty(replicationItem.getId());
-    persistentItem.addProperty(METACARD_ID_KEY, replicationItem.getMetacardId());
+    persistentItem.addIdProperty(replicationItem.getMetacardId());
     persistentItem.addProperty(RESOURCE_MODIFIED_KEY, replicationItem.getResourceModified());
     persistentItem.addProperty(METACARD_MODIFIED_KEY, replicationItem.getMetacardModified());
     persistentItem.addProperty(FAILURE_COUNT_KEY, replicationItem.getFailureCount());
@@ -221,7 +208,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   private ReplicationItem mapToReplicationItem(Map<String, Object> persistedMap) {
     Map<String, Object> attributes = PersistentItem.stripSuffixes(persistedMap);
 
-    final String metacardId = (String) attributes.get(METACARD_ID_KEY);
+    final String metacardId = (String) attributes.get(ID_KEY);
     final Date resourceModified = (Date) attributes.get(RESOURCE_MODIFIED_KEY);
     final Date metacardModified = (Date) attributes.get(METACARD_MODIFIED_KEY);
     final String source = (String) attributes.get(SOURCE_NAME_KEY);
@@ -230,7 +217,6 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
     final int failureCount = (int) attributes.get(FAILURE_COUNT_KEY);
 
     return new ReplicationItemImpl(
-        (String) attributes.get(ID_KEY),
         metacardId,
         resourceModified,
         metacardModified,

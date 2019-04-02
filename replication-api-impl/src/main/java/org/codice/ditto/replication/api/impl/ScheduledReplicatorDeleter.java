@@ -167,10 +167,10 @@ public class ScheduledReplicatorDeleter {
                   .filter(item -> itemNotInCatalog(item, idsInTheCatalog))
                   .collect(Collectors.toSet());
 
-          orphanedItems
-              .stream()
-              .map(ReplicationItem::getId)
-              .forEach(replicationItemManager::deleteItem);
+          orphanedItems.forEach(
+              item ->
+                  replicationItemManager.deleteItem(
+                      item.getMetacardId(), item.getSource(), item.getDestination()));
 
           startIndex += replicationItems.size() - orphanedItems.size();
         } else {
@@ -205,13 +205,22 @@ public class ScheduledReplicatorDeleter {
               "Failed to retrieve replication items for config: {}. Deletion will be retried next poll interval.",
               configName,
               e);
-          return;
+          break;
         } catch (SourceUnavailableException e) {
           LOGGER.debug(
               "Failed to delete metacards replicated by config: {}. Deletion will be retried next poll interval.",
               configName,
               e);
-          return;
+          break;
+        }
+
+        try {
+          replicationItemManager.deleteItemsForConfig(configId);
+        } catch (PersistenceException e) {
+          LOGGER.debug(
+              "Removed metacards for replicator {}, but failed to delete replication items. Deletion will be tried next poll interval.",
+              configName);
+          break;
         }
       }
 
