@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.configuration.SystemInfo;
-import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.junit.Before;
@@ -135,13 +134,6 @@ public class SiteManagerImplTest {
   @Test
   public void testExistsNotFound() {
     when(persistentStore.get(ReplicationSiteImpl.class, "id")).thenThrow(NotFoundException.class);
-    assertThat(siteManager.exists("id"), is(false));
-  }
-
-  @Test
-  public void testExistsErrorAccessingPersistenceStore() {
-    when(persistentStore.get(ReplicationSiteImpl.class, "id"))
-        .thenThrow(ReplicationPersistenceException.class);
     assertThat(siteManager.exists("id"), is(false));
   }
 

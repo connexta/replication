@@ -37,8 +37,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Periodically polls for available {@link ReplicatorConfig}s and deletes them based on the {@link
- * ReplicatorConfig#isDeleted()} and {@link ReplicatorConfig#deleteData()} properties. A {@link
- * ReplicatorConfig} marked as deleted always has its history deleted.
+ * ReplicatorConfig#isDeleted()} and {@link ReplicatorConfig#shouldDeleteData()} properties. A
+ * {@link ReplicatorConfig} marked as deleted always has its history deleted.
  */
 public class ScheduledReplicatorDeleter {
 
@@ -77,6 +77,8 @@ public class ScheduledReplicatorDeleter {
         DEFAULT_PAGE_SIZE);
   }
 
+  @VisibleForTesting
+  @SuppressWarnings("squid:S00107" /* Only for testing */)
   ScheduledReplicatorDeleter(
       ReplicatorConfigManager replicatorConfigManager,
       ScheduledExecutorService scheduledExecutorService,
@@ -105,7 +107,7 @@ public class ScheduledReplicatorDeleter {
     scheduledExecutorService.shutdownNow();
   }
 
-  public void cleanup() {
+  void cleanup() {
     security.runAsAdmin(
         () -> {
           try {
@@ -195,7 +197,7 @@ public class ScheduledReplicatorDeleter {
       final String configId = config.getId();
       final String configName = config.getName();
 
-      if (config.deleteData()) {
+      if (config.shouldDeleteData()) {
         try {
           deleteMetacards(configId);
         } catch (PersistenceException e) {

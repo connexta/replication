@@ -330,7 +330,7 @@ public class ScheduledReplicatorDeleterTest {
     when(config.getId()).thenReturn(id);
     when(config.getName()).thenReturn(name);
     when(config.isDeleted()).thenReturn(isDeleted);
-    when(config.deleteData()).thenReturn(deleteData);
+    when(config.shouldDeleteData()).thenReturn(deleteData);
     return config;
   }
 

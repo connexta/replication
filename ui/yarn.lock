@@ -5406,10 +5406,10 @@ normalize-scroll-left@^0.1.2:
   resolved "https://registry.yarnpkg.com/normalize-scroll-left/-/normalize-scroll-left-0.1.2.tgz#6b79691ba79eb5fb107fa5edfbdc06b55caee2aa"
   integrity sha512-F9YMRls0zCF6BFIE2YnXDRpHPpfd91nOIaNdDgrx5YMoPLo8Wqj+6jNXHQsYBavJeXP4ww8HCt0xQAKc5qk2Fg==
 
-notistack@0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/notistack/-/notistack-0.5.0.tgz#4fece949c973cad6d1d4a9d34da8024ef3158b5e"
-  integrity sha512-DYAix/jnN/Qv/AHwgbNFcQ2d6HjeQ8duEge6OJr5rn0pmxUutQjuGpZ+3dJ/4FBJtfRbnv0BX59ZtHrn2tE+Jw==
+notistack@0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/notistack/-/notistack-0.6.1.tgz#d29a7b85deb67ed144e5427438280961615c7b1b"
+  integrity sha512-tuXmw/0TBmdeHqRjWQwf9Jh298OMEwi18mrnTwxV4IfkxO0n2AplTj/WM9D9kV7aEmMjHTcHixRzllZUou1mAw==
   dependencies:
     classnames "^2.2.6"
     prop-types "^15.6.2"

@@ -138,7 +138,7 @@ public interface ReplicatorConfig extends Persistable {
   void setSuspended(boolean suspended);
 
   /**
-   * See {@link #deleteData()}.
+   * See {@link #shouldDeleteData()}.
    *
    * @return whether or not this {@code ReplicatorConfig} should be considered as deleted
    */
@@ -147,7 +147,7 @@ public interface ReplicatorConfig extends Persistable {
   /**
    * Marks this {@code ReplicatorConfig} as deleted.
    *
-   * @param deleted
+   * @param deleted whether or not this {@code ReplicatorConfig} should be considered as deleted
    */
   void setDeleted(boolean deleted);
 
@@ -160,10 +160,10 @@ public interface ReplicatorConfig extends Persistable {
    * @return if {@code true}, delete the associated data replicated by this {@code
    *     ReplicatorConfig}, otherwise retain the data.
    */
-  boolean deleteData();
+  boolean shouldDeleteData();
 
   /**
-   * See {@link #deleteData()}.
+   * See {@link #shouldDeleteData()}.
    *
    * @param deleteData {@code true} if this {@code ReplicatorConfig}'s data should be deleted,
    *     otherwise false

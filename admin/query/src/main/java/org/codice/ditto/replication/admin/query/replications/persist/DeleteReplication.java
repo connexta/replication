@@ -30,7 +30,7 @@ public class DeleteReplication extends BaseFunctionField<BooleanField> {
   public static final String FIELD_NAME = "deleteReplication";
 
   public static final String DESCRIPTION =
-      "Deletes a Replication. Optionally delete the data of the Replication. Deleting data will delete "
+      "Deletes a Replication and its history (statistics). Optionally delete the data of the Replication. Deleting data will delete "
           + "any local resources and metadata that were replicated by this Replication, but not any resources replicated to a remote Node.";
 
   public static final BooleanField RETURN_TYPE = new BooleanField();

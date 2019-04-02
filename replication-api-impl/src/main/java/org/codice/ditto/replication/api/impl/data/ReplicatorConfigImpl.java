@@ -96,7 +96,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     result.put(DESCRIPTION_KEY, getDescription());
     result.put(SUSPENDED_KEY, Boolean.toString(isSuspended()));
     result.put(DELETED_KEY, Boolean.toString(isDeleted()));
-    result.put(DELETE_DATA_KEY, Boolean.toString(deleteData()));
+    result.put(DELETE_DATA_KEY, Boolean.toString(shouldDeleteData()));
     return result;
   }
 
@@ -206,7 +206,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   }
 
   @Override
-  public boolean deleteData() {
+  public boolean shouldDeleteData() {
     return deleteData;
   }
 

@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
-import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.junit.Before;
@@ -81,13 +80,6 @@ public class ReplicatorConfigManagerImplTest {
   @Test
   public void testExistsNotFound() {
     when(persistentStore.get(ReplicatorConfigImpl.class, "id")).thenThrow(NotFoundException.class);
-    assertThat(manager.exists("id"), is(false));
-  }
-
-  @Test
-  public void testExistsErrorAccessingPersistenceStore() {
-    when(persistentStore.get(ReplicatorConfigImpl.class, "id"))
-        .thenThrow(ReplicationPersistenceException.class);
     assertThat(manager.exists("id"), is(false));
   }
 

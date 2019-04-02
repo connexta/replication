@@ -97,7 +97,7 @@ public class SiteManagerImpl implements SiteManager {
   public boolean exists(String id) {
     try {
       persistentStore.get(ReplicationSiteImpl.class, id);
-    } catch (NotFoundException | ReplicationPersistenceException e) {
+    } catch (NotFoundException e) {
       return false;
     }
     return true;

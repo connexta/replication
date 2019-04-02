@@ -37,9 +37,9 @@ public class DeleteReplicationTest {
 
   private static final String ID = "abc123";
 
-  DeleteReplication deleteReplication;
+  private DeleteReplication deleteReplication;
 
-  Map<String, Object> args;
+  private Map<String, Object> args;
 
   @Mock ReplicationUtils utils;
 

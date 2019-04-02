@@ -301,7 +301,7 @@ public class ReplicationUtilsTest {
     when(configManager.get("id")).thenReturn(config);
 
     assertThat(utils.markConfigDeleted("id", true), is(true));
-    assertThat(config.deleteData(), is(true));
+    assertThat(config.shouldDeleteData(), is(true));
     assertThat(config.isDeleted(), is(true));
     assertThat(config.isSuspended(), is(true));
     verify(replicator).cancelSyncRequest("id");

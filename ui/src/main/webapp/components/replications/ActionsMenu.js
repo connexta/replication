@@ -30,7 +30,7 @@ import {
 import { allReplications } from './gql/queries'
 import { Mutation } from 'react-apollo'
 import Replications from './replications'
-import { withSnackbar } from 'notistack'
+import { withSnackbar, useSnackbar } from 'notistack'
 import Confirmable from '../common/Confirmable'
 
 const DeleteReplication = withSnackbar(
@@ -119,8 +119,9 @@ const DeleteReplication = withSnackbar(
 )
 DeleteReplication.displayName = 'DeleteReplication'
 
-const SuspendReplication = withSnackbar(props => {
-  const { id, suspend, key, label, onClose, enqueueSnackbar, name } = props
+const SuspendReplication = props => {
+  const { id, suspend, key, label, onClose, name } = props
+  const { enqueueSnackbar } = useSnackbar()
 
   return (
     <Mutation mutation={suspendReplication}>
@@ -167,11 +168,11 @@ const SuspendReplication = withSnackbar(props => {
       )}
     </Mutation>
   )
-})
-SuspendReplication.displayName = 'SuspendReplication'
+}
 
-const CancelReplication = withSnackbar(props => {
-  const { id, onClose, name, enqueueSnackbar } = props
+const CancelReplication = props => {
+  const { id, onClose, name } = props
+  const { enqueueSnackbar } = useSnackbar()
 
   return (
     <Mutation mutation={cancelReplication}>
@@ -218,8 +219,7 @@ const CancelReplication = withSnackbar(props => {
       )}
     </Mutation>
   )
-})
-CancelReplication.displayName = 'CancelReplication'
+}
 
 const ActionsMenu = function(props) {
   const { menuId, anchorEl = null, onClose, replication } = props
