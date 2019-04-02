@@ -43,7 +43,7 @@ const HelpDialog = props => {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='md'>
       <DialogTitle variant='h6' id='help-dialog-title'>
-        {'Welcome to the Project Charleston BETA'}
+        {'Welcome to the Project Charleston'}
       </DialogTitle>
       <DialogContent>
         <DialogContentText id='help-dialog-description'>
