@@ -75,7 +75,7 @@ function ReplicationsContainer(props) {
   const { classes } = props
 
   return (
-    <Query query={allReplications} pollInterval={3000}>
+    <Query query={allReplications} pollInterval={10000}>
       {({ data, loading, error }) => {
         if (loading) return <CenteredCircularProgress />
         if (error) return <ServerError />

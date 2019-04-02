@@ -43,7 +43,7 @@ function SitesContainer(props) {
   const { classes } = props
 
   return (
-    <Query query={allSites} pollInterval={10000}>
+    <Query query={allSites}>
       {({ data, loading, error }) => {
         if (loading) return <CenteredCircularProgress />
         if (error) return <ServerError />

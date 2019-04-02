@@ -103,7 +103,7 @@ class Navbar extends React.Component {
       >
         <Toolbar>
           <Typography variant='h6' color='inherit' noWrap>
-            Project Charleston BETA
+            Project Charleston
           </Typography>
           <div className='navIcons'>
             <Tooltip
