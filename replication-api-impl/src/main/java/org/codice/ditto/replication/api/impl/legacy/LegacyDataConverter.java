@@ -42,7 +42,7 @@ import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
-import org.codice.ditto.replication.api.impl.MetacardHelper;
+import org.codice.ditto.replication.api.impl.Metacards;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.impl.persistence.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
@@ -65,7 +65,7 @@ public class LegacyDataConverter {
 
   private final FilterBuilder filterBuilder;
 
-  private final MetacardHelper helper;
+  private final Metacards metacards;
 
   private final SiteManager siteManager;
 
@@ -78,14 +78,14 @@ public class LegacyDataConverter {
   public LegacyDataConverter(
       CatalogFramework framework,
       FilterBuilder filterBuilder,
-      MetacardHelper helper,
+      Metacards metacards,
       SiteManager siteManager,
       ReplicatorConfigManager newConfigManager,
       ReplicationPersistentStore persistentStore) {
     this(
         framework,
         filterBuilder,
-        helper,
+        metacards,
         siteManager,
         newConfigManager,
         persistentStore,
@@ -96,14 +96,14 @@ public class LegacyDataConverter {
   LegacyDataConverter(
       CatalogFramework framework,
       FilterBuilder filterBuilder,
-      MetacardHelper helper,
+      Metacards metacards,
       SiteManager siteManager,
       ReplicatorConfigManager newConfigManager,
       ReplicationPersistentStore persistentStore,
       Security security) {
     this.framework = framework;
     this.filterBuilder = filterBuilder;
-    this.helper = helper;
+    this.metacards = metacards;
     this.siteManager = siteManager;
     this.newConfigManager = newConfigManager;
     this.persistentStore = persistentStore;
@@ -169,7 +169,7 @@ public class LegacyDataConverter {
   }
 
   List<ReplicatorConfig> getAllConfigs() {
-    return helper.getTypeForFilter(
+    return metacards.getTypeForFilter(
         filterBuilder.attribute(Metacard.TAGS).is().like().text(ReplicationConfig.METACARD_TAG),
         this::getConfigFromMetacard);
   }
@@ -190,17 +190,17 @@ public class LegacyDataConverter {
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     Direction direction;
     config.setId(mcard.getId());
-    config.setName(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.NAME, null));
+    config.setName(metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.NAME, null));
     config.setDescription(
-        helper.getAttributeValueOrDefault(mcard, ReplicationConfig.DESCRIPTION, null));
+        metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.DESCRIPTION, null));
     direction =
         Direction.valueOf(
-            helper.getAttributeValueOrDefault(
+            metacards.getAttributeValueOrDefault(
                 mcard, ReplicationConfig.DIRECTION, Direction.PUSH.name()));
     config.setFailureRetryCount(
-        helper.getAttributeValueOrDefault(
+        metacards.getAttributeValueOrDefault(
             mcard, ReplicationConfig.FAILURE_RETRY_COUNT, DEFAULT_FAILURE_RETRY_COUNT));
-    String oldUrl = helper.getAttributeValueOrDefault(mcard, ReplicationConfig.URL, null);
+    String oldUrl = metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.URL, null);
 
     if (oldUrl != null) {
       config = setSourceAndDestinationWithOldUrl(config, direction, oldUrl);
@@ -209,11 +209,11 @@ public class LegacyDataConverter {
       }
     } else {
       config.setDestination(
-          helper.getAttributeValueOrDefault(mcard, ReplicationConfig.DESTINATION, null));
-      config.setSource(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.SOURCE, null));
+          metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.DESTINATION, null));
+      config.setSource(metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.SOURCE, null));
     }
 
-    config.setFilter(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.CQL, null));
+    config.setFilter(metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.CQL, null));
     config.setBidirectional(direction == Direction.BOTH);
 
     if (config.getDestination() == null
@@ -229,8 +229,9 @@ public class LegacyDataConverter {
           ReplicationConfig.CQL);
       return null;
     }
-    config.setVersion(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.VERSION, 1));
-    config.setSuspended(helper.getAttributeValueOrDefault(mcard, ReplicationConfig.SUSPEND, false));
+    config.setVersion(metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.VERSION, 1));
+    config.setSuspended(
+        metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.SUSPEND, false));
 
     return config;
   }

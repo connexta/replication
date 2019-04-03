@@ -67,7 +67,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.shiro.SecurityUtils;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationItem;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.ReplicatorHistory;
@@ -95,7 +95,7 @@ class SyncHelper {
 
   private final ReplicatorConfig config;
 
-  private final ReplicationPersistentStore persistentStore;
+  private final ReplicationItemManager persistentStore;
 
   private final ReplicatorHistory history;
 
@@ -120,7 +120,7 @@ class SyncHelper {
       ReplicationStore destination,
       ReplicatorConfig config,
       ReplicationStatus status,
-      ReplicationPersistentStore persistentStore,
+      ReplicationItemManager persistentStore,
       ReplicatorHistory history,
       FilterBuilder builder) {
     this.source = source;

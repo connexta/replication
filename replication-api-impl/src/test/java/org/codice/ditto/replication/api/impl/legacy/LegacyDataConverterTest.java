@@ -19,7 +19,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import ddf.catalog.CatalogFramework;
 import ddf.catalog.data.Metacard;
@@ -49,7 +54,7 @@ import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
-import org.codice.ditto.replication.api.impl.MetacardHelper;
+import org.codice.ditto.replication.api.impl.Metacards;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.impl.mcard.ReplicationConfigAttributes;
@@ -72,16 +77,14 @@ import org.opengis.filter.Filter;
 @RunWith(MockitoJUnitRunner.class)
 public class LegacyDataConverterTest {
 
-  // @Rule public Timeout globalTimeout = Timeout.seconds(10);
-
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
-  LegacyDataConverter converter;
+  private LegacyDataConverter converter;
 
   @Mock CatalogFramework framework;
 
-  @Mock MetacardHelper helper;
+  @Mock Metacards helper;
 
   @Mock SiteManager siteManager;
 
@@ -91,7 +94,7 @@ public class LegacyDataConverterTest {
 
   @Mock Security security;
 
-  MetacardType type;
+  private MetacardType type;
 
   @Before
   public void setUp() throws Exception {
@@ -122,13 +125,7 @@ public class LegacyDataConverterTest {
     oldSite.setName("oldSiteName");
     oldSite.setUrl("https://oldurl:8080");
     when(persistentStore.objects(eq(OldSite.class)))
-        .thenAnswer(
-            new Answer<Stream<OldSite>>() {
-              @Override
-              public Stream<OldSite> answer(InvocationOnMock invocation) throws Throwable {
-                return Stream.of(oldSite);
-              }
-            });
+        .thenAnswer((Answer<Stream<OldSite>>) invocation -> Stream.of(oldSite));
     when(siteManager.createSite(anyString(), anyString())).thenReturn(new ReplicationSiteImpl());
     converter =
         new LegacyDataConverter(

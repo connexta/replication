@@ -41,20 +41,20 @@ public class SiteManagerImplTest {
 
   private static final String LOCAL_SITE_ID = "local-site-id-1234567890";
 
-  SiteManagerImpl store;
+  private SiteManagerImpl siteManager;
 
   @Mock ReplicationPersistentStore persistentStore;
 
   @Before
   public void setUp() {
     System.setProperty("org.codice.ddf.system.siteName", "testSite");
-    store = new SiteManagerImpl(persistentStore);
+    siteManager = new SiteManagerImpl(persistentStore);
   }
 
   @Test
   public void init() {
     when(persistentStore.get(any(Class.class), anyString())).thenThrow(new NotFoundException());
-    store.init();
+    siteManager.init();
     ArgumentCaptor<ReplicationSiteImpl> captor = ArgumentCaptor.forClass(ReplicationSiteImpl.class);
     verify(persistentStore).save(captor.capture());
     ReplicationSite site = captor.getValue();
@@ -69,7 +69,7 @@ public class SiteManagerImplTest {
     orig.setName("oldName");
     orig.setUrl(SystemBaseUrl.EXTERNAL.getBaseUrl());
     when(persistentStore.get(eq(ReplicationSiteImpl.class), anyString())).thenReturn(orig);
-    store.init();
+    siteManager.init();
     ArgumentCaptor<ReplicationSiteImpl> captor = ArgumentCaptor.forClass(ReplicationSiteImpl.class);
     verify(persistentStore).save(captor.capture());
     ReplicationSiteImpl site = captor.getValue();
@@ -84,7 +84,7 @@ public class SiteManagerImplTest {
     orig.setName(SystemInfo.getSiteName());
     orig.setUrl("https://asdf:1234");
     when(persistentStore.get(eq(ReplicationSiteImpl.class), anyString())).thenReturn(orig);
-    store.init();
+    siteManager.init();
     ArgumentCaptor<ReplicationSiteImpl> captor = ArgumentCaptor.forClass(ReplicationSiteImpl.class);
     verify(persistentStore).save(captor.capture());
     ReplicationSiteImpl site = captor.getValue();
@@ -99,7 +99,7 @@ public class SiteManagerImplTest {
     orig.setName(SystemInfo.getSiteName());
     orig.setUrl(SystemBaseUrl.EXTERNAL.getBaseUrl());
     when(persistentStore.get(eq(ReplicationSiteImpl.class), anyString())).thenReturn(orig);
-    store.init();
+    siteManager.init();
     verify(persistentStore, never()).save(any(ReplicationSiteImpl.class));
   }
 
@@ -109,12 +109,12 @@ public class SiteManagerImplTest {
     Stream<ReplicationSiteImpl> siteStream = Stream.of(site);
     when(persistentStore.objects(eq(ReplicationSiteImpl.class))).thenReturn(siteStream);
 
-    assertThat(store.objects().anyMatch(site::equals), is(true));
+    assertThat(siteManager.objects().anyMatch(site::equals), is(true));
   }
 
   @Test
   public void createSite() {
-    ReplicationSite site = store.createSite("name", "url");
+    ReplicationSite site = siteManager.createSite("name", "url");
     assertThat(site.getName(), is("name"));
     assertThat(site.getUrl(), is("url"));
   }
@@ -122,12 +122,23 @@ public class SiteManagerImplTest {
   @Test(expected = IllegalArgumentException.class)
   public void saveSiteBadSite() {
     ReplicationSite site = mock(ReplicationSite.class);
-    store.save(site);
+    siteManager.save(site);
   }
 
   @Test
   public void deleteSite() {
-    store.remove("id");
+    siteManager.remove("id");
     verify(persistentStore).delete(eq(ReplicationSiteImpl.class), eq("id"));
+  }
+
+  @Test
+  public void testExistsNotFound() {
+    when(persistentStore.get(ReplicationSiteImpl.class, "id")).thenThrow(NotFoundException.class);
+    assertThat(siteManager.exists("id"), is(false));
+  }
+
+  @Test
+  public void testExistsConfigFound() {
+    assertThat(siteManager.exists("id"), is(true));
   }
 }

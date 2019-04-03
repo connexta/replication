@@ -17,9 +17,9 @@ import java.util.List;
 import java.util.Optional;
 import org.codice.ddf.persistence.PersistenceException;
 
-public interface ReplicationPersistentStore {
+public interface ReplicationItemManager {
 
-  Optional<ReplicationItem> getItem(String id, String source, String destination);
+  Optional<ReplicationItem> getItem(String metacardId, String source, String destination);
 
   List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize)
       throws PersistenceException;
@@ -28,7 +28,7 @@ public interface ReplicationPersistentStore {
 
   void deleteAllItems() throws PersistenceException;
 
-  void deleteItem(String id, String source, String destination);
+  void deleteItem(String metacardId, String source, String destination);
 
   List<String> getFailureList(int maximumFailureCount, String source, String destination);
 

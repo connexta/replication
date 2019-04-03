@@ -28,7 +28,7 @@ import java.security.PrivilegedAction;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import org.codice.ddf.security.common.Security;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.ReplicatorHistory;
@@ -56,7 +56,7 @@ public class ReplicatorImplTest {
 
   @Mock ReplicatorStoreFactory replicatorStoreFactory;
   @Mock ReplicatorHistory history;
-  @Mock ReplicationPersistentStore persistentStore;
+  @Mock ReplicationItemManager persistentStore;
   @Mock SiteManager siteManager;
   @Mock ExecutorService executor;
   @Mock Security security;

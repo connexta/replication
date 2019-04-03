@@ -92,4 +92,14 @@ public class SiteManagerImpl implements SiteManager {
   public void remove(String id) {
     persistentStore.delete(ReplicationSiteImpl.class, id);
   }
+
+  @Override
+  public boolean exists(String id) {
+    try {
+      persistentStore.get(ReplicationSiteImpl.class, id);
+    } catch (NotFoundException e) {
+      return false;
+    }
+    return true;
+  }
 }

@@ -19,18 +19,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ddf.persistence.PersistentItem;
 import org.codice.ddf.persistence.PersistentStore;
 import org.codice.ditto.replication.api.ReplicationItem;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReplicationPersistentStoreImpl implements ReplicationPersistentStore {
+public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(ReplicationPersistentStoreImpl.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationItemManagerImpl.class);
 
   private static final String ID_KEY = "id";
 
@@ -54,15 +55,16 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
 
   private final PersistentStore persistentStore;
 
-  public ReplicationPersistentStoreImpl(PersistentStore persistentStore) {
+  public ReplicationItemManagerImpl(PersistentStore persistentStore) {
     this.persistentStore = persistentStore;
   }
 
   @Override
-  public Optional<ReplicationItem> getItem(String id, String source, String destination) {
+  public Optional<ReplicationItem> getItem(String metacardId, String source, String destination) {
     String cqlFilter =
         String.format(
-            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'", id, source, destination);
+            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
+            metacardId, source, destination);
     List<Map<String, Object>> matchingPersistentItems;
 
     try {
@@ -70,23 +72,23 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
     } catch (PersistenceException e) {
       LOGGER.debug(
           "failed to retrieve item with id: {}, source: {}, and destination: {}",
-          id,
+          metacardId,
           source,
           destination);
       return Optional.empty();
     }
 
-    if (matchingPersistentItems == null || matchingPersistentItems.isEmpty()) {
+    if (CollectionUtils.isEmpty(matchingPersistentItems)) {
       LOGGER.debug(
           "couldn't find persisted item with id: {}, source: {}, and destination: {}. This is expected during initial replication.",
-          id,
+          metacardId,
           source,
           destination);
       return Optional.empty();
     } else if (matchingPersistentItems.size() > 1) {
       throw new IllegalStateException(
           "Found multiple persistent items with id: "
-              + id
+              + metacardId
               + ", source: "
               + source
               + ", and destination: "
@@ -102,7 +104,7 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
     // translation currently does not work.
     String cql = "";
     int index = DEFAULT_START_INDEX;
-    long itemsDeleted = 0;
+    long itemsDeleted;
     do {
       itemsDeleted = persistentStore.delete(PERSISTENCE_TYPE, cql, index, DEFAULT_PAGE_SIZE);
       index += DEFAULT_PAGE_SIZE;
@@ -112,7 +114,12 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
   @Override
   public List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize)
       throws PersistenceException {
-    String cql = String.format("'config-id' = '%s'", configId);
+    String cql;
+    if (StringUtils.isNotEmpty(configId)) {
+      cql = String.format("'%s' = '%s'", CONFIGURATION_ID_KEY, configId);
+    } else {
+      cql = "";
+    }
     List<Map<String, Object>> matchingPersistentItems;
 
     matchingPersistentItems = persistentStore.get(PERSISTENCE_TYPE, cql, startIndex, pageSize);
@@ -133,16 +140,17 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
   }
 
   @Override
-  public void deleteItem(String id, String source, String destination) {
+  public void deleteItem(String metacardId, String source, String destination) {
     String cqlFilter =
         String.format(
-            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'", id, source, destination);
+            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
+            metacardId, source, destination);
     try {
       persistentStore.delete(PERSISTENCE_TYPE, cqlFilter);
     } catch (PersistenceException e) {
       LOGGER.error(
           "error deleting persisted item with id: {}, source: {}, and destination: {}",
-          id,
+          metacardId,
           source,
           destination);
     }
@@ -175,7 +183,7 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
 
   @Override
   public void deleteItemsForConfig(String configId) throws PersistenceException {
-    String cql = String.format("'config-id' = '%s'", configId);
+    String cql = String.format("'%s' = '%s'", CONFIGURATION_ID_KEY, configId);
     int itemsDeleted;
 
     do {

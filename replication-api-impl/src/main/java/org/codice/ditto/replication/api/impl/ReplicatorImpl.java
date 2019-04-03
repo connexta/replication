@@ -38,7 +38,7 @@ import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.ReplicationException;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.Replicator;
@@ -60,7 +60,7 @@ public class ReplicatorImpl implements Replicator {
 
   private final ReplicatorHistory history;
 
-  private final ReplicationPersistentStore persistentStore;
+  private final ReplicationItemManager persistentStore;
 
   private final SiteManager siteManager;
 
@@ -81,7 +81,7 @@ public class ReplicatorImpl implements Replicator {
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
-      ReplicationPersistentStore persistentStore,
+      ReplicationItemManager persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
       FilterBuilder builder) {
@@ -98,7 +98,7 @@ public class ReplicatorImpl implements Replicator {
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
-      ReplicationPersistentStore persistentStore,
+      ReplicationItemManager persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
       FilterBuilder builder,

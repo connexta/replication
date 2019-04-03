@@ -24,6 +24,7 @@ import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 import org.codice.ditto.replication.api.ReplicationException;
+import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.ReplicatorHistory;
@@ -32,9 +33,13 @@ import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Utility class that does all the heavy lifting for the graphql operations */
 public class ReplicationUtils {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationUtils.class);
 
   private static final long BYTES_PER_MB = 1024L * 1024L;
 
@@ -71,12 +76,7 @@ public class ReplicationUtils {
   }
 
   public boolean siteIdExists(String id) {
-    try {
-      siteManager.get(id);
-      return true;
-    } catch (NotFoundException e) {
-      return false;
-    }
+    return siteManager.exists(id);
   }
 
   public ReplicationSiteField updateSite(String id, String name, AddressField address) {
@@ -109,7 +109,7 @@ public class ReplicationUtils {
   }
 
   public boolean configExists(String id) {
-    return configManager.configExists(id);
+    return configManager.exists(id);
   }
 
   public ReplicationField createReplication(
@@ -215,12 +215,21 @@ public class ReplicationUtils {
     return field;
   }
 
-  public boolean deleteConfig(String id) {
+  public boolean markConfigDeleted(String id, boolean deleteData) {
     try {
-      configManager.remove(id);
+      ReplicatorConfig config = configManager.get(id);
+      config.setDeleted(true);
+      config.setDeleteData(deleteData);
+      config.setSuspended(true);
+      configManager.save(config);
+      replicator.cancelSyncRequest(id);
       return true;
-    } catch (NotFoundException e) {
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.debug("Unable to delete replicator configuration with id {}", id, e);
       return false;
+    } catch (NotFoundException e) {
+      LOGGER.debug("Config with id {}", id, e);
+      return true;
     }
   }
 
@@ -253,9 +262,18 @@ public class ReplicationUtils {
     return siteFields;
   }
 
-  public ListField<ReplicationField> getReplications() {
+  public ListField<ReplicationField> getReplications(boolean filterDeleted) {
     ListField<ReplicationField> fields = new ReplicationField.ListImpl();
-    configManager.objects().map(this::getReplicationFieldForConfig).forEach(fields::add);
+
+    if (filterDeleted) {
+      configManager
+          .objects()
+          .filter(c -> !c.isDeleted())
+          .map(this::getReplicationFieldForConfig)
+          .forEach(fields::add);
+    } else {
+      configManager.objects().map(this::getReplicationFieldForConfig).forEach(fields::add);
+    }
     return fields;
   }
 }

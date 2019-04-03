@@ -44,7 +44,7 @@ import org.codice.ddf.configuration.SystemInfo;
 import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationItem;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.mcard.Replication;
 import org.codice.ditto.replication.api.mcard.ReplicationConfig;
@@ -106,7 +106,7 @@ public class ConfigDeleteCommand extends SubjectCommands {
 
   @Reference CatalogFramework framework;
 
-  @Reference ReplicationPersistentStore store;
+  @Reference ReplicationItemManager store;
 
   @Reference FilterBuilder builder;
 
@@ -281,7 +281,7 @@ public class ConfigDeleteCommand extends SubjectCommands {
         try {
           framework.delete(new DeleteRequestImpl(id));
         } catch (IngestException e) {
-          LOGGER.debug("Failed to delete metacard with id:%s because of exception {}", id, e);
+          LOGGER.debug("Failed to delete metacard with id: {}", id, e);
         }
       }
     }

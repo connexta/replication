@@ -21,8 +21,9 @@ public interface DataManager<T extends Persistable> {
    *
    * @param id The object id
    * @return the T object with the given id
-   * @throws ReplicationPersistenceException if an error occurs while trying to retrieve the object
-   * @throws NotFoundException if an object with the given id cannot be found
+   * @throws {@link org.codice.ditto.replication.api.ReplicationPersistenceException} if an error
+   *     occurs while trying to retrieve the object
+   * @throws {@link javax.ws.rs.NotFoundException} if an object with the given id cannot be found
    * @throws IllegalStateException if multiple objects were found with the given id
    */
   T get(String id);
@@ -31,7 +32,8 @@ public interface DataManager<T extends Persistable> {
    * Gets all the currently saved T objects
    *
    * @return Stream of all T objects
-   * @throws ReplicationPersistenceException if an error occurs while trying to retrieve the objects
+   * @throws {@link org.codice.ditto.replication.api.ReplicationPersistenceException} if an error
+   *     occurs while trying to retrieve the objects
    */
   Stream<T> objects();
 
@@ -41,7 +43,8 @@ public interface DataManager<T extends Persistable> {
    * method included in this interface.
    *
    * @param object The T object to save or update
-   * @throws ReplicationPersistenceException if an error occurs while trying to save the config
+   * @throws {@link org.codice.ditto.replication.api.ReplicationPersistenceException} if an error
+   *     occurs while trying to save the config
    * @throws IllegalArgumentException if the T implementation is not one that can be saved
    */
   void save(T object);
@@ -50,8 +53,17 @@ public interface DataManager<T extends Persistable> {
    * Deletes a T object with the given id
    *
    * @param id The id of the object to be removed
-   * @throws ReplicationPersistenceException if an error occurs while trying to delete the config
-   * @throws NotFoundException if an object with the given id cannot be found
+   * @throws {@link org.codice.ditto.replication.api.ReplicationPersistenceException} if an error
+   *     occurs while trying to delete the config
+   * @throws {@link javax.ws.rs.NotFoundException} if an object with the given id cannot be found
    */
   void remove(String id);
+
+  /**
+   * @param id unique id of the {@link Persistable}
+   * @return {@code true} if the {@link Persistable} exists, otherwise {@code false}.
+   * @throws {@link org.codice.ditto.replication.api.ReplicationPersistenceException} if there is an
+   *     error accessing storage
+   */
+  boolean exists(String id);
 }
