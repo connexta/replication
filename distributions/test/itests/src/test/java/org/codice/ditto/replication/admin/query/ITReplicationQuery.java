@@ -31,12 +31,12 @@ import org.codice.pax.exam.junit.ServiceAdmin;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-@TestDelimiter(stdout = true, elapsed = true)
 @DDFCommonOptions.ConfigureVMOptionsForTesting
 @DDFCommonOptions.ConfigureDebugging
 @DDFCommonOptions.ConfigurePorts
 @DDFCommonOptions.ConfigureLogging
 @ReplicationOptions.Install
+@TestDelimiter(stdout = true, elapsed = true)
 @ServiceAdmin
 @ConfigurationAdmin
 @RunWith(Dominion.class)
