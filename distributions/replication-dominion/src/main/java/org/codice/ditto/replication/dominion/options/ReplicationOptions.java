@@ -21,6 +21,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.codice.ddf.dominion.options.DDFOptions;
 import org.codice.dominion.options.Option;
+import org.codice.dominion.options.karaf.KarafOptions;
+import org.codice.maven.MavenUrl;
 
 /**
  * This class defines annotations that can be used to configure Dominion containers. It is solely
@@ -29,17 +31,20 @@ import org.codice.dominion.options.Option;
 public class ReplicationOptions {
   /** Dominion option for installing replication. */
   @DDFOptions.InstallDistribution(solr = true)
-  // The replication feature cannot be currently installed this way (i.e. as a boot feature) as it
-  // relies on DDF features to already be started. We shall be forced to start the feature at
-  // runtime directly in each test classes using the ServiceAdmin JUnit rule
-  // @KarafOptions.InstallFeature(
-  //    repository =
-  //        @MavenUrl(
-  //            groupId = "replication.distributions.features",
-  //            artifactId = "replication",
-  //            version = MavenUrl.AS_IN_PROJECT,
-  //            type = "xml",
-  //            classifier = "features"))
+  // The replication feature cannot be currently installed as a boot feature as it
+  // relies on DDF features to already be started. We shall be forced to install the feature via
+  // the SSH console after DDF has been installed with the above annotation
+  @KarafOptions.InstallFeature(
+    repository =
+        @MavenUrl(
+          groupId = "replication.distributions.features",
+          artifactId = "replication",
+          version = MavenUrl.AS_IN_PROJECT,
+          type = "xml",
+          classifier = "features"
+        ),
+    boot = false
+  )
   @Option.Annotation
   @Target(ElementType.TYPE)
   @Retention(RetentionPolicy.RUNTIME)
