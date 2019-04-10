@@ -30,7 +30,7 @@
 
         <admin-query.version>1.2.7</admin-query.version>
         <ddf.support.version>2.3.12</ddf.support.version>
-        <ddf.version>2.13.8-SNAPSHOT</ddf.version>
+        <ddf.version>2.13.8</ddf.version>
         <codice-maven.version>0.2</codice-maven.version>
         <codice-test.version>0.7-SNAPSHOT</codice-test.version>
 
