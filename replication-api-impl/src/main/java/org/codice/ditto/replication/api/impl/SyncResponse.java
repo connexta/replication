@@ -23,7 +23,7 @@ public class SyncResponse {
   private final long itemsFailed;
   private final Status status;
 
-  SyncResponse(long itemsReplicated, long itemsFailed, long bytesTransferred, Status status) {
+  public SyncResponse(long itemsReplicated, long itemsFailed, long bytesTransferred, Status status) {
     this.itemsReplicated = notNull(itemsReplicated);
     this.itemsFailed = notNull(itemsFailed);
     this.bytesTransferred = notNull(bytesTransferred);

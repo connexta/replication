@@ -674,5 +674,6 @@
         <module>docs</module>
         <module>ui</module>
         <module>distributions</module>
+        <module>adapters</module>
     </modules>
 </project>
