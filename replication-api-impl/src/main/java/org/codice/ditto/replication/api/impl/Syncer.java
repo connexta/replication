@@ -5,12 +5,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import javax.ws.rs.NotFoundException;
+import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicationStatus;
-import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.data.Metadata;
+import org.codice.ditto.replication.api.data.QueryRequest;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.data.Resource;
+import org.codice.ditto.replication.api.data.ResourceResponse;
 import org.codice.ditto.replication.api.impl.data.CreateRequestImpl;
 import org.codice.ditto.replication.api.impl.data.CreateStorageRequestImpl;
 import org.codice.ditto.replication.api.impl.data.DeleteRequestImpl;
@@ -19,11 +24,7 @@ import org.codice.ditto.replication.api.impl.data.ResourceRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateStorageRequestImpl;
 import org.codice.ditto.replication.api.mcard.Replication;
-import org.codice.ditto.replication.api.NodeAdapter;
-import org.codice.ditto.replication.api.data.Metadata;
-import org.codice.ditto.replication.api.data.QueryRequest;
-import org.codice.ditto.replication.api.data.Resource;
-import org.codice.ditto.replication.api.data.ResourceResponse;
+import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,10 +38,11 @@ public class Syncer {
 
   private final ReplicationPersistentStore replicationPersistentStore;
 
-  private final ReplicatorHistory replicatorHistory;
+  private final ReplicatorHistoryManager replicatorHistory;
 
   public Syncer(
-      ReplicationPersistentStore replicationPersistentStore, ReplicatorHistory replicatorHistory) {
+      ReplicationPersistentStore replicationPersistentStore,
+      ReplicatorHistoryManager replicatorHistory) {
     this.replicationPersistentStore = replicationPersistentStore;
     this.replicatorHistory = replicatorHistory;
   }
@@ -243,13 +245,12 @@ public class Syncer {
 
     @Nullable
     private Date getModifiedAfter() {
-      final ReplicationStatus lastSuccessfulRun =
-          replicatorHistory
-              .getReplicationEvents(replicatorConfig.getName())
-              .stream()
-              .filter(s -> s.getStatus().equals(Status.SUCCESS))
-              .findFirst()
-              .orElse(null);
+      ReplicationStatus lastSuccessfulRun;
+      try {
+        lastSuccessfulRun = replicatorHistory.getByReplicatorId(replicatorConfig.getId());
+      } catch (NotFoundException e) {
+        return null;
+      }
 
       if (lastSuccessfulRun != null) {
         long time = lastSuccessfulRun.getStartTime().getTime();
