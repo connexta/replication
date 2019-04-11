@@ -16,5 +16,6 @@
 
   <modules>
     <module>ddf</module>
+    <module>factories</module>
   </modules>
 </project>

@@ -36,6 +36,8 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
 import org.codice.ddf.security.common.Security;
+import org.codice.ditto.replication.api.NodeAdapterRegistry;
+import org.codice.ditto.replication.api.NodeAdapterType;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
 import org.codice.ditto.replication.api.ReplicationStatus;
@@ -57,7 +59,7 @@ public class ReplicatorImpl implements Replicator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicatorImpl.class);
 
-  private final ReplicatorStoreFactory replicatorStoreFactory;
+  private final NodeAdapterRegistry nodeAdapterRegistry;
 
   private final ReplicatorHistoryManager history;
 
@@ -78,22 +80,22 @@ public class ReplicatorImpl implements Replicator {
   private final Security security;
 
   public ReplicatorImpl(
-      ReplicatorStoreFactory replicatorStoreFactory,
+      NodeAdapterRegistry nodeAdapterRegistry,
       ReplicatorHistoryManager history,
       SiteManager siteManager,
       ExecutorService executor,
       Syncer syncer) {
-    this(replicatorStoreFactory, history, siteManager, executor, syncer, Security.getInstance());
+    this(nodeAdapterRegistry, history, siteManager, executor, syncer, Security.getInstance());
   }
 
   public ReplicatorImpl(
-      ReplicatorStoreFactory replicatorStoreFactory,
+      NodeAdapterRegistry nodeAdapterRegistry,
       ReplicatorHistoryManager history,
       SiteManager siteManager,
       ExecutorService executor,
       Syncer syncer,
       Security security) {
-    this.replicatorStoreFactory = notNull(replicatorStoreFactory);
+    this.nodeAdapterRegistry = notNull(nodeAdapterRegistry);
     this.history = notNull(history);
     this.executor = notNull(executor);
     this.siteManager = notNull(siteManager);
@@ -296,7 +298,7 @@ public class ReplicatorImpl implements Replicator {
     NodeAdapter store;
     ReplicationSite site = siteManager.get(siteId);
     try {
-      store = replicatorStoreFactory.createReplicatorStore(new URL(site.getUrl()));
+      store = nodeAdapterRegistry.factoryFor(NodeAdapterType.DDF).create(new URL(site.getUrl()));
     } catch (Exception e) {
       throw new ReplicationException("Error connecting to node at " + site.getUrl(), e);
     }

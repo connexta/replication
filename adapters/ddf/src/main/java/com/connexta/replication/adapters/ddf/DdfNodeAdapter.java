@@ -29,7 +29,6 @@ import ddf.catalog.data.Metacard;
 import ddf.catalog.data.Result;
 import ddf.catalog.data.impl.AttributeImpl;
 import ddf.catalog.data.types.Core;
-import ddf.catalog.filter.FilterBuilder;
 import ddf.catalog.operation.CreateResponse;
 import ddf.catalog.operation.DeleteResponse;
 import ddf.catalog.operation.OperationTransaction.OperationType;
@@ -68,19 +67,19 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswSourceConfiguration;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.AbstractCswStore;
-import org.codice.ditto.replication.api.mcard.Replication;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.data.CreateRequest;
+import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.DeleteRequest;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.QueryRequest;
 import org.codice.ditto.replication.api.data.QueryResponse;
-import org.codice.ditto.replication.api.data.UpdateRequest;
-import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.ResourceRequest;
 import org.codice.ditto.replication.api.data.ResourceResponse;
+import org.codice.ditto.replication.api.data.UpdateRequest;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
+import org.codice.ditto.replication.api.mcard.Replication;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.opengis.filter.Filter;
@@ -98,8 +97,6 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
   private final DdfRestClientFactory ddfRestClientFactory;
 
-  private final FilterBuilder builder;
-
   private final URL hostUrl;
 
   private String cachedSystemName;
@@ -111,11 +108,9 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
       ClientFactoryFactory clientFactoryFactory,
       EncryptionService encryptionService,
       DdfRestClientFactory ddfRestClientFactory,
-      FilterBuilder builder,
       URL hostUrl) {
     super(context, cswSourceConfiguration, provider, clientFactoryFactory, encryptionService);
     this.ddfRestClientFactory = ddfRestClientFactory;
-    this.builder = builder;
     this.hostUrl = hostUrl;
   }
 
@@ -135,9 +130,9 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
       return cachedSystemName;
     }
     Filter filter =
-        builder.allOf(
-            builder.attribute(Metacard.TAGS).is().equalTo().text(REGISTRY_TAG),
-            builder.not(builder.attribute(REGISTRY_IDENTITY_NODE).empty()));
+        filterBuilder.allOf(
+            filterBuilder.attribute(Metacard.TAGS).is().equalTo().text(REGISTRY_TAG),
+            filterBuilder.not(filterBuilder.attribute(REGISTRY_IDENTITY_NODE).empty()));
 
     Query newQuery = new QueryImpl(filter);
     ddf.catalog.operation.QueryRequest queryRequest =
@@ -172,33 +167,42 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     for (String excludedNode : queryRequest.getExcludedNodes()) {
       filters.add(
-          builder.not(builder.attribute(Replication.ORIGINS).is().equalTo().text(excludedNode)));
+          filterBuilder.not(
+              filterBuilder.attribute(Replication.ORIGINS).is().equalTo().text(excludedNode)));
     }
-    filters.add(builder.attribute(Core.METACARD_TAGS).is().equalTo().text(Metacard.DEFAULT_TAG));
+    filters.add(
+        filterBuilder.attribute(Core.METACARD_TAGS).is().equalTo().text(Metacard.DEFAULT_TAG));
 
     final List<Filter> failedItemFilters = new ArrayList<>();
     for (String itemId : queryRequest.getFailedItemIds()) {
-      failedItemFilters.add(builder.attribute(Core.ID).is().equalTo().text(itemId));
+      failedItemFilters.add(filterBuilder.attribute(Core.ID).is().equalTo().text(itemId));
     }
 
     Date modifiedAfter = queryRequest.getModifiedAfter();
     List<Filter> deletedFilters = new ArrayList<>();
     if (modifiedAfter != null) {
       modifiedAfter = new Date(modifiedAfter.getTime() - 1000);
-      filters.add(builder.attribute(Core.METACARD_MODIFIED).is().after().date(modifiedAfter));
+      filters.add(filterBuilder.attribute(Core.METACARD_MODIFIED).is().after().date(modifiedAfter));
 
       deletedFilters.add(
-          builder.attribute(MetacardVersion.VERSIONED_ON).after().date(modifiedAfter));
+          filterBuilder.attribute(MetacardVersion.VERSIONED_ON).after().date(modifiedAfter));
       deletedFilters.add(
-          builder.attribute(Core.METACARD_TAGS).is().equalTo().text(MetacardVersion.VERSION_TAG));
-      deletedFilters.add(builder.attribute(MetacardVersion.ACTION).is().like().text("Deleted*"));
+          filterBuilder
+              .attribute(Core.METACARD_TAGS)
+              .is()
+              .equalTo()
+              .text(MetacardVersion.VERSION_TAG));
+      deletedFilters.add(
+          filterBuilder.attribute(MetacardVersion.ACTION).is().like().text("Deleted*"));
     }
 
     final Filter finalFilter =
-        builder.anyOf(
-            builder.allOf(
-                ecqlFilter, builder.anyOf(builder.allOf(filters), builder.allOf(deletedFilters))),
-            builder.anyOf(failedItemFilters));
+        filterBuilder.anyOf(
+            filterBuilder.allOf(
+                ecqlFilter,
+                filterBuilder.anyOf(
+                    filterBuilder.allOf(filters), filterBuilder.allOf(deletedFilters))),
+            filterBuilder.anyOf(failedItemFilters));
 
     Query query = new QueryImpl(finalFilter);
     ddf.catalog.operation.QueryRequest request = new QueryRequestImpl(query);
@@ -213,7 +217,8 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     try {
       return this.query(
                   new QueryRequestImpl(
-                      new QueryImpl(builder.attribute(Core.ID).is().equalTo().text(metacardId))))
+                      new QueryImpl(
+                          filterBuilder.attribute(Core.ID).is().equalTo().text(metacardId))))
               .getHits()
           > 0;
     } catch (UnsupportedOperationException | UnsupportedQueryException e) {
@@ -379,8 +384,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     return metacards;
   }
 
-  private ContentItem toContentItem(
-      org.codice.ditto.replication.api.data.Resource resource) {
+  private ContentItem toContentItem(org.codice.ditto.replication.api.data.Resource resource) {
     ByteSource byteSource =
         new ByteSource() {
           @Override
