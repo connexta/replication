@@ -675,5 +675,6 @@
         <module>ui</module>
         <module>distributions</module>
         <module>adapters</module>
+      <module>commons</module>
     </modules>
 </project>

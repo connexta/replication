@@ -11,20 +11,21 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.impl;
+package com.connexta.replication.data;
 
-import static org.apache.commons.lang3.Validate.notNull;
+import org.codice.ditto.replication.api.data.Metadata;
+import org.codice.ditto.replication.api.data.QueryResponse;
 
-import org.codice.ditto.replication.api.Status;
+public class QueryResponseImpl implements QueryResponse {
 
-public class SyncResponse {
-  private final Status status;
+  private final Iterable<Metadata> metadata;
 
-  SyncResponse(Status status) {
-    this.status = notNull(status);
+  public QueryResponseImpl(Iterable<Metadata> metadata) {
+    this.metadata = metadata;
   }
 
-  public Status getStatus() {
-    return status;
+  @Override
+  public Iterable<Metadata> getMetadata() {
+    return metadata;
   }
 }

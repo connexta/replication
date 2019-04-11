@@ -11,20 +11,21 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.impl;
+package org.codice.ditto.replication.api.impl.data;
 
-import static org.apache.commons.lang3.Validate.notNull;
+import org.codice.ditto.replication.api.data.Metadata;
+import org.codice.ditto.replication.api.data.ResourceRequest;
 
-import org.codice.ditto.replication.api.Status;
+public class ResourceRequestImpl implements ResourceRequest {
 
-public class SyncResponse {
-  private final Status status;
+  private final Metadata metadata;
 
-  SyncResponse(Status status) {
-    this.status = notNull(status);
+  public ResourceRequestImpl(Metadata metadata) {
+    this.metadata = metadata;
   }
 
-  public Status getStatus() {
-    return status;
+  @Override
+  public Metadata getMetadata() {
+    return metadata;
   }
 }

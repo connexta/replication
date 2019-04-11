@@ -24,5 +24,5 @@ public interface ReplicatorStoreFactory {
    * @param url The url the store should connect to
    * @return The created replicator store.
    */
-  ReplicationStore createReplicatorStore(URL url);
+  NodeAdapter createReplicatorStore(URL url);
 }

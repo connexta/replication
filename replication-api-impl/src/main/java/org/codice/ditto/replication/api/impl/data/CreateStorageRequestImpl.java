@@ -11,20 +11,22 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.impl;
+package org.codice.ditto.replication.api.impl.data;
 
-import static org.apache.commons.lang3.Validate.notNull;
+import java.util.List;
+import org.codice.ditto.replication.api.data.CreateStorageRequest;
+import org.codice.ditto.replication.api.data.Resource;
 
-import org.codice.ditto.replication.api.Status;
+public class CreateStorageRequestImpl implements CreateStorageRequest {
 
-public class SyncResponse {
-  private final Status status;
+  private final List<Resource> resources;
 
-  SyncResponse(Status status) {
-    this.status = notNull(status);
+  public CreateStorageRequestImpl(List<Resource> resources) {
+    this.resources = resources;
   }
 
-  public Status getStatus() {
-    return status;
+  @Override
+  public List<Resource> getResources() {
+    return resources;
   }
 }

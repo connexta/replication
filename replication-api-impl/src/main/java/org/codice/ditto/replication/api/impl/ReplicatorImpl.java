@@ -16,7 +16,6 @@ package org.codice.ditto.replication.api.impl;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import com.google.common.annotations.VisibleForTesting;
-import ddf.catalog.filter.FilterBuilder;
 import ddf.security.Subject;
 import java.io.Closeable;
 import java.io.IOException;
@@ -39,6 +38,7 @@ import org.apache.commons.collections4.queue.UnmodifiableQueue;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
@@ -49,6 +49,7 @@ import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
+import org.codice.ditto.replication.api.NodeAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,13 +61,11 @@ public class ReplicatorImpl implements Replicator {
 
   private final ReplicatorHistoryManager history;
 
-  private final ReplicationPersistentStore persistentStore;
-
   private final SiteManager siteManager;
 
   private final ExecutorService executor;
 
-  private final FilterBuilder builder;
+  private final Syncer syncer;
 
   /** Does not contain duplicates */
   private BlockingQueue<SyncRequest> pendingSyncRequests = new LinkedBlockingQueue<>();
@@ -74,41 +73,31 @@ public class ReplicatorImpl implements Replicator {
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
 
-  private final Map<String, SyncHelper> syncHelperMap = new ConcurrentHashMap<>();
+  private final Map<String, Syncer.Job> syncerJobMap = new ConcurrentHashMap<>();
 
   private final Security security;
 
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistoryManager history,
-      ReplicationPersistentStore persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
-      FilterBuilder builder) {
-    this(
-        replicatorStoreFactory,
-        history,
-        persistentStore,
-        siteManager,
-        executor,
-        builder,
-        Security.getInstance());
+      Syncer syncer) {
+    this(replicatorStoreFactory, history, siteManager, executor, syncer, Security.getInstance());
   }
 
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistoryManager history,
-      ReplicationPersistentStore persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
-      FilterBuilder builder,
+      Syncer syncer,
       Security security) {
     this.replicatorStoreFactory = notNull(replicatorStoreFactory);
     this.history = notNull(history);
-    this.persistentStore = notNull(persistentStore);
     this.executor = notNull(executor);
-    this.builder = notNull(builder);
     this.siteManager = notNull(siteManager);
+    this.syncer = syncer;
     this.security = security;
   }
 
@@ -158,8 +147,8 @@ public class ReplicatorImpl implements Replicator {
           status.markStartTime();
 
           ReplicatorConfig config = syncRequest.getConfig();
-          ReplicationStore node1 = null;
-          ReplicationStore node2 = null;
+          NodeAdapter node1 = null;
+          NodeAdapter node2 = null;
 
           try {
             node1 = getStoreForId(config.getSource());
@@ -178,8 +167,8 @@ public class ReplicatorImpl implements Replicator {
             return;
           }
 
-          try (ReplicationStore store1 = node1;
-              ReplicationStore store2 = node2) {
+          try (NodeAdapter store1 = node1;
+              NodeAdapter store2 = node2) {
             Status pullStatus = Status.SUCCESS;
             if (config.isBidirectional()) {
               status.setStatus(Status.PULL_IN_PROGRESS);
@@ -201,29 +190,21 @@ public class ReplicatorImpl implements Replicator {
             status.setStatus(failureStatus);
           } finally {
             completeActiveSyncRequest(syncRequest, status);
-            syncHelperMap.remove(syncRequest.getConfig().getId());
+            syncerJobMap.remove(syncRequest.getConfig().getId());
           }
         });
   }
 
   private Status sync(
-      ReplicationStore source,
-      ReplicationStore destination,
+      NodeAdapter source,
+      NodeAdapter destination,
       ReplicatorConfig config,
       ReplicationStatus status) {
-    SyncHelper syncHelper = createSyncHelper(source, destination, config, status);
-    syncHelperMap.put(config.getId(), syncHelper);
-    SyncResponse response = syncHelper.sync();
-    syncHelperMap.remove(config.getId());
+    Syncer.Job job = syncer.create(source, destination, config, status);
+    syncerJobMap.put(config.getId(), job);
+    SyncResponse response = job.sync();
+    syncerJobMap.remove(config.getId());
     return response.getStatus();
-  }
-
-  SyncHelper createSyncHelper(
-      ReplicationStore source,
-      ReplicationStore destination,
-      ReplicatorConfig config,
-      ReplicationStatus status) {
-    return new SyncHelper(source, destination, config, status, persistentStore, history, builder);
   }
 
   private void completeActiveSyncRequest(SyncRequest syncRequest, ReplicationStatus status) {
@@ -287,9 +268,9 @@ public class ReplicatorImpl implements Replicator {
       LOGGER.debug("Removed pending request with name: {}", syncRequest.getConfig().getName());
     }
 
-    SyncHelper helper = syncHelperMap.remove(syncRequest.getConfig().getId());
-    if (helper != null) {
-      helper.cancel();
+    Syncer.Job job = syncerJobMap.remove(syncRequest.getConfig().getId());
+    if (job != null) {
+      job.cancel();
     }
   }
 
@@ -311,8 +292,8 @@ public class ReplicatorImpl implements Replicator {
     return Collections.unmodifiableSet(new HashSet<>(activeSyncRequests));
   }
 
-  private ReplicationStore getStoreForId(String siteId) {
-    ReplicationStore store;
+  private NodeAdapter getStoreForId(String siteId) {
+    NodeAdapter store;
     ReplicationSite site = siteManager.get(siteId);
     try {
       store = replicatorStoreFactory.createReplicatorStore(new URL(site.getUrl()));

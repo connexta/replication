@@ -11,20 +11,21 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.impl;
+package com.connexta.replication.data;
 
-import static org.apache.commons.lang3.Validate.notNull;
+import org.codice.ditto.replication.api.data.Resource;
+import org.codice.ditto.replication.api.data.ResourceResponse;
 
-import org.codice.ditto.replication.api.Status;
+public class ResourceResponseImpl implements ResourceResponse {
 
-public class SyncResponse {
-  private final Status status;
+  private final Resource resource;
 
-  SyncResponse(Status status) {
-    this.status = notNull(status);
+  public ResourceResponseImpl(Resource resource) {
+    this.resource = resource;
   }
 
-  public Status getStatus() {
-    return status;
+  @Override
+  public Resource getResource() {
+    return resource;
   }
 }
