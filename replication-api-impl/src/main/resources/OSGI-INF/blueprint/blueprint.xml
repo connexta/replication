@@ -18,45 +18,49 @@
 
     <reference id="persistentStore" interface="org.codice.ddf.persistence.PersistentStore"/>
 
-    <bean id="replicationPersistentStore"
-          class="org.codice.ditto.replication.api.impl.ReplicationPersistentStoreImpl">
+    <bean id="replicationItemManager"
+          class="org.codice.ditto.replication.api.impl.ReplicationItemManagerImpl">
         <argument ref="persistentStore"/>
     </bean>
 
-    <bean id="newReplicationPersistentStore"
+    <bean id="replicationPersistentStore"
             class="org.codice.ditto.replication.api.impl.persistence.ReplicationPersistentStore">
         <argument ref="persistentStore"/>
     </bean>
 
     <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl">
-        <argument ref="newReplicationPersistentStore"/>
+        <argument ref="replicationPersistentStore"/>
     </bean>
 
-    <service ref="replicationPersistentStore" interface="org.codice.ditto.replication.api.ReplicationPersistentStore"/>
+    <service ref="replicationItemManager" interface="org.codice.ditto.replication.api.persistence.ReplicationItemManager"/>
     <service ref="siteManager" interface="org.codice.ditto.replication.api.persistence.SiteManager"/>
 
     <bean id="configManager" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorConfigManagerImpl">
-        <argument ref="newReplicationPersistentStore"/>
+        <argument ref="replicationPersistentStore"/>
     </bean>
 
     <service ref="configManager" interface="org.codice.ditto.replication.api.persistence.ReplicatorConfigManager"/>
 
     <bean id="historyManager" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorHistoryManagerImpl">
-        <argument ref="newReplicationPersistentStore"/>
+        <argument ref="replicationPersistentStore"/>
     </bean>
 
     <service ref="historyManager" interface="org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager"/>
 
-    <bean id="nodeAdapterRegistry" class="org.codice.ditto.replication.api.impl.NodeAdapters"/>
+    <reference-list id="nodeAdapterFactories" interface="org.codice.ditto.replication.api.NodeAdapterFactory" availability="optional"/>
+
+    <bean id="nodeAdapters" class="org.codice.ditto.replication.api.impl.NodeAdapters">
+        <property name="nodeAdapterFactories" ref="nodeAdapterFactories"/>
+    </bean>
 
     <bean id="syncer" class="org.codice.ditto.replication.api.impl.Syncer">
-        <argument ref="replicationPersistentStore"/>
+        <argument ref="replicationItemManager"/>
         <argument ref="historyManager"/>
     </bean>
 
     <bean id="replicator" class="org.codice.ditto.replication.api.impl.ReplicatorImpl" init-method="init"
           destroy-method="cleanUp">
-        <argument ref="nodeAdapterRegistry"/>
+        <argument ref="nodeAdapters"/>
         <argument ref="historyManager"/>
         <argument ref="siteManager"/>
         <argument ref="replicatorImplExecutor"/>

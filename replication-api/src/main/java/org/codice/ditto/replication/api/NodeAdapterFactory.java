@@ -5,4 +5,6 @@ import java.net.URL;
 public interface NodeAdapterFactory {
 
   NodeAdapter create(URL url);
+
+  NodeAdapterType getType();
 }

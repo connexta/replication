@@ -7,8 +7,9 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.NodeAdapter;
+import org.codice.ditto.replication.api.Replication;
 import org.codice.ditto.replication.api.ReplicationItem;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.persistence.ReplicationItemManager;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.QueryRequest;
@@ -23,7 +24,6 @@ import org.codice.ditto.replication.api.impl.data.QueryRequestImpl;
 import org.codice.ditto.replication.api.impl.data.ResourceRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateStorageRequestImpl;
-import org.codice.ditto.replication.api.Replication;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +36,14 @@ public class Syncer {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
 
-  private final ReplicationPersistentStore replicationPersistentStore;
+  private final ReplicationItemManager replicationItemManager;
 
   private final ReplicatorHistoryManager historyManager;
 
   public Syncer(
-      ReplicationPersistentStore replicationPersistentStore,
+      ReplicationItemManager replicationItemManager,
       ReplicatorHistoryManager historyManager) {
-    this.replicationPersistentStore = replicationPersistentStore;
+    this.replicationItemManager = replicationItemManager;
     this.historyManager = historyManager;
   }
 
@@ -90,7 +90,7 @@ public class Syncer {
     public SyncResponse sync() {
       Date modifiedAfter = getModifiedAfter();
       List<String> failedItemIds =
-          replicationPersistentStore.getFailureList(
+          replicationItemManager.getFailureList(
               replicatorConfig.getFailureRetryCount(), sourceName, destinationName);
 
       QueryRequest queryRequest =
@@ -108,15 +108,14 @@ public class Syncer {
         }
 
         Optional<ReplicationItem> replicationItem =
-            replicationPersistentStore.getItem(metadata.getId(), sourceName, destinationName);
+            replicationItemManager.getItem(metadata.getId(), sourceName, destinationName);
 
-        // todo: handle failures
         if (!replicationItem.isPresent()) {
           doCreate(metadata);
         } else if (destination.exists(metadata)) {
           doUpdate(metadata, replicationItem.get());
         } else {
-          doDelete(metadata);
+          doDelete(metadata, replicationItem.get());
         }
       }
 
@@ -152,9 +151,14 @@ public class Syncer {
 
       if (created) {
         ReplicationItem replicationItem = createReplicationItem(metadata);
-        replicationPersistentStore.saveItem(replicationItem);
+        replicationItemManager.saveItem(replicationItem);
         replicationStatus.incrementCount();
       } else {
+        ReplicationItem replicationItem = createReplicationItem(metadata);
+        replicationItem.incrementFailureCount();
+        replicationItemManager.saveItem(replicationItem);
+        replicationStatus.incrementFailure();
+
         LOGGER.debug(
             "Failed to create metadata {} from source {} to destination {}",
             metadata.getId(),
@@ -195,9 +199,13 @@ public class Syncer {
 
       if (updated) {
         ReplicationItem updateReplicationItem = createReplicationItem(metadata);
-        replicationPersistentStore.saveItem(updateReplicationItem);
+        replicationItemManager.saveItem(updateReplicationItem);
         replicationStatus.incrementCount();
       } else {
+        replicationItem.incrementFailureCount();
+        replicationItemManager.saveItem(replicationItem);
+        replicationStatus.incrementFailure();
+
         LOGGER.debug(
             "Failed to update metadata {} from source {} to destination {}",
             metadata.getId(),
@@ -206,17 +214,21 @@ public class Syncer {
       }
     }
 
-    private void doDelete(Metadata metadata) {
+    private void doDelete(Metadata metadata, ReplicationItem replicationItem) {
       boolean deleted =
           destination.deleteRequest(new DeleteRequestImpl(Collections.singletonList(metadata)));
       String id = metadata.getId();
 
       if (deleted) {
-        replicationPersistentStore.deleteItem(id, sourceName, destinationName);
+        replicationItemManager.deleteItem(id, sourceName, destinationName);
         replicationStatus.incrementCount();
       } else {
+        replicationItem.incrementFailureCount();
+        replicationItemManager.saveItem(replicationItem);
+        replicationStatus.incrementFailure();
+
         LOGGER.debug(
-            "Failed to ddelete metadata {} from source {} to destination {}",
+            "Failed to delete metadata {} from source {} to destination {}",
             id,
             sourceName,
             destinationName);
@@ -245,21 +257,20 @@ public class Syncer {
 
     @Nullable
     private Date getModifiedAfter() {
-      ReplicationStatus lastSuccessfulRun;
+      ReplicationStatus status;
       try {
-        lastSuccessfulRun = historyManager.getByReplicatorId(replicatorConfig.getId());
+        status = historyManager.getByReplicatorId(replicatorConfig.getId());
       } catch (NotFoundException e) {
+        LOGGER.trace(
+            "no history for replication config {} found. This config may not have completed a run yet.",
+            replicatorConfig.getId());
         return null;
       }
 
-      if (lastSuccessfulRun != null) {
-        long time = lastSuccessfulRun.getStartTime().getTime();
-        if (lastSuccessfulRun.getLastSuccess() != null) {
-          time = lastSuccessfulRun.getLastSuccess().getTime();
-        }
-
-        return new Date(time);
+      if (status.getLastSuccess() != null) {
+        return new Date(status.getLastSuccess().getTime());
       } else {
+        LOGGER.trace("no previous successful run for config {} found.", replicatorConfig.getId());
         return null;
       }
     }

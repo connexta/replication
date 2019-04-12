@@ -55,6 +55,11 @@
             <artifactId>platform-util-unavailableurls</artifactId>
             <version>${ddf.version}</version>
         </dependency>
+        <dependency>
+            <groupId>ddf.persistence.core</groupId>
+            <artifactId>persistence-core-api</artifactId>
+            <version>${ddf.version}</version>
+        </dependency>
         <!-- End DDF Dependencies -->
 
         <dependency>
@@ -99,12 +104,6 @@
         </dependency>
     </dependencies>
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>

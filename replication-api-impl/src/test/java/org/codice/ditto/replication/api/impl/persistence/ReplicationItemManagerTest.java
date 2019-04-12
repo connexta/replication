@@ -46,7 +46,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class ReplicationPersistentStoreTest {
+public class ReplicationItemManagerTest {
 
   private static final String REPSYNC_TYPE = "replication_config";
 

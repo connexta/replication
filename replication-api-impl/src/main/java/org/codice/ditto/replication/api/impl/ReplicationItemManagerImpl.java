@@ -23,14 +23,14 @@ import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ddf.persistence.PersistentItem;
 import org.codice.ddf.persistence.PersistentStore;
 import org.codice.ditto.replication.api.ReplicationItem;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
+import org.codice.ditto.replication.api.ReplicationPersistenceException;
+import org.codice.ditto.replication.api.persistence.ReplicationItemManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReplicationPersistentStoreImpl implements ReplicationPersistentStore {
+public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(ReplicationPersistentStoreImpl.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationItemManagerImpl.class);
 
   private static final String ID_KEY = "id";
 
@@ -54,7 +54,7 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
 
   private final PersistentStore persistentStore;
 
-  public ReplicationPersistentStoreImpl(PersistentStore persistentStore) {
+  public ReplicationItemManagerImpl(PersistentStore persistentStore) {
     this.persistentStore = persistentStore;
   }
 
@@ -97,25 +97,32 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
   }
 
   @Override
-  public void deleteAllItems() throws PersistenceException {
+  public void deleteAllItems() {
     // passing in empty cql defaults to *:* solr query. proper cql, `id` like `*`, to solr query
     // translation currently does not work.
     String cql = "";
     int index = DEFAULT_START_INDEX;
-    long itemsDeleted = 0;
+    long itemsDeleted;
     do {
-      itemsDeleted = persistentStore.delete(PERSISTENCE_TYPE, cql, index, DEFAULT_PAGE_SIZE);
+      try {
+        itemsDeleted = persistentStore.delete(PERSISTENCE_TYPE, cql, index, DEFAULT_PAGE_SIZE);
+      } catch (PersistenceException e) {
+        throw new ReplicationPersistenceException(e);
+      }
       index += DEFAULT_PAGE_SIZE;
     } while (itemsDeleted != 0);
   }
 
   @Override
-  public List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize)
-      throws PersistenceException {
+  public List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize) {
     String cql = String.format("'config-id' = '%s'", configId);
     List<Map<String, Object>> matchingPersistentItems;
 
-    matchingPersistentItems = persistentStore.get(PERSISTENCE_TYPE, cql, startIndex, pageSize);
+    try {
+      matchingPersistentItems = persistentStore.get(PERSISTENCE_TYPE, cql, startIndex, pageSize);
+    } catch (PersistenceException e) {
+      throw new ReplicationPersistenceException(e);
+    }
 
     return matchingPersistentItems
         .stream()
@@ -174,13 +181,17 @@ public class ReplicationPersistentStoreImpl implements ReplicationPersistentStor
   }
 
   @Override
-  public void deleteItemsForConfig(String configId) throws PersistenceException {
+  public void deleteItemsForConfig(String configId) {
     String cql = String.format("'config-id' = '%s'", configId);
     int itemsDeleted;
 
     do {
-      itemsDeleted =
-          persistentStore.delete(PERSISTENCE_TYPE, cql, DEFAULT_START_INDEX, DEFAULT_PAGE_SIZE);
+      try {
+        itemsDeleted =
+            persistentStore.delete(PERSISTENCE_TYPE, cql, DEFAULT_START_INDEX, DEFAULT_PAGE_SIZE);
+      } catch (PersistenceException e) {
+        throw new ReplicationPersistenceException(e);
+      }
     } while (itemsDeleted == DEFAULT_PAGE_SIZE);
   }
 

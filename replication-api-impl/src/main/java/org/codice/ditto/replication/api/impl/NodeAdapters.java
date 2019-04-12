@@ -1,32 +1,26 @@
 package org.codice.ditto.replication.api.impl;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
-import org.codice.ditto.replication.api.NodeAdapterRegistry;
 import org.codice.ditto.replication.api.NodeAdapterType;
 
-public class NodeAdapters implements NodeAdapterRegistry {
+public class NodeAdapters {
 
-  private final Map<NodeAdapterType, NodeAdapterFactory> nodeAdaptersFactories =
-      new ConcurrentHashMap<>();
+  private List<NodeAdapterFactory> nodeAdapterFactories;
 
-  @Override
   public NodeAdapterFactory factoryFor(NodeAdapterType type) {
-    if (!nodeAdaptersFactories.containsKey(type)) {
-      throw new IllegalArgumentException(
-          String.format("No node adapter factory with type %s registered", type.toString()));
-    }
-    return nodeAdaptersFactories.get(type);
+    return nodeAdapterFactories
+        .stream()
+        .filter(factory -> factory.getType().equals(type))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    String.format(
+                        "No node adapter factory with type %s registered", type.toString())));
   }
 
-  @Override
-  public void register(NodeAdapterType type, NodeAdapterFactory factory) {
-    if (nodeAdaptersFactories.containsKey(type)) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Node adapter factory with type %s is already registered", type.toString()));
-    }
-    nodeAdaptersFactories.put(type, factory);
+  public void setNodeAdapterFactories(List<NodeAdapterFactory> nodeAdapterFactories) {
+    this.nodeAdapterFactories = nodeAdapterFactories;
   }
 }

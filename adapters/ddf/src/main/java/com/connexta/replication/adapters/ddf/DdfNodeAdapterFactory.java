@@ -30,7 +30,6 @@ import org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactio
 import org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerManager;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
-import org.codice.ditto.replication.api.NodeAdapterRegistry;
 import org.codice.ditto.replication.api.NodeAdapterType;
 import org.osgi.framework.BundleContext;
 
@@ -82,9 +81,7 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
 
   private ClientFactoryFactory clientFactoryFactory;
 
-  public DdfNodeAdapterFactory(
-      NodeAdapterRegistry nodeAdapterRegistry, DdfRestClientFactory ddfRestClientFactory) {
-    nodeAdapterRegistry.register(NodeAdapterType.DDF, this);
+  public DdfNodeAdapterFactory(DdfRestClientFactory ddfRestClientFactory) {
     this.ddfRestClientFactory = ddfRestClientFactory;
   }
 
@@ -128,6 +125,11 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
     ddfNodeAdapter.init();
 
     return ddfNodeAdapter;
+  }
+
+  @Override
+  public NodeAdapterType getType() {
+    return NodeAdapterType.DDF;
   }
 
   public void setBundleContext(BundleContext bundleContext) {

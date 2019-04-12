@@ -10,7 +10,7 @@ grant codeBase "file:/org.apache.karaf.features.command" {
     permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions${/}-", "read,write";
 }
 
-grant codeBase "file:/replication-api-impl" {
+grant codeBase "file:/replication-api-impl/ddf" {
     permission java.lang.RuntimePermission "createClassLoader";
     permission java.io.FilePermission "${ddf.home.perm}etc${/}keystores${/}-", "read";
     permission java.io.FilePermission "${ddf.home.perm}etc${/}ws-security${/}server${/}-", "read";

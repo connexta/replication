@@ -11,26 +11,28 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api;
+package org.codice.ditto.replication.api.persistence;
 
 import java.util.List;
 import java.util.Optional;
-import org.codice.ddf.persistence.PersistenceException;
+import org.codice.ditto.replication.api.ReplicationItem;
 
-public interface ReplicationPersistentStore {
+public interface ReplicationItemManager {
 
   Optional<ReplicationItem> getItem(String id, String source, String destination);
 
-  List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize)
-      throws ReplicationPersistenceException;
+  /** @throws org.codice.ditto.replication.api.ReplicationPersistenceException */
+  List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize);
 
   void saveItem(ReplicationItem replicationItem);
 
-  void deleteAllItems() throws PersistenceException;
+  /** @throws org.codice.ditto.replication.api.ReplicationPersistenceException */
+  void deleteAllItems();
 
   void deleteItem(String id, String source, String destination);
 
   List<String> getFailureList(int maximumFailureCount, String source, String destination);
 
-  void deleteItemsForConfig(String configId) throws PersistenceException;
+  /** @throws org.codice.ditto.replication.api.ReplicationPersistenceException */
+  void deleteItemsForConfig(String configId);
 }

@@ -41,10 +41,19 @@
       <scope>compile</scope>
     </dependency>
 
-    <!-- Start DDF Dependencies -->
     <dependency>
-      <groupId>org.codice.ddf.spatial</groupId>
-      <artifactId>spatial-csw-source-common</artifactId>
+      <groupId>ddf.catalog.rest</groupId>
+      <artifactId>catalog-rest-endpoint</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ddf.platform.security</groupId>
+      <artifactId>security-rest-clientapi</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ddf.security.core</groupId>
+      <artifactId>security-core-api</artifactId>
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
@@ -53,8 +62,68 @@
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.catalog.rest</groupId>
-      <artifactId>catalog-rest-endpoint</artifactId>
+      <groupId>org.codice.ddf.spatial</groupId>
+      <artifactId>spatial-csw-schema-bindings</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+      <version>${cxf.frontent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ddf.security</groupId>
+      <artifactId>ddf-security-common</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ddf.security.core</groupId>
+      <artifactId>security-core-impl</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codice.thirdparty</groupId>
+      <artifactId>ogc-filter-v_1_1_0-schema</artifactId>
+      <version>${thirdparty.ogc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jvnet.ogc</groupId>
+      <artifactId>gml-v_3_1_1-schema</artifactId>
+      <version>${ogc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jvnet.ogc</groupId>
+      <artifactId>ows-v_1_0_0-schema</artifactId>
+      <version>${ogc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ddf.platform.util</groupId>
+      <artifactId>platform-util</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>${validation.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ddf.platform.util</groupId>
+      <artifactId>platform-util-unavailableurls</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.thoughtworks.xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>${xstream.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codice.ddf.spatial</groupId>
+      <artifactId>spatial-csw-source-common</artifactId>
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
@@ -73,38 +142,85 @@
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.platform.util</groupId>
-      <artifactId>platform-util-unavailableurls</artifactId>
+      <groupId>org.jvnet.ogc</groupId>
+      <artifactId>ogc-tools-gml-jts</artifactId>
+      <version>${ogc.tools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.vividsolutions</groupId>
+      <artifactId>jts-core</artifactId>
+      <version>${jts.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>xercesImpl</artifactId>
+          <groupId>xerces</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.vividsolutions</groupId>
+      <artifactId>jts-io</artifactId>
+      <version>${jts.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>xercesImpl</artifactId>
+          <groupId>xerces</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jvnet.jaxb2_commons</groupId>
+      <artifactId>jaxb2-basics-runtime</artifactId>
+      <version>${jaxb.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-cql</artifactId>
+      <version>${org.geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-xml</artifactId>
+      <version>${org.geotools.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>${xerces.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codice.ddf</groupId>
+      <artifactId>geospatial</artifactId>
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.platform.util</groupId>
-      <artifactId>platform-util</artifactId>
-      <version>${ddf.version}</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
+      <version>${commons.collection4.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.security</groupId>
-      <artifactId>ddf-security-common</artifactId>
-      <version>${ddf.version}</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons.lang3.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.security.core</groupId>
-      <artifactId>security-core-impl</artifactId>
-      <version>${ddf.version}</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.platform.security</groupId>
-      <artifactId>security-rest-clientapi</artifactId>
-      <version>${ddf.version}</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-ext</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.security.core</groupId>
-      <artifactId>security-core-api</artifactId>
-      <version>${ddf.version}</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.codice.ddf.spatial</groupId>
-      <artifactId>spatial-csw-schema-bindings</artifactId>
+      <groupId>ddf.persistence.core</groupId>
+      <artifactId>persistence-core-api</artifactId>
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
@@ -112,11 +228,41 @@
       <artifactId>versioning-api</artifactId>
       <version>${ddf.version}</version>
     </dependency>
-    <!-- End DDF Dependencies -->
-
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ddf.catalog.core</groupId>
+      <artifactId>catalog-core-urlresourcereader</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codice.ddf.spatial</groupId>
+      <artifactId>spatial-ogc-api</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.jodah</groupId>
+      <artifactId>failsafe</artifactId>
+      <version>1.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>ddf.catalog.core</groupId>
+      <artifactId>filter-proxy</artifactId>
+      <version>${ddf.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -170,7 +316,8 @@
               jaxb2-basics-runtime,
               commons-lang3,
               geospatial,
-              security-core-impl
+              security-core-impl,
+              commons
             </Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
           </instructions>

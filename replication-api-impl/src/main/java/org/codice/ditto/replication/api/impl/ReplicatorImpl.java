@@ -37,7 +37,6 @@ import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.NodeAdapter;
-import org.codice.ditto.replication.api.NodeAdapterRegistry;
 import org.codice.ditto.replication.api.NodeAdapterType;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.Replicator;
@@ -55,7 +54,7 @@ public class ReplicatorImpl implements Replicator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicatorImpl.class);
 
-  private final NodeAdapterRegistry nodeAdapterRegistry;
+  private final NodeAdapters nodeAdapters;
 
   private final ReplicatorHistoryManager history;
 
@@ -76,22 +75,22 @@ public class ReplicatorImpl implements Replicator {
   private final Security security;
 
   public ReplicatorImpl(
-      NodeAdapterRegistry nodeAdapterRegistry,
+      NodeAdapters nodeAdapters,
       ReplicatorHistoryManager history,
       SiteManager siteManager,
       ExecutorService executor,
       Syncer syncer) {
-    this(nodeAdapterRegistry, history, siteManager, executor, syncer, Security.getInstance());
+    this(nodeAdapters, history, siteManager, executor, syncer, Security.getInstance());
   }
 
   public ReplicatorImpl(
-      NodeAdapterRegistry nodeAdapterRegistry,
+      NodeAdapters nodeAdapters,
       ReplicatorHistoryManager history,
       SiteManager siteManager,
       ExecutorService executor,
       Syncer syncer,
       Security security) {
-    this.nodeAdapterRegistry = notNull(nodeAdapterRegistry);
+    this.nodeAdapters = notNull(nodeAdapters);
     this.history = notNull(history);
     this.executor = notNull(executor);
     this.siteManager = notNull(siteManager);
@@ -106,7 +105,6 @@ public class ReplicatorImpl implements Replicator {
         () -> {
           while (true) {
             try {
-              // wait for something to be available in the queue and take it
               final SyncRequest syncRequest = pendingSyncRequests.take();
               LOGGER.trace(
                   "Just took sync request {} from the pendingSyncRequests queue. There are {} pending sync requests now in the queue.",
@@ -123,15 +121,15 @@ public class ReplicatorImpl implements Replicator {
                 executeSyncRequest(syncRequest);
               }
             } catch (InterruptedException e) {
-              LOGGER.trace("InterruptedException in executor. This is expected during shutdown.");
+              LOGGER.debug("InterruptedException in executor. This is expected during shutdown.");
               Thread.currentThread().interrupt();
               break;
             }
           }
         });
 
-    LOGGER.trace(
-        "Successfully configured the single-thread scheduler to execute sync requests from the queue");
+    LOGGER.info(
+        "Successfully configured the single-thread scheduler to execute replication requests.");
   }
 
   @VisibleForTesting
@@ -153,8 +151,8 @@ public class ReplicatorImpl implements Replicator {
             node2 = getStoreForId(config.getDestination());
           } catch (Exception e) {
             final Status connectionUnavailable = Status.CONNECTION_UNAVAILABLE;
-            LOGGER.warn(
-                "Error getting store for source config {}. Setting status to {}",
+            LOGGER.debug(
+                "Error getting node adapters for replicator config {}. Setting status to {}",
                 config.getName(),
                 connectionUnavailable,
                 e);
@@ -177,11 +175,10 @@ public class ReplicatorImpl implements Replicator {
               status.setStatus(Status.PUSH_IN_PROGRESS);
               sync(store1, store2, config, status);
             }
-
           } catch (Exception e) {
             final Status failureStatus = Status.FAILURE;
             LOGGER.warn(
-                "Error getting store for config {}. Setting status to {}",
+                "Unexpected error when replicating between {} and {} for config {}. Setting status to {}",
                 config.getName(),
                 failureStatus,
                 e);
@@ -294,7 +291,7 @@ public class ReplicatorImpl implements Replicator {
     NodeAdapter store;
     ReplicationSite site = siteManager.get(siteId);
     try {
-      store = nodeAdapterRegistry.factoryFor(NodeAdapterType.DDF).create(new URL(site.getUrl()));
+      store = nodeAdapters.factoryFor(NodeAdapterType.DDF).create(new URL(site.getUrl()));
     } catch (Exception e) {
       throw new ReplicationException("Error connecting to node at " + site.getUrl(), e);
     }
@@ -302,11 +299,6 @@ public class ReplicatorImpl implements Replicator {
       throw new ReplicationException("System at " + site.getUrl() + " is currently unavailable");
     }
     return store;
-  }
-
-  @VisibleForTesting
-  void setPendingSyncRequestsQueue(BlockingQueue<SyncRequest> queue) {
-    pendingSyncRequests = queue;
   }
 
   private void closeQuietly(Closeable c) {

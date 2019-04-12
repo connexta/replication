@@ -25,6 +25,7 @@ import ddf.catalog.Constants;
 import ddf.catalog.content.data.ContentItem;
 import ddf.catalog.content.data.impl.ContentItemImpl;
 import ddf.catalog.core.versioning.MetacardVersion;
+import ddf.catalog.data.Attribute;
 import ddf.catalog.data.Metacard;
 import ddf.catalog.data.Result;
 import ddf.catalog.data.impl.AttributeImpl;
@@ -69,6 +70,7 @@ import org.codice.ddf.spatial.ogc.csw.catalog.common.CswSourceConfiguration;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.AbstractCswStore;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
+import org.codice.ditto.replication.api.Replication;
 import org.codice.ditto.replication.api.data.CreateRequest;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.DeleteRequest;
@@ -79,7 +81,6 @@ import org.codice.ditto.replication.api.data.ResourceRequest;
 import org.codice.ditto.replication.api.data.ResourceResponse;
 import org.codice.ditto.replication.api.data.UpdateRequest;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
-import org.codice.ditto.replication.api.Replication;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.opengis.filter.Filter;
@@ -117,6 +118,12 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
   @Override
   protected Map<String, Consumer<Object>> getAdditionalConsumers() {
     return Collections.emptyMap();
+  }
+
+  @Override
+  public void init() {
+    super.init();
+    configureCswSource();
   }
 
   @Override
@@ -178,9 +185,13 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
       failedItemFilters.add(filterBuilder.attribute(Core.ID).is().equalTo().text(itemId));
     }
 
+    Filter finalFilter;
+
     Date modifiedAfter = queryRequest.getModifiedAfter();
     List<Filter> deletedFilters = new ArrayList<>();
     if (modifiedAfter != null) {
+      // subtract a second in case something was modified before the run time but didn't finish
+      // ingesting before we queried.
       modifiedAfter = new Date(modifiedAfter.getTime() - 1000);
       filters.add(filterBuilder.attribute(Core.METACARD_MODIFIED).is().after().date(modifiedAfter));
 
@@ -194,15 +205,20 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
               .text(MetacardVersion.VERSION_TAG));
       deletedFilters.add(
           filterBuilder.attribute(MetacardVersion.ACTION).is().like().text("Deleted*"));
+
+      finalFilter =
+          filterBuilder.allOf(
+              ecqlFilter,
+              filterBuilder.anyOf(
+                  filterBuilder.allOf(filters), filterBuilder.allOf(deletedFilters)));
+    } else {
+      filters.add(ecqlFilter);
+      finalFilter = filterBuilder.allOf(filters);
     }
 
-    final Filter finalFilter =
-        filterBuilder.anyOf(
-            filterBuilder.allOf(
-                ecqlFilter,
-                filterBuilder.anyOf(
-                    filterBuilder.allOf(filters), filterBuilder.allOf(deletedFilters))),
-            filterBuilder.anyOf(failedItemFilters));
+    if (!failedItemFilters.isEmpty()) {
+      finalFilter = filterBuilder.anyOf(finalFilter, filterBuilder.anyOf(failedItemFilters));
+    }
 
     Query query = new QueryImpl(finalFilter);
     ddf.catalog.operation.QueryRequest request = new QueryRequestImpl(query);
@@ -400,7 +416,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
         resource.getMimeType(),
         resource.getName(),
         resource.getSize(),
-        (Metacard) resource.getMetadata());
+        (Metacard) resource.getMetadata().getRawMetadata());
   }
 
   private void checkForProcessingErrors(Response response, String requestType)
@@ -456,21 +472,24 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
           metadata.setResourceModified(metacard.getModifiedDate());
           metadata.setResourceUri(metacard.getResourceURI());
 
-          metacard
-              .getAttribute(Replication.ORIGINS)
-              .getValues()
-              .stream()
-              .filter(String.class::isInstance)
-              .map(String.class::cast)
-              .forEach(metadata::addLineage);
+          Attribute origins = metacard.getAttribute(Replication.ORIGINS);
+          if (origins != null) {
+            origins
+                .getValues()
+                .stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .forEach(metadata::addLineage);
+          }
 
-          metacard
-              .getAttribute(Core.METACARD_TAGS)
-              .getValues()
-              .stream()
-              .filter(String.class::isInstance)
-              .map(String.class::cast)
-              .forEach(metadata::addLineage);
+          Attribute tags = metacard.getAttribute(Core.METACARD_TAGS);
+          if (tags != null) {
+            tags.getValues()
+                .stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .forEach(metadata::addLineage);
+          }
 
           return metadata;
         }

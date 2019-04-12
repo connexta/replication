@@ -26,9 +26,6 @@
     <argument ref="xmlMetacardTransformer"/>
   </bean>
 
-  <service ref="nodeAdapterRegistry"
-    interface="org.codice.ditto.replication.api.NodeAdapterRegistry"/>
-
   <reference id="filterBuilder" interface="ddf.catalog.filter.FilterBuilder"/>
   <reference id="filterAdapter" interface="ddf.catalog.filter.FilterAdapter"/>
   <reference id="resourceReader" interface="ddf.catalog.resource.ResourceReader"
@@ -56,7 +53,6 @@
 
   <bean id="ddfNodeAdapterFactory"
     class="com.connexta.replication.adapters.ddf.DdfNodeAdapterFactory">
-    <argument ref="nodeAdapterRegistry"/>
     <argument ref="ddfRestClientFactory"/>
 
     <property name="bundleContext" ref="blueprintBundleContext"/>
@@ -75,6 +71,9 @@
     <property name="cswTransactionWriter" ref="cswTransactionWriter"/>
     <property name="clientFactoryFactory" ref="clientFactoryFactory"/>
   </bean>
+
+  <service ref="ddfNodeAdapterFactory"
+    interface="org.codice.ditto.replication.api.NodeAdapterFactory"/>
 
   <bean id="replicationAttributes" class="ddf.catalog.data.impl.MetacardTypeImpl">
     <argument value="replication"/>
