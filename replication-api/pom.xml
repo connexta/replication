@@ -24,11 +24,6 @@
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
-            <groupId>ddf.catalog.core</groupId>
-            <artifactId>catalog-core-api</artifactId>
-            <version>${ddf.version}</version>
-        </dependency>
-        <dependency>
             <groupId>ddf.persistence.core</groupId>
             <artifactId>persistence-core-api</artifactId>
             <version>${ddf.version}</version>

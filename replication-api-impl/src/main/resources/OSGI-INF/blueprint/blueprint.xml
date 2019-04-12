@@ -13,19 +13,10 @@
  **/
 -->
 <blueprint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
            xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
 
-    <reference id="filterAdapter" interface="ddf.catalog.filter.FilterAdapter"/>
-    <reference id="filterBuilder" interface="ddf.catalog.filter.FilterBuilder"/>
-    <reference id="resourceReader" interface="ddf.catalog.resource.ResourceReader"
-               filter="(shortname=URLResourceReader)"/>
-    <reference id="cswTransformProvider" interface="com.thoughtworks.xstream.converters.Converter"/>
-    <reference id="securityManager" interface="ddf.security.service.SecurityManager"/>
-    <reference id="encryptionService" interface="ddf.security.encryption.EncryptionService"/>
     <reference id="persistentStore" interface="org.codice.ddf.persistence.PersistentStore"/>
-    <reference id="clientFactoryFactory" interface="org.codice.ddf.cxf.client.ClientFactoryFactory"/>
 
     <bean id="replicationPersistentStore"
           class="org.codice.ditto.replication.api.impl.ReplicationPersistentStoreImpl">
@@ -41,42 +32,6 @@
         <argument ref="newReplicationPersistentStore"/>
     </bean>
 
-    <bean id="metacardTransformerManager"
-          class="org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerManager">
-        <argument ref="metacardTransformers"/>
-    </bean>
-
-    <bean id="metacardTransformers" class="ddf.catalog.util.impl.SortedServiceReferenceList"/>
-    <reference-list id="metacardTransformerList" member-type="service-reference"
-                    interface="ddf.catalog.transform.MetacardTransformer">
-        <reference-listener bind-method="bindService" unbind-method="unbindService"
-                            ref="metacardTransformers"/>
-    </reference-list>
-
-    <bean id="cswTransactionWriter"
-          class="org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter">
-        <argument ref="cswTransformProvider"/>
-    </bean>
-
-    <bean id="resourceStoreFactory" class="org.codice.ditto.replication.api.impl.ReplicatorStoreFactoryImpl">
-        <property name="bundleContext" ref="blueprintBundleContext"/>
-        <property name="filterBuilder" ref="filterBuilder"/>
-        <property name="filterAdapter" ref="filterAdapter"/>
-        <property name="resourceReader" ref="resourceReader"/>
-        <property name="cswTransformConverter">
-            <bean class="org.codice.ddf.spatial.ogc.csw.catalog.converter.GetRecordsResponseConverter">
-                <argument ref="cswTransformProvider"/>
-            </bean>
-        </property>
-        <property name="securityManager" ref="securityManager"/>
-        <property name="encryptionService" ref="encryptionService"/>
-        <!-- CSW Store Properties -->
-        <property name="schemaTransformerManager" ref="metacardTransformerManager"/>
-        <property name="cswTransactionWriter" ref="cswTransactionWriter"/>
-        <property name="clientFactoryFactory" ref="clientFactoryFactory"/>
-    </bean>
-
-    <service ref="resourceStoreFactory" interface="org.codice.ditto.replication.api.ReplicatorStoreFactory"/>
     <service ref="replicationPersistentStore" interface="org.codice.ditto.replication.api.ReplicationPersistentStore"/>
     <service ref="siteManager" interface="org.codice.ditto.replication.api.persistence.SiteManager"/>
 
@@ -86,21 +41,29 @@
 
     <service ref="configManager" interface="org.codice.ditto.replication.api.persistence.ReplicatorConfigManager"/>
 
-    <bean id="historyService" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorHistoryManagerImpl">
+    <bean id="historyManager" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorHistoryManagerImpl">
         <argument ref="newReplicationPersistentStore"/>
     </bean>
 
-    <service ref="historyService" interface="org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager"/>
+    <service ref="historyManager" interface="org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager"/>
+
+    <bean id="nodeAdapterRegistry" class="org.codice.ditto.replication.api.impl.NodeAdapters"/>
+
+    <bean id="syncer" class="org.codice.ditto.replication.api.impl.Syncer">
+        <argument ref="replicationPersistentStore"/>
+        <argument ref="historyManager"/>
+    </bean>
 
     <bean id="replicator" class="org.codice.ditto.replication.api.impl.ReplicatorImpl" init-method="init"
           destroy-method="cleanUp">
-        <argument ref="resourceStoreFactory"/>
-        <argument ref="historyService"/>
-        <argument ref="replicationPersistentStore"/>
+        <argument ref="nodeAdapterRegistry"/>
+        <argument ref="historyManager"/>
         <argument ref="siteManager"/>
         <argument ref="replicatorImplExecutor"/>
-        <argument ref="filterBuilder"/>
+        <argument ref="syncer"/>
     </bean>
+
+    <service ref="replicator" interface="org.codice.ditto.replication.api.Replicator"/>
 
     <bean id="replicatorImplExecutor" class="java.util.concurrent.Executors"
           factory-method="newSingleThreadScheduledExecutor">
@@ -113,10 +76,10 @@
         <argument value="replicatorImplProcessorThread"/>
     </bean>
 
-    <bean id="runner" class="org.codice.ditto.replication.api.impl.ReplicatorRunner" init-method="init" destroy-method="destroy">
-        <argument ref="replicatorRunnerExecutor"/>
-        <argument ref="replicator"/>
-        <argument ref="configManager"/>
+    <bean id="replicatorRunnerFactory"
+          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          factory-method="newThreadFactory">
+        <argument value="replicatorRunnerThread"/>
     </bean>
 
     <bean id="replicatorRunnerExecutor" class="java.util.concurrent.Executors"
@@ -124,27 +87,9 @@
         <argument ref="replicatorRunnerFactory"/>
     </bean>
 
-    <bean id="replicatorRunnerFactory"
-          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
-          factory-method="newThreadFactory">
-        <argument value="replicatorRunnerThread"/>
+    <bean id="runner" class="org.codice.ditto.replication.api.impl.ReplicatorRunner" init-method="init" destroy-method="destroy">
+        <argument ref="replicatorRunnerExecutor"/>
+        <argument ref="replicator"/>
+        <argument ref="configManager"/>
     </bean>
-
-    <service ref="replicator" interface="org.codice.ditto.replication.api.Replicator"/>
-
-    <bean id="replicationAttributes" class="ddf.catalog.data.impl.MetacardTypeImpl">
-        <argument value="replication"/>
-        <argument>
-            <list>
-                <bean class="org.codice.ditto.replication.api.impl.mcard.ReplicationAttributes"/>
-                <bean class="ddf.catalog.data.impl.types.CoreAttributes"/>
-            </list>
-        </argument>
-    </bean>
-
-    <service ref="replicationAttributes" interface="ddf.catalog.data.MetacardType">
-        <service-properties>
-            <entry key="name" value="replication"/>
-        </service-properties>
-    </service>
 </blueprint>

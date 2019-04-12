@@ -82,7 +82,8 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
 
   private ClientFactoryFactory clientFactoryFactory;
 
-  public DdfNodeAdapterFactory(NodeAdapterRegistry nodeAdapterRegistry, DdfRestClientFactory ddfRestClientFactory) {
+  public DdfNodeAdapterFactory(
+      NodeAdapterRegistry nodeAdapterRegistry, DdfRestClientFactory ddfRestClientFactory) {
     nodeAdapterRegistry.register(NodeAdapterType.DDF, this);
     this.ddfRestClientFactory = ddfRestClientFactory;
   }

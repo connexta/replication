@@ -11,10 +11,13 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.mcard;
+package org.codice.ditto.replication.api;
 
-public interface Replication {
-  String REPLICATED_TAG = "replicated";
+public class Replication {
 
-  String ORIGINS = "replication.origins";
+  public static final String REPLICATED_TAG = "replicated";
+
+  public static final String ORIGINS = "replication.origins";
+
+  private Replication() {}
 }

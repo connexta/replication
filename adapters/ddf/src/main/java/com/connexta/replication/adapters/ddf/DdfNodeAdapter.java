@@ -79,7 +79,7 @@ import org.codice.ditto.replication.api.data.ResourceRequest;
 import org.codice.ditto.replication.api.data.ResourceResponse;
 import org.codice.ditto.replication.api.data.UpdateRequest;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
-import org.codice.ditto.replication.api.mcard.Replication;
+import org.codice.ditto.replication.api.Replication;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.opengis.filter.Filter;
@@ -372,7 +372,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     List<Metacard> metacards =
         metadata
             .stream()
-            .filter(m -> m.getType().isInstance(Metacard.class))
+            .filter(m -> Metacard.class.isAssignableFrom(m.getType()))
             .map(Metacard.class::cast)
             .collect(Collectors.toList());
 

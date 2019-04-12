@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright (c) Connexta
+ *
+ * This is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details. A copy of the GNU Lesser General Public License is distributed along with this program and can be found at
+ * <http://www.gnu.org/licenses/lgpl.html>.
+ *
+ **/
+-->
+<blueprint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+  xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
+
+  <reference id="clientFactoryFactory" interface="org.codice.ddf.cxf.client.ClientFactoryFactory"/>
+  <reference id="xmlMetacardTransformer" interface="ddf.catalog.transform.MetacardTransformer"
+    filter="(id=xml)"/>
+
+  <bean id="ddfRestClientFactory"
+    class="com.connexta.replication.adapters.ddf.DdfRestClientFactory">
+    <argument ref="clientFactoryFactory"/>
+    <argument ref="xmlMetacardTransformer"/>
+  </bean>
+
+  <service ref="nodeAdapterRegistry"
+    interface="org.codice.ditto.replication.api.NodeAdapterRegistry"/>
+
+  <reference id="filterBuilder" interface="ddf.catalog.filter.FilterBuilder"/>
+  <reference id="filterAdapter" interface="ddf.catalog.filter.FilterAdapter"/>
+  <reference id="resourceReader" interface="ddf.catalog.resource.ResourceReader"
+    filter="(shortname=URLResourceReader)"/>
+  <reference id="cswTransformProvider" interface="com.thoughtworks.xstream.converters.Converter"/>
+  <reference id="securityManager" interface="ddf.security.service.SecurityManager"/>
+  <reference id="encryptionService" interface="ddf.security.encryption.EncryptionService"/>
+
+  <bean id="metacardTransformers" class="ddf.catalog.util.impl.SortedServiceReferenceList"/>
+  <reference-list id="metacardTransformerList" member-type="service-reference"
+    interface="ddf.catalog.transform.MetacardTransformer">
+    <reference-listener bind-method="bindService" unbind-method="unbindService"
+      ref="metacardTransformers"/>
+  </reference-list>
+
+  <bean id="metacardTransformerManager"
+    class="org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerManager">
+    <argument ref="metacardTransformers"/>
+  </bean>
+
+  <bean id="cswTransactionWriter"
+    class="org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter">
+    <argument ref="cswTransformProvider"/>
+  </bean>
+
+  <bean id="ddfNodeAdapterFactory"
+    class="com.connexta.replication.adapters.ddf.DdfNodeAdapterFactory">
+    <argument ref="nodeAdapterRegistry"/>
+    <argument ref="ddfRestClientFactory"/>
+
+    <property name="bundleContext" ref="blueprintBundleContext"/>
+    <property name="filterBuilder" ref="filterBuilder"/>
+    <property name="filterAdapter" ref="filterAdapter"/>
+    <property name="resourceReader" ref="resourceReader"/>
+    <property name="cswTransformConverter">
+      <bean class="org.codice.ddf.spatial.ogc.csw.catalog.converter.GetRecordsResponseConverter">
+        <argument ref="cswTransformProvider"/>
+      </bean>
+    </property>
+    <property name="securityManager" ref="securityManager"/>
+    <property name="encryptionService" ref="encryptionService"/>
+    <!-- CSW Store Properties -->
+    <property name="schemaTransformerManager" ref="metacardTransformerManager"/>
+    <property name="cswTransactionWriter" ref="cswTransactionWriter"/>
+    <property name="clientFactoryFactory" ref="clientFactoryFactory"/>
+  </bean>
+
+  <bean id="replicationAttributes" class="ddf.catalog.data.impl.MetacardTypeImpl">
+    <argument value="replication"/>
+    <argument>
+      <list>
+        <bean class="com.connexta.replication.adapters.ddf.ReplicationAttributes"/>
+        <bean class="ddf.catalog.data.impl.types.CoreAttributes"/>
+      </list>
+    </argument>
+  </bean>
+
+  <service ref="replicationAttributes" interface="ddf.catalog.data.MetacardType">
+    <service-properties>
+      <entry key="name" value="replication"/>
+    </service-properties>
+  </service>
+</blueprint>

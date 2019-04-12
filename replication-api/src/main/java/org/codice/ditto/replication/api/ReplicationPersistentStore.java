@@ -22,7 +22,7 @@ public interface ReplicationPersistentStore {
   Optional<ReplicationItem> getItem(String id, String source, String destination);
 
   List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize)
-      throws PersistenceException;
+      throws ReplicationPersistenceException;
 
   void saveItem(ReplicationItem replicationItem);
 

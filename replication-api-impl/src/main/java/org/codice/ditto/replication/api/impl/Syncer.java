@@ -23,7 +23,7 @@ import org.codice.ditto.replication.api.impl.data.QueryRequestImpl;
 import org.codice.ditto.replication.api.impl.data.ResourceRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateStorageRequestImpl;
-import org.codice.ditto.replication.api.mcard.Replication;
+import org.codice.ditto.replication.api.Replication;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +38,13 @@ public class Syncer {
 
   private final ReplicationPersistentStore replicationPersistentStore;
 
-  private final ReplicatorHistoryManager replicatorHistory;
+  private final ReplicatorHistoryManager historyManager;
 
   public Syncer(
       ReplicationPersistentStore replicationPersistentStore,
-      ReplicatorHistoryManager replicatorHistory) {
+      ReplicatorHistoryManager historyManager) {
     this.replicationPersistentStore = replicationPersistentStore;
-    this.replicatorHistory = replicatorHistory;
+    this.historyManager = historyManager;
   }
 
   public Job create(
@@ -247,7 +247,7 @@ public class Syncer {
     private Date getModifiedAfter() {
       ReplicationStatus lastSuccessfulRun;
       try {
-        lastSuccessfulRun = replicatorHistory.getByReplicatorId(replicatorConfig.getId());
+        lastSuccessfulRun = historyManager.getByReplicatorId(replicatorConfig.getId());
       } catch (NotFoundException e) {
         return null;
       }

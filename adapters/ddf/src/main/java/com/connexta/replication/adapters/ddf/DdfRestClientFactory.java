@@ -42,7 +42,7 @@ public class DdfRestClientFactory {
 
   private static final String CONTENT_DISPOSITION = "Content-Disposition";
 
-  private static final String DEFAULT_REST_ENDPOINT = "/services/catalog";
+  private static final String DEFAULT_REST_ENDPOINT = "/catalog";
 
   private final MetacardTransformer xmlMetacardTransformer;
 
