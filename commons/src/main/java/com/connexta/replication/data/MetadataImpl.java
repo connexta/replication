@@ -43,12 +43,12 @@ public class MetadataImpl implements Metadata {
 
   private Date resourceModified;
 
-  public MetadataImpl(Object metadata, Class type, Date metadataModified) {
+  public MetadataImpl(Object metadata, Class type, String id, Date metadataModified) {
     this.metadata = metadata;
     this.type = type;
     this.metadataModified = metadataModified;
+    this.id = id;
 
-    this.id = UUID.randomUUID().toString();
     this.tags = new HashSet<>();
     this.lineage = new ArrayList<>();
   }

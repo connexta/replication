@@ -310,9 +310,9 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
 
     setDuration(getDuration() + status.getDuration());
 
-    if (status.getStatus().equals(Status.SUCCESS)
-        && (getLastSuccess() == null || status.getStartTime().after(getLastSuccess()))) {
-      setLastSuccess(status.getStartTime());
-    }
+    //    if (status.getStatus().equals(Status.SUCCESS)
+    //        && (getLastSuccess() == null || status.getStartTime().after(getLastSuccess()))) {
+    //      setLastSuccess(status.getStartTime());
+    //    }
   }
 }

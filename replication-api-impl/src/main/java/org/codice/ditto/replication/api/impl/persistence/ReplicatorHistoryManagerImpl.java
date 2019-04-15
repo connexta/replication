@@ -67,10 +67,10 @@ public class ReplicatorHistoryManagerImpl implements ReplicatorHistoryManager {
       previous.addStats(status);
       persistentStore.save((ReplicationStatusImpl) previous);
     } catch (NotFoundException e) {
-      status.setLastRun(status.getStartTime());
-      if (status.getStatus().equals(Status.SUCCESS)) {
-        status.setLastSuccess(status.getStartTime());
-      }
+      //      status.setLastRun(status.getStartTime());
+      //      if (status.getStatus().equals(Status.SUCCESS)) {
+      //        status.setLastSuccess(status.getStartTime());
+      //      }
       persistentStore.save((ReplicationStatusImpl) status);
     }
   }

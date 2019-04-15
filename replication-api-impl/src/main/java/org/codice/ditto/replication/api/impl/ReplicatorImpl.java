@@ -178,7 +178,7 @@ public class ReplicatorImpl implements Replicator {
           } catch (Exception e) {
             final Status failureStatus = Status.FAILURE;
             LOGGER.warn(
-                "Unexpected error when replicating between {} and {} for config {}. Setting status to {}",
+                "Unexpected error when running config {}. Setting status to {}",
                 config.getName(),
                 failureStatus,
                 e);

@@ -9,7 +9,6 @@ import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.Replication;
 import org.codice.ditto.replication.api.ReplicationItem;
-import org.codice.ditto.replication.api.persistence.ReplicationItemManager;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.QueryRequest;
@@ -24,6 +23,7 @@ import org.codice.ditto.replication.api.impl.data.QueryRequestImpl;
 import org.codice.ditto.replication.api.impl.data.ResourceRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateStorageRequestImpl;
+import org.codice.ditto.replication.api.persistence.ReplicationItemManager;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +41,7 @@ public class Syncer {
   private final ReplicatorHistoryManager historyManager;
 
   public Syncer(
-      ReplicationItemManager replicationItemManager,
-      ReplicatorHistoryManager historyManager) {
+      ReplicationItemManager replicationItemManager, ReplicatorHistoryManager historyManager) {
     this.replicationItemManager = replicationItemManager;
     this.historyManager = historyManager;
   }
@@ -102,6 +101,7 @@ public class Syncer {
 
       Iterable<Metadata> changeSet = source.query(queryRequest).getMetadata();
 
+      Date modifiedOfLastMetadata = null;
       for (Metadata metadata : changeSet) {
         if (canceled) {
           break;
@@ -112,11 +112,17 @@ public class Syncer {
 
         if (!replicationItem.isPresent()) {
           doCreate(metadata);
-        } else if (destination.exists(metadata)) {
+        } else if (source.exists(metadata)) {
           doUpdate(metadata, replicationItem.get());
         } else {
           doDelete(metadata, replicationItem.get());
         }
+
+        modifiedOfLastMetadata = metadata.getMetadataModified();
+      }
+
+      if (modifiedOfLastMetadata != null) {
+        replicationStatus.setLastSuccess(modifiedOfLastMetadata);
       }
 
       replicationStatus.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
@@ -135,16 +141,27 @@ public class Syncer {
       addTagsAndLineage(metadata);
       boolean created;
 
+      final String metadataId = metadata.getId();
       if (hasResource(metadata)) {
         ResourceResponse resourceResponse = source.readResource(new ResourceRequestImpl(metadata));
         List<Resource> resources = Collections.singletonList(resourceResponse.getResource());
 
+        LOGGER.trace(
+            "Sending create storage from {} to {} for metadata {}",
+            sourceName,
+            destinationName,
+            metadataId);
         created = destination.createResource(new CreateStorageRequestImpl(resources));
         if (created) {
           bytesTransferred += metadata.getResourceSize();
           replicationStatus.incrementBytesTransferred(bytesTransferred);
         }
       } else {
+        LOGGER.trace(
+            "Sending create from {} to {} for metadata {}",
+            sourceName,
+            destinationName,
+            metadataId);
         created =
             destination.createRequest(new CreateRequestImpl(Collections.singletonList(metadata)));
       }
@@ -171,22 +188,33 @@ public class Syncer {
       addTagsAndLineage(metadata);
 
       boolean shouldUpdateMetadata =
-          metadata.getResourceModified().after(replicationItem.getResourceModified())
+          metadata.getMetadataModified().after(replicationItem.getMetacardModified())
               || replicationItem.getFailureCount() > 0;
 
-      boolean shouldUpdateResource = hasResource(metadata) && shouldUpdateMetadata;
+      boolean shouldUpdateResource =
+          hasResource(metadata)
+              && (metadata.getResourceModified().after(replicationItem.getResourceModified())
+                  || replicationItem.getFailureCount() > 0);
 
-      boolean updated = false;
+      final String metadataId = metadata.getId();
+      boolean updated;
       if (shouldUpdateResource) {
         ResourceResponse resourceResponse = source.readResource(new ResourceRequestImpl(metadata));
         List<Resource> resources = Collections.singletonList(resourceResponse.getResource());
 
+        LOGGER.trace(
+            "Sending update storage from {} to {} for metadata {}",
+            sourceName,
+            destination,
+            metadataId);
         updated = destination.updateResource(new UpdateStorageRequestImpl(resources));
         if (updated) {
           bytesTransferred += metadata.getResourceSize();
           replicationStatus.incrementBytesTransferred(bytesTransferred);
         }
       } else if (shouldUpdateMetadata) {
+        LOGGER.trace(
+            "Sending update from {} to {} for metadata {}", sourceName, destination, metadataId);
         updated =
             destination.updateRequest(new UpdateRequestImpl(Collections.singletonList(metadata)));
       } else {
@@ -195,6 +223,7 @@ public class Syncer {
             metadata.getId(),
             sourceName,
             destinationName);
+        return;
       }
 
       if (updated) {
@@ -220,6 +249,11 @@ public class Syncer {
       String id = metadata.getId();
 
       if (deleted) {
+        LOGGER.trace(
+            "Sending delete from {} to {} for metadata {}",
+            sourceName,
+            destinationName,
+            metadata.getId());
         replicationItemManager.deleteItem(id, sourceName, destinationName);
         replicationStatus.incrementCount();
       } else {
@@ -249,7 +283,7 @@ public class Syncer {
       return new ReplicationItemImpl(
           metadata.getId(),
           metadata.getResourceModified(),
-          metadata.getResourceModified(),
+          metadata.getMetadataModified(),
           sourceName,
           destinationName,
           replicatorConfig.getId());

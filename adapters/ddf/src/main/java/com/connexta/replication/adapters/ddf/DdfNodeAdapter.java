@@ -30,6 +30,7 @@ import ddf.catalog.data.Metacard;
 import ddf.catalog.data.Result;
 import ddf.catalog.data.impl.AttributeImpl;
 import ddf.catalog.data.types.Core;
+import ddf.catalog.filter.impl.SortByImpl;
 import ddf.catalog.operation.CreateResponse;
 import ddf.catalog.operation.DeleteResponse;
 import ddf.catalog.operation.OperationTransaction.OperationType;
@@ -84,6 +85,7 @@ import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.opengis.filter.Filter;
+import org.opengis.filter.sort.SortOrder;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -216,11 +218,18 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
       finalFilter = filterBuilder.allOf(filters);
     }
 
-    if (!failedItemFilters.isEmpty()) {
-      finalFilter = filterBuilder.anyOf(finalFilter, filterBuilder.anyOf(failedItemFilters));
-    }
+    //    if (!failedItemFilters.isEmpty()) {
+    //      finalFilter = filterBuilder.anyOf(finalFilter, filterBuilder.anyOf(failedItemFilters));
+    //    }
 
-    Query query = new QueryImpl(finalFilter);
+    Query query =
+        new QueryImpl(
+            finalFilter,
+            1,
+            100,
+            new SortByImpl(Core.METACARD_MODIFIED, SortOrder.ASCENDING),
+            false,
+            0L);
     ddf.catalog.operation.QueryRequest request = new QueryRequestImpl(query);
 
     ResultIterable results = ResultIterable.resultIterable(super::query, request);
@@ -295,7 +304,10 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     List<Metacard> metacards = getMetacards(deleteRequest.getMetadata());
 
     DeleteRequestImpl ddfDeleteRequest =
-        new DeleteRequestImpl(metacards.stream().map(Metacard::getId).toArray(String[]::new));
+        new DeleteRequestImpl(
+            deleteRequest.getMetadata().stream().map(Metadata::getId).toArray(String[]::new));
+
+    // todo: this was not correct before either. we place versioned metacards in here.
     ddfDeleteRequest
         .getProperties()
         .put(
@@ -389,6 +401,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
         metadata
             .stream()
             .filter(m -> Metacard.class.isAssignableFrom(m.getType()))
+            .map(Metadata::getRawMetadata)
             .map(Metacard.class::cast)
             .collect(Collectors.toList());
 
@@ -409,14 +422,35 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
           }
         };
 
-    return new ContentItemImpl(
+    String qualifier = getQualifier(resource.getResourceUri());
+
+    ContentItem contentItem = new ContentItemImpl(
         resource.getId(),
         resource.getQualifier(),
         byteSource,
         resource.getMimeType(),
-        resource.getName(),
+        resource.getName() == null && qualifier != null ? qualifier + ".bin" : resource.getName(),
         resource.getSize(),
         (Metacard) resource.getMetadata().getRawMetadata());
+
+    if (qualifier != null) {
+      addDerivedResourceUriToMetacard(contentItem);
+    }
+
+    return contentItem;
+  }
+
+  private void addDerivedResourceUriToMetacard(ContentItem contentItem) {
+    final Metacard metacard = contentItem.getMetacard();
+    Attribute attribute = metacard.getAttribute(Core.DERIVED_RESOURCE_URI);
+    if (attribute == null) {
+      attribute = new AttributeImpl(Core.DERIVED_RESOURCE_URI, contentItem.getUri());
+    } else {
+      AttributeImpl newAttribute = new AttributeImpl(attribute);
+      newAttribute.addValue(contentItem.getUri());
+      attribute = newAttribute;
+    }
+    metacard.setAttribute(attribute);
   }
 
   private void checkForProcessingErrors(Response response, String requestType)
@@ -463,10 +497,19 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
           metacard.setAttribute(
               new AttributeImpl(Metacard.DERIVED_RESOURCE_URI, (Serializable) null));
 
+          String id;
+          Attribute versionedMetacardId = metacard.getAttribute(MetacardVersion.VERSION_OF_ID);
+          if (versionedMetacardId != null && versionedMetacardId.getValue() != null) {
+            id = (String) versionedMetacardId.getValue();
+          } else {
+            id = metacard.getId();
+          }
+
           Metadata metadata =
               new MetadataImpl(
                   metacard,
                   Metacard.class,
+                  id,
                   (Date) metacard.getAttribute(Core.METACARD_MODIFIED).getValue());
           metadata.setResourceSize(Long.parseLong(metacard.getResourceSize()));
           metadata.setResourceModified(metacard.getModifiedDate());
