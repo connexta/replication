@@ -32,7 +32,7 @@
         <ddf.support.version>2.3.12</ddf.support.version>
         <ddf.version>2.13.8</ddf.version>
         <codice-maven.version>0.2</codice-maven.version>
-        <codice-test.version>0.7-SNAPSHOT</codice-test.version>
+        <codice-test.version>0.7</codice-test.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
