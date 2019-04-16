@@ -1,0 +1,16 @@
+<csw:GetRecordsResponse xmlns:csw="http://www.opengis.net/cat/csw">
+    <csw:SearchStatus status="subset" timestamp="2013-05-01T02:13:36+0200"/>
+    <csw:SearchResults elementSet="full" nextRecord="1"
+        numberOfRecordsMatched="1" numberOfRecordsReturned="1"
+        recordSchema="urn:catalog:metacard">
+          <metacard xmlns="urn:catalog:metacard" gml:id="95b20d0f7f644442b7fae6ddb3b95e07">
+            <type>fallback.common</type>
+            <string name="metacard-tags">
+              <value>resource</value>
+            </string>
+            <date name="metacard.modified">
+              <value>1234-01-02T03:04:05.060</value>
+            </date>
+          </metacard>
+    </csw:SearchResults>
+</csw:GetRecordsResponse>

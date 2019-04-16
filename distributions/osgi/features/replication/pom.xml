@@ -40,12 +40,12 @@
         </dependency>
         <dependency>
             <groupId>replication-adapters</groupId>
-            <artifactId>ddf</artifactId>
+            <artifactId>ddf-adapter</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>replication-adapters</groupId>
-            <artifactId>ddf</artifactId>
+            <artifactId>ddf-adapter</artifactId>
             <version>${project.version}</version>
             <type>json</type>
             <classifier>injection</classifier>

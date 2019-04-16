@@ -15,6 +15,6 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>ddf</module>
+    <module>ddf-adapter</module>
   </modules>
 </project>

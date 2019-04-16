@@ -108,6 +108,11 @@
             <version>1.4.5</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>replication</groupId>
+            <artifactId>commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -130,7 +135,8 @@
                             platform-util,
                             platform-util-unavailableurls,
                             commons-lang3,
-                            security-core-impl
+                            security-core-impl,
+                            commons
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>

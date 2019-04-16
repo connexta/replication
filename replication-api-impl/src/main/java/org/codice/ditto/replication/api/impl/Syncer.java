@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.api.impl;
 
+import com.connexta.replication.data.QueryRequestImpl;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -32,7 +33,6 @@ import org.codice.ditto.replication.api.data.ResourceResponse;
 import org.codice.ditto.replication.api.impl.data.CreateRequestImpl;
 import org.codice.ditto.replication.api.impl.data.CreateStorageRequestImpl;
 import org.codice.ditto.replication.api.impl.data.DeleteRequestImpl;
-import org.codice.ditto.replication.api.impl.data.QueryRequestImpl;
 import org.codice.ditto.replication.api.impl.data.ResourceRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateStorageRequestImpl;
@@ -177,7 +177,10 @@ public class Syncer {
           }
         }
 
-        replicationStatus.setLastMetadataModified(metadata.getMetadataModified());
+        if (replicationStatus.getLastMetadataModified() == null
+            || metadata.getMetadataModified().after(replicationStatus.getLastMetadataModified())) {
+          replicationStatus.setLastMetadataModified(metadata.getMetadataModified());
+        }
       }
 
       synchronized (lock) {
