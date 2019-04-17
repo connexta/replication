@@ -13,13 +13,15 @@
  */
 package com.connexta.replication.data;
 
+import static org.apache.commons.lang3.Validate.notEmpty;
+import static org.apache.commons.lang3.Validate.notNull;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import javax.annotation.Nullable;
 import org.codice.ditto.replication.api.data.Metadata;
 
@@ -44,10 +46,10 @@ public class MetadataImpl implements Metadata {
   private Date resourceModified;
 
   public MetadataImpl(Object metadata, Class type, String id, Date metadataModified) {
-    this.metadata = metadata;
-    this.type = type;
-    this.metadataModified = metadataModified;
-    this.id = id;
+    this.metadata = notNull(metadata, "Argument metadata may not be null");
+    this.type = notNull(type, "Argument type may not be null");
+    this.id = notEmpty(id, "Argument id may not be null or empty");
+    this.metadataModified = notNull(metadataModified, "Argument metadataModified may not be null");
 
     this.tags = new HashSet<>();
     this.lineage = new ArrayList<>();
