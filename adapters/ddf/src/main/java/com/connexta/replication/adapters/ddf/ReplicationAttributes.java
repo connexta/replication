@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.codice.ditto.replication.api.Replication;
 
+/** DDF specific attributes for replication. */
 public class ReplicationAttributes implements MetacardType {
   private static final Set<AttributeDescriptor> DESCRIPTORS;
 

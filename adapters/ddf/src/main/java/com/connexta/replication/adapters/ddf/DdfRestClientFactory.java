@@ -38,6 +38,7 @@ import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ddf.endpoints.rest.RESTService;
 import org.codice.ddf.security.common.Security;
 
+/** Factory for creating a basic client capable of posting resources to the DDF REST endpoint. */
 public class DdfRestClientFactory {
 
   private static final String CONTENT_DISPOSITION = "Content-Disposition";

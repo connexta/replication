@@ -15,6 +15,7 @@ package com.connexta.replication.data;
 
 import java.io.InputStream;
 import java.net.URI;
+import javax.annotation.Nullable;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.Resource;
 
@@ -71,6 +72,7 @@ public class ResourceImpl implements Resource {
   }
 
   @Override
+  @Nullable
   public String getQualifier() {
     return qualifier;
   }

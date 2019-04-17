@@ -92,6 +92,7 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** A {@link NodeAdapter} for interacting with DDF based systems. */
 public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DdfNodeAdapter.class);

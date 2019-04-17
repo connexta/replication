@@ -33,6 +33,10 @@ import org.codice.ditto.replication.api.NodeAdapterFactory;
 import org.codice.ditto.replication.api.NodeAdapterType;
 import org.osgi.framework.BundleContext;
 
+/**
+ * Factory for creating {@link DdfNodeAdapter}s for the {@link
+ * org.codice.ditto.replication.api.Replicator}.
+ */
 public class DdfNodeAdapterFactory implements NodeAdapterFactory {
 
   private static final String ID = "CSWFederatedSource";

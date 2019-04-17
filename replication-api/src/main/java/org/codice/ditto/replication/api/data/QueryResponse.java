@@ -3,9 +3,14 @@ package org.codice.ditto.replication.api.data;
 public interface QueryResponse {
 
   /**
-   * Returns a delegate iterable for accessing an adapters metadata
+   * An iterable of {@link Metadata} returned by a {@link QueryRequest} sent to a {@link
+   * org.codice.ditto.replication.api.NodeAdapter}, which translates a node's specific metadata
+   * format into {@link Metadata}.
    *
-   * @return
+   * <p>Considerations of paging when iterating should be taken into account in order to avoid
+   * memory issues.
+   *
+   * @return the iterable of {@link Metadata}
    */
   Iterable<Metadata> getMetadata();
 }
