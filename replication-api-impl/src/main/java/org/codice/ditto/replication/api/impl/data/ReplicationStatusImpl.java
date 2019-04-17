@@ -309,27 +309,31 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
   }
 
   @Override
-  public void addStats(ReplicationStatus status) {
-    setPushCount(getPushCount() + status.getPushCount());
-    setPushBytes(getPushBytes() + status.getPushBytes());
-    setPushFailCount(getPushFailCount() + status.getPushFailCount());
-    setPullCount(getPullCount() + status.getPullCount());
-    setPullBytes(getPullBytes() + status.getPullBytes());
-    setPullFailCount(getPullFailCount() + status.getPullFailCount());
-    if (getLastRun() == null || status.getStartTime().after(getLastRun())) {
-      setLastRun(status.getStartTime());
-      setStatus(status.getStatus());
+  public void addStats(ReplicationStatus newStatus) {
+    setPushCount(getPushCount() + newStatus.getPushCount());
+    setPushBytes(getPushBytes() + newStatus.getPushBytes());
+    setPushFailCount(getPushFailCount() + newStatus.getPushFailCount());
+    setPullCount(getPullCount() + newStatus.getPullCount());
+    setPullBytes(getPullBytes() + newStatus.getPullBytes());
+    setPullFailCount(getPullFailCount() + newStatus.getPullFailCount());
+    if (getLastRun() == null || newStatus.getStartTime().after(getLastRun())) {
+      setLastRun(newStatus.getStartTime());
+      setStatus(newStatus.getStatus());
     }
 
-    if (getStartTime().after(status.getStartTime())) {
-      setStartTime(status.getStartTime());
+    if (newStatus.getLastMetadataModified() != null) {
+      setLastMetadataModified(newStatus.getLastMetadataModified());
     }
 
-    setDuration(getDuration() + status.getDuration());
+    if (getStartTime().after(newStatus.getStartTime())) {
+      setStartTime(newStatus.getStartTime());
+    }
 
-    if (status.getStatus().equals(Status.SUCCESS)
-        && (getLastSuccess() == null || status.getStartTime().after(getLastSuccess()))) {
-      setLastSuccess(status.getStartTime());
+    setDuration(getDuration() + newStatus.getDuration());
+
+    if (newStatus.getStatus().equals(Status.SUCCESS)
+        && (getLastSuccess() == null || newStatus.getStartTime().after(getLastSuccess()))) {
+      setLastSuccess(newStatus.getStartTime());
     }
   }
 }

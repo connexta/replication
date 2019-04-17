@@ -195,9 +195,6 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     Date modifiedAfter = queryRequest.getModifiedAfter();
     List<Filter> deletedFilters = new ArrayList<>();
     if (modifiedAfter != null) {
-      // subtract a second in case something was modified before the run time but didn't finish
-      // ingesting before we queried.
-      modifiedAfter = new Date(modifiedAfter.getTime() - 1000);
       filters.add(filterBuilder.attribute(Core.METACARD_MODIFIED).is().after().date(modifiedAfter));
 
       deletedFilters.add(
@@ -221,9 +218,9 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
       finalFilter = filterBuilder.allOf(filters);
     }
 
-    //    if (!failedItemFilters.isEmpty()) {
-    //      finalFilter = filterBuilder.anyOf(finalFilter, filterBuilder.anyOf(failedItemFilters));
-    //    }
+    if (!failedItemFilters.isEmpty()) {
+      finalFilter = filterBuilder.anyOf(finalFilter, filterBuilder.anyOf(failedItemFilters));
+    }
 
     Query query =
         new QueryImpl(
@@ -379,8 +376,15 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
 
-    // todo: handle failures
-    contentItems.forEach(client::post);
+    for (ContentItem contentItem : contentItems) {
+      if (!client
+          .post(contentItem)
+          .getStatusInfo()
+          .getFamily()
+          .equals(javax.ws.rs.core.Response.Status.Family.SUCCESSFUL)) {
+        return false;
+      }
+    }
 
     return true;
   }
@@ -396,9 +400,15 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
 
-    // todo: handle failures
-    contentItems.forEach(
-        contentItem -> client.post(contentItem, contentItem.getMetacard().getId()));
+    for (ContentItem contentItem : contentItems) {
+      if (!client
+          .post(contentItem, contentItem.getMetacard().getId())
+          .getStatusInfo()
+          .getFamily()
+          .equals(javax.ws.rs.core.Response.Status.Family.SUCCESSFUL)) {
+        return false;
+      }
+    }
 
     return true;
   }
@@ -409,6 +419,8 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
   }
 
   private List<Metacard> getMetacards(List<Metadata> metadata) {
+    metadata.forEach(this::addOriginsAndTags);
+
     List<Metacard> metacards =
         metadata
             .stream()
@@ -434,6 +446,8 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
           }
         };
 
+    addOriginsAndTags(resource.getMetadata());
+
     return new ContentItemImpl(
         resource.getId(),
         resource.getQualifier(),
@@ -442,6 +456,19 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
         resource.getName(),
         resource.getSize(),
         (Metacard) resource.getMetadata().getRawMetadata());
+  }
+
+  private void addOriginsAndTags(Metadata metadata) {
+    Metacard metacard = (Metacard) metadata.getRawMetadata();
+
+    Attribute origins = metacard.getAttribute(Replication.ORIGINS);
+    if (origins != null) {
+      List<Serializable> oldOrigins = origins.getValues();
+      oldOrigins.addAll(metadata.getLineage());
+      metacard.setAttribute(new AttributeImpl(Replication.ORIGINS, oldOrigins));
+    } else {
+      metacard.setAttribute(new AttributeImpl(Replication.ORIGINS, (List) metadata.getLineage()));
+    }
   }
 
   private void checkForProcessingErrors(Response response, String requestType)
@@ -489,19 +516,18 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
               new AttributeImpl(Metacard.DERIVED_RESOURCE_URI, (Serializable) null));
 
           String id;
+          Date metacardModified;
           Attribute versionedMetacardId = metacard.getAttribute(MetacardVersion.VERSION_OF_ID);
           if (versionedMetacardId != null && versionedMetacardId.getValue() != null) {
             id = (String) versionedMetacardId.getValue();
+            metacardModified =
+                (Date) metacard.getAttribute(MetacardVersion.VERSIONED_ON).getValue();
           } else {
             id = metacard.getId();
+            metacardModified = (Date) metacard.getAttribute(Core.METACARD_MODIFIED).getValue();
           }
 
-          Metadata metadata =
-              new MetadataImpl(
-                  metacard,
-                  Metacard.class,
-                  id,
-                  (Date) metacard.getAttribute(Core.METACARD_MODIFIED).getValue());
+          Metadata metadata = new MetadataImpl(metacard, Metacard.class, id, metacardModified);
           metadata.setResourceSize(Long.parseLong(metacard.getResourceSize()));
           metadata.setResourceModified(metacard.getModifiedDate());
           metadata.setResourceUri(metacard.getResourceURI());

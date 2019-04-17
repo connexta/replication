@@ -87,7 +87,7 @@ public class Syncer {
     }
 
     public SyncResponse sync() {
-      Date modifiedAfter = replicationStatus.getLastMetadataModified();
+      Date modifiedAfter = getModifiedAfter();
       List<String> failedItemIds =
           replicationItemManager.getFailureList(
               replicatorConfig.getFailureRetryCount(), sourceName, destinationName);
@@ -140,8 +140,9 @@ public class Syncer {
               replicationStatus.incrementFailure();
             } else {
               ReplicationItem item = createReplicationItem(metadata);
+              item.incrementFailureCount();
               replicationItemManager.saveItem(item);
-              replicationStatus.incrementCount();
+              replicationStatus.incrementFailure();
             }
           }
         }
@@ -330,8 +331,8 @@ public class Syncer {
         return null;
       }
 
-      if (status.getLastSuccess() != null) {
-        return new Date(status.getLastSuccess().getTime());
+      if (status.getLastMetadataModified() != null) {
+        return new Date(status.getLastMetadataModified().getTime());
       } else {
         LOGGER.trace("no previous successful run for config {} found.", replicatorConfig.getId());
         return null;
