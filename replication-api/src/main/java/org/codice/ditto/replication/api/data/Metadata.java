@@ -33,7 +33,10 @@ public interface Metadata {
    */
   Object getRawMetadata();
 
-  /** @return the URI locating the metadata */
+  /**
+   * @return the URI locating the metadata, or {@code null} if there is no resource associated with
+   *     this metadata
+   */
   URI getResourceUri();
 
   /** @param resourceUri the URI locating the metadata */
@@ -49,7 +52,8 @@ public interface Metadata {
   Date getMetadataModified();
 
   /**
-   * @return the {@link Date} the {@link Resource} represented by this metadata was last modified
+   * @return the {@link Date} the {@link Resource} represented by this metadata was last modified,
+   *     or {@code null} if there is no resource associated with this metadata
    */
   Date getResourceModified();
 
@@ -84,13 +88,9 @@ public interface Metadata {
    */
   void addLineage(String name);
 
-  /**
-   * @return {@code true} if this metadata should be considered deleted, otherwise {@code false}
-   */
+  /** @return {@code true} if this metadata should be considered deleted, otherwise {@code false} */
   boolean isDeleted();
 
-  /**
-   * @param isDeleted whether or not this metadata should be considered deleted
-   */
+  /** @param isDeleted whether or not this metadata should be considered deleted */
   void setIsDeleted(boolean isDeleted);
 }
