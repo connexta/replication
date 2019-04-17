@@ -28,5 +28,6 @@
         <bundle>mvn:replication/replication-api-impl/${project.version}</bundle>
         <bundle>mvn:replication/replication-admin-query/${project.version}</bundle>
         <bundle>mvn:replication/replication-ui/${project.version}</bundle>
+        <bundle>mvn:replication-adapters/ddf/${project.version}</bundle>
     </feature>
 </features>

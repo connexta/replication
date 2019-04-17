@@ -215,6 +215,7 @@ public class Syncer {
       } else if (shouldUpdateMetadata) {
         LOGGER.trace(
             "Sending update from {} to {} for metadata {}", sourceName, destination, metadataId);
+
         updated =
             destination.updateRequest(new UpdateRequestImpl(Collections.singletonList(metadata)));
       } else {

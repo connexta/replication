@@ -50,6 +50,7 @@ import ddf.catalog.resource.ResourceNotSupportedException;
 import ddf.catalog.source.IngestException;
 import ddf.catalog.source.UnsupportedQueryException;
 import ddf.catalog.util.impl.ResultIterable;
+import ddf.security.SubjectUtils;
 import ddf.security.encryption.EncryptionService;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,6 +67,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.shiro.SecurityUtils;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswSourceConfiguration;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.AbstractCswStore;
@@ -278,6 +280,15 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
       ids[i] = metacards.get(i).getId();
     }
 
+    // assume content uri scheme since we cannot fetch the original resource uri over csw since it
+    // gets rewritten. This gets around the update getting denied by the framework thinking we are
+    // trying to change the resource uri, which is not allowed.
+    metacards.forEach(
+        metacard ->
+            metacard.setAttribute(
+                new AttributeImpl(
+                    Core.RESOURCE_URI, ContentItem.CONTENT_SCHEME + ":" + metacard.getId())));
+
     ddf.catalog.operation.UpdateRequest ddfUpdate = new UpdateRequestImpl(ids, metacards);
 
     // todo: This previous state metacards is not correct, but it was this way before. Does this
@@ -422,35 +433,14 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
           }
         };
 
-    String qualifier = getQualifier(resource.getResourceUri());
-
-    ContentItem contentItem = new ContentItemImpl(
+    return new ContentItemImpl(
         resource.getId(),
         resource.getQualifier(),
         byteSource,
         resource.getMimeType(),
-        resource.getName() == null && qualifier != null ? qualifier + ".bin" : resource.getName(),
+        resource.getName(),
         resource.getSize(),
         (Metacard) resource.getMetadata().getRawMetadata());
-
-    if (qualifier != null) {
-      addDerivedResourceUriToMetacard(contentItem);
-    }
-
-    return contentItem;
-  }
-
-  private void addDerivedResourceUriToMetacard(ContentItem contentItem) {
-    final Metacard metacard = contentItem.getMetacard();
-    Attribute attribute = metacard.getAttribute(Core.DERIVED_RESOURCE_URI);
-    if (attribute == null) {
-      attribute = new AttributeImpl(Core.DERIVED_RESOURCE_URI, contentItem.getUri());
-    } else {
-      AttributeImpl newAttribute = new AttributeImpl(attribute);
-      newAttribute.addValue(contentItem.getUri());
-      attribute = newAttribute;
-    }
-    metacard.setAttribute(attribute);
   }
 
   private void checkForProcessingErrors(Response response, String requestType)
@@ -533,6 +523,11 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
                 .map(String.class::cast)
                 .forEach(metadata::addLineage);
           }
+
+          metacard.setAttribute(
+              new AttributeImpl(
+                  Metacard.POINT_OF_CONTACT,
+                  SubjectUtils.getEmailAddress(SecurityUtils.getSubject())));
 
           return metadata;
         }
