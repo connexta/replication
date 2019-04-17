@@ -83,4 +83,14 @@ public interface Metadata {
    * @param name the name to add.
    */
   void addLineage(String name);
+
+  /**
+   * @return {@code true} if this metadata should be considered deleted, otherwise {@code false}
+   */
+  boolean isDeleted();
+
+  /**
+   * @param isDeleted whether or not this metadata should be considered deleted
+   */
+  void setIsDeleted(boolean isDeleted);
 }

@@ -45,6 +45,8 @@ public class MetadataImpl implements Metadata {
 
   private Date resourceModified;
 
+  private boolean isDeleted = false;
+
   public MetadataImpl(Object metadata, Class type, String id, Date metadataModified) {
     this.metadata = notNull(metadata, "Argument metadata may not be null");
     this.type = notNull(type, "Argument type may not be null");
@@ -125,5 +127,15 @@ public class MetadataImpl implements Metadata {
   @Override
   public void addLineage(String name) {
     lineage.add(name);
+  }
+
+  @Override
+  public boolean isDeleted() {
+    return isDeleted;
+  }
+
+  @Override
+  public void setIsDeleted(boolean isDeleted) {
+    this.isDeleted = isDeleted;
   }
 }

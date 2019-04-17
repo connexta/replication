@@ -110,12 +110,12 @@ public class Syncer {
             replicationItemManager.getItem(metadata.getId(), sourceName, destinationName);
 
         try {
-          if (!replicationItem.isPresent()) {
-            doCreate(metadata);
-          } else if (source.exists(metadata)) {
+          if (metadata.isDeleted() && replicationItem.isPresent()) {
+            doDelete(metadata, replicationItem.get());
+          } else if (destination.exists(metadata) && replicationItem.isPresent()) {
             doUpdate(metadata, replicationItem.get());
           } else {
-            doDelete(metadata, replicationItem.get());
+            doCreate(metadata);
           }
         } catch (VirtualMachineError e) {
           throw e;

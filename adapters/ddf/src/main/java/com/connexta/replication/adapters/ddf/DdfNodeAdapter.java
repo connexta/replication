@@ -532,6 +532,11 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
           metadata.setResourceModified(metacard.getModifiedDate());
           metadata.setResourceUri(metacard.getResourceURI());
 
+          Attribute versionAction = metacard.getAttribute(MetacardVersion.ACTION);
+          if (versionAction != null) {
+            metadata.setIsDeleted(versionAction.getValue().toString().startsWith("Deleted"));
+          }
+
           Attribute origins = metacard.getAttribute(Replication.ORIGINS);
           if (origins != null) {
             origins
