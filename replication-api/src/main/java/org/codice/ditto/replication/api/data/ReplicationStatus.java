@@ -84,6 +84,11 @@ public interface ReplicationStatus extends Persistable {
   @Nullable
   Date getLastSuccess();
 
+  void setLastMetadataModified(Date lastMetadataModified);
+
+  @Nullable
+  Date getLastMetadataModified();
+
   /**
    * Sets the Date of the last time the referenced configuration was successfully run
    *

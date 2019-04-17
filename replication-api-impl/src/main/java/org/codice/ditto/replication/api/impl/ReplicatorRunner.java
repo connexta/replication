@@ -22,12 +22,15 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.ws.rs.NotFoundException;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Replicator;
+import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +50,8 @@ public class ReplicatorRunner {
 
   private final ScheduledExecutorService scheduledExecutor;
 
+  private final ReplicatorHistoryManager replicatorHistoryManager;
+
   private static final long STARTUP_DELAY = TimeUnit.MINUTES.toSeconds(1);
 
   private static final String DEFAULT_REPLICATION_PERIOD_STR =
@@ -55,19 +60,27 @@ public class ReplicatorRunner {
   public ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
-      ReplicatorConfigManager replicatorConfigManager) {
-    this(scheduledExecutor, replicator, replicatorConfigManager, Security.getInstance());
+      ReplicatorConfigManager replicatorConfigManager,
+      ReplicatorHistoryManager replicatorHistoryManager) {
+    this(
+        scheduledExecutor,
+        replicator,
+        replicatorConfigManager,
+        replicatorHistoryManager,
+        Security.getInstance());
   }
 
-  /*Visible for testing only*/
+  @VisibleForTesting
   ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
       ReplicatorConfigManager replicatorConfigManager,
+      ReplicatorHistoryManager replicatorHistoryManager,
       Security security) {
     this.scheduledExecutor = notNull(scheduledExecutor);
     this.replicator = notNull(replicator);
     this.replicatorConfigManager = notNull(replicatorConfigManager);
+    this.replicatorHistoryManager = notNull(replicatorHistoryManager);
     this.security = security;
   }
 
@@ -110,8 +123,13 @@ public class ReplicatorRunner {
             .collect(Collectors.toList());
     try {
       for (ReplicatorConfig config : configsToSchedule) {
-        ReplicationStatusImpl status = new ReplicationStatusImpl();
-        status.setReplicatorId(config.getId());
+        ReplicationStatus status;
+        try {
+          status = replicatorHistoryManager.getByReplicatorId(config.getId());
+        } catch (NotFoundException e) {
+          status = new ReplicationStatusImpl();
+          status.setReplicatorId(config.getId());
+        }
         replicator.submitSyncRequest(new SyncRequestImpl(config, status));
       }
     } catch (InterruptedException e) {

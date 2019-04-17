@@ -32,6 +32,7 @@ import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,13 +58,17 @@ public class ReplicatorRunnerTest {
 
   @Mock ReplicatorConfig config;
 
+  @Mock ReplicatorHistoryManager replicatorHistoryManager;
+
   @Before
   public void setUp() throws Exception {
     when(security.runWithSubjectOrElevate(any(Callable.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call());
     when(security.runAsAdmin(any(PrivilegedAction.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, PrivilegedAction.class).run());
-    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, security);
+    runner =
+        new ReplicatorRunner(
+            scheduledExecutor, replicator, configManager, replicatorHistoryManager, security);
     configStream = Stream.of(config);
   }
 

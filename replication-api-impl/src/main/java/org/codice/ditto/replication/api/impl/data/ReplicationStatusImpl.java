@@ -47,6 +47,8 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
 
   public static final String PULL_BYTES = "pull-bytes";
 
+  public static final String LAST_METADATA_MODIFIED = "last-metadata-modified";
+
   private String replicatorId;
 
   private Date startTime;
@@ -70,6 +72,8 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
   private long pushBytes = 0;
 
   private long pullBytes = 0;
+
+  @Nullable private Date lastMetadataModified;
 
   /** 1 - initial version. */
   public static final int CURRENT_VERSION = 1;
@@ -111,6 +115,17 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
   @Override
   public @Nullable Date getLastSuccess() {
     return lastSuccess;
+  }
+
+  @Override
+  public void setLastMetadataModified(Date lastMetadataModified) {
+    this.lastMetadataModified = lastMetadataModified;
+  }
+
+  @Nullable
+  @Override
+  public Date getLastMetadataModified() {
+    return lastMetadataModified;
   }
 
   @Override
@@ -271,6 +286,7 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
     result.put(PULL_FAIL_COUNT, getPullFailCount());
     result.put(PUSH_BYTES, getPushBytes());
     result.put(PULL_BYTES, getPullBytes());
+    result.put(LAST_METADATA_MODIFIED, getLastMetadataModified());
     return result;
   }
 
@@ -289,6 +305,7 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
     setPullFailCount((Long) properties.get(PULL_FAIL_COUNT));
     setPushBytes((Long) properties.get(PUSH_BYTES));
     setPullBytes((Long) properties.get(PULL_BYTES));
+    setLastMetadataModified((Date) properties.get(LAST_METADATA_MODIFIED));
   }
 
   @Override
@@ -310,9 +327,9 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
 
     setDuration(getDuration() + status.getDuration());
 
-    //    if (status.getStatus().equals(Status.SUCCESS)
-    //        && (getLastSuccess() == null || status.getStartTime().after(getLastSuccess()))) {
-    //      setLastSuccess(status.getStartTime());
-    //    }
+    if (status.getStatus().equals(Status.SUCCESS)
+        && (getLastSuccess() == null || status.getStartTime().after(getLastSuccess()))) {
+      setLastSuccess(status.getStartTime());
+    }
   }
 }

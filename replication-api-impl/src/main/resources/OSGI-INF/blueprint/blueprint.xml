@@ -95,5 +95,6 @@
         <argument ref="replicatorRunnerExecutor"/>
         <argument ref="replicator"/>
         <argument ref="configManager"/>
+        <argument ref="historyManager"/>
     </bean>
 </blueprint>

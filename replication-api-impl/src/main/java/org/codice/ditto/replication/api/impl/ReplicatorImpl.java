@@ -253,6 +253,7 @@ public class ReplicatorImpl implements Replicator {
           "The pendingSyncRequests already contains sync request {}, or it is already running. Not adding again to pending requests.",
           syncRequest);
     } else {
+      syncRequest.getStatus().setStatus(Status.PENDING);
       pendingSyncRequests.put(syncRequest);
     }
   }
