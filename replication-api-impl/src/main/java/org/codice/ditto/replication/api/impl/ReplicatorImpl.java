@@ -121,14 +121,13 @@ public class ReplicatorImpl implements Replicator {
                 executeSyncRequest(syncRequest);
               }
             } catch (InterruptedException e) {
-              LOGGER.debug("InterruptedException in executor. This is expected during shutdown.");
               Thread.currentThread().interrupt();
               break;
             }
           }
         });
 
-    LOGGER.info(
+    LOGGER.debug(
         "Successfully configured the single-thread scheduler to execute replication requests.");
   }
 

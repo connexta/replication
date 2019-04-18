@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.adapters.ddf;
 
+import com.google.common.annotations.VisibleForTesting;
 import ddf.catalog.content.data.ContentItem;
 import ddf.catalog.data.BinaryContent;
 import ddf.catalog.transform.CatalogTransformerException;
@@ -49,18 +50,35 @@ public class DdfRestClientFactory {
 
   private final ClientFactoryFactory clientFactoryFactory;
 
+  private final Security security;
+
   public DdfRestClientFactory(
       ClientFactoryFactory clientFactoryFactory, MetacardTransformer xmlMetacardTransformer) {
-    this.xmlMetacardTransformer = xmlMetacardTransformer;
-    this.clientFactoryFactory = clientFactoryFactory;
+    this(clientFactoryFactory, xmlMetacardTransformer, Security.getInstance());
   }
 
-  public DdfRestClient create(String host) {
+  @VisibleForTesting
+  public DdfRestClientFactory(
+      ClientFactoryFactory clientFactoryFactory,
+      MetacardTransformer xmlMetacardTransformer,
+      Security security) {
+    this.xmlMetacardTransformer = xmlMetacardTransformer;
+    this.clientFactoryFactory = clientFactoryFactory;
+    this.security = security;
+  }
+
+  /**
+   * Creates a limited functionality wrapper around a new {@link WebClient} created from a given
+   * host name. The created client can be used for multiple requests.
+   *
+   * @param host the host for the client to connect to
+   * @return a wrapped {@link WebClient}
+   */
+  DdfRestClient create(String host) {
     final SecureCxfClientFactory<RESTService> restClientFactory =
         clientFactoryFactory.getSecureCxfClientFactory(
             host + DEFAULT_REST_ENDPOINT, RESTService.class);
 
-    Security security = Security.getInstance();
     WebClient webClient =
         security.runAsAdmin(
             () ->
@@ -78,15 +96,22 @@ public class DdfRestClientFactory {
     return new DdfRestClient(webClient);
   }
 
-  public class DdfRestClient {
+  /** A wrapper around the {@link WebClient}. */
+  class DdfRestClient {
 
     private final WebClient webClient;
 
-    public DdfRestClient(WebClient webClient) {
+    DdfRestClient(WebClient webClient) {
       this.webClient = webClient;
     }
 
-    public Response post(ContentItem contentItem) {
+    /**
+     * Post new content to the DDF REST endpoint.
+     *
+     * @param contentItem the {@link ContentItem} to post
+     * @return the response
+     */
+    Response post(ContentItem contentItem) {
       try {
         MultipartBody multipartBody = createBody(contentItem);
         return webClient.post(multipartBody);
@@ -95,7 +120,14 @@ public class DdfRestClientFactory {
       }
     }
 
-    public Response post(ContentItem contentItem, String metacardId) {
+    /**
+     * Post updated content to the DDF REST endpoint.
+     *
+     * @param contentItem the updated {@link ContentItem}
+     * @param metacardId the ID of the metadata to update
+     * @return the response
+     */
+    Response post(ContentItem contentItem, String metacardId) {
       try {
         webClient.replacePath(metacardId);
         MultipartBody multipartBody = createBody(contentItem);

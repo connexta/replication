@@ -24,7 +24,7 @@ public interface NodeAdapter extends Closeable {
   /**
    * Gets the Metadata that should be created, updated, or deleted to a remote {@code NodeAdapter}.
    *
-   * @param queryRequest
+   * @param queryRequest query criteria to determine creates, updates, and/or deletes
    * @return a {@link QueryResponse} containing the {@link Metadata} matching the {@link
    *     QueryRequest} criteria
    * @throws {@link AdapterException} if there is an error communicating with the remote server

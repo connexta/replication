@@ -137,32 +137,32 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
   }
 
   @Override
-  public String getSystemName() {
-    if (cachedSystemName != null) {
-      return cachedSystemName;
+  public synchronized String getSystemName() {
+    if (this.cachedSystemName != null) {
+      return this.cachedSystemName;
     }
-    Filter filter =
+    final Filter filter =
         filterBuilder.allOf(
             filterBuilder.attribute(Metacard.TAGS).is().equalTo().text(REGISTRY_TAG),
             filterBuilder.not(filterBuilder.attribute(REGISTRY_IDENTITY_NODE).empty()));
 
-    Query newQuery = new QueryImpl(filter);
+    final Query newQuery = new QueryImpl(filter);
     ddf.catalog.operation.QueryRequest queryRequest =
         new QueryRequestImpl(newQuery, new HashMap<>());
 
-    SourceResponse identityMetacard;
+    final SourceResponse identityMetacard;
     try {
       identityMetacard = super.query(queryRequest);
     } catch (UnsupportedQueryException e) {
       throw new AdapterException("Could not get remote name from registry metacard", e);
     }
     if (!identityMetacard.getResults().isEmpty()) {
-      cachedSystemName = identityMetacard.getResults().get(0).getMetacard().getTitle();
+      this.cachedSystemName = identityMetacard.getResults().get(0).getMetacard().getTitle();
     } else {
       throw new AdapterException(
           "No registry metacard available on remote node. Could not retrieve remote system name");
     }
-    return cachedSystemName;
+    return this.cachedSystemName;
   }
 
   @Override
@@ -377,11 +377,12 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
 
     for (ContentItem contentItem : contentItems) {
-      if (!client
-          .post(contentItem)
-          .getStatusInfo()
-          .getFamily()
-          .equals(javax.ws.rs.core.Response.Status.Family.SUCCESSFUL)) {
+      javax.ws.rs.core.Response response = client.post(contentItem);
+      if (response != null
+          && !response
+              .getStatusInfo()
+              .getFamily()
+              .equals(javax.ws.rs.core.Response.Status.Family.SUCCESSFUL)) {
         return false;
       }
     }
@@ -401,11 +402,13 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
 
     for (ContentItem contentItem : contentItems) {
-      if (!client
-          .post(contentItem, contentItem.getMetacard().getId())
-          .getStatusInfo()
-          .getFamily()
-          .equals(javax.ws.rs.core.Response.Status.Family.SUCCESSFUL)) {
+      javax.ws.rs.core.Response response =
+          client.post(contentItem, contentItem.getMetacard().getId());
+      if (response != null
+          && !response
+              .getStatusInfo()
+              .getFamily()
+              .equals(javax.ws.rs.core.Response.Status.Family.SUCCESSFUL)) {
         return false;
       }
     }
@@ -492,7 +495,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     private final Iterator<Result> resultIterator;
 
-    public ResultIterableWrapper(ResultIterable resultIterable) {
+    ResultIterableWrapper(ResultIterable resultIterable) {
       resultIterator = resultIterable.iterator();
     }
 
@@ -519,6 +522,8 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
           Date metacardModified;
           Attribute versionedMetacardId = metacard.getAttribute(MetacardVersion.VERSION_OF_ID);
           if (versionedMetacardId != null && versionedMetacardId.getValue() != null) {
+            // Since we are dealing with a delete revision metacard, we need to make sure the
+            // returned metadata has the original metacard id and modified date.
             id = (String) versionedMetacardId.getValue();
             metacardModified =
                 (Date) metacard.getAttribute(MetacardVersion.VERSIONED_ON).getValue();
