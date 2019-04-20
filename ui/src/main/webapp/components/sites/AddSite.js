@@ -51,6 +51,7 @@ const defaultState = {
   name: '',
   hostname: '',
   port: 0,
+  rootContext: 'services',
   nameErrorText: '',
   hostnameErrorText: '',
   portErrorText: '',
@@ -94,6 +95,7 @@ const AddSite = class extends React.Component {
       name,
       hostname,
       port,
+      rootContext,
       nameErrorText,
       hostnameErrorText,
       portErrorText,
@@ -149,6 +151,16 @@ const AddSite = class extends React.Component {
               helperText={portErrorText ? portErrorText : ''}
               error={portErrorText ? true : false}
             />
+            <TextField
+              margin='dense'
+              id='rootContext'
+              label='Root Context *'
+              type='text'
+              onChange={this.handleChange('rootContext')}
+              fullWidth
+              helperText='The path under which the replication services can be found. Typically this is under `services`'
+              value={rootContext}
+            />
           </DialogContent>
           <DialogActions>
             <Button onClick={this.handleClose} color='primary'>
@@ -178,7 +190,7 @@ const AddSite = class extends React.Component {
               {(createReplicationSite, { loading }) => (
                 <div>
                   <Button
-                    disabled={!(name && hostname && port)}
+                    disabled={!(name && hostname && port && rootContext)}
                     color='primary'
                     onClick={() => {
                       createReplicationSite({
@@ -190,6 +202,7 @@ const AddSite = class extends React.Component {
                               port: port,
                             },
                           },
+                          rootContext: rootContext,
                         },
                         update: (
                           store,

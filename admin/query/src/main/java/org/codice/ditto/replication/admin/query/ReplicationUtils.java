@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
@@ -43,6 +44,8 @@ public class ReplicationUtils {
 
   private static final long BYTES_PER_MB = 1024L * 1024L;
 
+  private static final String DEFAULT_CONTEXT = "services";
+
   private final SiteManager siteManager;
 
   private final ReplicatorConfigManager configManager;
@@ -63,8 +66,9 @@ public class ReplicationUtils {
   }
 
   // mutator methods
-  public ReplicationSiteField createSite(String name, AddressField address) {
-    String urlString = addressFieldToUrlString(address);
+  public ReplicationSiteField createSite(
+      String name, AddressField address, @Nullable String rootContext) {
+    String urlString = addressFieldToUrlString(address, rootContext);
     ReplicationSite newSite = siteManager.createSite(name, urlString);
     siteManager.save(newSite);
 
@@ -79,8 +83,9 @@ public class ReplicationUtils {
     return siteManager.exists(id);
   }
 
-  public ReplicationSiteField updateSite(String id, String name, AddressField address) {
-    String urlString = addressFieldToUrlString(address);
+  public ReplicationSiteField updateSite(
+      String id, String name, AddressField address, @Nullable String rootContext) {
+    String urlString = addressFieldToUrlString(address, rootContext);
     ReplicationSite site = siteManager.get(id);
 
     setIfPresent(site::setName, name);
@@ -89,10 +94,14 @@ public class ReplicationUtils {
     return getSiteFieldForSite(site);
   }
 
-  private String addressFieldToUrlString(AddressField address) {
+  private String addressFieldToUrlString(AddressField address, @Nullable String rootContext) {
+    final String context =
+        (rootContext != null) ? rootContext.trim().replaceFirst("^[/\\s]*", "") : DEFAULT_CONTEXT;
+
     return address.host().hostname() == null
         ? address.url()
-        : String.format("https://%s:%s", address.host().hostname(), address.host().port());
+        : String.format(
+            "https://%s:%s/%s", address.host().hostname(), address.host().port(), context);
   }
 
   public boolean deleteSite(String id) {
@@ -212,6 +221,7 @@ public class ReplicationUtils {
     address.hostname(url.getHost());
     address.port(url.getPort());
     field.address(address);
+    field.rootContext(StringUtils.isEmpty(url.getPath()) ? DEFAULT_CONTEXT : url.getPath());
     return field;
   }
 

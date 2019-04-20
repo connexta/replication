@@ -37,6 +37,8 @@ public class ReplicationSiteField extends BaseObjectField {
 
   private AddressField address;
 
+  private StringField rootContext;
+
   public ReplicationSiteField() {
     this(DEFAULT_FIELD_NAME);
   }
@@ -46,6 +48,7 @@ public class ReplicationSiteField extends BaseObjectField {
     this.id = new PidField("id");
     this.name = new StringField("name");
     this.address = new AddressField();
+    this.rootContext = new StringField("rootContext");
   }
 
   public ReplicationSiteField id(String id) {
@@ -60,6 +63,11 @@ public class ReplicationSiteField extends BaseObjectField {
 
   public ReplicationSiteField address(AddressField address) {
     this.address = address;
+    return this;
+  }
+
+  public ReplicationSiteField rootContext(String context) {
+    this.rootContext.setValue(context);
     return this;
   }
 
@@ -83,9 +91,13 @@ public class ReplicationSiteField extends BaseObjectField {
     return address;
   }
 
+  public StringField rootContext() {
+    return rootContext;
+  }
+
   @Override
   public List<Field> getFields() {
-    return ImmutableList.of(id, name, address);
+    return ImmutableList.of(id, name, address, rootContext);
   }
 
   public static class ListImpl extends BaseListField<ReplicationSiteField> {

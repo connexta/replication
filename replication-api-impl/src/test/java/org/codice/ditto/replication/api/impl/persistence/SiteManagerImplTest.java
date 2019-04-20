@@ -48,6 +48,7 @@ public class SiteManagerImplTest {
   @Before
   public void setUp() {
     System.setProperty("org.codice.ddf.system.siteName", "testSite");
+    System.setProperty("org.codice.ddf.system.rootContext", "services");
     siteManager = new SiteManagerImpl(persistentStore);
   }
 
@@ -59,7 +60,7 @@ public class SiteManagerImplTest {
     verify(persistentStore).save(captor.capture());
     ReplicationSite site = captor.getValue();
     assertThat(site.getName(), is(SystemInfo.getSiteName()));
-    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.getBaseUrl()));
+    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
   }
 
   @Test
@@ -74,7 +75,7 @@ public class SiteManagerImplTest {
     verify(persistentStore).save(captor.capture());
     ReplicationSiteImpl site = captor.getValue();
     assertThat(site.getName(), is(SystemInfo.getSiteName()));
-    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.getBaseUrl()));
+    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
   }
 
   @Test
@@ -89,7 +90,7 @@ public class SiteManagerImplTest {
     verify(persistentStore).save(captor.capture());
     ReplicationSiteImpl site = captor.getValue();
     assertThat(site.getName(), is(SystemInfo.getSiteName()));
-    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.getBaseUrl()));
+    assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
   }
 
   @Test
