@@ -31,6 +31,8 @@ public class ReplicationStatusImpl implements ReplicationStatus {
 
   @Nullable private Date lastRun;
 
+  @Nullable private Date lastMetadataModified;
+
   private long duration = -1;
 
   private Status status = Status.PENDING;
@@ -95,6 +97,24 @@ public class ReplicationStatusImpl implements ReplicationStatus {
   @Override
   public void setLastSuccess(@Nullable Date lastSuccess) {
     this.lastSuccess = lastSuccess;
+  }
+
+  @Override
+  public void setLastMetadataModified(Date lastMetadataModified) {
+    this.lastMetadataModified = lastMetadataModified;
+  }
+
+  @Nullable
+  @Override
+  public Date getLastMetadataModified() {
+    if (lastMetadataModified != null) {
+      return lastMetadataModified;
+    }
+
+    // Preserve this behavior so that existing configurations will not attempt to re-sync all
+    // items. After the first run of an existing config with these changes, last metadata modified
+    // will always be used.
+    return lastSuccess;
   }
 
   @Override
@@ -194,7 +214,7 @@ public class ReplicationStatusImpl implements ReplicationStatus {
   @Override
   public String toString() {
     return String.format(
-        "ReplicationStatus{id='%s', replicatorName='%s', startTime=%s, duration=%d, status=%s, pushCount=%d, pullCount=%d, pushFailCount=%d, pullFailCount=%d, pushBytes=%d, pullBytes=%d}",
+        "ReplicationStatus{id='%s', replicatorName='%s', startTime=%s, duration=%d, status=%s, pushCount=%d, pullCount=%d, pushFailCount=%d, pullFailCount=%d, pushBytes=%d, pullBytes=%d, lastMetadataModified=%s}",
         id,
         replicatorName,
         startTime,
@@ -205,7 +225,8 @@ public class ReplicationStatusImpl implements ReplicationStatus {
         pushFailCount,
         pullFailCount,
         pushBytes,
-        pullBytes);
+        pullBytes,
+        lastMetadataModified);
   }
 
   @Override

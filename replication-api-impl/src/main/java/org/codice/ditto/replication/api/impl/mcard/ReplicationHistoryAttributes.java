@@ -60,6 +60,14 @@ public class ReplicationHistoryAttributes implements ReplicationHistory, Metacar
             BasicTypes.DATE_TYPE));
     descriptors.add(
         new AttributeDescriptorImpl(
+            ReplicationHistory.LAST_METADATA_MODIFIED,
+            true,
+            true,
+            false,
+            false,
+            BasicTypes.DATE_TYPE));
+    descriptors.add(
+        new AttributeDescriptorImpl(
             ReplicationHistory.DURATION,
             true /* indexed */,
             true /* stored */,

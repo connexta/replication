@@ -38,4 +38,6 @@ public interface ReplicationHistory {
   String LAST_RUN = "replication-history.last-run";
 
   String LAST_SUCCESS = "replication-history.last-success";
+
+  String LAST_METADATA_MODIFIED = "replication-history.last-metadata-modified";
 }
