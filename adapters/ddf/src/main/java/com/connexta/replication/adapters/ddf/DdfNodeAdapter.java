@@ -260,13 +260,10 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     try {
       CreateResponse createResponse = super.create(new CreateRequestImpl(metacards));
-      checkForProcessingErrors(createResponse, "CreateResponse");
+      return hasProcessingErrors(createResponse);
     } catch (IngestException e) {
-      LOGGER.debug("Failed to create metacards to remote store", e);
-      return false;
+      throw new AdapterException("Failed to create metacards to remote store", e);
     }
-
-    return true;
   }
 
   @Override
@@ -299,13 +296,10 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     try {
       UpdateResponse updateResponse = super.update(ddfUpdate);
-      checkForProcessingErrors(updateResponse, "UpdateRequest");
+      return hasProcessingErrors(updateResponse);
     } catch (IngestException e) {
-      LOGGER.debug("Failed to update metacards to remote store", e);
-      return false;
+      throw new AdapterException("Failed to update metacards to remote store", e);
     }
-
-    return true;
   }
 
   @Override
@@ -325,13 +319,10 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     try {
       DeleteResponse deleteResponse = super.delete(ddfDeleteRequest);
-      checkForProcessingErrors(deleteResponse, "DeleteRequest");
+      return hasProcessingErrors(deleteResponse);
     } catch (IngestException e) {
-      LOGGER.debug("Failed to delete metacards to remote store", e);
-      return false;
+      throw new AdapterException("Failed to delete metacards to remote store", e);
     }
-
-    return true;
   }
 
   @Override
@@ -474,11 +465,8 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     }
   }
 
-  private void checkForProcessingErrors(Response response, String requestType)
-      throws IngestException {
-    if (CollectionUtils.isNotEmpty(response.getProcessingErrors())) {
-      throw new IngestException("Processing errors when submitting a " + requestType);
-    }
+  private boolean hasProcessingErrors(Response response) {
+    return CollectionUtils.isNotEmpty(response.getProcessingErrors());
   }
 
   private String getQualifier(URI uri) {

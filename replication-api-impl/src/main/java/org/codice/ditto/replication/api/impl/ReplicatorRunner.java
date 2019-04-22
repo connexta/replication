@@ -50,7 +50,7 @@ public class ReplicatorRunner {
   private static final long STARTUP_DELAY = TimeUnit.MINUTES.toSeconds(1);
 
   private static final String DEFAULT_REPLICATION_PERIOD_STR =
-      String.valueOf(TimeUnit.MINUTES.toSeconds(1));
+      String.valueOf(TimeUnit.MINUTES.toSeconds(5));
 
   public ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,

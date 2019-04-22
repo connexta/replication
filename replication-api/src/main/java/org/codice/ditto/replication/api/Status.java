@@ -33,7 +33,7 @@ public enum Status {
    */
   PULL_IN_PROGRESS,
 
-  /** Indicates a {@link SyncRequest} was successfully exectuted. */
+  /** Indicates a {@link SyncRequest} was successfully executed. */
   SUCCESS,
 
   /** Indicates an unknown error occurred. */

@@ -99,7 +99,7 @@ public class Syncer {
       this.destinationName = destination.getSystemName();
     }
 
-    public SyncResponse sync() {
+    SyncResponse sync() {
       Date modifiedAfter = getModifiedAfter();
       List<String> failedItemIds =
           replicationItemManager.getFailureList(
@@ -127,7 +127,7 @@ public class Syncer {
             doDelete(metadata, replicationItem.get());
           } else if (destination.exists(metadata) && replicationItem.isPresent()) {
             doUpdate(metadata, replicationItem.get());
-          } else {
+          } else if (!replicationItem.isPresent()) {
             doCreate(metadata);
           }
         } catch (VirtualMachineError e) {
