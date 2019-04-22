@@ -43,6 +43,14 @@ The `direction` option can be set to `PUSH`, `PULL`, or `BOTH`. The PULL option 
 records to the ${platform} at the given destination url, `PULL` replicates records from the destination ${platform} at the
 given url to the source ${platform}, and `BOTH`, does PUSH and PULL.
 
+[WARNING]
+====
+It is strongly recommended to only replicate to a ${platform} that has replication installed. This
+will allow the replicated metadata to be saved with the "Replication Origins" tag. The origins tag
+plays a role in telling replication what data it should replicate and without it data may be undesirably
+replicated back to its source.
+====
+
 The `cql` field can accept any
 cql query, allowing the user to add a variety of filters to a replication configuration. Here are some examples:
 
