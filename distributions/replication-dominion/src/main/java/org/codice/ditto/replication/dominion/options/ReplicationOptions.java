@@ -19,6 +19,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.TimeUnit;
 import org.codice.ddf.dominion.options.DDFOptions;
 import org.codice.dominion.options.Option;
 import org.codice.dominion.options.karaf.KarafOptions;
@@ -43,7 +44,9 @@ public class ReplicationOptions {
           type = "xml",
           classifier = "features"
         ),
-    boot = false
+    boot = false,
+    timeout = 10L,
+    units = TimeUnit.MINUTES
   )
   @Option.Annotation
   @Target(ElementType.TYPE)
