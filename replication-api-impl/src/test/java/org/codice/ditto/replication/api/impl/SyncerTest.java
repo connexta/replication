@@ -63,7 +63,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SycnerTest {
+public class SyncerTest {
 
   @Mock ReplicationItemManager replicationItemManager;
 

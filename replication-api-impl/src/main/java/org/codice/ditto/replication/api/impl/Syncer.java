@@ -53,8 +53,7 @@ public class Syncer {
 
   private final ReplicatorHistoryManager historyManager;
 
-  public Syncer(
-      ReplicationItemManager replicationItemManager, ReplicatorHistoryManager historyManager) {
+  Syncer(ReplicationItemManager replicationItemManager, ReplicatorHistoryManager historyManager) {
     this.replicationItemManager = replicationItemManager;
     this.historyManager = historyManager;
   }
@@ -99,6 +98,11 @@ public class Syncer {
       this.destinationName = destination.getSystemName();
     }
 
+    /**
+     * Blocking call that begins syncing between a source and destination {@link NodeAdapter}s.
+     *
+     * @return the result {@link Status} of the sync
+     */
     SyncResponse sync() {
       Date modifiedAfter = getModifiedAfter();
       List<String> failedItemIds =
