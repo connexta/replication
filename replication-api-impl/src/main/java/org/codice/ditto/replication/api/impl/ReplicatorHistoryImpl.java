@@ -204,6 +204,9 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
         helper.getAttributeValueOrDefault(metacard, ReplicationHistory.LAST_SUCCESS, null));
     status.setLastRun(
         helper.getAttributeValueOrDefault(metacard, ReplicationHistory.LAST_RUN, null));
+    status.setLastMetadataModified(
+        helper.getAttributeValueOrDefault(
+            metacard, ReplicationHistory.LAST_METADATA_MODIFIED, null));
 
     return status;
   }
@@ -224,6 +227,10 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
     helper.setIfPresent(mcard, ReplicationHistory.STATUS, replicationStatus.getStatus().name());
     helper.setIfPresent(mcard, ReplicationHistory.LAST_SUCCESS, replicationStatus.getLastSuccess());
     helper.setIfPresent(mcard, ReplicationHistory.LAST_RUN, replicationStatus.getLastRun());
+    helper.setIfPresent(
+        mcard,
+        ReplicationHistory.LAST_METADATA_MODIFIED,
+        replicationStatus.getLastMetadataModified());
     mcard.setId(replicationStatus.getId());
     mcard.setTags(Collections.singleton(ReplicationHistory.METACARD_TAG));
     return mcard;
@@ -239,6 +246,10 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
     if (base.getLastRun() == null || status.getStartTime().after(base.getLastRun())) {
       base.setLastRun(status.getStartTime());
       base.setStatus(status.getStatus());
+    }
+
+    if (status.getLastMetadataModified() != null) {
+      base.setLastMetadataModified(status.getLastMetadataModified());
     }
 
     if (base.getStartTime().after(status.getStartTime())) {

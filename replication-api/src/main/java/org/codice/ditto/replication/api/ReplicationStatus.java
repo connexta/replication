@@ -69,6 +69,22 @@ public interface ReplicationStatus {
   void setLastSuccess(@Nullable Date lastSuccess);
 
   /**
+   * See {@link #getLastMetadataModified()}.
+   *
+   * @param lastMetadataModified the metadata's modified date
+   */
+  void setLastMetadataModified(Date lastMetadataModified);
+
+  /**
+   * A {@link Date} which represents the modified date of the last metadata that was attempted to be
+   * replicated. If available, this should be used when determining what metadata to replicate.
+   *
+   * @return the {@link Date}
+   */
+  @Nullable
+  Date getLastMetadataModified();
+
+  /**
    * Gets the runtime duration of the referenced configuration in seconds
    *
    * @return

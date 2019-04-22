@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.shiro.SecurityUtils;
 import org.codice.ditto.replication.api.ReplicationException;
@@ -146,8 +147,9 @@ class SyncHelper {
       mcard = metacardResult.getMetacard();
       existingReplicationItem = persistentStore.getItem(mcard.getId(), sourceName, destinationName);
 
+      boolean deletedMetacard = isDeletedMetacard();
       try {
-        if (isDeletedMetacard()) {
+        if (deletedMetacard) {
           processDeletedMetacard();
         } else if (isUpdatable()) {
           processUpdate(existingReplicationItem.get());
@@ -163,6 +165,14 @@ class SyncHelper {
           recordItemFailure(e);
         }
       }
+
+      final Date modifiedDate;
+      if (deletedMetacard) {
+        modifiedDate = (Date) mcard.getAttribute(MetacardVersion.VERSIONED_ON).getValue();
+      } else {
+        modifiedDate = (Date) mcard.getAttribute(Core.METACARD_MODIFIED).getValue();
+      }
+      status.setLastMetadataModified(modifiedDate);
     }
     status.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
     return new SyncResponse(syncCount, failCount, bytesTransferred, status.getStatus());
@@ -199,13 +209,6 @@ class SyncHelper {
     final Filter ecqlFilter;
     final List<Filter> filters = createBasicMetacardFilters();
     final List<Filter> failureFilters = createFailedMetacardFilters();
-    final ReplicationStatus lastSuccessfulRun =
-        history
-            .getReplicationEvents(config.getName())
-            .stream()
-            .filter(s -> s.getStatus().equals(Status.SUCCESS))
-            .findFirst()
-            .orElse(null);
     Filter finalFilter;
 
     try {
@@ -214,14 +217,10 @@ class SyncHelper {
       throw new ReplicationException("Error creating filter from cql: " + config.getFilter(), e);
     }
 
-    if (lastSuccessfulRun != null) {
-      long time = lastSuccessfulRun.getStartTime().getTime();
-      if (lastSuccessfulRun.getLastSuccess() != null) {
-        time = lastSuccessfulRun.getLastSuccess().getTime();
-      }
-      Date timeStamp = new Date(time - 1000);
-      List<Filter> deletedFilters = createDeletedMetacardFilters(timeStamp);
-      filters.add(builder.attribute(Core.METACARD_MODIFIED).is().after().date(timeStamp));
+    final Date modifiedAfter = getModifiedAfter();
+    if (modifiedAfter != null) {
+      List<Filter> deletedFilters = createDeletedMetacardFilters(modifiedAfter);
+      filters.add(builder.attribute(Core.METACARD_MODIFIED).is().after().date(modifiedAfter));
       finalFilter =
           builder.allOf(
               ecqlFilter, builder.anyOf(builder.allOf(filters), builder.allOf(deletedFilters)));
@@ -234,6 +233,18 @@ class SyncHelper {
       finalFilter = builder.anyOf(finalFilter, builder.anyOf(failureFilters));
     }
     return finalFilter;
+  }
+
+  @Nullable
+  private Date getModifiedAfter() {
+    final ReplicationStatus replicationStatus =
+        history.getReplicationEvents(config.getName()).stream().findFirst().orElse(null);
+
+    if (replicationStatus == null) {
+      return null;
+    }
+
+    return replicationStatus.getLastMetadataModified();
   }
 
   private List<Filter> createBasicMetacardFilters() {
