@@ -3,7 +3,7 @@
 :status: published
 :parent: Replication
 :summary: Known issues, limitations, and assumptions.
-:order: 05
+:order: 25
 
 == {title}
 
@@ -41,4 +41,3 @@ a ${platform}.
 [NOTE]
 Any metadata that is generated upon querying a source, similar to how Confluence metadata is generated,
 cannot be replicated either.
-
