@@ -15,6 +15,7 @@ import { allSites } from './gql/queries'
 import PropTypes from 'prop-types'
 import { withSnackbar } from 'notistack'
 import { deleteSite } from './gql/mutations'
+import Confirmable from '../common/Confirmable'
 
 const styles = {
   centered: {
@@ -70,9 +71,8 @@ class Site extends React.Component {
           >
             {(deleteReplicationSite, { loading }) => (
               <div>
-                <IconButton
-                  color='primary'
-                  onClick={() => {
+                <Confirmable
+                  onConfirm={() => {
                     deleteReplicationSite({
                       variables: {
                         id: id,
@@ -97,9 +97,16 @@ class Site extends React.Component {
                       },
                     })
                   }}
-                >
-                  <DeleteForever />
-                </IconButton>
+                  message={`Are you sure you want to delete the node ${name}?`}
+                  Button={props => {
+                    const { onClick } = props
+                    return (
+                      <IconButton color='primary' onClick={onClick}>
+                        <DeleteForever />
+                      </IconButton>
+                    )
+                  }}
+                />
                 {loading && <CircularProgress size={10} />}
               </div>
             )}
