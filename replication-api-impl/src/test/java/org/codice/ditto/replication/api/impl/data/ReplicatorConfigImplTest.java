@@ -16,6 +16,7 @@ package org.codice.ditto.replication.api.impl.data;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -39,6 +40,8 @@ public class ReplicatorConfigImplTest {
 
   private static final String VERSION_KEY = "version";
 
+  private static final String MODIFIED_KEY = "modified";
+
   private ReplicatorConfigImpl config;
 
   @Before
@@ -55,6 +58,8 @@ public class ReplicatorConfigImplTest {
     config.setFilter("filter");
     config.setBidirectional(true);
     config.setFailureRetryCount(5);
+    Date modified = new Date();
+    config.setModified(modified);
 
     Map<String, Object> props = config.toMap();
 
@@ -66,6 +71,7 @@ public class ReplicatorConfigImplTest {
     assertThat(props.get(BIDIRECTIONAL_KEY), is("true"));
     assertThat(props.get(RETRY_COUNT_KEY), is(5));
     assertThat(props.get(VERSION_KEY), is(1));
+    assertThat(props.get(MODIFIED_KEY), is(modified));
   }
 
   @Test
@@ -79,6 +85,8 @@ public class ReplicatorConfigImplTest {
     props.put(BIDIRECTIONAL_KEY, "true");
     props.put(RETRY_COUNT_KEY, 5);
     props.put(VERSION_KEY, 1);
+    Date modified = new Date();
+    props.put(MODIFIED_KEY, modified);
 
     config.fromMap(props);
 
@@ -90,5 +98,6 @@ public class ReplicatorConfigImplTest {
     assertThat(config.isBidirectional(), is(true));
     assertThat(config.getFailureRetryCount(), is(5));
     assertThat(config.getVersion(), is(1));
+    assertThat(config.getModified(), is(modified));
   }
 }

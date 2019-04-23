@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.api.data;
 
+import java.util.Date;
 import javax.annotation.Nullable;
 import org.codice.ditto.replication.api.ReplicationItem;
 
@@ -136,4 +137,21 @@ public interface ReplicatorConfig extends Persistable {
    * @param suspended the suspended state to give this config
    */
   void setSuspended(boolean suspended);
+
+  /**
+   * Gets the date on which this config was last modified.
+   *
+   * @return Date the date on which this config was last modified.
+   */
+  Date getModified();
+
+  /**
+   * Sets this config's modified date to the given date.
+   *
+   * @param modified the date to set as the modified date.
+   */
+  void setModified(Date modified);
+
+  /** Sets this config's modified date to the current time. */
+  void setModified();
 }

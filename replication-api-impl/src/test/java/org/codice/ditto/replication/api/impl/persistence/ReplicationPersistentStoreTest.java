@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,8 @@ public class ReplicationPersistentStoreTest {
 
   private static final String VERSION = "version";
 
+  private static final String MODIFIED = "modified";
+
   private PersistentStore mockPersistentStore;
 
   private ReplicationPersistentStore persistentStore;
@@ -118,6 +121,7 @@ public class ReplicationPersistentStoreTest {
     map.put(SUSPENDED, "false");
     map.put(DESCRIPTION, DESCRIPTION + num);
     map.put(VERSION, ReplicatorConfigImpl.CURRENT_VERSION);
+    map.put(MODIFIED, new Date(num));
     return map;
   }
 

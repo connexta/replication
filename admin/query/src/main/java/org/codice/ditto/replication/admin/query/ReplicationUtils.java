@@ -126,6 +126,7 @@ public class ReplicationUtils {
     config.setFilter(filter);
     config.setBidirectional(biDirectional);
     config.setFailureRetryCount(5);
+    config.setModified();
     configManager.save(config);
 
     return getReplicationFieldForConfig(config);
@@ -145,6 +146,7 @@ public class ReplicationUtils {
     setIfPresent(config::setDestination, destinationId);
     setIfPresent(config::setFilter, filter);
     setIfPresent(config::setBidirectional, biDirectional);
+    config.setModified();
 
     configManager.save(config);
     return getReplicationFieldForConfig(config);
@@ -254,6 +256,7 @@ public class ReplicationUtils {
     }
 
     config.setSuspended(suspended);
+    config.setModified();
     configManager.save(config);
     if (suspended) {
       replicator.cancelSyncRequest(id);

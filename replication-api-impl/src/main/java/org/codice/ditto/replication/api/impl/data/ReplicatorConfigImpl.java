@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.api.impl.data;
 
+import java.util.Date;
 import java.util.Map;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
@@ -41,9 +42,19 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   private static final String SUSPENDED_KEY = "suspended";
 
+  private static final String MODIFIED_KEY = "modified";
+
   /**
-   * 0/No Version - initial version of configs which were saved in the catalog framework. 1 - the
-   * first version of configs to be saved in the replication persistent store.
+   * Field specifying the version of the configuration. Possible versions include:
+   *
+   * <ol>
+   *   <li>0 (No version) - initial version of configs which were saved in the catalog framework
+   *   <li>1 - The first version of configs to be saved in the replication persistent store
+   *       <ul>
+   *         <li>Add <b>suspended</b> field of type boolean with default of false
+   *       </ul>
+   *   <li>2 - Add <b>modified</b> field of type Date
+   * </ol>
    */
   public static final int CURRENT_VERSION = 1;
 
@@ -63,6 +74,8 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   private boolean suspended;
 
+  private Date modified;
+
   public ReplicatorConfigImpl() {
     super.setVersion(CURRENT_VERSION);
   }
@@ -78,6 +91,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     result.put(RETRY_COUNT_KEY, getFailureRetryCount());
     result.put(DESCRIPTION_KEY, getDescription());
     result.put(SUSPENDED_KEY, Boolean.toString(isSuspended()));
+    result.put(MODIFIED_KEY, getModified());
     return result;
   }
 
@@ -92,6 +106,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     setFailureRetryCount((int) properties.get(RETRY_COUNT_KEY));
     setDescription((String) properties.get(DESCRIPTION_KEY));
     setSuspended(Boolean.valueOf((String) properties.get(SUSPENDED_KEY)));
+    setModified((Date) properties.get(MODIFIED_KEY));
   }
 
   @Override
@@ -172,5 +187,20 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public void setSuspended(boolean suspended) {
     this.suspended = suspended;
+  }
+
+  @Override
+  public Date getModified() {
+    return modified;
+  }
+
+  @Override
+  public void setModified(Date modified) {
+    this.modified = modified;
+  }
+
+  @Override
+  public void setModified() {
+    modified = new Date();
   }
 }
