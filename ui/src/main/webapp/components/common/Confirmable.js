@@ -28,16 +28,22 @@ function Confirmable(props) {
     message,
     subMessage,
     Button: Trigger,
-    onClose,
+    onClose: close,
   } = props
   const [open, setOpen] = React.useState(false)
+
+  function handleClose() {
+    if (close !== undefined) {
+      close()
+    }
+  }
 
   return (
     <>
       <Dialog
         open={open}
         onClose={() => {
-          onClose()
+          handleClose()
           setOpen(false)
         }}
         fullWidth
@@ -50,7 +56,7 @@ function Confirmable(props) {
         <DialogActions>
           <Button
             onClick={() => {
-              onClose()
+              handleClose()
               setOpen(false)
             }}
             color='primary'
