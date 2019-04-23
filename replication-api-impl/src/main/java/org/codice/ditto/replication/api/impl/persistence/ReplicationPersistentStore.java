@@ -82,9 +82,7 @@ public class ReplicationPersistentStore {
             String.format("Found two objects in persistence of type %s with ID %s", typeName, id));
       }
 
-      T persistable = createPersistable(klass);
-      persistable.fromMap(PersistentItem.stripSuffixes(storedMaps.get(0)));
-      return persistable;
+      return getPersistableFromMap(klass, storedMaps.get(0));
     }
   }
 

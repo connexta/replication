@@ -13,6 +13,8 @@
  */
 package org.codice.ditto.replication.api.data;
 
+import java.util.Date;
+
 /** A Persistable is an object that can be saved in persistence. */
 public interface Persistable {
 
@@ -36,4 +38,11 @@ public interface Persistable {
    * @return integer version of the persistable
    */
   int getVersion();
+
+  /**
+   * Returns a {@link Date} at which the persistable was last modified
+   *
+   * @return when the persistable was last modified
+   */
+  Date getModified();
 }

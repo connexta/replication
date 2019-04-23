@@ -58,6 +58,10 @@ public class ReplicationField extends BaseObjectField {
 
   private DateField lastSuccess;
 
+  private DateField modified;
+
+  private IntegerField version;
+
   public ReplicationField() {
     super("replication", "ReplicationConfig", DESCRIPTION);
     id = new PidField("id");
@@ -73,6 +77,8 @@ public class ReplicationField extends BaseObjectField {
     lastRun = new DateField("lastRun");
     firstRun = new DateField("firstRun");
     lastSuccess = new DateField("lastSuccess");
+    modified = new DateField("modified");
+    version = new IntegerField("version");
   }
 
   // setters
@@ -156,6 +162,21 @@ public class ReplicationField extends BaseObjectField {
     return this;
   }
 
+  public ReplicationField modified(String modified) {
+    this.modified.setValue(modified);
+    return this;
+  }
+
+  public ReplicationField modified(Date modified) {
+    this.modified.setValue(getInstantOrNull(modified));
+    return this;
+  }
+
+  public ReplicationField version(int version) {
+    this.version.setValue(version);
+    return this;
+  }
+
   private Instant getInstantOrNull(Date date) {
     if (date != null) {
       return date.toInstant();
@@ -236,6 +257,14 @@ public class ReplicationField extends BaseObjectField {
     return firstRun;
   }
 
+  public DateField modified() {
+    return modified;
+  }
+
+  public IntegerField version() {
+    return version;
+  }
+
   @Override
   public List<Field> getFields() {
     return ImmutableList.of(
@@ -251,7 +280,9 @@ public class ReplicationField extends BaseObjectField {
         suspended,
         lastRun,
         lastSuccess,
-        firstRun);
+        firstRun,
+        modified,
+        version);
   }
 
   public static class ListImpl extends BaseListField<ReplicationField> {
