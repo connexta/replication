@@ -14,9 +14,11 @@
 package org.codice.ditto.replication.api.impl.data;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +29,8 @@ public class AbstractPersistableTest {
   private static final String ID = "id";
 
   private static final String VERSION = "version";
+
+  private static final String MODIFIED = "modified";
 
   @Test
   public void testAbstractPersistable() {
@@ -66,10 +70,27 @@ public class AbstractPersistableTest {
 
     assertThat(map.get(ID), is("test"));
     assertThat(map.get(VERSION), is(1));
+    assertThat(map.get(MODIFIED), notNullValue());
   }
 
   @Test
   public void fromMap() {
+    Map<String, Object> map = new HashMap<>();
+    map.put(ID, "test");
+    map.put(VERSION, 1);
+    Date modified = new Date();
+    map.put(MODIFIED, modified);
+
+    AbstractPersistable persistable = new TestPersistable();
+    persistable.fromMap(map);
+
+    assertThat(persistable.getId(), is("test"));
+    assertThat(persistable.getVersion(), is(1));
+    assertThat(persistable.getModified(), is(modified));
+  }
+
+  @Test
+  public void fromMapNoModifiedDate() {
     Map<String, Object> map = new HashMap<>();
     map.put(ID, "test");
     map.put(VERSION, 1);
@@ -79,6 +100,7 @@ public class AbstractPersistableTest {
 
     assertThat(persistable.getId(), is("test"));
     assertThat(persistable.getVersion(), is(1));
+    assertThat(persistable.getModified(), is(new Date(0)));
   }
 
   private class TestPersistable extends AbstractPersistable {}

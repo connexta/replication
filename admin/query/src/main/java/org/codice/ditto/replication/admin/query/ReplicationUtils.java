@@ -168,6 +168,8 @@ public class ReplicationUtils {
     field.destination(getSiteFieldForSite(siteManager.get(config.getDestination())));
     field.filter(config.getFilter());
     field.biDirectional(config.isBidirectional());
+    field.modified(config.getModified());
+    field.version(config.getVersion());
     List<ReplicationStatus> statusList = history.getReplicationEvents(config.getName());
     if (!statusList.isEmpty()) {
       ReplicationStatus lastStatus = statusList.get(0);
@@ -208,6 +210,8 @@ public class ReplicationUtils {
     ReplicationSiteField field = new ReplicationSiteField();
     field.id(site.getId());
     field.name(site.getName());
+    field.modified(site.getModified());
+    field.version(site.getVersion());
     AddressField address = new AddressField();
     URL url;
 

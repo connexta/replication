@@ -13,9 +13,11 @@
  */
 package org.codice.ditto.replication.api.impl.data;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import javax.annotation.Nullable;
 import org.codice.ditto.replication.api.data.Persistable;
 
 /**
@@ -28,9 +30,13 @@ public abstract class AbstractPersistable implements Persistable {
 
   private static final String VERSION_KEY = "version";
 
+  private static final String MODIFIED_KEY = "modified";
+
   private String id;
 
   private int version;
+
+  private Date modified;
 
   protected AbstractPersistable() {
     this.id = UUID.randomUUID().toString();
@@ -55,9 +61,20 @@ public abstract class AbstractPersistable implements Persistable {
     this.version = version;
   }
 
+  @Override
+  public Date getModified() {
+    return modified;
+  }
+
+  private void setModified(@Nullable Date modified) {
+    this.modified = modified != null ? modified : new Date(0);
+  }
+
   /**
-   * Writes the variables of the persistable to a map. Any implementation of this method in a
-   * subclass should first make a call to the super version before performing its own functionality.
+   * Writes the variables of the persistable to a map. Since this method is intended to be called
+   * just before the persistable is saved, it will set the modified date to the current time. Any
+   * implementation of this method in a subclass should first make a call to the super version
+   * before performing its own functionality.
    *
    * @return a map containing the variable of the persistable
    */
@@ -65,6 +82,7 @@ public abstract class AbstractPersistable implements Persistable {
     Map<String, Object> result = new HashMap<>();
     result.put(ID_KEY, getId());
     result.put(VERSION_KEY, getVersion());
+    result.put(MODIFIED_KEY, new Date());
     return result;
   }
 
@@ -78,5 +96,6 @@ public abstract class AbstractPersistable implements Persistable {
   public void fromMap(Map<String, Object> properties) {
     setId((String) properties.get(ID_KEY));
     setVersion((int) properties.get(VERSION_KEY));
+    setModified((Date) properties.get(MODIFIED_KEY));
   }
 }

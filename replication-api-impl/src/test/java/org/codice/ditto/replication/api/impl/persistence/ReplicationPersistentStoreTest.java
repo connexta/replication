@@ -14,6 +14,8 @@
 package org.codice.ditto.replication.api.impl.persistence;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -41,9 +43,9 @@ import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.AbstractPersistable;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 public class ReplicationPersistentStoreTest {
@@ -73,6 +75,12 @@ public class ReplicationPersistentStoreTest {
   private static final String URL = "url";
 
   private static final String VERSION = "version";
+
+  private static final String MODIFIED = "modified";
+
+  private static final String DELETED = "deleted";
+
+  private static final String DELETE_DATA = "deleteData";
 
   private PersistentStore mockPersistentStore;
 
@@ -116,8 +124,8 @@ public class ReplicationPersistentStoreTest {
     map.put(RETRY_COUNT, num);
     map.put(BIDIRECTIONAL, "true");
     map.put(SUSPENDED, "false");
-    map.put("deleted", "false");
-    map.put("deleteData", "false");
+    map.put(DELETED, "false");
+    map.put(DELETE_DATA, "false");
     map.put(DESCRIPTION, DESCRIPTION + num);
     map.put(VERSION, ReplicatorConfigImpl.CURRENT_VERSION);
     return map;
@@ -157,7 +165,8 @@ public class ReplicationPersistentStoreTest {
 
     assertEquals(2, results.size());
     for (int i = 0; i < 2; i++) {
-      assertEquals(repSyncResults.get(i), ((ReplicatorConfigImpl) results.get(i)).toMap());
+      assertEqualExcludingModified(
+          ((ReplicatorConfigImpl) results.get(i)).toMap(), repSyncResults.get(i));
     }
   }
 
@@ -171,7 +180,8 @@ public class ReplicationPersistentStoreTest {
 
     assertEquals(2, results.size());
     for (int i = 0; i < 2; i++) {
-      Assert.assertEquals(siteResults.get(i), ((ReplicationSiteImpl) results.get(i)).toMap());
+      assertEqualExcludingModified(
+          ((ReplicationSiteImpl) results.get(i)).toMap(), siteResults.get(i));
     }
   }
 
@@ -192,7 +202,7 @@ public class ReplicationPersistentStoreTest {
 
     ReplicatorConfigImpl result = persistentStore.get(ReplicatorConfigImpl.class, "id0");
 
-    assertEquals(repSyncResults.get(0), result.toMap());
+    assertEqualExcludingModified(result.toMap(), repSyncResults.get(0));
   }
 
   @Test(expected = NotFoundException.class)
@@ -223,7 +233,7 @@ public class ReplicationPersistentStoreTest {
 
     ReplicatorConfigImpl result = persistentStore.get(ReplicatorConfigImpl.class, "id0");
 
-    assertEquals(repSyncResults.get(0), result.toMap());
+    assertEqualExcludingModified(result.toMap(), repSyncResults.get(0));
   }
 
   @Test
@@ -234,7 +244,7 @@ public class ReplicationPersistentStoreTest {
 
     ReplicationSiteImpl result = persistentStore.get(ReplicationSiteImpl.class, "id0");
 
-    assertEquals(siteResults.get(0), result.toMap());
+    assertEqualExcludingModified(result.toMap(), siteResults.get(0));
   }
 
   @Test(expected = ReplicationPersistenceException.class)
@@ -252,7 +262,12 @@ public class ReplicationPersistentStoreTest {
     repSync.fromMap(repSyncResults.get(0));
     persistentStore.save(repSync);
 
-    verify(mockPersistentStore).add(REPSYNC_TYPE, repSyncPersistentItems.get(0));
+    ArgumentCaptor<Map> captor = ArgumentCaptor.forClass(Map.class);
+    verify(mockPersistentStore).add(eq(REPSYNC_TYPE), captor.capture());
+    Map<String, Object> savedMap = PersistentItem.stripSuffixes(captor.getValue());
+    assertEqualExcludingModified(savedMap, repSyncResults.get(0));
+    // assert that the modified date was updated upon save
+    assertThat(savedMap.get(MODIFIED), notNullValue());
   }
 
   @Test(expected = ReplicationPersistenceException.class)
@@ -299,6 +314,13 @@ public class ReplicationPersistentStoreTest {
         .thenThrow(PersistenceException.class);
 
     persistentStore.delete(ReplicatorConfigImpl.class, "id");
+  }
+
+  private void assertEqualExcludingModified(
+      Map<String, Object> actual, Map<String, Object> expected) {
+    Map<String, Object> copy = new HashMap<>(actual);
+    copy.remove(MODIFIED);
+    assertThat(copy, is(expected));
   }
 
   private PersistentItem getPersistentItemFromMap(Map<String, Object> map) {
