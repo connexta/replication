@@ -77,7 +77,7 @@
         "statements": 7,
         "branches": 6,
         "lines": 7,
-        "functions": 2
+        "functions": 1
       }
     },
     "collectCoverage": true,
