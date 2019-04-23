@@ -3,14 +3,14 @@
 :status: published
 :parent: Replication
 :summary: Instructions for installing replication.
-:order: 02
+:order: 05
 
 == {title}
 
 Replication is not installed by default with a standard installation. There are several installation options available.
 
 === Installation When Replication _*Is*_ Included In Distribution
-==== Installing Via Feature
+==== Installing Via Admin Console
 An administrator
 can install the *replication* feature by following these steps:
 
@@ -23,13 +23,9 @@ can install the *replication* feature by following these steps:
 
 === Installation When Replication _*Not*_ Included In Distribution
 [NOTE]
-For this scenario first copy the `replication.policy` file into the `<ddf-home>/security/` directory and restart ths system.
+For this scenario first copy the `replication.policy` file into the `<ddf-home>/security/` directory and restart the system.
 
 
-
-==== Installing Via Kar Command
-
-On an already installed system run: `kar:install mvn:replication.distributions.features/replication/${project.version}/kar`
 
 ==== Installing Via Hot-Deploy Directory
 

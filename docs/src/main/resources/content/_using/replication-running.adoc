@@ -3,7 +3,7 @@
 :status: published
 :parent: Replication
 :summary: Instructions for running replication.
-:order: 04
+:order: 20
 
 == {title}
 
