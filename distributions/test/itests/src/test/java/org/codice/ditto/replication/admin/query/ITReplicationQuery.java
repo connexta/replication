@@ -45,7 +45,7 @@ public class ITReplicationQuery {
   @Interpolate
   private static String GRAPHQL_ENDPOINT = "https://localhost:{port.https}/admin/hub/graphql";
 
-  private static final String URL = "https://localhost:9999";
+  private static final String URL = "https://localhost:9999/services";
 
   // ----------------------------------- Site Tests -----------------------------------//
 
@@ -72,7 +72,7 @@ public class ITReplicationQuery {
     asAdmin()
         .body(
             String.format(
-                "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { host: { hostname: \\\"localhost\\\" port: 9999 }}){ id name address{ host{ hostname port } url }}}\"}",
+                "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { host: { hostname: \\\"localhost\\\" port: 9999 }}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
                 name))
         .when()
         .post(GRAPHQL_ENDPOINT)
@@ -115,7 +115,7 @@ public class ITReplicationQuery {
     asAdmin()
         .body(
             String.format(
-                "{\"query\":\"mutation{ createReplicationSite(name: 25, address: { url: \\\"%s\\\"}){ id name address{ host{ hostname port } url }}}\"}",
+                "{\"query\":\"mutation{ createReplicationSite(name: 25, address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
                 URL))
         .when()
         .post(GRAPHQL_ENDPOINT)
@@ -196,7 +196,7 @@ public class ITReplicationQuery {
 
   private static String makeCreateSiteQuery(String name, String url) {
     return String.format(
-        "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { url: \\\"%s\\\"}){ id name address{ host{ hostname port } url }}}\"}",
+        "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
         name, url);
   }
 
@@ -206,7 +206,7 @@ public class ITReplicationQuery {
 
   private static String makeUpdateSiteQuery(String id, String name, String url) {
     return String.format(
-        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}){ id name address{ host{ hostname port } url }}}\"}",
+        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
         id, name, url);
   }
 

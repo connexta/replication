@@ -37,7 +37,7 @@ public class SiteManagerImpl implements SiteManager {
       ReplicationSite site = new ReplicationSiteImpl();
       site.setId(LOCAL_SITE_ID);
       site.setName(SystemInfo.getSiteName());
-      site.setUrl(SystemBaseUrl.EXTERNAL.getBaseUrl());
+      site.setUrl(SystemBaseUrl.EXTERNAL.constructUrl(null, true));
       save(site);
     }
   }

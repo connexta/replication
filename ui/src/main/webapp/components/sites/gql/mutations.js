@@ -19,13 +19,22 @@ export const deleteSite = gql`
   }
 `
 export const addSite = gql`
-  mutation createReplicationSite($name: String!, $address: Address!) {
-    createReplicationSite(name: $name, address: $address) {
+  mutation createReplicationSite(
+    $name: String!
+    $address: Address!
+    $rootContext: String!
+  ) {
+    createReplicationSite(
+      name: $name
+      address: $address
+      rootContext: $rootContext
+    ) {
       id
       name
       address {
         url
       }
+      rootContext
     }
   }
 `

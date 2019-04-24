@@ -105,7 +105,7 @@ public class HybridStore extends AbstractCswStore implements ReplicationStore {
     super(context, cswSourceConfiguration, provider, clientFactoryFactory, encryptionService);
     this.restClientFactory =
         clientFactoryFactory.getSecureCxfClientFactory(
-            url.toString() + "/services/catalog", RESTService.class);
+            url.toString() + "/catalog", RESTService.class);
   }
 
   @Override
@@ -159,8 +159,7 @@ public class HybridStore extends AbstractCswStore implements ReplicationStore {
       throw new ResourceNotFoundException(
           "Error retrieving resource. Code " + response.getStatus());
     }
-    // TODO: There is a ECP bug that will cause this not to work unless the /services/catalog
-    // endpoint doesn't use the IDP
+
     String filename = null;
     if (response.getHeaderString(CONTENT_DISPOSITION) != null) {
       filename =
