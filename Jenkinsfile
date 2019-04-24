@@ -118,7 +118,7 @@ pipeline {
                                 if(params.RELEASE == true) {
                                     sh '''
                                         unset JAVA_TOOL_OPTIONS
-                                        mvn -B -Dtag=${env.RELEASE_TAG} -DreleaseVersion=${env.RELEASE_VERSION} -DdevelopmentVersion=${env.NEXT_VERSION} release:prepare
+                                        mvn -B -Dtag=$RELEASE_TAG -DreleaseVersion=$RELEASE_VERSION -DdevelopmentVersion=$NEXT_VERSION release:prepare
                                     '''
                                     env.RELEASE_COMMIT =  sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
                                 } else {
