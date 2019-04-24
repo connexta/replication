@@ -40,6 +40,8 @@ public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   private AddressField address;
 
+  private StringField rootContext;
+
   private ReplicationUtils replicationUtils;
 
   public UpdateReplicationSite(ReplicationUtils replicationUtils) {
@@ -49,11 +51,13 @@ public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
     id = new PidField("id");
     name = new StringField("name");
     address = new AddressField();
+    rootContext = new StringField("rootContext");
   }
 
   @Override
   public ReplicationSiteField performFunction() {
-    return replicationUtils.updateSite(id.getValue(), name.getValue(), address);
+    return replicationUtils.updateSite(
+        id.getValue(), name.getValue(), address, rootContext.getValue());
   }
 
   @Override
@@ -63,7 +67,7 @@ public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(id, name, address);
+    return ImmutableList.of(id, name, address, rootContext);
   }
 
   @Override

@@ -44,11 +44,20 @@ public class CreateReplicationSiteTest {
   @Before
   public void setUp() throws Exception {
     site = new CreateReplicationSite(utils);
-    when(utils.createSite(any(String.class), any(AddressField.class)))
+    when(utils.createSite(any(String.class), any(AddressField.class), any(String.class)))
         .thenReturn(new ReplicationSiteField());
     input = new HashMap<>();
     input.put("id", "myid");
     input.put("name", "myname");
+    input.put("rootContext", "services");
+
+    Map<String, Object> addressField = new HashMap<>();
+    Map<String, Object> hostMap = new HashMap<>();
+    hostMap.put("hostname", "localhost");
+    hostMap.put("port", 1234);
+    addressField.put("host", hostMap);
+
+    input.put("address", addressField);
   }
 
   @Test
