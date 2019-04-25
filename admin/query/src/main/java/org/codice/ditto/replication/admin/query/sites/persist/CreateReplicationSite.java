@@ -30,13 +30,16 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   public static final String FIELD_NAME = "createReplicationSite";
 
-  public static final String DESCRIPTION = "Creates a replication site.";
+  public static final String DESCRIPTION =
+      "Creates a replication site. If no rootContext is provided, it will default to 'services'";
 
   public static final ReplicationSiteField RETURN_TYPE = new ReplicationSiteField();
 
   private StringField name;
 
   private AddressField address;
+
+  private StringField rootContext;
 
   private ReplicationUtils replicationUtils;
 
@@ -46,11 +49,15 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
     this.replicationUtils = replicationUtils;
     name = new StringField("name");
     address = new AddressField();
+    rootContext = new StringField("rootContext");
+    name.isRequired(true);
+    address.isRequired(true);
+    rootContext.isRequired(true);
   }
 
   @Override
   public ReplicationSiteField performFunction() {
-    return replicationUtils.createSite(name.getValue(), address);
+    return replicationUtils.createSite(name.getValue(), address, rootContext.getValue());
   }
 
   @Override
@@ -60,7 +67,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(name, address);
+    return ImmutableList.of(name, address, rootContext);
   }
 
   @Override
