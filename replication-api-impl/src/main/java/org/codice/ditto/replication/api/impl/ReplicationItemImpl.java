@@ -19,11 +19,11 @@ import org.codice.ditto.replication.api.ReplicationItem;
 
 public class ReplicationItemImpl implements ReplicationItem {
 
-  private final String metacardId;
+  private final String metadataId;
 
   private final Date resourceModified;
 
-  private final Date metacardModified;
+  private final Date metadataModified;
 
   private final String source;
 
@@ -34,30 +34,30 @@ public class ReplicationItemImpl implements ReplicationItem {
   private int failureCount;
 
   public ReplicationItemImpl(
-      String metacardId,
+      String metadataId,
       Date resourceModified,
-      Date metacardModified,
+      Date metadataModified,
       String source,
       String destination,
       String configId) {
-    this(metacardId, resourceModified, metacardModified, source, destination, configId, 0);
+    this(metadataId, resourceModified, metadataModified, source, destination, configId, 0);
   }
 
   public ReplicationItemImpl(
-      String metacardId,
+      String metadataId,
       Date resourceModified,
-      Date metacardModified,
+      Date metadataModified,
       String source,
       String destination,
       String configId,
       int failureCount) {
-    this.metacardId = notBlank(metacardId);
+    this.metadataId = notBlank(metadataId);
     // TODO these dates don't matter for delete requests that fail. Need to make a way to
     // instantiate a failed ReplicationItem for failed deletes.
     //    this.resourceModified = notNull(resourceModified);
-    //    this.metacardModified = notNull(metacardModified);
+    //    this.metadataModified = notNull(metadataModified);
     this.resourceModified = resourceModified;
-    this.metacardModified = metacardModified;
+    this.metadataModified = metadataModified;
     this.source = notBlank(source);
     this.destination = notBlank(destination);
     this.configurationId = configId;
@@ -73,8 +73,8 @@ public class ReplicationItemImpl implements ReplicationItem {
   }
 
   @Override
-  public String getMetacardId() {
-    return metacardId;
+  public String getMetadataId() {
+    return metadataId;
   }
 
   @Override
@@ -83,8 +83,8 @@ public class ReplicationItemImpl implements ReplicationItem {
   }
 
   @Override
-  public Date getMetacardModified() {
-    return metacardModified;
+  public Date getMetadataModified() {
+    return metadataModified;
   }
 
   @Override
@@ -110,5 +110,12 @@ public class ReplicationItemImpl implements ReplicationItem {
   @Override
   public void incrementFailureCount() {
     failureCount++;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "ReplicationItemImpl{id=%s, resourceModified=%s, metadataModified=%s, sourceName=%s, destinationName=%s, replicatorConfigId=%s}",
+        metadataId, resourceModified, metadataModified, source, destination, configurationId);
   }
 }

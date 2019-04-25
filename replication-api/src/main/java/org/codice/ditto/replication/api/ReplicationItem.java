@@ -15,25 +15,50 @@ package org.codice.ditto.replication.api;
 
 import java.util.Date;
 
-/**
- * A ReplicationItem is a representation of a resource that replication has replicated or attempted
- * to replicate.
- */
+/** Represents a resource that replication has replicated or attempted to replicate. */
 public interface ReplicationItem {
 
-  String getMetacardId();
+  /**
+   * @return id for which {@link org.codice.ditto.replication.api.data.Metadata} this item
+   *     represents
+   */
+  String getMetadataId();
 
+  /** @return this last time the resource associated with this item modified */
   Date getResourceModified();
 
-  Date getMetacardModified();
+  /**
+   * @return the last time the {@link org.codice.ditto.replication.api.data.Metadata} associated
+   *     with this item was modified
+   */
+  Date getMetadataModified();
 
+  /**
+   * @return the name for the source {@link NodeAdapter} the metadata/resource was being replicated
+   *     from.
+   */
   String getSource();
 
+  /**
+   * @return the name for the destination {@link NodeAdapter} the metadata/resource was being
+   *     replicated to.
+   */
   String getDestination();
 
+  /**
+   * @return the id of the {@link org.codice.ditto.replication.api.data.ReplicatorConfig} this item
+   *     belongs to
+   */
   String getConfigurationId();
 
+  /**
+   * Represents the amount of times an operation between the source and destination {@link
+   * NodeAdapter}s failed.
+   *
+   * @return the failure count
+   */
   int getFailureCount();
 
+  /** Increments the failure count by 1. See {@link #getFailureCount()}. */
   void incrementFailureCount();
 }

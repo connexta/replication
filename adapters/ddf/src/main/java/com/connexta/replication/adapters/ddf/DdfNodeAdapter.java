@@ -249,8 +249,8 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     } catch (UnsupportedOperationException | UnsupportedQueryException e) {
       throw new AdapterException(
           String.format(
-              "Error checking for the existence of metacard %s on %s",
-              metacardId, getSystemName()));
+              "Error checking for the existence of metacard %s on %s", metacardId, getSystemName()),
+          e);
     }
   }
 
@@ -286,8 +286,6 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     ddf.catalog.operation.UpdateRequest ddfUpdate = new UpdateRequestImpl(ids, metacards);
 
-    // todo: This previous state metacards is not correct, but it was this way before. Does this
-    // have any effect?
     ddfUpdate
         .getProperties()
         .put(
@@ -310,7 +308,6 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
         new DeleteRequestImpl(
             deleteRequest.getMetadata().stream().map(Metadata::getId).toArray(String[]::new));
 
-    // todo: this was not correct before either. we place versioned metacards in here.
     ddfDeleteRequest
         .getProperties()
         .put(
@@ -546,7 +543,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
                 .stream()
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
-                .forEach(metadata::addLineage);
+                .forEach(metadata::addTag);
           }
 
           metacard.setAttribute(

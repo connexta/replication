@@ -209,11 +209,11 @@ public class SyncerTest {
     verify(replicationStatus, never()).incrementBytesTransferred(anyLong());
 
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetacardId(), is(metadataId));
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
     assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
-    assertThat(capturedItem.getMetacardModified(), is(modifiedDate));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(nullValue()));
   }
 
@@ -287,11 +287,11 @@ public class SyncerTest {
     verify(replicationStatus, never()).incrementBytesTransferred(anyLong());
 
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetacardId(), is(metadataId));
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
     assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
-    assertThat(capturedItem.getMetacardModified(), is(modifiedDate));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(nullValue()));
     assertThat(capturedItem.getFailureCount(), is(1));
   }
@@ -440,11 +440,11 @@ public class SyncerTest {
     verify(replicationStatus, never()).incrementBytesTransferred(anyLong());
 
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetacardId(), is(metadataId));
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
     assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
-    assertThat(capturedItem.getMetacardModified(), is(modifiedDate));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(nullValue()));
     assertThat(capturedItem.getFailureCount(), is(1));
   }
@@ -536,11 +536,11 @@ public class SyncerTest {
     verify(replicationItemManager, times(1)).saveItem(replicationItemCaptor.capture());
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
 
-    assertThat(capturedItem.getMetacardId(), is(metadataId));
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
     assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
-    assertThat(capturedItem.getMetacardModified(), is(modifiedDate));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(resourceModified));
   }
 
@@ -631,11 +631,11 @@ public class SyncerTest {
     verify(replicationItemManager, times(1)).saveItem(replicationItemCaptor.capture());
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
 
-    assertThat(capturedItem.getMetacardId(), is(metadataId));
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
     assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
-    assertThat(capturedItem.getMetacardModified(), is(modifiedDate));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(resourceModified));
     assertThat(capturedItem.getFailureCount(), is(1));
   }
@@ -720,11 +720,11 @@ public class SyncerTest {
     verify(replicationItemManager, times(1)).saveItem(replicationItemCaptor.capture());
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
 
-    assertThat(capturedItem.getMetacardId(), is(metadataId));
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
     assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
-    assertThat(capturedItem.getMetacardModified(), is(modifiedDate));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(resourceModified));
     assertThat(capturedItem.getFailureCount(), is(1));
   }
@@ -832,7 +832,7 @@ public class SyncerTest {
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
-    when(replicationItem.getMetacardModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
+    when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
 
@@ -883,11 +883,11 @@ public class SyncerTest {
     verify(replicationStatus, never()).incrementBytesTransferred(anyLong());
 
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetacardId(), is(metadataId));
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
     assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
-    assertThat(capturedItem.getMetacardModified(), is(modifiedDate));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(nullValue()));
   }
 
@@ -916,7 +916,7 @@ public class SyncerTest {
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
-    when(replicationItem.getMetacardModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
+    when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
 
@@ -995,7 +995,7 @@ public class SyncerTest {
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
-    when(replicationItem.getMetacardModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
+    when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItem.getResourceModified())
         .thenReturn(new Date(resourceModified.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
@@ -1052,11 +1052,11 @@ public class SyncerTest {
     ArgumentCaptor<ReplicationItem> repItem = ArgumentCaptor.forClass(ReplicationItem.class);
     verify(replicationItemManager, times(1)).saveItem(repItem.capture());
     ReplicationItem capturedItem = repItem.getValue();
-    assertThat(capturedItem.getMetacardId(), is(metadataId));
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
     assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
-    assertThat(capturedItem.getMetacardModified(), is(modifiedDate));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(resourceModified));
 
     verify(replicationStatus, times(1)).incrementCount();
@@ -1095,7 +1095,7 @@ public class SyncerTest {
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
-    when(replicationItem.getMetacardModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
+    when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItem.getResourceModified())
         .thenReturn(new Date(resourceModified.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
@@ -1317,7 +1317,7 @@ public class SyncerTest {
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
-    when(replicationItem.getMetacardModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
+    when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
 

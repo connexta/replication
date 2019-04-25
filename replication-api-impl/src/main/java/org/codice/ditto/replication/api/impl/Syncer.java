@@ -58,6 +58,16 @@ public class Syncer {
     this.historyManager = historyManager;
   }
 
+  /**
+   * Create a new job for replicating between the given source and destination {@link NodeAdapter}s.
+   * {@link Job#sync()} must be called to begin the syncing process.
+   *
+   * @param source the source {@link NodeAdapter}
+   * @param destination the destination {@link NodeAdapter}
+   * @param replicatorConfig a {@link ReplicatorConfig} defining the context of the sync
+   * @param replicationStatus a new {@link ReplicationStatus}
+   * @return a job ready for syncing
+   */
   public Job create(
       NodeAdapter source,
       NodeAdapter destination,
@@ -67,6 +77,8 @@ public class Syncer {
   }
 
   class Job {
+
+    private final Object lock = new Object();
 
     private final NodeAdapter source;
 
@@ -78,7 +90,7 @@ public class Syncer {
 
     private final ReplicatorConfig replicatorConfig;
 
-    private ReplicationStatus replicationStatus;
+    private final ReplicationStatus replicationStatus;
 
     private boolean canceled = false;
 
@@ -116,11 +128,14 @@ public class Syncer {
               failedItemIds,
               modifiedAfter);
 
+      // todo: these needed to be sorted ascending by medata modified
       Iterable<Metadata> changeSet = source.query(queryRequest).getMetadata();
 
       for (Metadata metadata : changeSet) {
-        if (canceled) {
-          break;
+        synchronized (lock) {
+          if (canceled) {
+            break;
+          }
         }
 
         Optional<ReplicationItem> replicationItem =
@@ -167,7 +182,9 @@ public class Syncer {
         replicationStatus.setLastMetadataModified(metadata.getMetadataModified());
       }
 
-      replicationStatus.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
+      synchronized (lock) {
+        replicationStatus.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
+      }
       return new SyncResponse(replicationStatus.getStatus());
     }
 
@@ -175,8 +192,10 @@ public class Syncer {
      * Cancel this sync job. Any metadata/resource currently being replicated will first be finished
      * and recorded.
      */
-    public void cancel() {
-      this.canceled = true;
+    void cancel() {
+      synchronized (lock) {
+        this.canceled = true;
+      }
     }
 
     private void doCreate(Metadata metadata) {
@@ -230,7 +249,7 @@ public class Syncer {
       addTagsAndLineage(metadata);
 
       boolean shouldUpdateMetadata =
-          metadata.getMetadataModified().after(replicationItem.getMetacardModified())
+          metadata.getMetadataModified().after(replicationItem.getMetadataModified())
               || replicationItem.getFailureCount() > 0;
 
       boolean shouldUpdateResource =
@@ -264,6 +283,7 @@ public class Syncer {
         updated =
             destination.updateRequest(new UpdateRequestImpl(Collections.singletonList(metadata)));
       } else {
+        // todo remove when change set is sorted ascending by last metadata modified
         LOGGER.debug(
             "Skipping metadata {} update from source {} to destination {}",
             metadata.getId(),

@@ -59,10 +59,11 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public Optional<ReplicationItem> getItem(String id, String source, String destination) {
+  public Optional<ReplicationItem> getItem(String metadataId, String source, String destination) {
     String cqlFilter =
         String.format(
-            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'", id, source, destination);
+            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
+            metadataId, source, destination);
     List<Map<String, Object>> matchingPersistentItems;
 
     try {
@@ -70,7 +71,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
     } catch (PersistenceException e) {
       LOGGER.debug(
           "failed to retrieve item with id: {}, source: {}, and destination: {}",
-          id,
+          metadataId,
           source,
           destination);
       return Optional.empty();
@@ -79,14 +80,14 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
     if (matchingPersistentItems == null || matchingPersistentItems.isEmpty()) {
       LOGGER.debug(
           "couldn't find persisted item with id: {}, source: {}, and destination: {}. This is expected during initial replication.",
-          id,
+          metadataId,
           source,
           destination);
       return Optional.empty();
     } else if (matchingPersistentItems.size() > 1) {
       throw new IllegalStateException(
           "Found multiple persistent items with id: "
-              + id
+              + metadataId
               + ", source: "
               + source
               + ", and destination: "
@@ -135,23 +136,25 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
     try {
       persistentStore.add(PERSISTENCE_TYPE, replicationToPersistentItem(replicationItem));
     } catch (PersistenceException e) {
-      LOGGER.error("error persisting item");
+      LOGGER.debug("Error persisting replication item {}", replicationItem.toString(), e);
     }
   }
 
   @Override
-  public void deleteItem(String id, String source, String destination) {
+  public void deleteItem(String metadataId, String source, String destination) {
     String cqlFilter =
         String.format(
-            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'", id, source, destination);
+            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
+            metadataId, source, destination);
     try {
       persistentStore.delete(PERSISTENCE_TYPE, cqlFilter);
     } catch (PersistenceException e) {
-      LOGGER.error(
-          "error deleting persisted item with id: {}, source: {}, and destination: {}",
-          id,
+      LOGGER.debug(
+          "Error deleting persisted item with id: {}, source: {}, and destination: {}",
+          metadataId,
           source,
-          destination);
+          destination,
+          e);
     }
   }
 
@@ -169,7 +172,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
           persistentStore.get(PERSISTENCE_TYPE, cqlFilter, DEFAULT_START_INDEX, 50);
       for (Map<String, Object> failItem : failList) {
         ReplicationItem item = mapToReplicationItem(failItem);
-        failureList.add(item.getMetacardId());
+        failureList.add(item.getMetadataId());
       }
     } catch (PersistenceException e) {
       LOGGER.error(
@@ -197,9 +200,9 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   private PersistentItem replicationToPersistentItem(ReplicationItem replicationItem) {
     PersistentItem persistentItem = new PersistentItem();
-    persistentItem.addIdProperty(replicationItem.getMetacardId());
+    persistentItem.addIdProperty(replicationItem.getMetadataId());
     persistentItem.addProperty(RESOURCE_MODIFIED_KEY, replicationItem.getResourceModified());
-    persistentItem.addProperty(METACARD_MODIFIED_KEY, replicationItem.getMetacardModified());
+    persistentItem.addProperty(METACARD_MODIFIED_KEY, replicationItem.getMetadataModified());
     persistentItem.addProperty(FAILURE_COUNT_KEY, replicationItem.getFailureCount());
     persistentItem.addProperty(SOURCE_NAME_KEY, replicationItem.getSource());
     persistentItem.addProperty(DESTINATION_NAME_KEY, replicationItem.getDestination());
