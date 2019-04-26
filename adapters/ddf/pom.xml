@@ -338,6 +338,7 @@
                 <rule>
                   <element>BUNDLE</element>
                   <limits>
+                    <!-- todo: tests will be written for this when the CSW store is switched for the client -->
                     <limit implementation="org.codice.jacoco.LenientLimit">
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>

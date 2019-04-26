@@ -53,7 +53,8 @@ public class Syncer {
 
   private final ReplicatorHistoryManager historyManager;
 
-  Syncer(ReplicationItemManager replicationItemManager, ReplicatorHistoryManager historyManager) {
+  public Syncer(
+      ReplicationItemManager replicationItemManager, ReplicatorHistoryManager historyManager) {
     this.replicationItemManager = replicationItemManager;
     this.historyManager = historyManager;
   }
@@ -369,7 +370,7 @@ public class Syncer {
       }
 
       if (status.getLastMetadataModified() != null) {
-        return new Date(status.getLastMetadataModified().getTime());
+        return status.getLastMetadataModified();
       } else {
         LOGGER.trace("no previous successful run for config {} found.", replicatorConfig.getId());
         return null;

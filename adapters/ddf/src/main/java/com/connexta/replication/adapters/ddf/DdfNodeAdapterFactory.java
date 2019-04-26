@@ -90,7 +90,8 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
   }
 
   @Override
-  public NodeAdapter create(URL url) {String baseUrl = url.toString();
+  public NodeAdapter create(URL url) {
+    String baseUrl = url.toString();
     if (StringUtils.isEmpty(url.getPath())) {
       baseUrl = baseUrl + "/services";
     }

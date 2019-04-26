@@ -301,6 +301,11 @@ public class ReplicatorImpl implements Replicator {
     return store;
   }
 
+  @VisibleForTesting
+  public void setPendingSyncRequestsQueue(BlockingQueue blockingQueue) {
+    this.pendingSyncRequests = blockingQueue;
+  }
+
   private void closeQuietly(Closeable c) {
     try {
       if (c != null) {

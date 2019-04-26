@@ -16,38 +16,41 @@ package org.codice.ditto.replication.api.impl.data;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.jparams.verifier.tostring.NameStyle;
+import com.jparams.verifier.tostring.ToStringVerifier;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import org.codice.ditto.replication.api.Status;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ReplicationStatusImplTest {
 
-  public static final String REPLICATOR_ID = "replicator-id";
+  private static final String REPLICATOR_ID = "replicator-id";
 
-  public static final String START_TIME = "start-time";
+  private static final String START_TIME = "start-time";
 
-  public static final String LAST_SUCCESS = "last-success";
+  private static final String LAST_SUCCESS = "last-success";
 
-  public static final String LAST_RUN = "last-run";
+  private static final String LAST_RUN = "last-run";
 
-  public static final String DURATION = "duration";
+  private static final String DURATION = "duration";
 
-  public static final String STATUS = "status";
+  private static final String STATUS = "status";
 
-  public static final String PUSH_COUNT = "push-count";
+  private static final String PUSH_COUNT = "push-count";
 
-  public static final String PULL_COUNT = "pull-count";
+  private static final String PULL_COUNT = "pull-count";
 
-  public static final String PUSH_FAIL_COUNT = "push-fail-count";
+  private static final String PUSH_FAIL_COUNT = "push-fail-count";
 
-  public static final String PULL_FAIL_COUNT = "pull-fail-count";
+  private static final String PULL_FAIL_COUNT = "pull-fail-count";
 
-  public static final String PUSH_BYTES = "push-bytes";
+  private static final String PUSH_BYTES = "push-bytes";
 
-  public static final String PULL_BYTES = "pull-bytes";
+  private static final String PULL_BYTES = "pull-bytes";
 
   private ReplicationStatusImpl status;
 
@@ -74,22 +77,9 @@ public class ReplicationStatusImplTest {
 
   @Test
   public void testToString() {
-    assertThat(
-        status.toString(),
-        is(
-            String.format(
-                "ReplicationStatus{id='%s', replicatorId='%s', startTime=%s, duration=%d, status=%s, pushCount=%d, pullCount=%d, pushFailCount=%d, pullFailCount=%d, pushBytes=%d, pullBytes=%d}",
-                status.getId(),
-                status.getReplicatorId(),
-                status.getStartTime(),
-                status.getDuration(),
-                status.getStatus(),
-                status.getPushCount(),
-                status.getPullCount(),
-                status.getPushFailCount(),
-                status.getPullFailCount(),
-                status.getPushBytes(),
-                status.getPullBytes())));
+    ToStringVerifier.forClass(ReplicationStatusImpl.class)
+        .withClassName(NameStyle.SIMPLE_NAME)
+        .verify();
   }
 
   @Test
@@ -241,6 +231,24 @@ public class ReplicationStatusImplTest {
     assertThat(base.getStatus(), is(Status.values()[2]));
     assertThat(base.getStartTime(), is(new Date(1)));
     assertThat(base.getLastSuccess(), is(new Date(2)));
+  }
+
+  @Test
+  public void testNoLastMetadataModifiedReturnsLastSuccess() {
+    final Date lastSuccess = new Date(5);
+    status.setLastSuccess(lastSuccess);
+    assertThat(status.getLastMetadataModified(), is(lastSuccess));
+  }
+
+  @Test
+  public void testLastMetadataModifiedPresent() {
+    Random r = new Random();
+    final Date lastSuccess = new Date(r.nextInt());
+    final Date lastMetadataModified = new Date(r.nextInt());
+    status.setLastSuccess(lastSuccess);
+    status.setLastMetadataModified(lastMetadataModified);
+
+    assertThat(status.getLastMetadataModified(), is(lastMetadataModified));
   }
 
   private ReplicationStatusImpl loadStatus(ReplicationStatusImpl status, int num) {

@@ -21,7 +21,7 @@
     <feature name="replication" version="${project.version}"
              description="Provides capabilities and console commands for replicating metadata and resources between DDF catalogs">
         <configfile finalname="${ddf.etc}/definitions/replication-attributes-injector.json">
-            mvn:replication-adapters/ddf/${project.version}/json/injection
+          mvn:replication-adapters/ddf/${project.version}/json/injection
         </configfile>
         <feature>admin-query-graphql</feature>
         <bundle>mvn:replication/replication-api/${project.version}</bundle>

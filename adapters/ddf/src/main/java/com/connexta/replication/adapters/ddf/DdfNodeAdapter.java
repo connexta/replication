@@ -26,9 +26,15 @@ import ddf.catalog.content.data.ContentItem;
 import ddf.catalog.content.data.impl.ContentItemImpl;
 import ddf.catalog.core.versioning.MetacardVersion;
 import ddf.catalog.data.Attribute;
+import ddf.catalog.data.AttributeDescriptor;
 import ddf.catalog.data.Metacard;
+import ddf.catalog.data.MetacardType;
 import ddf.catalog.data.Result;
+import ddf.catalog.data.impl.AttributeDescriptorImpl;
 import ddf.catalog.data.impl.AttributeImpl;
+import ddf.catalog.data.impl.BasicTypes;
+import ddf.catalog.data.impl.MetacardImpl;
+import ddf.catalog.data.impl.MetacardTypeImpl;
 import ddf.catalog.data.types.Core;
 import ddf.catalog.filter.impl.SortByImpl;
 import ddf.catalog.operation.CreateResponse;
@@ -61,11 +67,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.shiro.SecurityUtils;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
@@ -460,6 +469,16 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
     } else {
       metacard.setAttribute(new AttributeImpl(Replication.ORIGINS, (List) metadata.getLineage()));
     }
+
+    Attribute tags = metacard.getAttribute(Core.METACARD_TAGS);
+    if (tags != null) {
+      Set<Serializable> oldTags = new HashSet<>(tags.getValues());
+      oldTags.addAll(metadata.getTags());
+      List<Serializable> newTags = new ArrayList<>(oldTags);
+      metacard.setAttribute(new AttributeImpl(Core.METACARD_TAGS, newTags));
+    } else {
+      metacard.setAttribute(new AttributeImpl(Core.METACARD_TAGS, (List) metadata.getTags()));
+    }
   }
 
   private boolean hasProcessingErrors(Response response) {
@@ -494,7 +513,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
         @Override
         public Metadata next() {
-          Metacard metacard = resultIterator.next().getMetacard();
+          Metacard metacard = enhanceMetacardType(resultIterator.next().getMetacard());
 
           // Do not support transferring derived resources at this point so remove the derived
           // uri/urls
@@ -554,6 +573,23 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
           return metadata;
         }
       };
+    }
+
+    private Metacard enhanceMetacardType(@NotNull Metacard metacard) {
+      Set<AttributeDescriptor> descriptors = new HashSet<>();
+      descriptors.add(
+          new AttributeDescriptorImpl(
+              Replication.ORIGINS,
+              true /* indexed */,
+              true /* stored */,
+              false /* tokenized */,
+              true /* multivalued */,
+              BasicTypes.STRING_TYPE));
+      descriptors.addAll(metacard.getMetacardType().getAttributeDescriptors());
+
+      MetacardType metacardType =
+          new MetacardTypeImpl(metacard.getMetacardType().getName(), descriptors);
+      return new MetacardImpl(metacard, metacardType);
     }
   }
 }
