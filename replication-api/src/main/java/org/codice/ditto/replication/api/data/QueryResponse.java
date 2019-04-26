@@ -7,6 +7,9 @@ public interface QueryResponse {
    * org.codice.ditto.replication.api.NodeAdapter}, which translates a node's specific metadata
    * format into {@link Metadata}.
    *
+   * <p>The returned {@link Metadata} must be sorted in ascending order according to the {@link
+   * Metadata#getMetadataModified()} field.
+   *
    * <p>Considerations of paging when iterating should be taken into account in order to avoid
    * memory issues.
    *

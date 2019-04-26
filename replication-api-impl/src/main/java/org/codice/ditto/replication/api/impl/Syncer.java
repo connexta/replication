@@ -129,7 +129,6 @@ public class Syncer {
               failedItemIds,
               modifiedAfter);
 
-      // todo: these needed to be sorted ascending by medata modified
       Iterable<Metadata> changeSet = source.query(queryRequest).getMetadata();
 
       for (Metadata metadata : changeSet) {
@@ -282,7 +281,6 @@ public class Syncer {
         updated =
             destination.updateRequest(new UpdateRequestImpl(Collections.singletonList(metadata)));
       } else {
-        // todo remove when change set is sorted ascending by last metadata modified
         LOGGER.debug(
             "Skipping metadata {} update from source {} to destination {}",
             metadata.getId(),
@@ -340,7 +338,6 @@ public class Syncer {
     }
 
     private void addTagsAndLineage(Metadata metadata) {
-      // todo: Will this add duplicate lineage?
       metadata.addLineage(sourceName);
       metadata.addTag(Replication.REPLICATED_TAG);
     }
