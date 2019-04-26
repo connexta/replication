@@ -165,18 +165,16 @@ public class Syncer {
                 Status.CONNECTION_LOST);
             replicationStatus.setStatus(Status.CONNECTION_LOST);
             return new SyncResponse(replicationStatus.getStatus());
+          } else if (replicationItem.isPresent()) {
+            ReplicationItem item = replicationItem.get();
+            item.incrementFailureCount();
+            replicationItemManager.saveItem(item);
+            replicationStatus.incrementFailure();
           } else {
-            if (replicationItem.isPresent()) {
-              ReplicationItem item = replicationItem.get();
-              item.incrementFailureCount();
-              replicationItemManager.saveItem(item);
-              replicationStatus.incrementFailure();
-            } else {
-              ReplicationItem item = createReplicationItem(metadata);
-              item.incrementFailureCount();
-              replicationItemManager.saveItem(item);
-              replicationStatus.incrementFailure();
-            }
+            ReplicationItem item = createReplicationItem(metadata);
+            item.incrementFailureCount();
+            replicationItemManager.saveItem(item);
+            replicationStatus.incrementFailure();
           }
         }
 
