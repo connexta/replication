@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import org.codice.ditto.replication.api.data.QueryRequest;
 
+/** Simple implementation of {@link QueryRequest}. */
 public class QueryRequestImpl implements QueryRequest {
 
   private final String cql;

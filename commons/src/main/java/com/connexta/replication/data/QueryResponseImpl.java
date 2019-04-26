@@ -16,6 +16,7 @@ package com.connexta.replication.data;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.QueryResponse;
 
+/** Simple implementation of {@link QueryResponse}. */
 public class QueryResponseImpl implements QueryResponse {
 
   private final Iterable<Metadata> metadata;

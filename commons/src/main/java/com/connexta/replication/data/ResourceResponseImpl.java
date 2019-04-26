@@ -16,6 +16,7 @@ package com.connexta.replication.data;
 import org.codice.ditto.replication.api.data.Resource;
 import org.codice.ditto.replication.api.data.ResourceResponse;
 
+/** Simple implementation of {@link ResourceResponse}. */
 public class ResourceResponseImpl implements ResourceResponse {
 
   private final Resource resource;

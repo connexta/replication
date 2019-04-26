@@ -17,6 +17,7 @@ import java.util.List;
 import org.codice.ditto.replication.api.data.CreateRequest;
 import org.codice.ditto.replication.api.data.Metadata;
 
+/** Simple implementation of {@link CreateRequest}. */
 public class CreateRequestImpl implements CreateRequest {
 
   private final List<Metadata> metadata;

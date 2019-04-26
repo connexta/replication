@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.Resource;
 
+/** Simple implementation of {@link Resource}. */
 public class ResourceImpl implements Resource {
 
   private final String id;

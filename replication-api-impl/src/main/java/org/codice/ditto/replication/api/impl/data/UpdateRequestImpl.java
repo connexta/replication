@@ -17,6 +17,7 @@ import java.util.List;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.UpdateRequest;
 
+/** Simple implementation of ({@link UpdateRequest}. */
 public class UpdateRequestImpl implements UpdateRequest {
 
   private final List<Metadata> metadata;

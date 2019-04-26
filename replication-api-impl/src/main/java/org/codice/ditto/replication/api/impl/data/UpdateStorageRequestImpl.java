@@ -17,6 +17,7 @@ import java.util.List;
 import org.codice.ditto.replication.api.data.Resource;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 
+/** Simple implementation of {@link UpdateStorageRequest}. */
 public class UpdateStorageRequestImpl implements UpdateStorageRequest {
 
   private final List<Resource> updatedResources;

@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import org.codice.ditto.replication.api.data.Metadata;
 
+/** Simple implementation of {@link Metadata}. */
 public class MetadataImpl implements Metadata {
 
   private final Object metadata;
@@ -47,6 +48,12 @@ public class MetadataImpl implements Metadata {
 
   private boolean isDeleted = false;
 
+  /**
+   * @param metadata the raw metadata to wrap, cannot be null
+   * @param type the type of the metadata, cannot be null
+   * @param id id the of the metadata, cannot be null or empty
+   * @param metadataModified the last time the metadata was modified, cannot be null
+   */
   public MetadataImpl(Object metadata, Class type, String id, Date metadataModified) {
     this.metadata = notNull(metadata, "Argument metadata may not be null");
     this.type = notNull(type, "Argument type may not be null");

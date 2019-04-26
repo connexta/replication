@@ -17,6 +17,7 @@ import java.util.List;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.Resource;
 
+/** Simple implementation of {@link CreateStorageRequest}. */
 public class CreateStorageRequestImpl implements CreateStorageRequest {
 
   private final List<Resource> resources;

@@ -17,6 +17,7 @@ import java.util.List;
 import org.codice.ditto.replication.api.data.DeleteRequest;
 import org.codice.ditto.replication.api.data.Metadata;
 
+/** Simple implementation of {@link DeleteRequest}. */
 public class DeleteRequestImpl implements DeleteRequest {
 
   private final List<Metadata> metadata;

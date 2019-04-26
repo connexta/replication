@@ -16,6 +16,7 @@ package org.codice.ditto.replication.api.impl.data;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.ResourceRequest;
 
+/** Simple implementation of {@link ResourceRequest}. */
 public class ResourceRequestImpl implements ResourceRequest {
 
   private final Metadata metadata;
