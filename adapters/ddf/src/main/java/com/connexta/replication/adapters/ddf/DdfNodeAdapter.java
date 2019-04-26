@@ -269,7 +269,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     try {
       CreateResponse createResponse = super.create(new CreateRequestImpl(metacards));
-      return hasProcessingErrors(createResponse);
+      return !hasProcessingErrors(createResponse);
     } catch (IngestException e) {
       throw new AdapterException("Failed to create metacards to remote store", e);
     }
@@ -303,7 +303,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     try {
       UpdateResponse updateResponse = super.update(ddfUpdate);
-      return hasProcessingErrors(updateResponse);
+      return !hasProcessingErrors(updateResponse);
     } catch (IngestException e) {
       throw new AdapterException("Failed to update metacards to remote store", e);
     }
@@ -325,7 +325,7 @@ public class DdfNodeAdapter extends AbstractCswStore implements NodeAdapter {
 
     try {
       DeleteResponse deleteResponse = super.delete(ddfDeleteRequest);
-      return hasProcessingErrors(deleteResponse);
+      return !hasProcessingErrors(deleteResponse);
     } catch (IngestException e) {
       throw new AdapterException("Failed to delete metacards to remote store", e);
     }
