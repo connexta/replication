@@ -31,7 +31,9 @@ import org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerMana
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
 import org.codice.ditto.replication.api.NodeAdapterType;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * Factory for creating {@link DdfNodeAdapter}s for the {@link
@@ -64,8 +66,6 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
   private static final boolean REGISTER_FOR_EVENTS = true;
 
   private final DdfRestClientFactory ddfRestClientFactory;
-
-  private BundleContext bundleContext;
 
   private Converter provider;
 
@@ -114,7 +114,7 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
 
     DdfNodeAdapter ddfNodeAdapter =
         new DdfNodeAdapter(
-            bundleContext,
+            getBundleContext(),
             cswConfiguration,
             provider,
             clientFactoryFactory,
@@ -132,13 +132,14 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
     return ddfNodeAdapter;
   }
 
+  private BundleContext getBundleContext() {
+    Bundle bundle = FrameworkUtil.getBundle(DdfNodeAdapterFactory.class);
+    return bundle == null ? null : bundle.getBundleContext();
+  }
+
   @Override
   public NodeAdapterType getType() {
     return NodeAdapterType.DDF;
-  }
-
-  public void setBundleContext(BundleContext bundleContext) {
-    this.bundleContext = bundleContext;
   }
 
   public void setCswTransformConverter(Converter provider) {

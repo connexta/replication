@@ -55,7 +55,6 @@
     class="com.connexta.replication.adapters.ddf.DdfNodeAdapterFactory">
     <argument ref="ddfRestClientFactory"/>
 
-    <property name="bundleContext" ref="blueprintBundleContext"/>
     <property name="filterBuilder" ref="filterBuilder"/>
     <property name="filterAdapter" ref="filterAdapter"/>
     <property name="resourceReader" ref="resourceReader"/>
