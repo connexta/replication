@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.impl.mcard;
+package com.connexta.replication.adapters.ddf;
 
 import ddf.catalog.data.AttributeDescriptor;
 import ddf.catalog.data.MetacardType;
@@ -20,9 +20,9 @@ import ddf.catalog.data.impl.BasicTypes;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.codice.ditto.replication.api.mcard.Replication;
+import org.codice.ditto.replication.api.Replication;
 
-public class ReplicationAttributes implements Replication, MetacardType {
+public class ReplicationAttributes implements MetacardType {
   private static final Set<AttributeDescriptor> DESCRIPTORS;
 
   private static final String NAME = "replication";

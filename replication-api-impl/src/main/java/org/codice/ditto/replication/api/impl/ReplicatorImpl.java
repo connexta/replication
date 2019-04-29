@@ -16,7 +16,6 @@ package org.codice.ditto.replication.api.impl;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import com.google.common.annotations.VisibleForTesting;
-import ddf.catalog.filter.FilterBuilder;
 import ddf.security.Subject;
 import java.io.Closeable;
 import java.io.IOException;
@@ -37,11 +36,10 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
 import org.codice.ddf.security.common.Security;
+import org.codice.ditto.replication.api.NodeAdapter;
+import org.codice.ditto.replication.api.NodeAdapterType;
 import org.codice.ditto.replication.api.ReplicationException;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.Replicator;
-import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
@@ -56,17 +54,15 @@ public class ReplicatorImpl implements Replicator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicatorImpl.class);
 
-  private final ReplicatorStoreFactory replicatorStoreFactory;
+  private final NodeAdapters nodeAdapters;
 
   private final ReplicatorHistoryManager history;
-
-  private final ReplicationPersistentStore persistentStore;
 
   private final SiteManager siteManager;
 
   private final ExecutorService executor;
 
-  private final FilterBuilder builder;
+  private final Syncer syncer;
 
   /** Does not contain duplicates */
   private BlockingQueue<SyncRequest> pendingSyncRequests = new LinkedBlockingQueue<>();
@@ -74,41 +70,31 @@ public class ReplicatorImpl implements Replicator {
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
 
-  private final Map<String, SyncHelper> syncHelperMap = new ConcurrentHashMap<>();
+  private final Map<String, Syncer.Job> syncerJobMap = new ConcurrentHashMap<>();
 
   private final Security security;
 
   public ReplicatorImpl(
-      ReplicatorStoreFactory replicatorStoreFactory,
+      NodeAdapters nodeAdapters,
       ReplicatorHistoryManager history,
-      ReplicationPersistentStore persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
-      FilterBuilder builder) {
-    this(
-        replicatorStoreFactory,
-        history,
-        persistentStore,
-        siteManager,
-        executor,
-        builder,
-        Security.getInstance());
+      Syncer syncer) {
+    this(nodeAdapters, history, siteManager, executor, syncer, Security.getInstance());
   }
 
   public ReplicatorImpl(
-      ReplicatorStoreFactory replicatorStoreFactory,
+      NodeAdapters nodeAdapters,
       ReplicatorHistoryManager history,
-      ReplicationPersistentStore persistentStore,
       SiteManager siteManager,
       ExecutorService executor,
-      FilterBuilder builder,
+      Syncer syncer,
       Security security) {
-    this.replicatorStoreFactory = notNull(replicatorStoreFactory);
+    this.nodeAdapters = notNull(nodeAdapters);
     this.history = notNull(history);
-    this.persistentStore = notNull(persistentStore);
     this.executor = notNull(executor);
-    this.builder = notNull(builder);
     this.siteManager = notNull(siteManager);
+    this.syncer = syncer;
     this.security = security;
   }
 
@@ -119,7 +105,6 @@ public class ReplicatorImpl implements Replicator {
         () -> {
           while (true) {
             try {
-              // wait for something to be available in the queue and take it
               final SyncRequest syncRequest = pendingSyncRequests.take();
               LOGGER.trace(
                   "Just took sync request {} from the pendingSyncRequests queue. There are {} pending sync requests now in the queue.",
@@ -136,15 +121,14 @@ public class ReplicatorImpl implements Replicator {
                 executeSyncRequest(syncRequest);
               }
             } catch (InterruptedException e) {
-              LOGGER.trace("InterruptedException in executor. This is expected during shutdown.");
               Thread.currentThread().interrupt();
               break;
             }
           }
         });
 
-    LOGGER.trace(
-        "Successfully configured the single-thread scheduler to execute sync requests from the queue");
+    LOGGER.debug(
+        "Successfully configured the single-thread scheduler to execute replication requests.");
   }
 
   @VisibleForTesting
@@ -158,16 +142,16 @@ public class ReplicatorImpl implements Replicator {
           status.markStartTime();
 
           ReplicatorConfig config = syncRequest.getConfig();
-          ReplicationStore node1 = null;
-          ReplicationStore node2 = null;
+          NodeAdapter node1 = null;
+          NodeAdapter node2 = null;
 
           try {
             node1 = getStoreForId(config.getSource());
             node2 = getStoreForId(config.getDestination());
           } catch (Exception e) {
             final Status connectionUnavailable = Status.CONNECTION_UNAVAILABLE;
-            LOGGER.warn(
-                "Error getting store for source config {}. Setting status to {}",
+            LOGGER.debug(
+                "Error getting node adapters for replicator config {}. Setting status to {}",
                 config.getName(),
                 connectionUnavailable,
                 e);
@@ -178,8 +162,8 @@ public class ReplicatorImpl implements Replicator {
             return;
           }
 
-          try (ReplicationStore store1 = node1;
-              ReplicationStore store2 = node2) {
+          try (NodeAdapter store1 = node1;
+              NodeAdapter store2 = node2) {
             Status pullStatus = Status.SUCCESS;
             if (config.isBidirectional()) {
               status.setStatus(Status.PULL_IN_PROGRESS);
@@ -190,40 +174,31 @@ public class ReplicatorImpl implements Replicator {
               status.setStatus(Status.PUSH_IN_PROGRESS);
               sync(store1, store2, config, status);
             }
-
           } catch (Exception e) {
             final Status failureStatus = Status.FAILURE;
             LOGGER.warn(
-                "Error getting store for config {}. Setting status to {}",
+                "Unexpected error when running config {}. Setting status to {}",
                 config.getName(),
                 failureStatus,
                 e);
             status.setStatus(failureStatus);
           } finally {
             completeActiveSyncRequest(syncRequest, status);
-            syncHelperMap.remove(syncRequest.getConfig().getId());
+            syncerJobMap.remove(syncRequest.getConfig().getId());
           }
         });
   }
 
   private Status sync(
-      ReplicationStore source,
-      ReplicationStore destination,
+      NodeAdapter source,
+      NodeAdapter destination,
       ReplicatorConfig config,
       ReplicationStatus status) {
-    SyncHelper syncHelper = createSyncHelper(source, destination, config, status);
-    syncHelperMap.put(config.getId(), syncHelper);
-    SyncResponse response = syncHelper.sync();
-    syncHelperMap.remove(config.getId());
+    Syncer.Job job = syncer.create(source, destination, config, status);
+    syncerJobMap.put(config.getId(), job);
+    SyncResponse response = job.sync();
+    syncerJobMap.remove(config.getId());
     return response.getStatus();
-  }
-
-  SyncHelper createSyncHelper(
-      ReplicationStore source,
-      ReplicationStore destination,
-      ReplicatorConfig config,
-      ReplicationStatus status) {
-    return new SyncHelper(source, destination, config, status, persistentStore, history, builder);
   }
 
   private void completeActiveSyncRequest(SyncRequest syncRequest, ReplicationStatus status) {
@@ -277,6 +252,7 @@ public class ReplicatorImpl implements Replicator {
           "The pendingSyncRequests already contains sync request {}, or it is already running. Not adding again to pending requests.",
           syncRequest);
     } else {
+      syncRequest.getStatus().setStatus(Status.PENDING);
       pendingSyncRequests.put(syncRequest);
     }
   }
@@ -287,9 +263,9 @@ public class ReplicatorImpl implements Replicator {
       LOGGER.debug("Removed pending request with name: {}", syncRequest.getConfig().getName());
     }
 
-    SyncHelper helper = syncHelperMap.remove(syncRequest.getConfig().getId());
-    if (helper != null) {
-      helper.cancel();
+    Syncer.Job job = syncerJobMap.remove(syncRequest.getConfig().getId());
+    if (job != null) {
+      job.cancel();
     }
   }
 
@@ -311,11 +287,11 @@ public class ReplicatorImpl implements Replicator {
     return Collections.unmodifiableSet(new HashSet<>(activeSyncRequests));
   }
 
-  private ReplicationStore getStoreForId(String siteId) {
-    ReplicationStore store;
+  private NodeAdapter getStoreForId(String siteId) {
+    NodeAdapter store;
     ReplicationSite site = siteManager.get(siteId);
     try {
-      store = replicatorStoreFactory.createReplicatorStore(new URL(site.getUrl()));
+      store = nodeAdapters.factoryFor(NodeAdapterType.DDF).create(new URL(site.getUrl()));
     } catch (Exception e) {
       throw new ReplicationException("Error connecting to node at " + site.getUrl(), e);
     }
@@ -326,8 +302,8 @@ public class ReplicatorImpl implements Replicator {
   }
 
   @VisibleForTesting
-  void setPendingSyncRequestsQueue(BlockingQueue<SyncRequest> queue) {
-    pendingSyncRequests = queue;
+  public void setPendingSyncRequestsQueue(BlockingQueue blockingQueue) {
+    this.pendingSyncRequests = blockingQueue;
   }
 
   private void closeQuietly(Closeable c) {

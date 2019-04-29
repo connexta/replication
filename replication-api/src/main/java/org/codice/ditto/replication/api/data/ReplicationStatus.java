@@ -85,6 +85,23 @@ public interface ReplicationStatus extends Persistable {
   Date getLastSuccess();
 
   /**
+   * See {@link #getLastMetadataModified()}.
+   *
+   * @param lastMetadataModified the {@link Metadata}'s modified date
+   */
+  void setLastMetadataModified(Date lastMetadataModified);
+
+  /**
+   * A {@link Date} which represents the modified date of the last {@link Metadata} that was
+   * attempted to be replicated. If available, this should be used by the {@link
+   * QueryRequest#getModifiedAfter()}.
+   *
+   * @return the {@link Date}
+   */
+  @Nullable
+  Date getLastMetadataModified();
+
+  /**
    * Sets the Date of the last time the referenced configuration was successfully run
    *
    * @param lastSuccess the last time the referenced configuration was successfully run

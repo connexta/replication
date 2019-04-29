@@ -13,9 +13,11 @@
  */
 package org.codice.ditto.replication.api;
 
-import java.io.Closeable;
+public class Replication {
 
-public interface ReplicationStore extends CatalogResourceStore, Closeable {
+  public static final String REPLICATED_TAG = "replicated";
 
-  String getRemoteName();
+  public static final String ORIGINS = "replication.origins";
+
+  private Replication() {}
 }

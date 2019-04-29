@@ -18,28 +18,10 @@ import static org.apache.commons.lang3.Validate.notNull;
 import org.codice.ditto.replication.api.Status;
 
 public class SyncResponse {
-  private final long bytesTransferred;
-  private final long itemsReplicated;
-  private final long itemsFailed;
   private final Status status;
 
-  SyncResponse(long itemsReplicated, long itemsFailed, long bytesTransferred, Status status) {
-    this.itemsReplicated = notNull(itemsReplicated);
-    this.itemsFailed = notNull(itemsFailed);
-    this.bytesTransferred = notNull(bytesTransferred);
+  SyncResponse(Status status) {
     this.status = notNull(status);
-  }
-
-  public long getBytesTransferred() {
-    return bytesTransferred;
-  }
-
-  public long getItemsReplicated() {
-    return itemsReplicated;
-  }
-
-  public long getItemsFailed() {
-    return itemsFailed;
   }
 
   public Status getStatus() {

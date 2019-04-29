@@ -11,10 +11,16 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.mcard;
+package org.codice.ditto.replication.api;
 
-public interface Replication {
-  String REPLICATED_TAG = "replicated";
+/** General exception for {@link NodeAdapter} errors. */
+public class AdapterException extends RuntimeException {
 
-  String ORIGINS = "replication.origins";
+  public AdapterException(String msg) {
+    super(msg);
+  }
+
+  public AdapterException(String msg, Exception cause) {
+    super(msg, cause);
+  }
 }

@@ -43,7 +43,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ReplicatorRunnerTest {
 
-  ReplicatorRunner runner;
+  private ReplicatorRunner runner;
 
   @Mock Security security;
 
@@ -53,7 +53,7 @@ public class ReplicatorRunnerTest {
 
   @Mock ScheduledExecutorService scheduledExecutor;
 
-  Stream<ReplicatorConfig> configStream;
+  private Stream<ReplicatorConfig> configStream;
 
   @Mock ReplicatorConfig config;
 

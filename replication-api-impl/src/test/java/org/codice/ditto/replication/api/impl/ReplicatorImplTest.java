@@ -16,166 +16,293 @@ package org.codice.ditto.replication.api.impl;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import ddf.catalog.filter.FilterBuilder;
-import ddf.catalog.filter.proxy.builder.GeotoolsFilterBuilder;
 import ddf.security.Subject;
 import java.net.URL;
 import java.security.PrivilegedAction;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import org.codice.ddf.security.common.Security;
-import org.codice.ditto.replication.api.ReplicationPersistentStore;
-import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.ReplicatorStoreFactory;
+import org.codice.ditto.replication.api.NodeAdapter;
+import org.codice.ditto.replication.api.NodeAdapterFactory;
+import org.codice.ditto.replication.api.NodeAdapterType;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
-import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
-import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
-import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ReplicatorImplTest {
 
-  ReplicatorImpl replicator;
+  private static final String SOURCE_ID = "sourceId";
 
-  @Mock ReplicatorStoreFactory replicatorStoreFactory;
-  @Mock ReplicatorHistoryManager history;
-  @Mock ReplicationPersistentStore persistentStore;
-  @Mock SiteManager siteManager;
+  private static final String DESTINATION_ID = "destinationId";
+
+  private static final String SOURCE_URL = "https://source:1234";
+
+  private static final String DESTINATION_URL = "https://destination:1234";
+
+  private static final String REPLICATOR_CONFIG_ID = "replicatorConfigId";
+
+  private ReplicatorImpl replicator;
+
   @Mock ExecutorService executor;
+
+  @Mock NodeAdapters nodeAdapters;
+
+  @Mock ReplicatorHistoryManager replicatorHistoryManager;
+
+  @Mock SiteManager siteManager;
+
+  @Mock Syncer syncer;
+
   @Mock Security security;
 
-  @Mock ReplicationStore store1;
-  @Mock ReplicationStore store2;
-  @Mock SyncHelper helper;
-
-  ReplicatorConfigImpl config;
+  @Mock NodeAdapterFactory nodeAdapterFactory;
 
   @Before
   public void setUp() throws Exception {
-    FilterBuilder builder = new GeotoolsFilterBuilder();
-    replicator =
-        new ReplicatorImpl(
-            replicatorStoreFactory,
-            history,
-            persistentStore,
-            siteManager,
-            executor,
-            builder,
-            security) {
-          SyncHelper createSyncHelper(
-              ReplicationStore source,
-              ReplicationStore destination,
-              ReplicatorConfig config,
-              ReplicationStatus status) {
-            return helper;
-          }
-        };
     Subject subject = mock(Subject.class);
     Answer answer =
-        new Answer() {
-          @Override
-          public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-            ((Runnable) invocationOnMock.getArguments()[0]).run();
-            return null;
-          }
+        invocationOnMock -> {
+          ((Runnable) invocationOnMock.getArguments()[0]).run();
+          return null;
         };
     doAnswer(answer).when(subject).execute(any(Runnable.class));
     when(security.runAsAdmin(any(PrivilegedAction.class))).thenReturn(subject);
-    config = new ReplicatorConfigImpl();
-    config.setName("test");
-    config.setSource("srcId");
-    config.setDestination("destId");
-    config.setId("id");
-    config.setBidirectional(true);
-    config.setFilter("cql");
-    config.setVersion(0);
+
+    replicator =
+        new ReplicatorImpl(
+            nodeAdapters, replicatorHistoryManager, siteManager, executor, syncer, security);
   }
 
   @Test
-  public void executeSyncRequest() throws Exception {
-    ReplicationSite site1 = mock(ReplicationSite.class);
-    ReplicationSite site2 = mock(ReplicationSite.class);
-    when(site1.getUrl()).thenReturn("https://site1:1234");
-    when(site2.getUrl()).thenReturn("https://site2:1234");
-    when(siteManager.get("srcId")).thenReturn(site1);
-    when(siteManager.get("destId")).thenReturn(site2);
-    when(replicatorStoreFactory.createReplicatorStore(new URL("https://site1:1234")))
-        .thenReturn(store1);
-    when(replicatorStoreFactory.createReplicatorStore(new URL("https://site2:1234")))
-        .thenReturn(store2);
-    when(store1.isAvailable()).thenReturn(true);
-    when(store2.isAvailable()).thenReturn(true);
-    SyncResponse response = new SyncResponse(1L, 0L, 10L, Status.SUCCESS);
-    when(helper.sync()).thenReturn(response);
-    ReplicationStatusImpl status = new ReplicationStatusImpl();
-    status.setReplicatorId("test");
-    SyncRequest request = new SyncRequestImpl(config, status);
-    replicator.executeSyncRequest(request);
-    verify(history).save(status);
-    verify(siteManager).get("srcId");
-    verify(siteManager).get("destId");
-    verify(helper, times(2)).sync();
+  public void executeBiDirectionalSyncRequest() throws Exception {
+    // setup
+    ReplicationStatus replicationStatus = mock(ReplicationStatus.class);
+    ReplicatorConfig replicatorConfig = mockConfig();
+
+    SyncRequest syncRequest = mock(SyncRequest.class);
+    when(syncRequest.getStatus()).thenReturn(replicationStatus);
+    when(syncRequest.getConfig()).thenReturn(replicatorConfig);
+
+    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    ReplicationSite destinationSite = mock(ReplicationSite.class);
+    when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+
+    when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
+
+    NodeAdapter sourceNode = mock(NodeAdapter.class);
+    when(sourceNode.isAvailable()).thenReturn(true);
+    NodeAdapter destinationNode = mock(NodeAdapter.class);
+    when(destinationNode.isAvailable()).thenReturn(true);
+
+    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
+    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+
+    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+
+    SyncResponse syncResponse = mock(SyncResponse.class);
+    when(syncResponse.getStatus()).thenReturn(Status.SUCCESS);
+    Syncer.Job job = mock(Syncer.Job.class);
+    when(job.sync()).thenReturn(syncResponse);
+    when(syncer.create(sourceNode, destinationNode, replicatorConfig, replicationStatus))
+        .thenReturn(job);
+
+    when(syncer.create(destinationNode, sourceNode, replicatorConfig, replicationStatus))
+        .thenReturn(job);
+
+    // when
+    replicator.executeSyncRequest(syncRequest);
+
+    // then
+    verify(replicationStatus, times(1)).setStatus(Status.PULL_IN_PROGRESS);
+    verify(replicationStatus, times(1)).setStatus(Status.PUSH_IN_PROGRESS);
+    verify(replicatorHistoryManager, times(1)).save(replicationStatus);
+    verify(sourceNode, times(1)).close();
+    verify(destinationNode, times(1)).close();
+  }
+
+  @Test
+  public void testUnknownSyncError() throws Exception {
+    // setup
+    ReplicationStatus replicationStatus = mock(ReplicationStatus.class);
+    ReplicatorConfig replicatorConfig = mockConfig();
+
+    SyncRequest syncRequest = mock(SyncRequest.class);
+    when(syncRequest.getStatus()).thenReturn(replicationStatus);
+    when(syncRequest.getConfig()).thenReturn(replicatorConfig);
+
+    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    ReplicationSite destinationSite = mock(ReplicationSite.class);
+    when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+
+    when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
+
+    NodeAdapter sourceNode = mock(NodeAdapter.class);
+    when(sourceNode.isAvailable()).thenReturn(true);
+    NodeAdapter destinationNode = mock(NodeAdapter.class);
+    when(destinationNode.isAvailable()).thenReturn(true);
+
+    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
+    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+
+    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+
+    SyncResponse syncResponse = mock(SyncResponse.class);
+    when(syncResponse.getStatus()).thenReturn(Status.SUCCESS);
+    Syncer.Job job = mock(Syncer.Job.class);
+    when(job.sync()).thenThrow(Exception.class);
+    when(syncer.create(destinationNode, sourceNode, replicatorConfig, replicationStatus))
+        .thenReturn(job);
+
+    // when
+    replicator.executeSyncRequest(syncRequest);
+
+    // then
+    verify(replicationStatus, times(1)).setStatus(Status.FAILURE);
+    verify(replicatorHistoryManager, times(1)).save(replicationStatus);
+    verify(sourceNode, times(1)).close();
+    verify(destinationNode, times(1)).close();
+  }
+
+  @Test
+  public void testConnectionUnavailable() throws Exception {
+    // setup
+    ReplicationStatus replicationStatus = mock(ReplicationStatus.class);
+    ReplicatorConfig replicatorConfig = mockConfig();
+
+    SyncRequest syncRequest = mock(SyncRequest.class);
+    when(syncRequest.getStatus()).thenReturn(replicationStatus);
+    when(syncRequest.getConfig()).thenReturn(replicatorConfig);
+
+    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    ReplicationSite destinationSite = mock(ReplicationSite.class);
+    when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+
+    when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
+
+    NodeAdapter sourceNode = mock(NodeAdapter.class);
+    when(sourceNode.isAvailable()).thenReturn(true);
+    NodeAdapter destinationNode = mock(NodeAdapter.class);
+    when(destinationNode.isAvailable()).thenReturn(false);
+
+    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
+    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+
+    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+
+    SyncResponse syncResponse = mock(SyncResponse.class);
+    when(syncResponse.getStatus()).thenReturn(Status.SUCCESS);
+    Syncer.Job job = mock(Syncer.Job.class);
+    when(job.sync()).thenReturn(syncResponse);
+    when(syncer.create(sourceNode, destinationNode, replicatorConfig, replicationStatus))
+        .thenReturn(job);
+    when(syncer.create(destinationNode, sourceNode, replicatorConfig, replicationStatus))
+        .thenReturn(job);
+
+    // when
+    replicator.executeSyncRequest(syncRequest);
+
+    // then
+    verify(replicationStatus, times(1)).setStatus(Status.CONNECTION_UNAVAILABLE);
+    verify(replicatorHistoryManager, times(1)).save(replicationStatus);
+    verify(sourceNode, times(1)).close();
+    verify(destinationNode, never()).close();
   }
 
   @Test
   public void cancelPendingSyncRequest() throws Exception {
+    ReplicatorConfig replicatorConfig = mockConfig();
     BlockingQueue<SyncRequest> queue = mock(BlockingQueue.class);
     replicator.setPendingSyncRequestsQueue(queue);
-    ReplicationStatusImpl status = new ReplicationStatusImpl();
-    status.setReplicatorId("test");
-    SyncRequest request = new SyncRequestImpl(config, status);
-    replicator.submitSyncRequest(request);
-    verify(queue, times(1)).put(request);
-    replicator.cancelSyncRequest(request);
-    verify(queue, times(1)).remove(request);
+    ReplicationStatus replicationStatus = mock(ReplicationStatus.class);
+    when(replicationStatus.getReplicatorId()).thenReturn(REPLICATOR_CONFIG_ID);
+    SyncRequest syncRequest = mock(SyncRequest.class);
+    when(syncRequest.getStatus()).thenReturn(replicationStatus);
+    when(syncRequest.getConfig()).thenReturn(replicatorConfig);
+    replicator.submitSyncRequest(syncRequest);
+    verify(queue, times(1)).put(syncRequest);
+    replicator.cancelSyncRequest(syncRequest);
+    verify(queue, times(1)).remove(syncRequest);
   }
 
   @Test
   public void cancelActiveSyncRequest() throws Exception {
-    ReplicationSite site1 = mock(ReplicationSite.class);
-    ReplicationSite site2 = mock(ReplicationSite.class);
-    when(site1.getUrl()).thenReturn("https://site1:1234");
-    when(site2.getUrl()).thenReturn("https://site2:1234");
-    when(siteManager.get("srcId")).thenReturn(site1);
-    when(siteManager.get("destId")).thenReturn(site2);
-    when(replicatorStoreFactory.createReplicatorStore(new URL("https://site1:1234")))
-        .thenReturn(store1);
-    when(replicatorStoreFactory.createReplicatorStore(new URL("https://site2:1234")))
-        .thenReturn(store2);
-    when(store1.isAvailable()).thenReturn(true);
-    when(store2.isAvailable()).thenReturn(true);
-    SyncResponse response = new SyncResponse(1L, 0L, 10L, Status.CANCELED);
+    // setup
+    ReplicationStatus replicationStatus = mock(ReplicationStatus.class);
+    ReplicatorConfig replicatorConfig = mockConfig();
 
-    ReplicationStatusImpl status = new ReplicationStatusImpl();
-    status.setReplicatorId("test");
-    SyncRequest request = new SyncRequestImpl(config, status);
+    SyncRequest syncRequest = mock(SyncRequest.class);
+    when(syncRequest.getStatus()).thenReturn(replicationStatus);
+    when(syncRequest.getConfig()).thenReturn(replicatorConfig);
+
+    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    ReplicationSite destinationSite = mock(ReplicationSite.class);
+    when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+
+    when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
+
+    NodeAdapter sourceNode = mock(NodeAdapter.class);
+    when(sourceNode.isAvailable()).thenReturn(true);
+    NodeAdapter destinationNode = mock(NodeAdapter.class);
+    when(destinationNode.isAvailable()).thenReturn(true);
+
+    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
+    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+
+    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+
+    SyncResponse syncResponse = mock(SyncResponse.class);
+    when(syncResponse.getStatus()).thenReturn(Status.CANCELED);
+    Syncer.Job job = mock(Syncer.Job.class);
+
     Answer answer =
-        new Answer() {
-          @Override
-          public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-            replicator.cancelSyncRequest(request);
-            return response;
-          }
+        invocationOnMock -> {
+          replicator.cancelSyncRequest(syncRequest);
+          return syncResponse;
         };
-    when(helper.sync()).thenAnswer(answer);
-    replicator.executeSyncRequest(request);
-    verify(helper).cancel();
+
+    when(job.sync()).thenAnswer(answer);
+    when(syncer.create(sourceNode, destinationNode, replicatorConfig, replicationStatus))
+        .thenReturn(job);
+    when(syncer.create(destinationNode, sourceNode, replicatorConfig, replicationStatus))
+        .thenReturn(job);
+
+    // when
+    replicator.executeSyncRequest(syncRequest);
+
+    // then
+    verify(job).cancel();
+  }
+
+  private ReplicatorConfig mockConfig() {
+    ReplicatorConfig replicatorConfig = mock(ReplicatorConfig.class);
+    when(replicatorConfig.getSource()).thenReturn(SOURCE_ID);
+    when(replicatorConfig.getDestination()).thenReturn(DESTINATION_ID);
+    when(replicatorConfig.isBidirectional()).thenReturn(true);
+    when(replicatorConfig.getId()).thenReturn(REPLICATOR_CONFIG_ID);
+    return replicatorConfig;
   }
 }

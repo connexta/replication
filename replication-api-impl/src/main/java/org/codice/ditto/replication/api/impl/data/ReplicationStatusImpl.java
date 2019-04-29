@@ -23,29 +23,31 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
 
   public static final String PERSISTENCE_TYPE = "replication_status";
 
-  public static final String REPLICATOR_ID = "replicator-id";
+  private static final String REPLICATOR_ID = "replicator-id";
 
-  public static final String START_TIME = "start-time";
+  private static final String START_TIME = "start-time";
 
-  public static final String LAST_SUCCESS = "last-success";
+  private static final String LAST_SUCCESS = "last-success";
 
-  public static final String LAST_RUN = "last-run";
+  private static final String LAST_RUN = "last-run";
 
-  public static final String DURATION = "duration";
+  private static final String DURATION = "duration";
 
-  public static final String STATUS = "status";
+  private static final String STATUS = "status";
 
-  public static final String PUSH_COUNT = "push-count";
+  private static final String PUSH_COUNT = "push-count";
 
-  public static final String PULL_COUNT = "pull-count";
+  private static final String PULL_COUNT = "pull-count";
 
-  public static final String PUSH_FAIL_COUNT = "push-fail-count";
+  private static final String PUSH_FAIL_COUNT = "push-fail-count";
 
-  public static final String PULL_FAIL_COUNT = "pull-fail-count";
+  private static final String PULL_FAIL_COUNT = "pull-fail-count";
 
-  public static final String PUSH_BYTES = "push-bytes";
+  private static final String PUSH_BYTES = "push-bytes";
 
-  public static final String PULL_BYTES = "pull-bytes";
+  private static final String PULL_BYTES = "pull-bytes";
+
+  private static final String LAST_METADATA_MODIFIED = "last-metadata-modified";
 
   private String replicatorId;
 
@@ -71,8 +73,10 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
 
   private long pullBytes = 0;
 
+  @Nullable private Date lastMetadataModified;
+
   /** 1 - initial version. */
-  public static final int CURRENT_VERSION = 1;
+  private static final int CURRENT_VERSION = 1;
 
   public ReplicationStatusImpl() {
     super.setVersion(CURRENT_VERSION);
@@ -110,6 +114,24 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
 
   @Override
   public @Nullable Date getLastSuccess() {
+    return lastSuccess;
+  }
+
+  @Override
+  public void setLastMetadataModified(Date lastMetadataModified) {
+    this.lastMetadataModified = lastMetadataModified;
+  }
+
+  @Nullable
+  @Override
+  public Date getLastMetadataModified() {
+    if (lastMetadataModified != null) {
+      return lastMetadataModified;
+    }
+
+    // Preserve this behavior so that existing configurations will not attempt to re-sync all
+    // items. After the first run of an existing config with these changes, last metadata modified
+    // will always be used.
     return lastSuccess;
   }
 
@@ -215,7 +237,7 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
   @Override
   public String toString() {
     return String.format(
-        "ReplicationStatus{id='%s', replicatorId='%s', startTime=%s, duration=%d, status=%s, pushCount=%d, pullCount=%d, pushFailCount=%d, pullFailCount=%d, pushBytes=%d, pullBytes=%d}",
+        "ReplicationStatusImpl{id='%s', replicatorId='%s', startTime=%s, duration=%d, status=%s, pushCount=%d, pullCount=%d, pushFailCount=%d, pullFailCount=%d, pushBytes=%d, pullBytes=%d, lastMetadataModified=%s, lastSuccess=%s, lastRun=%s, version=%s}",
         getId(),
         replicatorId,
         startTime,
@@ -226,7 +248,11 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
         pushFailCount,
         pullFailCount,
         pushBytes,
-        pullBytes);
+        pullBytes,
+        lastMetadataModified,
+        lastSuccess,
+        lastRun,
+        getVersion());
   }
 
   @Override
@@ -271,6 +297,7 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
     result.put(PULL_FAIL_COUNT, getPullFailCount());
     result.put(PUSH_BYTES, getPushBytes());
     result.put(PULL_BYTES, getPullBytes());
+    result.put(LAST_METADATA_MODIFIED, getLastMetadataModified());
     return result;
   }
 
@@ -289,30 +316,35 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
     setPullFailCount((Long) properties.get(PULL_FAIL_COUNT));
     setPushBytes((Long) properties.get(PUSH_BYTES));
     setPullBytes((Long) properties.get(PULL_BYTES));
+    setLastMetadataModified((Date) properties.get(LAST_METADATA_MODIFIED));
   }
 
   @Override
-  public void addStats(ReplicationStatus status) {
-    setPushCount(getPushCount() + status.getPushCount());
-    setPushBytes(getPushBytes() + status.getPushBytes());
-    setPushFailCount(getPushFailCount() + status.getPushFailCount());
-    setPullCount(getPullCount() + status.getPullCount());
-    setPullBytes(getPullBytes() + status.getPullBytes());
-    setPullFailCount(getPullFailCount() + status.getPullFailCount());
-    if (getLastRun() == null || status.getStartTime().after(getLastRun())) {
-      setLastRun(status.getStartTime());
-      setStatus(status.getStatus());
+  public void addStats(ReplicationStatus newStatus) {
+    setPushCount(getPushCount() + newStatus.getPushCount());
+    setPushBytes(getPushBytes() + newStatus.getPushBytes());
+    setPushFailCount(getPushFailCount() + newStatus.getPushFailCount());
+    setPullCount(getPullCount() + newStatus.getPullCount());
+    setPullBytes(getPullBytes() + newStatus.getPullBytes());
+    setPullFailCount(getPullFailCount() + newStatus.getPullFailCount());
+    if (getLastRun() == null || newStatus.getStartTime().after(getLastRun())) {
+      setLastRun(newStatus.getStartTime());
+      setStatus(newStatus.getStatus());
     }
 
-    if (getStartTime().after(status.getStartTime())) {
-      setStartTime(status.getStartTime());
+    if (newStatus.getLastMetadataModified() != null) {
+      setLastMetadataModified(newStatus.getLastMetadataModified());
     }
 
-    setDuration(getDuration() + status.getDuration());
+    if (getStartTime().after(newStatus.getStartTime())) {
+      setStartTime(newStatus.getStartTime());
+    }
 
-    if (status.getStatus().equals(Status.SUCCESS)
-        && (getLastSuccess() == null || status.getStartTime().after(getLastSuccess()))) {
-      setLastSuccess(status.getStartTime());
+    setDuration(getDuration() + newStatus.getDuration());
+
+    if (newStatus.getStatus().equals(Status.SUCCESS)
+        && (getLastSuccess() == null || newStatus.getStartTime().after(getLastSuccess()))) {
+      setLastSuccess(newStatus.getStartTime());
     }
   }
 }

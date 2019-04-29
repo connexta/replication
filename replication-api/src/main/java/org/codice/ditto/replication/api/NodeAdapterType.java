@@ -13,24 +13,6 @@
  */
 package org.codice.ditto.replication.api;
 
-import java.util.List;
-import java.util.Optional;
-import org.codice.ddf.persistence.PersistenceException;
-
-public interface ReplicationPersistentStore {
-
-  Optional<ReplicationItem> getItem(String id, String source, String destination);
-
-  List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize)
-      throws PersistenceException;
-
-  void saveItem(ReplicationItem replicationItem);
-
-  void deleteAllItems() throws PersistenceException;
-
-  void deleteItem(String id, String source, String destination);
-
-  List<String> getFailureList(int maximumFailureCount, String source, String destination);
-
-  void deleteItemsForConfig(String configId) throws PersistenceException;
+public enum NodeAdapterType {
+  DDF
 }

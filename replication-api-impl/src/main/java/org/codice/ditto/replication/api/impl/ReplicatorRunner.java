@@ -59,7 +59,7 @@ public class ReplicatorRunner {
     this(scheduledExecutor, replicator, replicatorConfigManager, Security.getInstance());
   }
 
-  /*Visible for testing only*/
+  @VisibleForTesting
   ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,

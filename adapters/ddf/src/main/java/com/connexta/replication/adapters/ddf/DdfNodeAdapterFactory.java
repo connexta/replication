@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.impl;
+package com.connexta.replication.adapters.ddf;
 
 import static org.codice.ddf.spatial.ogc.csw.catalog.common.CswAxisOrder.LON_LAT;
 
@@ -28,11 +28,18 @@ import org.codice.ddf.spatial.ogc.csw.catalog.common.CswAxisOrder;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswSourceConfiguration;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerManager;
-import org.codice.ditto.replication.api.ReplicationStore;
-import org.codice.ditto.replication.api.ReplicatorStoreFactory;
+import org.codice.ditto.replication.api.NodeAdapter;
+import org.codice.ditto.replication.api.NodeAdapterFactory;
+import org.codice.ditto.replication.api.NodeAdapterType;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
-public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
+/**
+ * Factory for creating {@link DdfNodeAdapter}s for the {@link
+ * org.codice.ditto.replication.api.Replicator}.
+ */
+public class DdfNodeAdapterFactory implements NodeAdapterFactory {
 
   private static final String ID = "CSWFederatedSource";
 
@@ -58,7 +65,7 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   private static final boolean REGISTER_FOR_EVENTS = true;
 
-  private BundleContext bundleContext;
+  private final DdfRestClientFactory ddfRestClientFactory;
 
   private Converter provider;
 
@@ -78,13 +85,16 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   private ClientFactoryFactory clientFactoryFactory;
 
-  public ReplicationStore createReplicatorStore(URL url) {
+  public DdfNodeAdapterFactory(DdfRestClientFactory ddfRestClientFactory) {
+    this.ddfRestClientFactory = ddfRestClientFactory;
+  }
 
+  @Override
+  public NodeAdapter create(URL url) {
     String baseUrl = url.toString();
     if (StringUtils.isEmpty(url.getPath())) {
       baseUrl = baseUrl + "/services";
     }
-
     CswSourceConfiguration cswConfiguration = new CswSourceConfiguration(encryptionService);
     cswConfiguration.setCswUrl(baseUrl + "/csw");
     cswConfiguration.setConnectionTimeout(CONNECTION_TIMEOUT);
@@ -102,27 +112,34 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
     cswConfiguration.setUsePosList(USE_POS_LIST);
     cswConfiguration.setRegisterForEvents(REGISTER_FOR_EVENTS);
 
-    HybridStore hybridStore =
-        new HybridStore(
-            bundleContext,
+    DdfNodeAdapter ddfNodeAdapter =
+        new DdfNodeAdapter(
+            getBundleContext(),
             cswConfiguration,
             provider,
             clientFactoryFactory,
             encryptionService,
+            ddfRestClientFactory,
             url);
-    hybridStore.setFilterBuilder(filterBuilder);
-    hybridStore.setFilterAdapter(filterAdapter);
-    hybridStore.setResourceReader(resourceReader);
-    hybridStore.setSecurityManager(securityManager);
-    hybridStore.setSchemaTransformerManager(metacardTransformerManager);
-    hybridStore.setCswTransactionWriter(cswTransactionWriter);
-    hybridStore.init();
+    ddfNodeAdapter.setFilterBuilder(filterBuilder);
+    ddfNodeAdapter.setFilterAdapter(filterAdapter);
+    ddfNodeAdapter.setResourceReader(resourceReader);
+    ddfNodeAdapter.setSecurityManager(securityManager);
+    ddfNodeAdapter.setSchemaTransformerManager(metacardTransformerManager);
+    ddfNodeAdapter.setCswTransactionWriter(cswTransactionWriter);
+    ddfNodeAdapter.init();
 
-    return hybridStore;
+    return ddfNodeAdapter;
   }
 
-  public void setBundleContext(BundleContext bundleContext) {
-    this.bundleContext = bundleContext;
+  private BundleContext getBundleContext() {
+    Bundle bundle = FrameworkUtil.getBundle(DdfNodeAdapterFactory.class);
+    return bundle == null ? null : bundle.getBundleContext();
+  }
+
+  @Override
+  public NodeAdapterType getType() {
+    return NodeAdapterType.DDF;
   }
 
   public void setCswTransformConverter(Converter provider) {

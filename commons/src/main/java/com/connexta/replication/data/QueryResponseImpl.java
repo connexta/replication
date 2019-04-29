@@ -11,18 +11,22 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api;
+package com.connexta.replication.data;
 
-import java.net.URL;
+import org.codice.ditto.replication.api.data.Metadata;
+import org.codice.ditto.replication.api.data.QueryResponse;
 
-public interface ReplicatorStoreFactory {
+/** Simple implementation of {@link QueryResponse}. */
+public class QueryResponseImpl implements QueryResponse {
 
-  /**
-   * Creates a replicator store for the given url. Multiple requests to this method with the same
-   * url should return store objects that are independent of each other.
-   *
-   * @param url The url the store should connect to
-   * @return The created replicator store.
-   */
-  ReplicationStore createReplicatorStore(URL url);
+  private final Iterable<Metadata> metadata;
+
+  public QueryResponseImpl(Iterable<Metadata> metadata) {
+    this.metadata = metadata;
+  }
+
+  @Override
+  public Iterable<Metadata> getMetadata() {
+    return metadata;
+  }
 }
