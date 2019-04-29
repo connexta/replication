@@ -29,8 +29,12 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   private static final String URL_KEY = "url";
 
+  private static final String IS_DISABLED_LOCAL_KEY = "is-disabled-local";
+
   /** 1 - initial version. */
   public static final int CURRENT_VERSION = 1;
+
+  private boolean isDisabledLocal = false;
 
   private String name;
 
@@ -61,10 +65,21 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   }
 
   @Override
+  public void setIsDisabledLocal(boolean isDisabledLocal) {
+    this.isDisabledLocal = isDisabledLocal;
+  }
+
+  @Override
+  public boolean isDisabledLocal() {
+    return isDisabledLocal;
+  }
+
+  @Override
   public Map<String, Object> toMap() {
     Map<String, Object> result = super.toMap();
     result.put(NAME_KEY, getName());
     result.put(URL_KEY, getUrl());
+    result.put(IS_DISABLED_LOCAL_KEY, isDisabledLocal());
     return result;
   }
 
@@ -73,5 +88,6 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     super.fromMap(properties);
     setName((String) properties.get(NAME_KEY));
     setUrl((String) properties.get(URL_KEY));
+    setIsDisabledLocal((Boolean) properties.get(IS_DISABLED_LOCAL_KEY));
   }
 }

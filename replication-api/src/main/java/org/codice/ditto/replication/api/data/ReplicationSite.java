@@ -43,4 +43,24 @@ public interface ReplicationSite extends Persistable {
    * @param url the URL to give this site
    */
   void setUrl(String url);
+
+  /**
+   * See {@link #isDisabledLocal()}.
+   *
+   * @param isDisabledLocal whether or not the local process is responsible for running replications
+   *     this site is associated with.
+   */
+  void setIsDisabledLocal(boolean isDisabledLocal);
+
+  /**
+   * When {@link false}, the local process is responsible for running {@link
+   * org.codice.ditto.replication.api.mcard.ReplicationConfig}s associated with this site.
+   *
+   * <p>When {@link true}, the local process is no longer responsible for performing replication for
+   * any {@link org.codice.ditto.replication.api.mcard.ReplicationConfig}s associated with this
+   * site. This effectively disables running replication locally.
+   *
+   * @return {@code true} if replication should not occur locally, otherwise {@link false}.
+   */
+  boolean isDisabledLocal();
 }
