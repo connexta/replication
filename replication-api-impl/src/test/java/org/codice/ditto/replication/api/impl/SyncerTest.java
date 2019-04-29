@@ -1293,7 +1293,7 @@ public class SyncerTest {
   }
 
   @Test
-  public void testUpdateOnMetadataDeletedOnDestination() {
+  public void testUpdateOnMetadataDeletedOnDestinationDoesCreate() {
     // setup
     doThrow(NotFoundException.class)
         .when(replicatorHistoryManager)
@@ -1333,6 +1333,13 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
+    ArgumentCaptor<CreateRequest> createRequestCaptor =
+        ArgumentCaptor.forClass(CreateRequest.class);
+    when(destination.createRequest(createRequestCaptor.capture())).thenReturn(true);
+
+    ArgumentCaptor<ReplicationItem> replicationItemCaptor =
+        ArgumentCaptor.forClass(ReplicationItem.class);
+
     // doesn't matter. do to avoid an NPE when creating sync response
     when(replicationStatus.getStatus()).thenReturn(Status.SUCCESS);
 
@@ -1347,9 +1354,19 @@ public class SyncerTest {
     assertThat(queryRequest.getFailedItemIds(), is(Collections.emptyList()));
     assertThat(queryRequest.getModifiedAfter(), is(nullValue()));
 
-    verify(replicationItemManager, never()).saveItem(any(ReplicationItem.class));
-    verify(destination, never()).updateRequest(any(UpdateRequest.class));
-    verify(destination, never()).createRequest(any(CreateRequest.class));
+    CreateRequest createRequest = createRequestCaptor.getValue();
+    assertThat(createRequest.getMetadata().get(0), is(metadata));
+
+    verify(destination, times(1)).createRequest(any(CreateRequest.class));
+
+    verify(replicationItemManager, times(1)).saveItem(replicationItemCaptor.capture());
+    ReplicationItem capturedItem = replicationItemCaptor.getValue();
+    assertThat(capturedItem.getMetadataId(), is(metadataId));
+    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getSource(), is(SOURCE_NAME));
+    assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
+    assertThat(capturedItem.getFailureCount(), is(0));
   }
 
   @Test

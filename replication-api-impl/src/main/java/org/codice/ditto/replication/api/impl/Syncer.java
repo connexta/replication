@@ -146,7 +146,7 @@ public class Syncer {
             doDelete(metadata, replicationItem.get());
           } else if (destination.exists(metadata) && replicationItem.isPresent()) {
             doUpdate(metadata, replicationItem.get());
-          } else if (!replicationItem.isPresent()) {
+          } else {
             doCreate(metadata);
           }
         } catch (VirtualMachineError e) {
