@@ -47,7 +47,7 @@ public class ReplicationSiteField extends BaseObjectField {
 
   private IntegerField version;
 
-  private IsDisabledLocalField isDisabledLocal;
+  private IsRemoteManagedField isDisabledLocal;
 
   public ReplicationSiteField() {
     this(DEFAULT_FIELD_NAME);
@@ -61,7 +61,7 @@ public class ReplicationSiteField extends BaseObjectField {
     this.rootContext = new StringField("rootContext");
     this.modified = new DateField("modified");
     this.version = new IntegerField("version");
-    this.isDisabledLocal = new IsDisabledLocalField();
+    this.isDisabledLocal = new IsRemoteManagedField();
   }
 
   public ReplicationSiteField id(String id) {

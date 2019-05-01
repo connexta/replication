@@ -14,10 +14,12 @@
 package org.codice.ditto.replication.admin.query;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,6 +39,7 @@ import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
@@ -246,6 +249,44 @@ public class ReplicationUtilsTest {
     assertThat(field.itemsTransferred(), is(3));
     assertThat(field.dataTransferred(), is("15 MB"));
     verify(configManager).save(any(ReplicatorConfig.class));
+  }
+
+  @Test
+  public void testGetSiteById() {
+    final String siteId = "siteId";
+    ReplicationSite site = mock(ReplicationSite.class);
+    when(siteManager.get(siteId)).thenReturn(site);
+    ReplicationSite fetchedSite = utils.getSite(siteId);
+    assertThat(fetchedSite, is(site));
+  }
+
+  @Test
+  public void testGetSiteByIdNoExistingSite() {
+    when(siteManager.get(anyString())).thenThrow(NotFoundException.class);
+    ReplicationSite site = utils.getSite("id");
+    assertThat(site, is(nullValue()));
+  }
+
+  @Test
+  public void testIsNotUpdateSiteNotSiteByIdsName() {
+    final String siteId = "siteId";
+    final String siteName = "siteName";
+    ReplicationSite site = mock(ReplicationSite.class);
+    when(site.getName()).thenReturn(siteName);
+    when(siteManager.get(siteId)).thenReturn(site);
+    boolean isNotUpdateSiteName = utils.isNotUpdatedSiteName(siteId, "notSiteName");
+    assertThat(isNotUpdateSiteName, is(true));
+  }
+
+  @Test
+  public void testIsNotUpdateSiteIsSiteByIdsName() {
+    final String siteId = "siteId";
+    final String siteName = "sItEnAmE"; // for ignores case checking
+    ReplicationSite site = mock(ReplicationSite.class);
+    when(site.getName()).thenReturn(siteName);
+    when(siteManager.get(siteId)).thenReturn(site);
+    boolean isNotUpdateSiteName = utils.isNotUpdatedSiteName(siteId, "siteName");
+    assertThat(isNotUpdateSiteName, is(false));
   }
 
   @Test
@@ -468,18 +509,14 @@ public class ReplicationUtilsTest {
     site.setUrl("https://localhost:1234");
 
     when(siteManager.get(anyString())).thenReturn(site);
-    ReplicationSiteField field =
+    boolean result =
         utils.updateSite(
-            "id", "site", getAddress(new URL("https://localhost:1234")), "replication", false);
-    assertThat(field.id(), is("id"));
-    assertThat(field.name(), is("site"));
-    assertThat(field.address().url(), is("https://localhost:1234/replication"));
-    assertThat(field.address().host().hostname(), is("localhost"));
-    assertThat(field.address().host().port(), is(1234));
+            "id", "site", getAddress(new URL("https://localhost:1234")), "replication");
+    assertThat(result, is(true));
   }
 
   @Test // tests the ternary in addressFieldToUrlString
-  public void updateSiteAddressHostIsNull() {
+  public void updateSiteAddressHostIsNull() throws Exception {
     ReplicationSiteImpl site = new ReplicationSiteImpl();
     site.setId("id");
     site.setName("site");
@@ -488,12 +525,10 @@ public class ReplicationUtilsTest {
     when(siteManager.get(anyString())).thenReturn(site);
     AddressField address = new AddressField();
     address.url(site.getUrl());
-    ReplicationSiteField field = utils.updateSite("id", "site", address, null, false);
-    assertThat(field.id(), is("id"));
-    assertThat(field.name(), is("site"));
-    assertThat(field.address().url(), is("https://localhost:1234"));
-    assertThat(field.address().host().hostname(), is("localhost"));
-    assertThat(field.address().host().port(), is(1234));
+    boolean result =
+        utils.updateSite(
+            "id", "site", getAddress(new URL("https://localhost:1234")), "replication");
+    assertThat(result, is(true));
   }
 
   @Test

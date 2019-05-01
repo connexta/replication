@@ -124,9 +124,9 @@ public class ReplicatorRunner {
 
     try {
       for (ReplicatorConfig config : configsToSchedule) {
-        if (sourceOrDestinationDisabledLocal(config)) {
+        if (sourceOrDestinationIsRemotelyManaged(config)) {
           LOGGER.trace(
-              "One of config {}'s sites are disabled locally, not running the config",
+              "One of config {}'s sites are remotely managed, not running the config",
               config.getName());
           continue;
         }
@@ -138,10 +138,10 @@ public class ReplicatorRunner {
     }
   }
 
-  private boolean sourceOrDestinationDisabledLocal(ReplicatorConfig replicatorConfig) {
+  private boolean sourceOrDestinationIsRemotelyManaged(ReplicatorConfig replicatorConfig) {
     try {
-      return siteManager.get(replicatorConfig.getSource()).isDisabledLocal()
-          || siteManager.get(replicatorConfig.getDestination()).isDisabledLocal();
+      return siteManager.get(replicatorConfig.getSource()).isRemoteManaged()
+          || siteManager.get(replicatorConfig.getDestination()).isRemoteManaged();
     } catch (NotFoundException | ReplicationPersistenceException e) {
       LOGGER.debug(
           "Unable to determine if replication {} should be run based on its sites. This replication will not be run.",

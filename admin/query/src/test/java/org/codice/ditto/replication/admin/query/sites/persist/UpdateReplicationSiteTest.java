@@ -17,9 +17,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 import org.codice.ddf.admin.api.report.ErrorMessage;
 import org.codice.ddf.admin.api.report.FunctionReport;
+import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ddf.admin.common.report.message.DefaultMessages;
 import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
-import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,7 +52,7 @@ public class UpdateReplicationSiteTest {
 
   private static final String ADDRESS = "address";
 
-  private static final String IS_DISABLED_LOCAL = "isDisabledLocal";
+  private static final String IS_DISABLED_LOCAL = "isRemoteManaged";
 
   private static final String SITE_ID = "siteId";
 
@@ -99,30 +97,28 @@ public class UpdateReplicationSiteTest {
     when(replicationUtils.isDuplicateSiteName(SITE_NAME)).thenReturn(false);
     when(replicationUtils.isNotUpdatedSiteName(SITE_ID, SITE_NAME)).thenReturn(false);
 
-    ReplicationSiteField replicationSiteField = mock(ReplicationSiteField.class);
+    final boolean updateResult = true;
     when(replicationUtils.updateSite(
-            anyString(), anyString(), any(AddressField.class), anyString(), anyBoolean()))
-        .thenReturn(replicationSiteField);
+            anyString(), anyString(), any(AddressField.class), anyString()))
+        .thenReturn(updateResult);
 
     ArgumentCaptor<AddressField> addressFieldCaptor = ArgumentCaptor.forClass(AddressField.class);
     ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> contextCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Boolean> disabledLocalCaptor = ArgumentCaptor.forClass(Boolean.class);
     ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
 
     // when
-    FunctionReport<ReplicationSiteField> report = updateReplicationSite.execute(input, null);
+    FunctionReport<BooleanField> report = updateReplicationSite.execute(input, null);
 
     // then
     assertThat(report.getErrorMessages().size(), is(0));
-    assertThat(report.getResult(), is(replicationSiteField));
+    assertThat(report.getResult().getValue(), is(updateResult));
     verify(replicationUtils)
         .updateSite(
             idCaptor.capture(),
             nameCaptor.capture(),
             addressFieldCaptor.capture(),
-            contextCaptor.capture(),
-            disabledLocalCaptor.capture());
+            contextCaptor.capture());
 
     AddressField address = addressFieldCaptor.getValue();
     assertThat(address.host().hostname(), is(SITE_HOSTNAME));
@@ -130,7 +126,6 @@ public class UpdateReplicationSiteTest {
     assertThat(idCaptor.getValue(), is(SITE_ID));
     assertThat(nameCaptor.getValue(), is(SITE_NAME));
     assertThat(contextCaptor.getValue(), is(SITE_CONTEXT));
-    assertThat(disabledLocalCaptor.getValue(), is(SITE_IS_DISABLED_LOCAL));
   }
 
   @Test

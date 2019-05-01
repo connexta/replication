@@ -94,7 +94,7 @@ public class DeleteReplicationSiteTest {
   }
 
   @Test
-  public void testSiteInUseByReplication() {
+  public void testSourceSiteInUseByReplication() {
     // setup
     when(replicationUtils.siteIdExists(SITE_ID)).thenReturn(true);
 
@@ -103,6 +103,34 @@ public class DeleteReplicationSiteTest {
 
     ReplicationField replicationField = mock(ReplicationField.class);
     when(replicationField.source()).thenReturn(replicationSiteField);
+    ListField<ReplicationField> replicationFieldList = mock(ListField.class);
+    when(replicationFieldList.getList()).thenReturn(Collections.singletonList(replicationField));
+    when(replicationUtils.getReplications(true)).thenReturn(replicationFieldList);
+
+    // when
+    FunctionReport<BooleanField> report =
+        deleteReplicationSite.execute(input, ImmutableList.of(FUNCTION_PATH));
+
+    // then
+    assertThat(report.getErrorMessages().size(), is(1));
+    assertThat(report.getErrorMessages().get(0).getCode(), is(ReplicationMessages.SITE_IN_USE));
+    assertThat(report.getErrorMessages().get(0).getPath(), is(ImmutableList.of(FUNCTION_PATH)));
+  }
+
+  @Test
+  public void testDestinationSiteInUseByReplication() {
+    // setup
+    when(replicationUtils.siteIdExists(SITE_ID)).thenReturn(true);
+
+    ReplicationSiteField sourceSiteField = mock(ReplicationSiteField.class);
+    when(sourceSiteField.id()).thenReturn("someOtherID");
+
+    ReplicationSiteField destinationSiteField = mock(ReplicationSiteField.class);
+    when(destinationSiteField.id()).thenReturn(SITE_ID);
+
+    ReplicationField replicationField = mock(ReplicationField.class);
+    when(replicationField.source()).thenReturn(sourceSiteField);
+    when(replicationField.destination()).thenReturn(destinationSiteField);
     ListField<ReplicationField> replicationFieldList = mock(ListField.class);
     when(replicationFieldList.getList()).thenReturn(Collections.singletonList(replicationField));
     when(replicationUtils.getReplications(true)).thenReturn(replicationFieldList);

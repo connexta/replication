@@ -162,7 +162,7 @@ public class ReplicatorRunnerTest {
   }
 
   @Test
-  public void testConfigNotRunWhenConfigSourceIsDisabledLocal() throws Exception {
+  public void testConfigNotRunWhenConfigSourceIsRemoteManaged() throws Exception {
     ReplicationSite source = mockSite(SOURCE_ID, true);
     ReplicationSite destination = mockSite(DESTINATION_ID, false);
     when(siteManager.get(SOURCE_ID)).thenReturn(source);
@@ -181,7 +181,7 @@ public class ReplicatorRunnerTest {
   }
 
   @Test
-  public void testConfigNotRunWhenConfigDestinationIsDisabledLocal() throws Exception {
+  public void testConfigNotRunWhenConfigDestinationIsRemoteManaged() throws Exception {
     ReplicationSite source = mockSite(SOURCE_ID, false);
     ReplicationSite destination = mockSite(DESTINATION_ID, true);
     when(siteManager.get(SOURCE_ID)).thenReturn(source);
@@ -207,10 +207,10 @@ public class ReplicatorRunnerTest {
     verify(security).runWithSubjectOrElevate(any(Callable.class));
   }
 
-  private ReplicationSite mockSite(String id, boolean isDisabledLocal) {
+  private ReplicationSite mockSite(String id, boolean isRemoteManaged) {
     ReplicationSite site = mock(ReplicationSite.class);
     when(site.getId()).thenReturn(id);
-    when(site.isDisabledLocal()).thenReturn(isDisabledLocal);
+    when(site.isRemoteManaged()).thenReturn(isRemoteManaged);
     return site;
   }
 }

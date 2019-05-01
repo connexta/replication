@@ -29,12 +29,22 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   private static final String URL_KEY = "url";
 
-  private static final String IS_DISABLED_LOCAL_KEY = "is-disabled-local";
+  private static final String IS_REMOTE_MANAGED_KEY = "is-remote-managed";
 
-  /** 1 - initial version. */
-  public static final int CURRENT_VERSION = 1;
+  /**
+   * List of possible versions:
+   *
+   * <ul>
+   *   <li>1 - initial version.
+   *   <li>2 - Adds
+   *       <ul>
+   *         <li>is-remote-managed field of type boolean, defaults to false
+   *       </ul>
+   * </ul>
+   */
+  public static final int CURRENT_VERSION = 2;
 
-  private boolean isDisabledLocal = false;
+  private boolean isRemoteManaged = false;
 
   private String name;
 
@@ -65,13 +75,13 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   }
 
   @Override
-  public void setIsDisabledLocal(boolean isDisabledLocal) {
-    this.isDisabledLocal = isDisabledLocal;
+  public void setIsRemoteManaged(boolean isRemoteManaged) {
+    this.isRemoteManaged = isRemoteManaged;
   }
 
   @Override
-  public boolean isDisabledLocal() {
-    return isDisabledLocal;
+  public boolean isRemoteManaged() {
+    return isRemoteManaged;
   }
 
   @Override
@@ -79,7 +89,7 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     Map<String, Object> result = super.toMap();
     result.put(NAME_KEY, getName());
     result.put(URL_KEY, getUrl());
-    result.put(IS_DISABLED_LOCAL_KEY, isDisabledLocal());
+    result.put(IS_REMOTE_MANAGED_KEY, isRemoteManaged());
     return result;
   }
 
@@ -89,11 +99,11 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     setName((String) properties.get(NAME_KEY));
     setUrl((String) properties.get(URL_KEY));
 
-    Object isDisableLocal = properties.get(IS_DISABLED_LOCAL_KEY);
-    if (isDisableLocal != null) {
-      setIsDisabledLocal(Boolean.parseBoolean((String) isDisableLocal));
+    if (super.getVersion() == 1) {
+      setIsRemoteManaged(false);
+      super.setVersion(CURRENT_VERSION);
     } else {
-      setIsDisabledLocal(false);
+      setIsRemoteManaged(Boolean.parseBoolean((String) properties.get(IS_REMOTE_MANAGED_KEY)));
     }
   }
 }

@@ -67,10 +67,10 @@ public class ReplicationUtils {
 
   // mutator methods
   public ReplicationSiteField createSite(
-      String name, AddressField address, @Nullable String rootContext, boolean isDisableLocal) {
+      String name, AddressField address, @Nullable String rootContext, boolean isRemoteManaged) {
     String urlString = addressFieldToUrlString(address, rootContext);
     ReplicationSite newSite = siteManager.createSite(name, urlString);
-    newSite.setIsDisabledLocal(isDisableLocal);
+    newSite.setIsRemoteManaged(isRemoteManaged);
     siteManager.save(newSite);
 
     return getSiteFieldForSite(newSite);
@@ -80,6 +80,7 @@ public class ReplicationUtils {
     return siteManager.objects().map(ReplicationSite::getName).anyMatch(name::equalsIgnoreCase);
   }
 
+  @Nullable
   public ReplicationSite getSite(String id) {
     try {
       return siteManager.get(id);
@@ -89,7 +90,7 @@ public class ReplicationUtils {
   }
 
   public boolean isNotUpdatedSiteName(String id, String name) {
-    ReplicationSite site = this.getSite(id);
+    final ReplicationSite site = this.getSite(id);
     if (site != null) {
       return !site.getName().equalsIgnoreCase(name);
     }
@@ -101,21 +102,22 @@ public class ReplicationUtils {
     return siteManager.exists(id);
   }
 
-  public ReplicationSiteField updateSite(
-      String id,
-      String name,
-      AddressField address,
-      @Nullable String rootContext,
-      boolean isDisabledLocal) {
+  public boolean updateSite(
+      String id, String name, AddressField address, @Nullable String rootContext) {
     String urlString = addressFieldToUrlString(address, rootContext);
     ReplicationSite site = siteManager.get(id);
 
     setIfPresent(site::setName, name);
     setIfPresent(site::setUrl, urlString);
-    site.setIsDisabledLocal(isDisabledLocal);
-    siteManager.save(site);
 
-    return getSiteFieldForSite(siteManager.get(site.getId()));
+    try {
+      siteManager.save(site);
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.debug("Unable to saved updated site {} with id {}", site, id, e);
+      return false;
+    }
+
+    return true;
   }
 
   private String addressFieldToUrlString(AddressField address, @Nullable String rootContext) {
@@ -227,7 +229,7 @@ public class ReplicationUtils {
     return field;
   }
 
-  private @Nullable ReplicationSiteField getSiteFieldForSite(ReplicationSite site) {
+  public @Nullable ReplicationSiteField getSiteFieldForSite(ReplicationSite site) {
     if (site == null) {
       return null;
     }
@@ -250,7 +252,7 @@ public class ReplicationUtils {
     address.port(url.getPort());
     field.address(address);
     field.rootContext(StringUtils.isEmpty(url.getPath()) ? DEFAULT_CONTEXT : url.getPath());
-    field.isDisableLocal(site.isDisabledLocal());
+    field.isDisableLocal(site.isRemoteManaged());
     return field;
   }
 

@@ -15,14 +15,14 @@ package org.codice.ditto.replication.admin.query.sites.fields;
 
 import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 
-public class IsDisabledLocalField extends BooleanField {
+public class IsRemoteManagedField extends BooleanField {
 
   private static final String DESCRIPTION =
-      "Whether or not to exclude replications including this Node from running locally.";
+      "Whether or not replications including this Node should run locally.";
 
-  private static final String FIELD_NAME = "isDisabledLocal";
+  private static final String FIELD_NAME = "isRemoteManaged";
 
-  public IsDisabledLocalField() {
+  public IsRemoteManagedField() {
     super(FIELD_NAME, null, DESCRIPTION);
   }
 }

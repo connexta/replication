@@ -24,7 +24,6 @@ import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
-import org.codice.ditto.replication.admin.query.sites.fields.IsDisabledLocalField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 
 public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteField> {
@@ -44,8 +43,6 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   private ReplicationUtils replicationUtils;
 
-  private IsDisabledLocalField isDisabledLocal;
-
   public CreateReplicationSite(ReplicationUtils replicationUtils) {
     super(FIELD_NAME, DESCRIPTION);
 
@@ -53,18 +50,14 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
     this.name = new StringField("name");
     this.address = new AddressField();
     this.rootContext = new StringField("rootContext");
-    this.isDisabledLocal = new IsDisabledLocalField();
     this.name.isRequired(true);
     this.address.isRequired(true);
     this.rootContext.isRequired(true);
-
-    isDisabledLocal.setValue(false);
   }
 
   @Override
   public ReplicationSiteField performFunction() {
-    return replicationUtils.createSite(
-        name.getValue(), address, rootContext.getValue(), isDisabledLocal.getValue());
+    return replicationUtils.createSite(name.getValue(), address, rootContext.getValue(), false);
   }
 
   @Override

@@ -82,7 +82,7 @@ public class ReplicationPersistentStoreTest {
 
   private static final String DELETE_DATA = "deleteData";
 
-  private static final String IS_DISABLED_LOCAL = "is-disabled-local";
+  private static final String IS_DISABLED_LOCAL = "is-remote-managed";
 
   private PersistentStore mockPersistentStore;
 

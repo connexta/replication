@@ -45,12 +45,12 @@ public interface ReplicationSite extends Persistable {
   void setUrl(String url);
 
   /**
-   * See {@link #isDisabledLocal()}.
+   * See {@link #isRemoteManaged()}.
    *
-   * @param isDisabledLocal whether or not the local process is responsible for running replications
+   * @param isRemoteManaged whether or not the local process is responsible for running replications
    *     this site is associated with.
    */
-  void setIsDisabledLocal(boolean isDisabledLocal);
+  void setIsRemoteManaged(boolean isRemoteManaged);
 
   /**
    * When {@link false}, the local process is responsible for running {@link
@@ -62,5 +62,5 @@ public interface ReplicationSite extends Persistable {
    *
    * @return {@code true} if replication should not run locally, otherwise {@link false}.
    */
-  boolean isDisabledLocal();
+  boolean isRemoteManaged();
 }

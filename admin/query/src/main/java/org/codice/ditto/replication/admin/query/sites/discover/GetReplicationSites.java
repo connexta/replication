@@ -21,39 +21,54 @@ import org.codice.ddf.admin.api.Field;
 import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
+import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ddf.admin.common.report.message.DefaultMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
+import org.codice.ditto.replication.api.data.ReplicationSite;
 
 public class GetReplicationSites extends BaseFunctionField<ListField<ReplicationSiteField>> {
 
   public static final String FIELD_NAME = "sites";
 
   public static final String DESCRIPTION =
-      "Retrieves all the sites currently configured for replication.";
+      "Retrieves all the sites currently configured for replication, or a single site identified by a pid.";
 
   private static final ListField<ReplicationSiteField> RETURN_TYPE =
       new ReplicationSiteField.ListImpl();
 
   private final ReplicationUtils replicationUtils;
 
+  private PidField id;
+
   public GetReplicationSites(ReplicationUtils replicationUtils) {
     super(FIELD_NAME, DESCRIPTION);
     this.replicationUtils = replicationUtils;
+    this.id = new PidField();
   }
 
   @Override
   public ListField<ReplicationSiteField> performFunction() {
+    final String fetchId = id.getValue();
+
+    if (fetchId != null) {
+      final ReplicationSite site = replicationUtils.getSite(fetchId);
+      ListField<ReplicationSiteField> siteList = new ReplicationSiteField.ListImpl();
+      siteList.add(replicationUtils.getSiteFieldForSite(site));
+      return siteList;
+    }
+
     return replicationUtils.getSites();
   }
 
   @Override
   public Set<String> getFunctionErrorCodes() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(DefaultMessages.NO_EXISTING_CONFIG);
   }
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of();
+    return ImmutableList.of(id);
   }
 
   @Override
@@ -64,5 +79,18 @@ public class GetReplicationSites extends BaseFunctionField<ListField<Replication
   @Override
   public FunctionField<ListField<ReplicationSiteField>> newInstance() {
     return new GetReplicationSites(replicationUtils);
+  }
+
+  @Override
+  public void validate() {
+    super.validate();
+    if (containsErrorMsgs()) {
+      return;
+    }
+
+    final String fetchId = id.getValue();
+    if (fetchId != null && !replicationUtils.siteIdExists(fetchId)) {
+      addErrorMessage(DefaultMessages.noExistingConfigError());
+    }
   }
 }

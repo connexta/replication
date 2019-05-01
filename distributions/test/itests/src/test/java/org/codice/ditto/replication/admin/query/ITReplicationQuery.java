@@ -203,7 +203,7 @@ public class ITReplicationQuery {
 
   private static String makeUpdateSiteQuery(String id, String name, String url) {
     return String.format(
-        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
+        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\")}\"}",
         id, name, url);
   }
 
