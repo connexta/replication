@@ -37,7 +37,7 @@ import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Utility class that does all the heavy lifting for the graphql operations */
+/** Utility class for operating on replication configurations and sites. */
 public class ReplicationUtils {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationUtils.class);
@@ -67,16 +67,34 @@ public class ReplicationUtils {
 
   // mutator methods
   public ReplicationSiteField createSite(
-      String name, AddressField address, @Nullable String rootContext) {
+      String name, AddressField address, @Nullable String rootContext, boolean isDisableLocal) {
     String urlString = addressFieldToUrlString(address, rootContext);
     ReplicationSite newSite = siteManager.createSite(name, urlString);
+    newSite.setIsDisabledLocal(isDisableLocal);
     siteManager.save(newSite);
 
     return getSiteFieldForSite(newSite);
   }
 
-  public boolean siteExists(String name) {
+  public boolean isDuplicateSiteName(String name) {
     return siteManager.objects().map(ReplicationSite::getName).anyMatch(name::equalsIgnoreCase);
+  }
+
+  public ReplicationSite getSite(String id) {
+    try {
+      return siteManager.get(id);
+    } catch (NotFoundException e) {
+      return null;
+    }
+  }
+
+  public boolean isNotUpdatedSiteName(String id, String name) {
+    ReplicationSite site = this.getSite(id);
+    if (site != null) {
+      return !site.getName().equalsIgnoreCase(name);
+    }
+
+    return false;
   }
 
   public boolean siteIdExists(String id) {
@@ -84,14 +102,20 @@ public class ReplicationUtils {
   }
 
   public ReplicationSiteField updateSite(
-      String id, String name, AddressField address, @Nullable String rootContext) {
+      String id,
+      String name,
+      AddressField address,
+      @Nullable String rootContext,
+      boolean isDisabledLocal) {
     String urlString = addressFieldToUrlString(address, rootContext);
     ReplicationSite site = siteManager.get(id);
 
     setIfPresent(site::setName, name);
     setIfPresent(site::setUrl, urlString);
+    site.setIsDisabledLocal(isDisabledLocal);
+    siteManager.save(site);
 
-    return getSiteFieldForSite(site);
+    return getSiteFieldForSite(siteManager.get(site.getId()));
   }
 
   private String addressFieldToUrlString(AddressField address, @Nullable String rootContext) {
@@ -226,6 +250,7 @@ public class ReplicationUtils {
     address.port(url.getPort());
     field.address(address);
     field.rootContext(StringUtils.isEmpty(url.getPath()) ? DEFAULT_CONTEXT : url.getPath());
+    field.isDisableLocal(site.isDisabledLocal());
     return field;
   }
 

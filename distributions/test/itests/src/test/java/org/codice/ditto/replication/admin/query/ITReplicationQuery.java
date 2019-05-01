@@ -42,6 +42,8 @@ import org.junit.runner.RunWith;
 @RunWith(Dominion.class)
 public class ITReplicationQuery {
 
+  private static final String NO_EXISTING_CONFIG = "NO_EXISTING_CONFIG";
+
   @Interpolate
   private static String GRAPHQL_ENDPOINT = "https://localhost:{port.https}/admin/hub/graphql";
 
@@ -148,12 +150,7 @@ public class ITReplicationQuery {
         .then()
         .statusCode(200)
         .header("Content-Type", is("application/json;charset=utf-8"))
-        .body(
-            "errors.message",
-            hasItem(
-                "Internal Server Error(s) while executing query")); // what we currently get when a
-    // site with the given ID
-    // doesn't exist
+        .body("errors.message", hasItem(NO_EXISTING_CONFIG));
   }
 
   @Test
@@ -165,7 +162,7 @@ public class ITReplicationQuery {
         .then()
         .statusCode(200)
         .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("data.deleteReplicationSite", is(false));
+        .body("errors.message", hasItem(NO_EXISTING_CONFIG));
   }
 
   // ----------------------------------- General Tests -----------------------------------//

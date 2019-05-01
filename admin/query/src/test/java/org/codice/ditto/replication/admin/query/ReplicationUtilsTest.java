@@ -15,7 +15,6 @@ package org.codice.ditto.replication.admin.query;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -88,7 +87,7 @@ public class ReplicationUtilsTest {
               return site;
             });
     ReplicationSiteField field =
-        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())), null);
+        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())), null, false);
     assertThat(field.id(), is("id"));
     assertThat(field.name(), is("site"));
     assertThat(field.address().url(), is("https://localhost:1234/services"));
@@ -109,7 +108,7 @@ public class ReplicationUtilsTest {
               return site;
             });
     ReplicationSiteField field =
-        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())), "context");
+        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())), "context", false);
     assertThat(field.id(), is("id"));
     assertThat(field.name(), is("site"));
     assertThat(field.address().url(), is("https://localhost:1234/context"));
@@ -130,25 +129,11 @@ public class ReplicationUtilsTest {
               return site;
             });
     ReplicationSiteField field =
-        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())), " // context ");
+        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())), " // context ", false);
     assertThat(field.id(), is("id"));
     assertThat(field.name(), is("site"));
     assertThat(field.address().url(), is("https://localhost:1234/context"));
     verify(siteManager).save(any(ReplicationSiteImpl.class));
-  }
-
-  @Test
-  public void getSiteFieldForSiteReturnsNull() throws Exception {
-    ReplicationSiteImpl site = new ReplicationSiteImpl();
-    site.setId("id");
-    site.setName("site");
-    site.setUrl("https://localhost:1234");
-
-    when(siteManager.createSite(anyString(), anyString())).thenReturn(null);
-    when(siteManager.objects()).thenReturn(Stream.empty());
-    ReplicationSiteField field =
-        utils.createSite(site.getName(), getAddress(new URL(site.getUrl())), null);
-    assertNull(field);
   }
 
   @Test(expected = ReplicationException.class)
@@ -161,7 +146,7 @@ public class ReplicationUtilsTest {
     when(siteManager.createSite(anyString(), anyString())).thenReturn(site);
     AddressField address = new AddressField();
     address.url(site.getUrl());
-    utils.createSite(site.getName(), address, null);
+    utils.createSite(site.getName(), address, null, false);
   }
 
   @Test
@@ -485,7 +470,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get(anyString())).thenReturn(site);
     ReplicationSiteField field =
         utils.updateSite(
-            "id", "site", getAddress(new URL("https://localhost:1234")), "replication");
+            "id", "site", getAddress(new URL("https://localhost:1234")), "replication", false);
     assertThat(field.id(), is("id"));
     assertThat(field.name(), is("site"));
     assertThat(field.address().url(), is("https://localhost:1234/replication"));
@@ -503,7 +488,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get(anyString())).thenReturn(site);
     AddressField address = new AddressField();
     address.url(site.getUrl());
-    ReplicationSiteField field = utils.updateSite("id", "site", address, null);
+    ReplicationSiteField field = utils.updateSite("id", "site", address, null, false);
     assertThat(field.id(), is("id"));
     assertThat(field.name(), is("site"));
     assertThat(field.address().url(), is("https://localhost:1234"));
@@ -561,7 +546,7 @@ public class ReplicationUtilsTest {
     site.setUrl("https://localhost:1234");
 
     when(siteManager.objects()).thenReturn(Stream.of(site));
-    assertThat(utils.siteExists("site"), is(true));
+    assertThat(utils.isDuplicateSiteName("site"), is(true));
   }
 
   @Test
@@ -572,7 +557,7 @@ public class ReplicationUtilsTest {
     site.setUrl("https://localhost:1234");
 
     when(siteManager.objects()).thenReturn(Stream.empty());
-    assertThat(utils.siteExists("site"), is(false));
+    assertThat(utils.isDuplicateSiteName("site"), is(false));
   }
 
   private AddressField getAddress(URL url) {

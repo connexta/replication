@@ -47,6 +47,8 @@ public class ReplicationSiteField extends BaseObjectField {
 
   private IntegerField version;
 
+  private IsDisabledLocalField isDisabledLocal;
+
   public ReplicationSiteField() {
     this(DEFAULT_FIELD_NAME);
   }
@@ -59,6 +61,7 @@ public class ReplicationSiteField extends BaseObjectField {
     this.rootContext = new StringField("rootContext");
     this.modified = new DateField("modified");
     this.version = new IntegerField("version");
+    this.isDisabledLocal = new IsDisabledLocalField();
   }
 
   public ReplicationSiteField id(String id) {
@@ -88,6 +91,11 @@ public class ReplicationSiteField extends BaseObjectField {
 
   public ReplicationSiteField version(int version) {
     this.version.setValue(version);
+    return this;
+  }
+
+  public ReplicationSiteField isDisableLocal(boolean isDisableLocal) {
+    this.isDisabledLocal.setValue(isDisableLocal);
     return this;
   }
 
@@ -130,9 +138,13 @@ public class ReplicationSiteField extends BaseObjectField {
     return version;
   }
 
+  public boolean isDisabledLocal() {
+    return isDisabledLocal.getValue();
+  }
+
   @Override
   public List<Field> getFields() {
-    return ImmutableList.of(id, name, address, rootContext, modified, version);
+    return ImmutableList.of(id, name, address, rootContext, modified, version, isDisabledLocal);
   }
 
   public static class ListImpl extends BaseListField<ReplicationSiteField> {

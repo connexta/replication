@@ -60,7 +60,7 @@ public interface ReplicationSite extends Persistable {
    * any {@link org.codice.ditto.replication.api.mcard.ReplicationConfig}s associated with this
    * site. This effectively disables running replication locally.
    *
-   * @return {@code true} if replication should not occur locally, otherwise {@link false}.
+   * @return {@code true} if replication should not run locally, otherwise {@link false}.
    */
   boolean isDisabledLocal();
 }

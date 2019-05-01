@@ -88,6 +88,12 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     super.fromMap(properties);
     setName((String) properties.get(NAME_KEY));
     setUrl((String) properties.get(URL_KEY));
-    setIsDisabledLocal((Boolean) properties.get(IS_DISABLED_LOCAL_KEY));
+
+    Object isDisableLocal = properties.get(IS_DISABLED_LOCAL_KEY);
+    if (isDisableLocal != null) {
+      setIsDisabledLocal(Boolean.parseBoolean((String) isDisableLocal));
+    } else {
+      setIsDisabledLocal(false);
+    }
   }
 }

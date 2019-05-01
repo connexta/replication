@@ -23,7 +23,10 @@ import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ddf.admin.common.report.message.DefaultMessages;
+import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
+import org.codice.ditto.replication.admin.query.sites.fields.IsDisabledLocalField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 
 public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteField> {
@@ -42,22 +45,31 @@ public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   private StringField rootContext;
 
+  private IsDisabledLocalField isDisabledLocal;
+
   private ReplicationUtils replicationUtils;
 
   public UpdateReplicationSite(ReplicationUtils replicationUtils) {
     super(FIELD_NAME, DESCRIPTION);
     this.replicationUtils = replicationUtils;
 
-    id = new PidField("id");
-    name = new StringField("name");
-    address = new AddressField();
-    rootContext = new StringField("rootContext");
+    this.id = new PidField("id");
+    this.name = new StringField("name");
+    this.address = new AddressField();
+    this.rootContext = new StringField("rootContext");
+    this.isDisabledLocal = new IsDisabledLocalField();
+
+    this.id.isRequired(true);
   }
 
   @Override
   public ReplicationSiteField performFunction() {
     return replicationUtils.updateSite(
-        id.getValue(), name.getValue(), address, rootContext.getValue());
+        id.getValue(),
+        name.getValue(),
+        address,
+        rootContext.getValue(),
+        isDisabledLocal.getValue());
   }
 
   @Override
@@ -67,7 +79,7 @@ public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(id, name, address, rootContext);
+    return ImmutableList.of(id, name, address, rootContext, isDisabledLocal);
   }
 
   @Override
@@ -77,6 +89,25 @@ public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   @Override
   public Set<String> getFunctionErrorCodes() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(ReplicationMessages.DUPLICATE_SITE, DefaultMessages.NO_EXISTING_CONFIG);
+  }
+
+  @Override
+  public void validate() {
+    super.validate();
+    if (containsErrorMsgs()) {
+      return;
+    }
+
+    final String updatedName = name.getValue();
+    final String updateId = id.getValue();
+    if (!replicationUtils.siteIdExists(updateId)) {
+      addErrorMessage(DefaultMessages.noExistingConfigError());
+    }
+    if (updatedName != null
+        && (replicationUtils.isNotUpdatedSiteName(updateId, updatedName)
+            || replicationUtils.isDuplicateSiteName(updatedName))) {
+      addErrorMessage(ReplicationMessages.duplicateSites());
+    }
   }
 }

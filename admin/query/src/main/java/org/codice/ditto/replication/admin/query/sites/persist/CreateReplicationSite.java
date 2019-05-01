@@ -24,6 +24,7 @@ import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
+import org.codice.ditto.replication.admin.query.sites.fields.IsDisabledLocalField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 
 public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteField> {
@@ -33,7 +34,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
   public static final String DESCRIPTION =
       "Creates a replication site. If no rootContext is provided, it will default to 'services'";
 
-  public static final ReplicationSiteField RETURN_TYPE = new ReplicationSiteField();
+  private static final ReplicationSiteField RETURN_TYPE = new ReplicationSiteField();
 
   private StringField name;
 
@@ -43,21 +44,27 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   private ReplicationUtils replicationUtils;
 
+  private IsDisabledLocalField isDisabledLocal;
+
   public CreateReplicationSite(ReplicationUtils replicationUtils) {
     super(FIELD_NAME, DESCRIPTION);
 
     this.replicationUtils = replicationUtils;
-    name = new StringField("name");
-    address = new AddressField();
-    rootContext = new StringField("rootContext");
-    name.isRequired(true);
-    address.isRequired(true);
-    rootContext.isRequired(true);
+    this.name = new StringField("name");
+    this.address = new AddressField();
+    this.rootContext = new StringField("rootContext");
+    this.isDisabledLocal = new IsDisabledLocalField();
+    this.name.isRequired(true);
+    this.address.isRequired(true);
+    this.rootContext.isRequired(true);
+
+    isDisabledLocal.setValue(false);
   }
 
   @Override
   public ReplicationSiteField performFunction() {
-    return replicationUtils.createSite(name.getValue(), address, rootContext.getValue());
+    return replicationUtils.createSite(
+        name.getValue(), address, rootContext.getValue(), isDisabledLocal.getValue());
   }
 
   @Override
@@ -77,7 +84,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   @Override
   public Set<String> getFunctionErrorCodes() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(ReplicationMessages.DUPLICATE_SITE);
   }
 
   @Override
@@ -86,7 +93,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
     if (containsErrorMsgs()) {
       return;
     }
-    if (replicationUtils.siteExists(name.getValue())) {
+    if (replicationUtils.isDuplicateSiteName(name.getValue())) {
       addErrorMessage(ReplicationMessages.duplicateSites());
     }
   }

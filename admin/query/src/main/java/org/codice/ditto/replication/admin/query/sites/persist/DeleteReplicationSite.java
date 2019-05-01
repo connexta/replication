@@ -23,6 +23,7 @@ import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ddf.admin.common.report.message.DefaultMessages;
 import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
@@ -43,7 +44,8 @@ public class DeleteReplicationSite extends BaseFunctionField<BooleanField> {
     super(FIELD_NAME, DESCRIPTION);
 
     this.replicationUtils = replicationUtils;
-    id = new PidField("id");
+    this.id = new PidField("id");
+    this.id.isRequired(true);
   }
 
   @Override
@@ -60,8 +62,12 @@ public class DeleteReplicationSite extends BaseFunctionField<BooleanField> {
       return;
     }
 
-    ListField<ReplicationField> repFields = replicationUtils.getReplications(true);
     String idToDelete = id.getValue();
+    if (!replicationUtils.siteIdExists(idToDelete)) {
+      addErrorMessage(DefaultMessages.noExistingConfigError());
+    }
+
+    ListField<ReplicationField> repFields = replicationUtils.getReplications(true);
     for (ReplicationField repField : repFields.getList()) {
       if (idToDelete.equals(repField.source().id())
           || idToDelete.equals(repField.destination().id())) {
@@ -88,6 +94,6 @@ public class DeleteReplicationSite extends BaseFunctionField<BooleanField> {
 
   @Override
   public Set<String> getFunctionErrorCodes() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(DefaultMessages.NO_EXISTING_CONFIG, ReplicationMessages.SITE_IN_USE);
   }
 }
