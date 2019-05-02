@@ -47,10 +47,10 @@ public interface ReplicationSite extends Persistable {
   /**
    * See {@link #isRemoteManaged()}.
    *
-   * @param isRemoteManaged whether or not the local process is responsible for running replications
+   * @param remoteManaged whether or not the local process is responsible for running replications
    *     this site is associated with.
    */
-  void setIsRemoteManaged(boolean isRemoteManaged);
+  void setRemoteManaged(boolean remoteManaged);
 
   /**
    * When {@link false}, the local process is responsible for running {@link

@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
 import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
+import org.codice.ddf.admin.common.fields.common.HostField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 import org.codice.ditto.replication.api.ReplicationException;
@@ -58,6 +59,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 @RestoreSystemProperties
 public class ReplicationUtilsTest {
+
+  private static final String SITE_ID = "siteId";
 
   private ReplicationUtils utils;
 
@@ -268,25 +271,25 @@ public class ReplicationUtilsTest {
   }
 
   @Test
-  public void testIsNotUpdateSiteNotSiteByIdsName() {
+  public void testIsNotUpdatedSitesName() {
     final String siteId = "siteId";
     final String siteName = "siteName";
     ReplicationSite site = mock(ReplicationSite.class);
     when(site.getName()).thenReturn(siteName);
     when(siteManager.get(siteId)).thenReturn(site);
-    boolean isNotUpdateSiteName = utils.isNotUpdatedSiteName(siteId, "notSiteName");
-    assertThat(isNotUpdateSiteName, is(true));
+    boolean isNotUpdateSiteName = utils.isUpdatedSitesName(siteId, "notSiteName");
+    assertThat(isNotUpdateSiteName, is(false));
   }
 
   @Test
-  public void testIsNotUpdateSiteIsSiteByIdsName() {
+  public void testIsUpdatedSitesName() {
     final String siteId = "siteId";
     final String siteName = "sItEnAmE"; // for ignores case checking
     ReplicationSite site = mock(ReplicationSite.class);
     when(site.getName()).thenReturn(siteName);
     when(siteManager.get(siteId)).thenReturn(site);
-    boolean isNotUpdateSiteName = utils.isNotUpdatedSiteName(siteId, "siteName");
-    assertThat(isNotUpdateSiteName, is(false));
+    boolean isNotUpdateSiteName = utils.isUpdatedSitesName(siteId, "siteName");
+    assertThat(isNotUpdateSiteName, is(true));
   }
 
   @Test
@@ -502,33 +505,78 @@ public class ReplicationUtilsTest {
   }
 
   @Test
-  public void updateSite() throws Exception {
-    ReplicationSiteImpl site = new ReplicationSiteImpl();
-    site.setId("id");
-    site.setName("site");
-    site.setUrl("https://localhost:1234");
+  public void updateSiteName() {
+    // setup
+    final String newName = "newName";
+    final String testUrl = "https://fakestreet:1234/context";
+    ReplicationSite site = mock(ReplicationSite.class);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(site.getUrl()).thenReturn(testUrl);
+    when(site.getName()).thenReturn("prevName");
 
-    when(siteManager.get(anyString())).thenReturn(site);
-    boolean result =
-        utils.updateSite(
-            "id", "site", getAddress(new URL("https://localhost:1234")), "replication");
-    assertThat(result, is(true));
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+
+    // when
+    utils.updateSite(SITE_ID, newName, mockAddress(null, null), null);
+
+    // then
+    verify(site).setName(newName);
+    verify(site).setUrl(testUrl);
+    verify(siteManager).save(site);
   }
 
-  @Test // tests the ternary in addressFieldToUrlString
-  public void updateSiteAddressHostIsNull() throws Exception {
-    ReplicationSiteImpl site = new ReplicationSiteImpl();
-    site.setId("id");
-    site.setName("site");
-    site.setUrl("https://localhost:1234");
+  @Test
+  public void updateSiteHostname() {
+    // setup
+    ReplicationSite site = mock(ReplicationSite.class);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(site.getUrl()).thenReturn("https://fakestreet:1234/context");
 
-    when(siteManager.get(anyString())).thenReturn(site);
-    AddressField address = new AddressField();
-    address.url(site.getUrl());
-    boolean result =
-        utils.updateSite(
-            "id", "site", getAddress(new URL("https://localhost:1234")), "replication");
-    assertThat(result, is(true));
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+
+    // when
+    utils.updateSite(SITE_ID, null, mockAddress("updatedHost", null), null);
+
+    // then
+    verify(site, never()).setName(anyString());
+    verify(site).setUrl("https://updatedHost:1234/context");
+    verify(siteManager).save(site);
+  }
+
+  @Test
+  public void updateSitePort() {
+    // setup
+    ReplicationSite site = mock(ReplicationSite.class);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(site.getUrl()).thenReturn("https://fakestreet:1234/context");
+
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+
+    // when
+    utils.updateSite(SITE_ID, null, mockAddress(null, 4321), null);
+
+    // then
+    verify(site, never()).setName(anyString());
+    verify(site).setUrl("https://fakestreet:4321/context");
+    verify(siteManager).save(site);
+  }
+
+  @Test
+  public void updateSiteRootContext() {
+    // setup
+    ReplicationSite site = mock(ReplicationSite.class);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(site.getUrl()).thenReturn("https://fakestreet:1234/context");
+
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+
+    // when
+    utils.updateSite(SITE_ID, null, mockAddress(null, null), "updatedContext");
+
+    // then
+    verify(site, never()).setName(anyString());
+    verify(site).setUrl("https://fakestreet:1234/updatedContext");
+    verify(siteManager).save(site);
   }
 
   @Test
@@ -601,5 +649,14 @@ public class ReplicationUtilsTest {
     address.hostname(url.getHost());
     address.port(url.getPort());
     return address;
+  }
+
+  private AddressField mockAddress(String hostname, Integer port) {
+    HostField hostField = mock(HostField.class);
+    when(hostField.hostname()).thenReturn(hostname);
+    when(hostField.port()).thenReturn(port);
+    AddressField addressField = mock(AddressField.class);
+    when(addressField.host()).thenReturn(hostField);
+    return addressField;
   }
 }

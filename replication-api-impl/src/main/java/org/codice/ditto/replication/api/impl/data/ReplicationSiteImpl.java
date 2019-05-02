@@ -75,8 +75,8 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   }
 
   @Override
-  public void setIsRemoteManaged(boolean isRemoteManaged) {
-    this.isRemoteManaged = isRemoteManaged;
+  public void setRemoteManaged(boolean remoteManaged) {
+    this.isRemoteManaged = remoteManaged;
   }
 
   @Override
@@ -100,10 +100,10 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     setUrl((String) properties.get(URL_KEY));
 
     if (super.getVersion() == 1) {
-      setIsRemoteManaged(false);
+      setRemoteManaged(false);
       super.setVersion(CURRENT_VERSION);
     } else {
-      setIsRemoteManaged(Boolean.parseBoolean((String) properties.get(IS_REMOTE_MANAGED_KEY)));
+      setRemoteManaged(Boolean.parseBoolean((String) properties.get(IS_REMOTE_MANAGED_KEY)));
     }
   }
 }

@@ -32,7 +32,7 @@ public class GetReplicationSites extends BaseFunctionField<ListField<Replication
   public static final String FIELD_NAME = "sites";
 
   public static final String DESCRIPTION =
-      "Retrieves all the sites currently configured for replication, or a single site identified by a pid.";
+      "Retrieves all the sites currently configured for replication, or a site given its identifier.";
 
   private static final ListField<ReplicationSiteField> RETURN_TYPE =
       new ReplicationSiteField.ListImpl();

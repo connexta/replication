@@ -92,15 +92,20 @@ public class UpdateReplicationSite extends BaseFunctionField<BooleanField> {
       return;
     }
 
-    final String updatedName = name.getValue();
     final String updateId = id.getValue();
     if (!replicationUtils.siteIdExists(updateId)) {
       addErrorMessage(DefaultMessages.noExistingConfigError());
     }
-    if (updatedName != null
-        && (replicationUtils.isNotUpdatedSiteName(updateId, updatedName)
-            || replicationUtils.isDuplicateSiteName(updatedName))) {
-      addErrorMessage(ReplicationMessages.duplicateSites());
+
+    final String updatedName = name.getValue();
+    if (updatedName != null) {
+      if ((replicationUtils.isUpdatedSitesName(updateId, updatedName))) {
+        return;
+      }
+
+      if (replicationUtils.isDuplicateSiteName(updatedName)) {
+        addErrorMessage(ReplicationMessages.duplicateSites());
+      }
     }
   }
 }

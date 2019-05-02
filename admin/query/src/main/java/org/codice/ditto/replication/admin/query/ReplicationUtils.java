@@ -70,7 +70,7 @@ public class ReplicationUtils {
       String name, AddressField address, @Nullable String rootContext, boolean isRemoteManaged) {
     String urlString = addressFieldToUrlString(address, rootContext);
     ReplicationSite newSite = siteManager.createSite(name, urlString);
-    newSite.setIsRemoteManaged(isRemoteManaged);
+    newSite.setRemoteManaged(isRemoteManaged);
     siteManager.save(newSite);
 
     return getSiteFieldForSite(newSite);
@@ -89,10 +89,10 @@ public class ReplicationUtils {
     }
   }
 
-  public boolean isNotUpdatedSiteName(String id, String name) {
+  public boolean isUpdatedSitesName(String id, String name) {
     final ReplicationSite site = this.getSite(id);
     if (site != null) {
-      return !site.getName().equalsIgnoreCase(name);
+      return site.getName().equalsIgnoreCase(name);
     }
 
     return false;
@@ -103,26 +103,75 @@ public class ReplicationUtils {
   }
 
   public boolean updateSite(
-      String id, String name, AddressField address, @Nullable String rootContext) {
-    String urlString = addressFieldToUrlString(address, rootContext);
+      String id, @Nullable String name, AddressField address, @Nullable String rootContext) {
     ReplicationSite site = siteManager.get(id);
 
+    String updatedUrl = updateUrl(site.getUrl(), address, rootContext);
     setIfPresent(site::setName, name);
-    setIfPresent(site::setUrl, urlString);
+    setIfPresent(site::setUrl, updatedUrl);
 
     try {
       siteManager.save(site);
     } catch (ReplicationPersistenceException e) {
-      LOGGER.debug("Unable to saved updated site {} with id {}", site, id, e);
+      LOGGER.debug("Unable to save updated site {} with id {}", site, id, e);
       return false;
     }
 
     return true;
   }
 
+  private String updateUrl(String prevUrl, AddressField addressField, @Nullable String context) {
+    URL url;
+    try {
+      url = new URL(prevUrl);
+    } catch (MalformedURLException e) {
+      // sites previous saved url should always be valid
+      return "";
+    }
+
+    final String oldHostname = url.getHost();
+    final int oldPort = url.getPort();
+    final String oldContext = stipStartingSlashes(url.getPath());
+
+    final String newHostname;
+    final int newPort;
+    final String newContext;
+
+    if (addressField.host().hostname() != null) {
+      newHostname = addressField.host().hostname();
+    } else {
+      newHostname = oldHostname;
+    }
+
+    if (addressField.host().port() != null) {
+      newPort = addressField.host().port();
+    } else {
+      newPort = oldPort;
+    }
+
+    if (context != null) {
+      newContext = stipStartingSlashes(context);
+    } else {
+      newContext = oldContext;
+    }
+
+    try {
+      return new URL(
+              String.format("%s://%s:%d/%s", url.getProtocol(), newHostname, newPort, newContext))
+          .toString();
+    } catch (MalformedURLException e) {
+      // all fields are validated by graphql before we make it here so this cannot be hit.
+      return "";
+    }
+  }
+
+  private String stipStartingSlashes(String str) {
+    return str.trim().replaceFirst("^[/\\s]*", "");
+  }
+
   private String addressFieldToUrlString(AddressField address, @Nullable String rootContext) {
     final String context =
-        (rootContext != null) ? rootContext.trim().replaceFirst("^[/\\s]*", "") : DEFAULT_CONTEXT;
+        (rootContext != null) ? stipStartingSlashes(rootContext) : DEFAULT_CONTEXT;
 
     return address.host().hostname() == null
         ? address.url()

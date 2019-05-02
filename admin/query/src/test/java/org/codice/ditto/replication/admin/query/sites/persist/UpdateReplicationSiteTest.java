@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,7 +53,7 @@ public class UpdateReplicationSiteTest {
 
   private static final String ADDRESS = "address";
 
-  private static final String IS_DISABLED_LOCAL = "isRemoteManaged";
+  private static final String REMOTE_MANAGED = "remoteManaged";
 
   private static final String SITE_ID = "siteId";
 
@@ -87,7 +88,7 @@ public class UpdateReplicationSiteTest {
     input.put(NAME, SITE_NAME);
     input.put(ROOT_CONTEXT, SITE_CONTEXT);
     input.put(ADDRESS, addressField);
-    input.put(IS_DISABLED_LOCAL, SITE_IS_DISABLED_LOCAL);
+    input.put(REMOTE_MANAGED, SITE_IS_DISABLED_LOCAL);
   }
 
   @Test
@@ -95,7 +96,7 @@ public class UpdateReplicationSiteTest {
     // setup
     when(replicationUtils.siteIdExists(SITE_ID)).thenReturn(true);
     when(replicationUtils.isDuplicateSiteName(SITE_NAME)).thenReturn(false);
-    when(replicationUtils.isNotUpdatedSiteName(SITE_ID, SITE_NAME)).thenReturn(false);
+    when(replicationUtils.isUpdatedSitesName(SITE_ID, SITE_NAME)).thenReturn(false);
 
     final boolean updateResult = true;
     when(replicationUtils.updateSite(
@@ -133,7 +134,7 @@ public class UpdateReplicationSiteTest {
     // setup
     when(replicationUtils.isDuplicateSiteName(SITE_NAME)).thenReturn(true);
     when(replicationUtils.siteIdExists(SITE_ID)).thenReturn(true);
-    when(replicationUtils.isNotUpdatedSiteName(SITE_ID, SITE_NAME)).thenReturn(false);
+    when(replicationUtils.isUpdatedSitesName(SITE_ID, SITE_NAME)).thenReturn(false);
 
     // when
     List<ErrorMessage> errors =
@@ -146,11 +147,24 @@ public class UpdateReplicationSiteTest {
   }
 
   @Test
+  public void testIsUpdatedSitesNameNeverChecksForDuplicate() {
+    // setup
+    when(replicationUtils.siteIdExists(SITE_ID)).thenReturn(true);
+    when(replicationUtils.isUpdatedSitesName(SITE_ID, SITE_NAME)).thenReturn(true);
+
+    // when
+    updateReplicationSite.execute(input, ImmutableList.of(FUNCTION_PATH)).getErrorMessages();
+
+    // then
+    verify(replicationUtils, never()).isDuplicateSiteName(SITE_NAME);
+  }
+
+  @Test
   public void testNoExistingSite() {
     // setup
     when(replicationUtils.isDuplicateSiteName(SITE_NAME)).thenReturn(false);
     when(replicationUtils.siteIdExists(SITE_ID)).thenReturn(false);
-    when(replicationUtils.isNotUpdatedSiteName(SITE_ID, SITE_NAME)).thenReturn(false);
+    when(replicationUtils.isUpdatedSitesName(SITE_ID, SITE_NAME)).thenReturn(false);
 
     // when
     List<ErrorMessage> errors =
