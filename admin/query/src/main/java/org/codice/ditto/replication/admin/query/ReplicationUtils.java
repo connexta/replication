@@ -131,7 +131,7 @@ public class ReplicationUtils {
 
     final String oldHostname = url.getHost();
     final int oldPort = url.getPort();
-    final String oldContext = stipStartingSlashes(url.getPath());
+    final String oldContext = stripStartingSlashes(url.getPath());
 
     final String newHostname;
     final int newPort;
@@ -150,7 +150,7 @@ public class ReplicationUtils {
     }
 
     if (context != null) {
-      newContext = stipStartingSlashes(context);
+      newContext = stripStartingSlashes(context);
     } else {
       newContext = oldContext;
     }
@@ -165,13 +165,13 @@ public class ReplicationUtils {
     }
   }
 
-  private String stipStartingSlashes(String str) {
+  private String stripStartingSlashes(String str) {
     return str.trim().replaceFirst("^[/\\s]*", "");
   }
 
   private String addressFieldToUrlString(AddressField address, @Nullable String rootContext) {
     final String context =
-        (rootContext != null) ? stipStartingSlashes(rootContext) : DEFAULT_CONTEXT;
+        (rootContext != null) ? stripStartingSlashes(rootContext) : DEFAULT_CONTEXT;
 
     return address.host().hostname() == null
         ? address.url()
