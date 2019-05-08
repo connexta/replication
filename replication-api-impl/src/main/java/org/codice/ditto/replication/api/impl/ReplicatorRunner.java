@@ -22,12 +22,15 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.ws.rs.NotFoundException;
 import org.codice.ddf.security.common.Security;
+import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +50,8 @@ public class ReplicatorRunner {
 
   private final ScheduledExecutorService scheduledExecutor;
 
+  private final SiteManager siteManager;
+
   private static final long STARTUP_DELAY = TimeUnit.MINUTES.toSeconds(1);
 
   private static final String DEFAULT_REPLICATION_PERIOD_STR =
@@ -55,8 +60,14 @@ public class ReplicatorRunner {
   public ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
-      ReplicatorConfigManager replicatorConfigManager) {
-    this(scheduledExecutor, replicator, replicatorConfigManager, Security.getInstance());
+      ReplicatorConfigManager replicatorConfigManager,
+      SiteManager siteManager) {
+    this(
+        scheduledExecutor,
+        replicator,
+        replicatorConfigManager,
+        siteManager,
+        Security.getInstance());
   }
 
   /*Visible for testing only*/
@@ -64,10 +75,12 @@ public class ReplicatorRunner {
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
       ReplicatorConfigManager replicatorConfigManager,
+      SiteManager siteManager,
       Security security) {
     this.scheduledExecutor = notNull(scheduledExecutor);
     this.replicator = notNull(replicator);
     this.replicatorConfigManager = notNull(replicatorConfigManager);
+    this.siteManager = notNull(siteManager);
     this.security = security;
   }
 
@@ -108,13 +121,32 @@ public class ReplicatorRunner {
             .objects()
             .filter(c -> !c.isSuspended())
             .collect(Collectors.toList());
+
     try {
       for (ReplicatorConfig config : configsToSchedule) {
+        if (sourceOrDestinationIsRemotelyManaged(config)) {
+          LOGGER.trace(
+              "One of config {}'s sites are remotely managed, not running the config",
+              config.getName());
+          continue;
+        }
         replicator.submitSyncRequest(
             new SyncRequestImpl(config, new ReplicationStatusImpl(config.getName())));
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+    }
+  }
+
+  private boolean sourceOrDestinationIsRemotelyManaged(ReplicatorConfig replicatorConfig) {
+    try {
+      return siteManager.get(replicatorConfig.getSource()).isRemoteManaged()
+          || siteManager.get(replicatorConfig.getDestination()).isRemoteManaged();
+    } catch (NotFoundException | ReplicationPersistenceException e) {
+      LOGGER.debug(
+          "Unable to determine if replication {} should be run based on its sites. This replication will not be run.",
+          replicatorConfig.getName());
+      return true;
     }
   }
 }

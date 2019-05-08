@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,8 +31,10 @@ import java.util.stream.Stream;
 import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +46,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ReplicatorRunnerTest {
 
-  ReplicatorRunner runner;
+  private static final String SOURCE_ID = "sourceId";
+
+  private static final String DESTINATION_ID = "destinationId";
+
+  private ReplicatorRunner runner;
 
   @Mock Security security;
 
@@ -53,9 +60,11 @@ public class ReplicatorRunnerTest {
 
   @Mock ScheduledExecutorService scheduledExecutor;
 
-  Stream<ReplicatorConfig> configStream;
+  private Stream<ReplicatorConfig> configStream;
 
   @Mock ReplicatorConfig config;
+
+  @Mock SiteManager siteManager;
 
   @Before
   public void setUp() throws Exception {
@@ -63,7 +72,8 @@ public class ReplicatorRunnerTest {
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call());
     when(security.runAsAdmin(any(PrivilegedAction.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, PrivilegedAction.class).run());
-    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, security);
+    runner =
+        new ReplicatorRunner(scheduledExecutor, replicator, configManager, siteManager, security);
     configStream = Stream.of(config);
   }
 
@@ -99,10 +109,22 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void scheduleReplication() throws Exception {
-    ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
+    ReplicationSite source = mockSite(SOURCE_ID, false);
+    ReplicationSite destination = mockSite(DESTINATION_ID, false);
+    when(siteManager.get(SOURCE_ID)).thenReturn(source);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destination);
+
     when(config.getName()).thenReturn("test");
+    when(config.getSource()).thenReturn(SOURCE_ID);
+    when(config.getDestination()).thenReturn(DESTINATION_ID);
     when(configManager.objects()).thenReturn(configStream);
+
+    ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
+
+    // when
     runner.scheduleReplication();
+
+    // then
     verify(replicator).submitSyncRequest(request.capture());
     assertThat(request.getValue().getConfig().getName(), is("test"));
   }
@@ -119,13 +141,62 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void scheduleReplicationInterruptException() throws Exception {
-    ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
+    ReplicationSite source = mockSite(SOURCE_ID, false);
+    ReplicationSite destination = mockSite(DESTINATION_ID, false);
+    when(siteManager.get(SOURCE_ID)).thenReturn(source);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destination);
+
     when(config.getName()).thenReturn("test");
+    when(config.getSource()).thenReturn(SOURCE_ID);
+    when(config.getDestination()).thenReturn(DESTINATION_ID);
     when(configManager.objects()).thenReturn(configStream);
     doThrow(new InterruptedException()).when(replicator).submitSyncRequest(any(SyncRequest.class));
+    ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
+
+    // when
     runner.scheduleReplication();
+
+    // then
     verify(replicator).submitSyncRequest(request.capture());
     assertThat(request.getValue().getConfig().getName(), is("test"));
+  }
+
+  @Test
+  public void testConfigNotRunWhenConfigSourceIsRemoteManaged() throws Exception {
+    ReplicationSite source = mockSite(SOURCE_ID, true);
+    ReplicationSite destination = mockSite(DESTINATION_ID, false);
+    when(siteManager.get(SOURCE_ID)).thenReturn(source);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destination);
+
+    when(config.getName()).thenReturn("test");
+    when(config.getSource()).thenReturn(SOURCE_ID);
+    when(config.getDestination()).thenReturn(DESTINATION_ID);
+    when(configManager.objects()).thenReturn(configStream);
+
+    // when
+    runner.scheduleReplication();
+
+    // then
+    verify(replicator, never()).submitSyncRequest(any(SyncRequest.class));
+  }
+
+  @Test
+  public void testConfigNotRunWhenConfigDestinationIsRemoteManaged() throws Exception {
+    ReplicationSite source = mockSite(SOURCE_ID, false);
+    ReplicationSite destination = mockSite(DESTINATION_ID, true);
+    when(siteManager.get(SOURCE_ID)).thenReturn(source);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destination);
+
+    when(config.getName()).thenReturn("test");
+    when(config.getSource()).thenReturn(SOURCE_ID);
+    when(config.getDestination()).thenReturn(DESTINATION_ID);
+    when(configManager.objects()).thenReturn(configStream);
+
+    // when
+    runner.scheduleReplication();
+
+    // then
+    verify(replicator, never()).submitSyncRequest(any(SyncRequest.class));
   }
 
   @Test
@@ -134,5 +205,12 @@ public class ReplicatorRunnerTest {
     runner.replicateAsSystemUser();
     verify(security).runAsAdmin(any(PrivilegedAction.class));
     verify(security).runWithSubjectOrElevate(any(Callable.class));
+  }
+
+  private ReplicationSite mockSite(String id, boolean isRemoteManaged) {
+    ReplicationSite site = mock(ReplicationSite.class);
+    when(site.getId()).thenReturn(id);
+    when(site.isRemoteManaged()).thenReturn(isRemoteManaged);
+    return site;
   }
 }

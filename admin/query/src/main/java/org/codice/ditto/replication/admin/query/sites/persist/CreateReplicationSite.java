@@ -33,7 +33,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
   public static final String DESCRIPTION =
       "Creates a replication site. If no rootContext is provided, it will default to 'services'";
 
-  public static final ReplicationSiteField RETURN_TYPE = new ReplicationSiteField();
+  private static final ReplicationSiteField RETURN_TYPE = new ReplicationSiteField();
 
   private StringField name;
 
@@ -47,17 +47,17 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
     super(FIELD_NAME, DESCRIPTION);
 
     this.replicationUtils = replicationUtils;
-    name = new StringField("name");
-    address = new AddressField();
-    rootContext = new StringField("rootContext");
-    name.isRequired(true);
-    address.isRequired(true);
-    rootContext.isRequired(true);
+    this.name = new StringField("name");
+    this.address = new AddressField();
+    this.rootContext = new StringField("rootContext");
+    this.name.isRequired(true);
+    this.address.isRequired(true);
+    this.rootContext.isRequired(true);
   }
 
   @Override
   public ReplicationSiteField performFunction() {
-    return replicationUtils.createSite(name.getValue(), address, rootContext.getValue());
+    return replicationUtils.createSite(name.getValue(), address, rootContext.getValue(), false);
   }
 
   @Override
@@ -77,7 +77,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   @Override
   public Set<String> getFunctionErrorCodes() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(ReplicationMessages.DUPLICATE_SITE);
   }
 
   @Override
@@ -86,7 +86,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
     if (containsErrorMsgs()) {
       return;
     }
-    if (replicationUtils.siteExists(name.getValue())) {
+    if (replicationUtils.isDuplicateSiteName(name.getValue())) {
       addErrorMessage(ReplicationMessages.duplicateSites());
     }
   }

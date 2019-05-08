@@ -37,7 +37,7 @@ import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Utility class that does all the heavy lifting for the graphql operations */
+/** Utility class for operating on replication configurations and sites. */
 public class ReplicationUtils {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationUtils.class);
@@ -67,36 +67,111 @@ public class ReplicationUtils {
 
   // mutator methods
   public ReplicationSiteField createSite(
-      String name, AddressField address, @Nullable String rootContext) {
+      String name, AddressField address, @Nullable String rootContext, boolean isRemoteManaged) {
     String urlString = addressFieldToUrlString(address, rootContext);
     ReplicationSite newSite = siteManager.createSite(name, urlString);
+    newSite.setRemoteManaged(isRemoteManaged);
     siteManager.save(newSite);
 
     return getSiteFieldForSite(newSite);
   }
 
-  public boolean siteExists(String name) {
+  public boolean isDuplicateSiteName(String name) {
     return siteManager.objects().map(ReplicationSite::getName).anyMatch(name::equalsIgnoreCase);
+  }
+
+  @Nullable
+  public ReplicationSite getSite(String id) {
+    try {
+      return siteManager.get(id);
+    } catch (NotFoundException e) {
+      return null;
+    }
+  }
+
+  public boolean isUpdatedSitesName(String id, String name) {
+    final ReplicationSite site = this.getSite(id);
+    if (site != null) {
+      return site.getName().equalsIgnoreCase(name);
+    }
+
+    return false;
   }
 
   public boolean siteIdExists(String id) {
     return siteManager.exists(id);
   }
 
-  public ReplicationSiteField updateSite(
-      String id, String name, AddressField address, @Nullable String rootContext) {
-    String urlString = addressFieldToUrlString(address, rootContext);
+  public boolean updateSite(
+      String id, @Nullable String name, AddressField address, @Nullable String rootContext) {
     ReplicationSite site = siteManager.get(id);
 
+    String updatedUrl = updateUrl(site.getUrl(), address, rootContext);
     setIfPresent(site::setName, name);
-    setIfPresent(site::setUrl, urlString);
+    setIfPresent(site::setUrl, updatedUrl);
 
-    return getSiteFieldForSite(site);
+    try {
+      siteManager.save(site);
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.debug("Unable to save updated site {} with id {}", site, id, e);
+      return false;
+    }
+
+    return true;
+  }
+
+  private String updateUrl(String prevUrl, AddressField addressField, @Nullable String context) {
+    URL url;
+    try {
+      url = new URL(prevUrl);
+    } catch (MalformedURLException e) {
+      // sites previous saved url should always be valid
+      return "";
+    }
+
+    final String oldHostname = url.getHost();
+    final int oldPort = url.getPort();
+    final String oldContext = stripStartingSlashes(url.getPath());
+
+    final String newHostname;
+    final int newPort;
+    final String newContext;
+
+    if (addressField.host().hostname() != null) {
+      newHostname = addressField.host().hostname();
+    } else {
+      newHostname = oldHostname;
+    }
+
+    if (addressField.host().port() != null) {
+      newPort = addressField.host().port();
+    } else {
+      newPort = oldPort;
+    }
+
+    if (context != null) {
+      newContext = stripStartingSlashes(context);
+    } else {
+      newContext = oldContext;
+    }
+
+    try {
+      return new URL(
+              String.format("%s://%s:%d/%s", url.getProtocol(), newHostname, newPort, newContext))
+          .toString();
+    } catch (MalformedURLException e) {
+      // all fields are validated by graphql before we make it here so this cannot be hit.
+      return "";
+    }
+  }
+
+  private String stripStartingSlashes(String str) {
+    return str.trim().replaceFirst("^[/\\s]*", "");
   }
 
   private String addressFieldToUrlString(AddressField address, @Nullable String rootContext) {
     final String context =
-        (rootContext != null) ? rootContext.trim().replaceFirst("^[/\\s]*", "") : DEFAULT_CONTEXT;
+        (rootContext != null) ? stripStartingSlashes(rootContext) : DEFAULT_CONTEXT;
 
     return address.host().hostname() == null
         ? address.url()
@@ -203,7 +278,7 @@ public class ReplicationUtils {
     return field;
   }
 
-  private @Nullable ReplicationSiteField getSiteFieldForSite(ReplicationSite site) {
+  public @Nullable ReplicationSiteField getSiteFieldForSite(ReplicationSite site) {
     if (site == null) {
       return null;
     }
@@ -226,6 +301,7 @@ public class ReplicationUtils {
     address.port(url.getPort());
     field.address(address);
     field.rootContext(StringUtils.isEmpty(url.getPath()) ? DEFAULT_CONTEXT : url.getPath());
+    field.isDisableLocal(site.isRemoteManaged());
     return field;
   }
 

@@ -161,6 +161,7 @@
         <argument ref="replicatorRunnerExecutor"/>
         <argument ref="replicator"/>
         <argument ref="configManager"/>
+        <argument ref="siteManager"/>
     </bean>
 
     <bean id="replicatorRunnerExecutor" class="java.util.concurrent.Executors"

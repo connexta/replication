@@ -33,7 +33,7 @@ public class ReplicationSiteField extends BaseObjectField {
 
   private static final String FIELD_TYPE_NAME = "ReplicationSite";
 
-  private static final String DESCRIPTION = "Contains the name and address of a site.";
+  private static final String DESCRIPTION = "Contains information about a Site.";
 
   private PidField id;
 
@@ -47,6 +47,8 @@ public class ReplicationSiteField extends BaseObjectField {
 
   private IntegerField version;
 
+  private RemoteManagedField remoteManaged;
+
   public ReplicationSiteField() {
     this(DEFAULT_FIELD_NAME);
   }
@@ -59,6 +61,7 @@ public class ReplicationSiteField extends BaseObjectField {
     this.rootContext = new StringField("rootContext");
     this.modified = new DateField("modified");
     this.version = new IntegerField("version");
+    this.remoteManaged = new RemoteManagedField();
   }
 
   public ReplicationSiteField id(String id) {
@@ -88,6 +91,11 @@ public class ReplicationSiteField extends BaseObjectField {
 
   public ReplicationSiteField version(int version) {
     this.version.setValue(version);
+    return this;
+  }
+
+  public ReplicationSiteField isDisableLocal(boolean isDisableLocal) {
+    this.remoteManaged.setValue(isDisableLocal);
     return this;
   }
 
@@ -130,9 +138,13 @@ public class ReplicationSiteField extends BaseObjectField {
     return version;
   }
 
+  public boolean isDisabledLocal() {
+    return remoteManaged.getValue();
+  }
+
   @Override
   public List<Field> getFields() {
-    return ImmutableList.of(id, name, address, rootContext, modified, version);
+    return ImmutableList.of(id, name, address, rootContext, modified, version, remoteManaged);
   }
 
   public static class ListImpl extends BaseListField<ReplicationSiteField> {
