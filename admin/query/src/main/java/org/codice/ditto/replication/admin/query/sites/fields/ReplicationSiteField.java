@@ -14,14 +14,18 @@
 package org.codice.ditto.replication.admin.query.sites.fields;
 
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import org.codice.ddf.admin.api.Field;
 import org.codice.ddf.admin.common.fields.base.BaseListField;
 import org.codice.ddf.admin.common.fields.base.BaseObjectField;
+import org.codice.ddf.admin.common.fields.base.scalar.IntegerField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ditto.replication.admin.query.replications.fields.DateField;
 
 public class ReplicationSiteField extends BaseObjectField {
 
@@ -29,7 +33,7 @@ public class ReplicationSiteField extends BaseObjectField {
 
   private static final String FIELD_TYPE_NAME = "ReplicationSite";
 
-  private static final String DESCRIPTION = "Contains the name and address of a site.";
+  private static final String DESCRIPTION = "Contains information about a Site.";
 
   private PidField id;
 
@@ -38,6 +42,12 @@ public class ReplicationSiteField extends BaseObjectField {
   private AddressField address;
 
   private StringField rootContext;
+
+  private DateField modified;
+
+  private IntegerField version;
+
+  private RemoteManagedField remoteManaged;
 
   public ReplicationSiteField() {
     this(DEFAULT_FIELD_NAME);
@@ -49,6 +59,9 @@ public class ReplicationSiteField extends BaseObjectField {
     this.name = new StringField("name");
     this.address = new AddressField();
     this.rootContext = new StringField("rootContext");
+    this.modified = new DateField("modified");
+    this.version = new IntegerField("version");
+    this.remoteManaged = new RemoteManagedField();
   }
 
   public ReplicationSiteField id(String id) {
@@ -69,6 +82,28 @@ public class ReplicationSiteField extends BaseObjectField {
   public ReplicationSiteField rootContext(String context) {
     this.rootContext.setValue(context);
     return this;
+  }
+
+  public ReplicationSiteField modified(Date modified) {
+    this.modified.setValue(getInstantOrNull(modified));
+    return this;
+  }
+
+  public ReplicationSiteField version(int version) {
+    this.version.setValue(version);
+    return this;
+  }
+
+  public ReplicationSiteField isDisableLocal(boolean isDisableLocal) {
+    this.remoteManaged.setValue(isDisableLocal);
+    return this;
+  }
+
+  private static Instant getInstantOrNull(Date date) {
+    if (date != null) {
+      return date.toInstant();
+    }
+    return null;
   }
 
   public String id() {
@@ -95,9 +130,21 @@ public class ReplicationSiteField extends BaseObjectField {
     return rootContext;
   }
 
+  public DateField modified() {
+    return modified;
+  }
+
+  public IntegerField version() {
+    return version;
+  }
+
+  public boolean isDisabledLocal() {
+    return remoteManaged.getValue();
+  }
+
   @Override
   public List<Field> getFields() {
-    return ImmutableList.of(id, name, address, rootContext);
+    return ImmutableList.of(id, name, address, rootContext, modified, version, remoteManaged);
   }
 
   public static class ListImpl extends BaseListField<ReplicationSiteField> {

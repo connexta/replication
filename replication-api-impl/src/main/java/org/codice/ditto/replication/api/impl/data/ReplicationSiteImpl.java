@@ -29,8 +29,22 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   private static final String URL_KEY = "url";
 
-  /** 1 - initial version. */
-  public static final int CURRENT_VERSION = 1;
+  private static final String IS_REMOTE_MANAGED_KEY = "is-remote-managed";
+
+  /**
+   * List of possible versions:
+   *
+   * <ul>
+   *   <li>1 - initial version.
+   *   <li>2 - Adds
+   *       <ul>
+   *         <li>is-remote-managed field of type boolean, defaults to false
+   *       </ul>
+   * </ul>
+   */
+  public static final int CURRENT_VERSION = 2;
+
+  private boolean isRemoteManaged = false;
 
   private String name;
 
@@ -61,10 +75,21 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   }
 
   @Override
+  public void setRemoteManaged(boolean remoteManaged) {
+    this.isRemoteManaged = remoteManaged;
+  }
+
+  @Override
+  public boolean isRemoteManaged() {
+    return isRemoteManaged;
+  }
+
+  @Override
   public Map<String, Object> toMap() {
     Map<String, Object> result = super.toMap();
     result.put(NAME_KEY, getName());
     result.put(URL_KEY, getUrl());
+    result.put(IS_REMOTE_MANAGED_KEY, isRemoteManaged());
     return result;
   }
 
@@ -73,5 +98,12 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     super.fromMap(properties);
     setName((String) properties.get(NAME_KEY));
     setUrl((String) properties.get(URL_KEY));
+
+    if (super.getVersion() == 1) {
+      setRemoteManaged(false);
+      super.setVersion(CURRENT_VERSION);
+    } else {
+      setRemoteManaged(Boolean.parseBoolean((String) properties.get(IS_REMOTE_MANAGED_KEY)));
+    }
   }
 }

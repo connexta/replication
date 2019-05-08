@@ -14,6 +14,7 @@
 package org.codice.ditto.replication.api.impl.data;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
@@ -79,7 +80,24 @@ public class ReplicationSiteImplTest {
     assertThat(site.getId(), equalTo(TEST_ID));
     assertThat(site.getName(), equalTo(TEST_NAME));
     assertThat(site.getUrl(), equalTo(TEST_URL));
-    assertThat(site.getVersion(), equalTo(1));
+    assertThat(site.getVersion(), equalTo(2));
+  }
+
+  @Test
+  public void testReadVersionOnePopulatesDefaultRemoteManagedField() {
+    Map<String, Object> map = new HashMap<>();
+    map.put(ID, TEST_ID);
+    map.put(NAME, TEST_NAME);
+    map.put(URL, TEST_URL);
+    map.put(VERSION, 1);
+
+    site.fromMap(map);
+
+    assertThat(site.getId(), is(TEST_ID));
+    assertThat(site.getName(), is(TEST_NAME));
+    assertThat(site.getUrl(), is(TEST_URL));
+    assertThat(site.isRemoteManaged(), is(false));
+    assertThat(site.getVersion(), is(2));
   }
 
   private ReplicationSiteImpl loadSite(ReplicationSiteImpl site) {

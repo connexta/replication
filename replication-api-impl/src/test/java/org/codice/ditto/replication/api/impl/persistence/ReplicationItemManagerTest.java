@@ -74,6 +74,14 @@ public class ReplicationItemManagerTest {
 
   private static final String VERSION = "version";
 
+  private static final String MODIFIED = "modified";
+
+  private static final String DELETED = "deleted";
+
+  private static final String DELETE_DATA = "deleteData";
+
+  private static final String IS_REMOTE_MANAGED = "is-remote-managed";
+
   private PersistentStore mockPersistentStore;
 
   private ReplicationPersistentStore persistentStore;
@@ -127,6 +135,7 @@ public class ReplicationItemManagerTest {
     map.put(NAME, NAME + num);
     map.put(URL, URL + num);
     map.put(VERSION, ReplicationSiteImpl.CURRENT_VERSION);
+    map.put(IS_REMOTE_MANAGED, false);
     return map;
   }
 
