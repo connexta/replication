@@ -21,6 +21,7 @@ import { withStyles } from '@material-ui/core/styles'
 import Immutable from 'immutable'
 import ServerError from '../common/ServerError'
 import CenteredCircularProgress from '../common/CenteredCircularProgress'
+import RemoteReplicationsTable from './RemoteReplicationsTable'
 
 const styles = {
   expandingCard: {
@@ -51,6 +52,12 @@ const AddButton = props => {
     <Button color='primary' variant='outlined' onClick={props.onClick}>
       <Typography color='inherit'>Add Replication</Typography>
     </Button>
+  )
+}
+
+function sourceOrDestinationRemoteManaged(replication) {
+  return (
+    replication.source.remoteManaged || replication.destination.remoteManaged
   )
 }
 
@@ -86,10 +93,19 @@ function ReplicationsContainer(props) {
           data.replication.replications.length > 0
         ) {
           const activeReplications = Immutable.List(
-            data.replication.replications.filter(r => !r.suspended)
+            data.replication.replications.filter(
+              r => !r.suspended && !sourceOrDestinationRemoteManaged(r)
+            )
           )
           const inactiveReplications = Immutable.List(
-            data.replication.replications.filter(r => r.suspended)
+            data.replication.replications.filter(
+              r => r.suspended && !sourceOrDestinationRemoteManaged(r)
+            )
+          )
+          const remoteManagedReplications = Immutable.List(
+            data.replication.replications.filter(r =>
+              sourceOrDestinationRemoteManaged(r)
+            )
           )
 
           return (
@@ -110,6 +126,14 @@ function ReplicationsContainer(props) {
                   <ReplicationsTable
                     title='Inactive Replications'
                     replications={inactiveReplications}
+                  />
+                </div>
+              )}
+
+              {remoteManagedReplications.size > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <RemoteReplicationsTable
+                    replications={remoteManagedReplications}
                   />
                 </div>
               )}

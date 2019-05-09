@@ -12,6 +12,7 @@
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
 import gql from 'graphql-tag'
+import { sites } from './fragments'
 
 export const deleteSite = gql`
   mutation deleteReplicationSite($id: Pid!) {
@@ -29,12 +30,9 @@ export const addSite = gql`
       address: $address
       rootContext: $rootContext
     ) {
-      id
-      name
-      address {
-        url
-      }
+      ...ReplicationSite
       rootContext
     }
   }
+  ${sites}
 `
