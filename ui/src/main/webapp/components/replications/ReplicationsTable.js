@@ -30,6 +30,7 @@ import Immutable from 'immutable'
 import { withStyles } from '@material-ui/core/styles'
 import ActionsMenu from './ActionsMenu'
 import Replications from './replications'
+import ReactInterval from 'react-interval'
 
 const styles = {
   root: {
@@ -45,9 +46,11 @@ const format = utc => {
   return utc ? moment.utc(utc).fromNow() : '-'
 }
 
-class ReplicationsTable extends React.Component {
+class ReplicationRow extends React.Component {
   state = {
     anchor: null,
+    lastRun: format(this.props.replication.lastRun),
+    lastSuccess: format(this.props.replication.lastSuccess),
   }
 
   handleClickOpen = replication => event => {
@@ -58,6 +61,54 @@ class ReplicationsTable extends React.Component {
     this.setState({ anchor: null })
   }
 
+  render() {
+    const { replication } = this.props
+
+    return (
+      <TableRow>
+        <ReactInterval
+          enabled={true}
+          timeout={60000}
+          callback={() => {
+            this.setState({
+              lastRun: format(replication.lastRun),
+              lastSuccess: format(replication.lastSuccess),
+            })
+          }}
+        />
+
+        <TableCell component='th'>{replication.name}</TableCell>
+        <TableCell>{Replications.statusDisplayName(replication)}</TableCell>
+        <TableCell>{replication.source.name}</TableCell>
+        <TableCell>{replication.destination.name}</TableCell>
+        <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
+        <TableCell>{replication.filter}</TableCell>
+        <TableCell>{replication.itemsTransferred}</TableCell>
+        <TableCell>{replication.dataTransferred}</TableCell>
+        <TableCell>{this.state.lastRun}</TableCell>
+        <TableCell>{this.state.lastSuccess}</TableCell>
+        <TableCell>
+          <IconButton
+            onClick={this.handleClickOpen(replication)}
+            aria-label='More'
+            aria-owns={this.state.anchor !== null ? 'actions-menu' : undefined}
+          >
+            <MoreVert />
+          </IconButton>
+
+          <ActionsMenu
+            menuId='actions-menu'
+            replication={this.state.replication}
+            anchorEl={this.state.anchor}
+            onClose={this.handleClose}
+          />
+        </TableCell>
+      </TableRow>
+    )
+  }
+}
+
+class ReplicationsTable extends React.Component {
   render() {
     const { replications, title, classes } = this.props
     const sorted = Immutable.List(replications.sort(Replications.repSort))
@@ -88,40 +139,10 @@ class ReplicationsTable extends React.Component {
           <TableBody>
             {sorted &&
               sorted.map(replication => (
-                <TableRow key={replication.id}>
-                  <TableCell component='th'>{replication.name}</TableCell>
-                  <TableCell>
-                    {Replications.statusDisplayName(replication)}
-                  </TableCell>
-                  <TableCell>{replication.source.name}</TableCell>
-                  <TableCell>{replication.destination.name}</TableCell>
-                  <TableCell>
-                    {replication.biDirectional ? 'Yes' : 'No'}
-                  </TableCell>
-                  <TableCell>{replication.filter}</TableCell>
-                  <TableCell>{replication.itemsTransferred}</TableCell>
-                  <TableCell>{replication.dataTransferred}</TableCell>
-                  <TableCell>{format(replication.lastRun)}</TableCell>
-                  <TableCell>{format(replication.lastSuccess)}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      onClick={this.handleClickOpen(replication)}
-                      aria-label='More'
-                      aria-owns={
-                        this.state.anchor !== null ? 'actions-menu' : undefined
-                      }
-                    >
-                      <MoreVert />
-                    </IconButton>
-
-                    <ActionsMenu
-                      menuId='actions-menu'
-                      replication={this.state.replication}
-                      anchorEl={this.state.anchor}
-                      onClose={this.handleClose}
-                    />
-                  </TableCell>
-                </TableRow>
+                <ReplicationRow
+                  key={replication.id}
+                  replication={replication}
+                />
               ))}
           </TableBody>
         </Table>

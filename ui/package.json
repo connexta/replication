@@ -35,6 +35,7 @@
     "react": "16.8.3",
     "react-apollo": "2.3.3",
     "react-dom": "16.8.3",
+    "react-interval": "2.0.2",
     "react-router-dom": "4.3.1",
     "unfetch": "4.1.0"
   },
@@ -74,7 +75,7 @@
     ],
     "coverageThreshold": {
       "global": {
-        "statements": 6,
+        "statements": 5,
         "branches": 6,
         "lines": 6,
         "functions": 1
