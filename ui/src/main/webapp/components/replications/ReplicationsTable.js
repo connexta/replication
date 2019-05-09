@@ -40,6 +40,9 @@ const styles = {
   title: {
     flex: '0 0 auto',
   },
+  actions: {
+    float: 'right',
+  },
 }
 
 const format = utc => {
@@ -89,6 +92,7 @@ class ReplicationRow extends React.Component {
         <TableCell>{this.state.lastSuccess}</TableCell>
         <TableCell>
           <IconButton
+            className={classes.actions}
             onClick={this.handleClickOpen(replication)}
             aria-label='More'
             aria-owns={this.state.anchor !== null ? 'actions-menu' : undefined}

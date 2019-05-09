@@ -26,6 +26,9 @@ const styles = {
   title: {
     flex: '0 0 auto',
   },
+  actions: {
+    float: 'right',
+  },
 }
 
 function RemoteReplicationsTable(props) {
@@ -41,7 +44,6 @@ function RemoteReplicationsTable(props) {
         <Typography variant='h6' id='tableTitle' className={classes.title}>
           {'Remote Managed Replications'}
           <Tooltip
-            className={classes.tooltip}
             title='Replications in this table are remotely managed by the Cloud because one of the source or destination Nodes has been identified as a Cloud ready Node. They will be run by the Cloud and statistics for these Replications will not be available locally.'
             placement='bottom'
           >
@@ -79,6 +81,7 @@ function RemoteReplicationsTable(props) {
                     }}
                     aria-label='More'
                     aria-owns={anchor !== null ? 'actions-menu' : undefined}
+                    className={classes.actions}
                   >
                     <MoreVert />
                   </IconButton>
