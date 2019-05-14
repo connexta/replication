@@ -301,7 +301,7 @@ public class ReplicationUtils {
     address.port(url.getPort());
     field.address(address);
     field.rootContext(StringUtils.isEmpty(url.getPath()) ? DEFAULT_CONTEXT : url.getPath());
-    field.isDisableLocal(site.isRemoteManaged());
+    field.isRemoteManaged(site.isRemoteManaged());
     return field;
   }
 
