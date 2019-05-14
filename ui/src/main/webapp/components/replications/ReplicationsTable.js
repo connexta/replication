@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import {
   Paper,
@@ -27,12 +27,12 @@ import {
 import { MoreVert } from '@material-ui/icons'
 import moment from 'moment'
 import Immutable from 'immutable'
-import { withStyles } from '@material-ui/core/styles'
 import ActionsMenu from './ActionsMenu'
 import Replications from './replications'
 import ReactInterval from 'react-interval'
+import { makeStyles } from '@material-ui/styles'
 
-const styles = {
+const useStyles = makeStyles({
   root: {
     width: '100%',
     overflowX: 'auto',
@@ -43,120 +43,109 @@ const styles = {
   actions: {
     float: 'right',
   },
-}
+})
 
 const format = utc => {
   return utc ? moment.utc(utc).fromNow() : '-'
 }
 
-class ReplicationRow extends React.Component {
-  state = {
-    anchor: null,
-    lastRun: format(this.props.replication.lastRun),
-    lastSuccess: format(this.props.replication.lastSuccess),
-  }
+function ReplicationRow(props) {
+  const [anchor, setAnchor] = useState(null)
+  const [selectedReplication, setSelectedReplication] = useState({})
+  const [lastRun, setLastRun] = useState(format(props.replication.lastRun))
+  const [lastSuccess, setLastSuccess] = useState(
+    format(props.replication.lastSuccess)
+  )
+  const classes = useStyles()
 
-  handleClickOpen = replication => event => {
-    this.setState({ replication, anchor: event.currentTarget })
-  }
+  const { replication } = props
 
-  handleClose = () => {
-    this.setState({ anchor: null })
-  }
+  return (
+    <TableRow>
+      <ReactInterval
+        enabled={true}
+        timeout={60000}
+        callback={() => {
+          setLastRun(format(replication.lastRun))
+          setLastSuccess(format(replication.lastSuccess))
+        }}
+      />
 
-  render() {
-    const { replication } = this.props
-
-    return (
-      <TableRow>
-        <ReactInterval
-          enabled={true}
-          timeout={60000}
-          callback={() => {
-            this.setState({
-              lastRun: format(replication.lastRun),
-              lastSuccess: format(replication.lastSuccess),
-            })
+      <TableCell component='th'>{replication.name}</TableCell>
+      <TableCell>{Replications.statusDisplayName(replication)}</TableCell>
+      <TableCell>{replication.source.name}</TableCell>
+      <TableCell>{replication.destination.name}</TableCell>
+      <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
+      <TableCell>{replication.filter}</TableCell>
+      <TableCell>{replication.itemsTransferred}</TableCell>
+      <TableCell>{replication.dataTransferred}</TableCell>
+      <TableCell>{lastRun}</TableCell>
+      <TableCell>{lastSuccess}</TableCell>
+      <TableCell>
+        <IconButton
+          className={classes.actions}
+          onClick={e => {
+            setSelectedReplication(replication)
+            setAnchor(e.currentTarget)
           }}
+          aria-label='More'
+          aria-owns={anchor !== null ? 'actions-menu' : undefined}
+        >
+          <MoreVert />
+        </IconButton>
+
+        <ActionsMenu
+          menuId='actions-menu'
+          replication={selectedReplication}
+          anchorEl={anchor}
+          onClose={() => setAnchor(null)}
         />
-
-        <TableCell component='th'>{replication.name}</TableCell>
-        <TableCell>{Replications.statusDisplayName(replication)}</TableCell>
-        <TableCell>{replication.source.name}</TableCell>
-        <TableCell>{replication.destination.name}</TableCell>
-        <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
-        <TableCell>{replication.filter}</TableCell>
-        <TableCell>{replication.itemsTransferred}</TableCell>
-        <TableCell>{replication.dataTransferred}</TableCell>
-        <TableCell>{this.state.lastRun}</TableCell>
-        <TableCell>{this.state.lastSuccess}</TableCell>
-        <TableCell>
-          <IconButton
-            className={classes.actions}
-            onClick={this.handleClickOpen(replication)}
-            aria-label='More'
-            aria-owns={this.state.anchor !== null ? 'actions-menu' : undefined}
-          >
-            <MoreVert />
-          </IconButton>
-
-          <ActionsMenu
-            menuId='actions-menu'
-            replication={this.state.replication}
-            anchorEl={this.state.anchor}
-            onClose={this.handleClose}
-          />
-        </TableCell>
-      </TableRow>
-    )
-  }
+      </TableCell>
+    </TableRow>
+  )
 }
 
-class ReplicationsTable extends React.Component {
-  render() {
-    const { replications, title, classes } = this.props
-    const sorted = Immutable.List(replications.sort(Replications.repSort))
+function ReplicationsTable(props) {
+  const { replications, title } = props
+  const classes = useStyles()
+  const sorted = Immutable.List(replications.sort(Replications.repSort))
 
-    return (
-      <Paper className={classes.root}>
-        <Toolbar>
-          <Typography variant='h6' id='tableTitle' className={classes.title}>
-            {title}
-          </Typography>
-        </Toolbar>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Last Run Status</TableCell>
-              <TableCell>Source</TableCell>
-              <TableCell>Destination</TableCell>
-              <TableCell>Bidirectional</TableCell>
-              <TableCell>Filter</TableCell>
-              <TableCell>Items Transferred</TableCell>
-              <TableCell>MB Transferred</TableCell>
-              <TableCell>Last Run</TableCell>
-              <TableCell>Last Success</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sorted &&
-              sorted.map(replication => (
-                <ReplicationRow
-                  key={replication.id}
-                  replication={replication}
-                />
-              ))}
-          </TableBody>
-        </Table>
-      </Paper>
-    )
-  }
+  return (
+    <Paper className={classes.root}>
+      <Toolbar>
+        <Typography variant='h6' id='tableTitle' className={classes.title}>
+          {title}
+        </Typography>
+      </Toolbar>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell>Last Run Status</TableCell>
+            <TableCell>Source</TableCell>
+            <TableCell>Destination</TableCell>
+            <TableCell>Bidirectional</TableCell>
+            <TableCell>Filter</TableCell>
+            <TableCell>Items Transferred</TableCell>
+            <TableCell>MB Transferred</TableCell>
+            <TableCell>Last Run</TableCell>
+            <TableCell>Last Success</TableCell>
+            <TableCell />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {sorted &&
+            sorted.map(replication => (
+              <ReplicationRow key={replication.id} replication={replication} />
+            ))}
+        </TableBody>
+      </Table>
+    </Paper>
+  )
 }
 
 ReplicationsTable.propTypes = {
   replications: PropTypes.object.isRequired,
 }
 
-export default withStyles(styles)(ReplicationsTable)
+export default ReplicationsTable
