@@ -27,6 +27,8 @@ public class ITReplicationQuery {
 
   private static final String GRAPHQL_ENDPOINT = "https://localhost:8993/admin/hub/graphql";
 
+  private static final String NO_EXISTING_CONFIG = "NO_EXISTING_CONFIG";
+
   private static final String URL = "https://localhost:9999/services";
 
   // ----------------------------------- Site Tests -----------------------------------//
@@ -130,12 +132,7 @@ public class ITReplicationQuery {
         .then()
         .statusCode(200)
         .header("Content-Type", is("application/json;charset=utf-8"))
-        .body(
-            "errors.message",
-            hasItem(
-                "Internal Server Error(s) while executing query")); // what we currently get when a
-    // site with the given ID
-    // doesn't exist
+        .body("errors.message", hasItem(NO_EXISTING_CONFIG));
   }
 
   @Test
@@ -147,7 +144,7 @@ public class ITReplicationQuery {
         .then()
         .statusCode(200)
         .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("data.deleteReplicationSite", is(false));
+        .body("errors.message", hasItem(NO_EXISTING_CONFIG));
   }
 
   // ----------------------------------- General Tests -----------------------------------//
@@ -188,7 +185,7 @@ public class ITReplicationQuery {
 
   private static String makeUpdateSiteQuery(String id, String name, String url) {
     return String.format(
-        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
+        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\")}\"}",
         id, name, url);
   }
 

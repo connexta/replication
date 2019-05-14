@@ -20,19 +20,21 @@ import java.util.Set;
 import org.codice.ddf.admin.api.Field;
 import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
+import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ddf.admin.common.report.message.DefaultMessages;
+import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
-import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 
-public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteField> {
+public class UpdateReplicationSite extends BaseFunctionField<BooleanField> {
 
   public static final String FIELD_NAME = "updateReplicationSite";
 
-  public static final String DESCRIPTION = "Updates a replication Site.";
+  public static final String DESCRIPTION = "Updates a Replication Site.";
 
-  public static final ReplicationSiteField RETURN_TYPE = new ReplicationSiteField();
+  public static final BooleanField RETURN_TYPE = new BooleanField();
 
   private PidField id;
 
@@ -48,20 +50,23 @@ public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
     super(FIELD_NAME, DESCRIPTION);
     this.replicationUtils = replicationUtils;
 
-    id = new PidField("id");
-    name = new StringField("name");
-    address = new AddressField();
-    rootContext = new StringField("rootContext");
+    this.id = new PidField("id");
+    this.name = new StringField("name");
+    this.address = new AddressField();
+    this.rootContext = new StringField("rootContext");
+
+    this.id.isRequired(true);
   }
 
   @Override
-  public ReplicationSiteField performFunction() {
-    return replicationUtils.updateSite(
-        id.getValue(), name.getValue(), address, rootContext.getValue());
+  public BooleanField performFunction() {
+    return new BooleanField(
+        replicationUtils.updateSite(
+            id.getValue(), name.getValue(), address, rootContext.getValue()));
   }
 
   @Override
-  public ReplicationSiteField getReturnType() {
+  public BooleanField getReturnType() {
     return RETURN_TYPE;
   }
 
@@ -71,12 +76,36 @@ public class UpdateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
   }
 
   @Override
-  public FunctionField<ReplicationSiteField> newInstance() {
+  public FunctionField<BooleanField> newInstance() {
     return new UpdateReplicationSite(replicationUtils);
   }
 
   @Override
   public Set<String> getFunctionErrorCodes() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(ReplicationMessages.DUPLICATE_SITE, DefaultMessages.NO_EXISTING_CONFIG);
+  }
+
+  @Override
+  public void validate() {
+    super.validate();
+    if (containsErrorMsgs()) {
+      return;
+    }
+
+    final String updateId = id.getValue();
+    if (!replicationUtils.siteIdExists(updateId)) {
+      addErrorMessage(DefaultMessages.noExistingConfigError());
+    }
+
+    final String updatedName = name.getValue();
+    if (updatedName != null) {
+      if ((replicationUtils.isUpdatedSitesName(updateId, updatedName))) {
+        return;
+      }
+
+      if (replicationUtils.isDuplicateSiteName(updatedName)) {
+        addErrorMessage(ReplicationMessages.duplicateSites());
+      }
+    }
   }
 }
