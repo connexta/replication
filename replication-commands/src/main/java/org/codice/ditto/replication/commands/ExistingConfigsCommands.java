@@ -13,15 +13,20 @@
  */
 package org.codice.ditto.replication.commands;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.karaf.shell.api.action.Argument;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.codice.ddf.commands.catalog.SubjectCommands;
+import org.codice.ditto.replication.api.data.Persistable;
+import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
+import org.codice.ditto.replication.api.persistence.SiteManager;
 
 abstract class ExistingConfigsCommands extends SubjectCommands {
 
@@ -35,25 +40,63 @@ abstract class ExistingConfigsCommands extends SubjectCommands {
 
   @Reference ReplicatorConfigManager replicatorConfigManager;
 
+  @Reference SiteManager siteManager;
+
   @Override
   protected final Object executeWithSubject() throws Exception {
-    List<ReplicatorConfig> configs = replicatorConfigManager.objects().collect(Collectors.toList());
-    for (final String configName : new HashSet<>(configNames)) {
-      final Optional<ReplicatorConfig> config =
-          configs.stream().filter(c -> c.getName().equals(configName)).findFirst();
+    final Map<String, ReplicationSite> sites =
+        siteManager.objects().collect(Collectors.toMap(Persistable::getId, Function.identity()));
+    final Map<String, ReplicatorConfig> configs =
+        replicatorConfigManager
+            .objects()
+            .collect(Collectors.toMap(ReplicatorConfig::getName, Function.identity()));
 
-      if (config.isPresent()) {
-        executeWithExistingConfig(configName, config.get());
-      } else {
-        printErrorMessage(
-            "There are no replication configurations with the name \""
-                + configName
-                + "\". Nothing was executed for that name.");
-      }
-    }
-
+    configNames
+        .stream()
+        .distinct()
+        .map(config -> Pair.of(config, configs.get(config)))
+        .forEach(config -> executeWithExistingConfig(config.getKey(), config.getValue(), sites));
     return null;
   }
 
-  abstract void executeWithExistingConfig(final String configName, final ReplicatorConfig config);
+  private void executeWithExistingConfig(
+      String configName, @Nullable ReplicatorConfig config, Map<String, ReplicationSite> sites) {
+    if (config == null) {
+      printErrorMessage(
+          "There are no replication configurations with the name \""
+              + configName
+              + "\". Nothing was executed for that name.");
+      return;
+    }
+    final ReplicationSite source = sites.get(config.getSource());
+    final ReplicationSite destination = sites.get(config.getDestination());
+
+    if (source == null) {
+      printErrorMessage(
+          "Unable to determine the source \""
+              + config.getSource()
+              + "\" for replication \""
+              + configName
+              + "\". Nothing was executed for that name.");
+    } else if (destination == null) {
+      printErrorMessage(
+          "Unable to determine the destination \""
+              + config.getDestination()
+              + "\" for replication \""
+              + configName
+              + "\". Nothing was executed for that name.");
+    } else {
+      executeWithExistingConfig(config, source, destination);
+    }
+  }
+
+  /**
+   * Executes the command for the specified configuration and sites.
+   *
+   * @param config the replication configuration for which to execute the command
+   * @param source the source replication site associated with the configuration
+   * @param destination the destination replication site associated with the configuration
+   */
+  protected abstract void executeWithExistingConfig(
+      ReplicatorConfig config, ReplicationSite source, ReplicationSite destination);
 }

@@ -13,8 +13,14 @@
  */
 package org.codice.ditto.replication.api;
 
+import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
+/**
+ * The {@link SyncRequest} interface gathers together information that is required to synchronize
+ * two sites together. It also provides access to a status that can be updated as part of the
+ * processing of this synchronization request.
+ */
 public interface SyncRequest {
 
   /**
@@ -23,6 +29,20 @@ public interface SyncRequest {
    * @return The configuration of this request
    */
   ReplicatorConfig getConfig();
+
+  /**
+   * Gets the source replication site associated with the configuration for this request.
+   *
+   * @return the source replication site
+   */
+  ReplicationSite getSource();
+
+  /**
+   * Gets the destination replication site associated with the configuration for this request.
+   *
+   * @return the destination replication site
+   */
+  ReplicationSite getDestination();
 
   /**
    * Get the status of this request. Status will be updated during processing.

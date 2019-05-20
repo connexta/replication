@@ -112,7 +112,7 @@ class SyncHelper {
 
   private long bytesTransferred;
 
-  private boolean canceled = false;
+  private volatile boolean canceled = false;
 
   private ReplicationStatus status;
 
@@ -138,7 +138,6 @@ class SyncHelper {
     bytesTransferred = 0;
   }
 
-  @SuppressWarnings("squid:S3655" /*isUpdatable performs the needed optional check*/)
   public SyncResponse sync() {
     for (Result metacardResult : getMetacardChangeSet()) {
       if (canceled) {
@@ -149,13 +148,7 @@ class SyncHelper {
 
       boolean deletedMetacard = isDeletedMetacard();
       try {
-        if (deletedMetacard) {
-          processDeletedMetacard();
-        } else if (isUpdatable()) {
-          processUpdate(existingReplicationItem.get());
-        } else {
-          processCreate();
-        }
+        process(deletedMetacard);
       } catch (Exception e) {
         if (causedByConnectionLoss(e)) {
           logConnectionLoss();
@@ -176,6 +169,17 @@ class SyncHelper {
     }
     status.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
     return new SyncResponse(syncCount, failCount, bytesTransferred, status.getStatus());
+  }
+
+  @SuppressWarnings("squid:S3655" /*isUpdatable performs the needed optional check*/)
+  private void process(boolean deletedMetacard) throws IngestException, SourceUnavailableException {
+    if (deletedMetacard) {
+      processDeletedMetacard();
+    } else if (isUpdatable()) {
+      processUpdate(existingReplicationItem.get());
+    } else {
+      processCreate();
+    }
   }
 
   /**

@@ -16,22 +16,44 @@ package org.codice.ditto.replication.api.impl.data;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
+/** Provides a simple implementation for the {@link SyncRequest} interface. */
 public class SyncRequestImpl implements SyncRequest {
 
   private ReplicatorConfig config;
 
+  private ReplicationSite source;
+
+  private ReplicationSite destination;
+
   private ReplicationStatus status;
 
-  public SyncRequestImpl(ReplicatorConfig config, ReplicationStatus status) {
+  public SyncRequestImpl(
+      ReplicatorConfig config,
+      ReplicationSite source,
+      ReplicationSite destination,
+      ReplicationStatus status) {
     this.config = config;
+    this.source = source;
+    this.destination = destination;
     this.status = status;
   }
 
   @Override
   public ReplicatorConfig getConfig() {
     return config;
+  }
+
+  @Override
+  public ReplicationSite getSource() {
+    return source;
+  }
+
+  @Override
+  public ReplicationSite getDestination() {
+    return destination;
   }
 
   @Override
@@ -54,6 +76,8 @@ public class SyncRequestImpl implements SyncRequest {
 
   @Override
   public String toString() {
-    return String.format("SyncRequestImpl{config=%s, status=%s}", config, status);
+    return String.format(
+        "SyncRequestImpl{config=%s, source=%s, destination=%s, status=%s}",
+        config, source, destination, status);
   }
 }

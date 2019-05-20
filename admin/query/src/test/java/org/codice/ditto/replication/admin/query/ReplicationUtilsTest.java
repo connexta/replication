@@ -356,7 +356,7 @@ public class ReplicationUtilsTest {
     ReplicationStatusImpl status = new ReplicationStatusImpl("test");
     status.setStatus(Status.PUSH_IN_PROGRESS);
     when(history.getReplicationEvents("test")).thenReturn(new ArrayList<>());
-    SyncRequestImpl syncRequest = new SyncRequestImpl(config, status);
+    SyncRequestImpl syncRequest = new SyncRequestImpl(config, src, dest, status);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.singleton(syncRequest));
     ReplicationField field = utils.updateReplication("id", "test", "srcId", "destId", "cql", true);
     assertThat(field.name(), is("test"));

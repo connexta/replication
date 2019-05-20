@@ -14,6 +14,7 @@
 package org.codice.ditto.replication.api.impl.persistence;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -61,6 +62,7 @@ public class SiteManagerImplTest {
     ReplicationSite site = captor.getValue();
     assertThat(site.getName(), is(SystemInfo.getSiteName()));
     assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
+    assertThat(site.getVerifiedUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
   }
 
   @Test
@@ -76,6 +78,7 @@ public class SiteManagerImplTest {
     ReplicationSiteImpl site = captor.getValue();
     assertThat(site.getName(), is(SystemInfo.getSiteName()));
     assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
+    assertThat(site.getVerifiedUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
   }
 
   @Test
@@ -91,6 +94,7 @@ public class SiteManagerImplTest {
     ReplicationSiteImpl site = captor.getValue();
     assertThat(site.getName(), is(SystemInfo.getSiteName()));
     assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
+    assertThat(site.getVerifiedUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
   }
 
   @Test
@@ -99,6 +103,7 @@ public class SiteManagerImplTest {
     orig.setId(LOCAL_SITE_ID);
     orig.setName(SystemInfo.getSiteName());
     orig.setUrl(SystemBaseUrl.EXTERNAL.getBaseUrl());
+    orig.setVerifiedUrl(SystemBaseUrl.EXTERNAL.getBaseUrl());
     when(persistentStore.get(eq(ReplicationSiteImpl.class), anyString())).thenReturn(orig);
     siteManager.init();
     verify(persistentStore, never()).save(any(ReplicationSiteImpl.class));
@@ -118,6 +123,7 @@ public class SiteManagerImplTest {
     ReplicationSite site = siteManager.createSite("name", "url");
     assertThat(site.getName(), is("name"));
     assertThat(site.getUrl(), is("url"));
+    assertThat(site.getVerifiedUrl(), nullValue());
   }
 
   @Test(expected = IllegalArgumentException.class)

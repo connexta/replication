@@ -46,9 +46,9 @@ import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
+import org.codice.ditto.replication.api.Verifier;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
-import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +62,7 @@ public class ReplicatorImpl implements Replicator {
 
   private final ReplicationItemManager persistentStore;
 
-  private final SiteManager siteManager;
+  private final Verifier verifier;
 
   private final ExecutorService executor;
 
@@ -82,14 +82,14 @@ public class ReplicatorImpl implements Replicator {
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
       ReplicationItemManager persistentStore,
-      SiteManager siteManager,
+      Verifier verifier,
       ExecutorService executor,
       FilterBuilder builder) {
     this(
         replicatorStoreFactory,
         history,
         persistentStore,
-        siteManager,
+        verifier,
         executor,
         builder,
         Security.getInstance());
@@ -99,7 +99,7 @@ public class ReplicatorImpl implements Replicator {
       ReplicatorStoreFactory replicatorStoreFactory,
       ReplicatorHistory history,
       ReplicationItemManager persistentStore,
-      SiteManager siteManager,
+      Verifier verifier,
       ExecutorService executor,
       FilterBuilder builder,
       Security security) {
@@ -108,7 +108,7 @@ public class ReplicatorImpl implements Replicator {
     this.persistentStore = notNull(persistentStore);
     this.executor = notNull(executor);
     this.builder = notNull(builder);
-    this.siteManager = notNull(siteManager);
+    this.verifier = notNull(verifier);
     this.security = security;
   }
 
@@ -158,21 +158,39 @@ public class ReplicatorImpl implements Replicator {
           status.markStartTime();
 
           ReplicatorConfig config = syncRequest.getConfig();
+          final ReplicationSite source = verify(syncRequest.getSource());
+          final ReplicationSite destination = verify(syncRequest.getDestination());
+
+          if (source.isRemoteManaged() || destination.isRemoteManaged()) {
+            LOGGER.trace(
+                "Config {}'s is remotely managed, not running the config", config.getName());
+            completeActiveSyncRequest(
+                syncRequest, status, false); // don't generate a replication event
+            return;
+          } else if ((source.getVerifiedUrl() == null) || (destination.getVerifiedUrl() == null)) {
+            LOGGER.warn(
+                "Error verifying sites for config {}. Setting status to {}",
+                config.getName(),
+                Status.CONNECTION_UNAVAILABLE);
+            status.setStatus(Status.CONNECTION_UNAVAILABLE);
+            completeActiveSyncRequest(syncRequest, status, true);
+            return;
+          }
           ReplicationStore node1 = null;
           ReplicationStore node2 = null;
 
           try {
-            node1 = getStoreForId(config.getSource());
-            node2 = getStoreForId(config.getDestination());
+            node1 = getStoreFor(source);
+            node2 = getStoreFor(destination);
           } catch (Exception e) {
             final Status connectionUnavailable = Status.CONNECTION_UNAVAILABLE;
             LOGGER.warn(
-                "Error getting store for source config {}. Setting status to {}",
+                "Error getting stores for config {}. Setting status to {}",
                 config.getName(),
                 connectionUnavailable,
                 e);
             status.setStatus(connectionUnavailable);
-            completeActiveSyncRequest(syncRequest, status);
+            completeActiveSyncRequest(syncRequest, status, true);
             closeQuietly(node1);
             closeQuietly(node2);
             return;
@@ -200,10 +218,17 @@ public class ReplicatorImpl implements Replicator {
                 e);
             status.setStatus(failureStatus);
           } finally {
-            completeActiveSyncRequest(syncRequest, status);
+            completeActiveSyncRequest(syncRequest, status, true);
             syncHelperMap.remove(syncRequest.getConfig().getId());
           }
         });
+  }
+
+  private ReplicationSite verify(ReplicationSite site) {
+    if (site.getVerifiedUrl() == null) {
+      verifier.verify(site);
+    }
+    return site;
   }
 
   private Status sync(
@@ -218,6 +243,7 @@ public class ReplicatorImpl implements Replicator {
     return response.getStatus();
   }
 
+  @VisibleForTesting
   SyncHelper createSyncHelper(
       ReplicationStore source,
       ReplicationStore destination,
@@ -226,15 +252,18 @@ public class ReplicatorImpl implements Replicator {
     return new SyncHelper(source, destination, config, status, persistentStore, history, builder);
   }
 
-  private void completeActiveSyncRequest(SyncRequest syncRequest, ReplicationStatus status) {
+  private void completeActiveSyncRequest(
+      SyncRequest syncRequest, ReplicationStatus status, boolean report) {
     status.setDuration();
     LOGGER.trace("Removing sync request {} from the active queue", syncRequest);
     if (!activeSyncRequests.remove(syncRequest)) {
       LOGGER.debug("Failed to remove sync request {} from the active queue", syncRequest);
     }
-    LOGGER.trace("Adding replication event to history: {}", status);
-    history.addReplicationEvent(status);
-    LOGGER.trace("Successfully added replication event to history: {}", status);
+    if (report) {
+      LOGGER.trace("Adding replication event to history: {}", status);
+      history.addReplicationEvent(status);
+      LOGGER.trace("Successfully added replication event to history: {}", status);
+    }
   }
 
   public void cleanUp() {
@@ -311,13 +340,18 @@ public class ReplicatorImpl implements Replicator {
     return Collections.unmodifiableSet(new HashSet<>(activeSyncRequests));
   }
 
-  private ReplicationStore getStoreForId(String siteId) {
+  private ReplicationStore getStoreFor(ReplicationSite site) {
     ReplicationStore store;
-    ReplicationSite site = siteManager.get(siteId);
+    final String url = site.getVerifiedUrl();
+
+    if (url == null) {
+      throw new ReplicationException("System at " + site.getUrl() + " has not been verified yet");
+    }
     try {
-      store = replicatorStoreFactory.createReplicatorStore(new URL(site.getUrl()));
+      store = replicatorStoreFactory.createReplicatorStore(new URL(url));
     } catch (Exception e) {
-      throw new ReplicationException("Error connecting to node at " + site.getUrl(), e);
+      throw new ReplicationException(
+          "Error connecting to node '" + site.getUrl() + "' at " + url, e);
     }
     if (!store.isAvailable()) {
       throw new ReplicationException("System at " + site.getUrl() + " is currently unavailable");
