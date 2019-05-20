@@ -13,9 +13,9 @@
  */
 package org.codice.ditto.replication.api.impl.persistence;
 
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -73,6 +73,8 @@ public class ReplicationPersistentStoreTest {
   private static final String SUSPENDED = "suspended";
 
   private static final String URL = "url";
+
+  private static final String VERIFIED_URL = "verified-url";
 
   private static final String VERSION = "version";
 
@@ -138,6 +140,7 @@ public class ReplicationPersistentStoreTest {
     map.put(ID, ID + num);
     map.put(NAME, NAME + num);
     map.put(URL, URL + num);
+    map.put(VERIFIED_URL, URL + "/verified/" + num);
     map.put(VERSION, ReplicationSiteImpl.CURRENT_VERSION);
     map.put(IS_REMOTE_MANAGED, false);
     return map;

@@ -34,10 +34,13 @@ public class SiteManagerImpl implements SiteManager {
 
   private void createLocalSite() {
     if (!localSiteExistsAndIsCorrect()) {
-      ReplicationSite site = new ReplicationSiteImpl();
+      final ReplicationSite site = new ReplicationSiteImpl();
+      final String url = SystemBaseUrl.EXTERNAL.constructUrl(null, true);
+
       site.setId(LOCAL_SITE_ID);
       site.setName(SystemInfo.getSiteName());
-      site.setUrl(SystemBaseUrl.EXTERNAL.constructUrl(null, true));
+      site.setUrl(url);
+      site.setVerifiedUrl(url); // do this after setUrl()
       save(site);
     }
   }
@@ -50,9 +53,11 @@ public class SiteManagerImpl implements SiteManager {
     } catch (NotFoundException e) {
       return false;
     }
+    final String url = SystemBaseUrl.EXTERNAL.getBaseUrl();
 
     return site.getName().equals(SystemInfo.getSiteName())
-        && site.getUrl().equals(SystemBaseUrl.EXTERNAL.getBaseUrl());
+        && url.equals(site.getUrl())
+        && url.equals(site.getVerifiedUrl());
   }
 
   @Override

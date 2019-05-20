@@ -13,6 +13,8 @@
  */
 package org.codice.ditto.replication.api.data;
 
+import javax.annotation.Nullable;
+
 /** A ReplicationSite holds information about a system to be replicated to/from */
 public interface ReplicationSite extends Persistable {
 
@@ -38,11 +40,32 @@ public interface ReplicationSite extends Persistable {
   String getUrl();
 
   /**
-   * Set the URL of this site
+   * Set the URL of this site while clearing the verified URL.
    *
    * @param url the URL to give this site
    */
   void setUrl(String url);
+
+  /**
+   * Get the verified URL of this site. This should be the url to use to communicate with the site
+   * when replicating. This URL will be <code>null</code> until the URL reported by {@link
+   * #getUrl()} has been verified at which point the verified URL should be updated. It is also
+   * possible that this URL be changed later in cases where the site permanently redirected us to a
+   * new location at which point this new location should be saved as the new verified URL until
+   * such time when the URL is changed via {@link #setUrl(String)} which will automatically clear
+   * the verified URL.
+   *
+   * @return the verified site URL
+   */
+  @Nullable
+  String getVerifiedUrl();
+
+  /**
+   * Set the verified URL of this site.
+   *
+   * @param url the verified URL to give this site or <code>null</code> to clear the URL
+   */
+  void setVerifiedUrl(@Nullable String url);
 
   /**
    * See {@link #isRemoteManaged()}.

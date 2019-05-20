@@ -16,7 +16,9 @@ package org.codice.ditto.replication.commands;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.codice.ditto.replication.api.Heartbeater;
 import org.codice.ditto.replication.api.Replicator;
+import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
@@ -26,11 +28,26 @@ import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 public class RunCommand extends ExistingConfigsCommands {
 
   @Reference Replicator replicator;
+  @Reference Heartbeater heartbeater;
 
   @Override
-  void executeWithExistingConfig(final String configName, ReplicatorConfig config) {
+  protected void executeWithExistingConfig(
+      ReplicatorConfig config, ReplicationSite source, ReplicationSite destination) {
+    if (source.isRemoteManaged() || destination.isRemoteManaged()) {
+      heartbeatConfig(config, source, destination);
+    } else {
+      // none of them are remote or they have not been verified yet
+      // either way, let the replicator handle it as it will verify them first if need be
+      replicateConfig(config, source, destination);
+    }
+  }
+
+  private void replicateConfig(
+      ReplicatorConfig config, ReplicationSite source, ReplicationSite destination) {
+    final String configName = config.getName();
     final SyncRequestImpl syncRequest =
-        new SyncRequestImpl(config, new ReplicationStatusImpl(configName));
+        new SyncRequestImpl(config, source, destination, new ReplicationStatusImpl(configName));
+
     try {
       replicator.submitSyncRequest(syncRequest);
       printSuccessMessage(
@@ -41,6 +58,36 @@ public class RunCommand extends ExistingConfigsCommands {
       printErrorMessage(
           "There was an interrupted exception while submitting replication request for the replication configuration with the name \""
               + configName
+              + "\". See logs for more details.");
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private void heartbeatConfig(
+      ReplicatorConfig config, ReplicationSite source, ReplicationSite destination) {
+    try {
+      if (source.isRemoteManaged() || (source.getVerifiedUrl() == null)) {
+        heartbeater.heartbeat(source);
+        printSuccessMessage(
+            "A heartbeat request was submitted for source \""
+                + source.getName()
+                + "\" of replication \""
+                + config.getName()
+                + "\".");
+      }
+      if (destination.isRemoteManaged() || (destination.getVerifiedUrl() == null)) {
+        heartbeater.heartbeat(destination);
+        printSuccessMessage(
+            "A heartbeat request was submitted for destination \""
+                + destination.getName()
+                + "\" of replication \""
+                + config.getName()
+                + "\".");
+      }
+    } catch (InterruptedException e) {
+      printErrorMessage(
+          "There was an interrupted exception while submitting heartbeat requests for the replication configuration with the name \""
+              + config.getName()
               + "\". See logs for more details.");
       Thread.currentThread().interrupt();
     }
