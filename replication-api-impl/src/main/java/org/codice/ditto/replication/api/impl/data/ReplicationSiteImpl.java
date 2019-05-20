@@ -60,8 +60,14 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   private String name;
 
+  /** This is the configured URL for the site. */
   private String url;
 
+  /**
+   * The verified url corresponds to the URL that should be used to replicate to/from or send a
+   * heartbeat to this site. It will typically be the same as the configured url above but you be
+   * changed if permanent redirects are received.
+   */
   @Nullable private String verifiedUrl = null;
 
   public ReplicationSiteImpl() {
