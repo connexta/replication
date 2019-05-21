@@ -11,27 +11,41 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.impl;
+package org.codice.ditto.replication.api.impl.data;
 
 import java.util.Date;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codice.ditto.replication.api.ReplicationItem;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.solr.core.mapping.Indexed;
+import org.springframework.data.solr.core.mapping.SolrDocument;
 
+@SolrDocument(collection = "replication_item")
 public class ReplicationItemImpl implements ReplicationItem {
 
-  private final String metadataId;
+  @Id
+  @Indexed(name = "id_txt")
+  private String id;
 
-  private final Date resourceModified;
+  @Indexed(name = "resource-modified_tdt")
+  private Date resourceModified;
 
-  private final Date metadataModified;
+  @Indexed(name = "metacard-modified_tdt")
+  private Date metadataModified;
 
-  private final String source;
+  @Indexed(name = "source_txt")
+  private String source;
 
-  private final String destination;
+  @Indexed(name = "destination_txt")
+  private String destination;
 
-  private final String configurationId;
+  @Indexed(name = "config-id_txt")
+  private String configId;
 
+  @Indexed(name = "failure-count_int")
   private int failureCount;
+
+  public ReplicationItemImpl() {}
 
   public ReplicationItemImpl(
       String metadataId,
@@ -51,7 +65,7 @@ public class ReplicationItemImpl implements ReplicationItem {
       String destination,
       String configId,
       int failureCount) {
-    this.metadataId = notBlank(metadataId);
+    this.id = notBlank(metadataId);
     // TODO these dates don't matter for delete requests that fail. Need to make a way to
     // instantiate a failed ReplicationItem for failed deletes.
     //    this.resourceModified = notNull(resourceModified);
@@ -60,12 +74,12 @@ public class ReplicationItemImpl implements ReplicationItem {
     this.metadataModified = metadataModified;
     this.source = notBlank(source);
     this.destination = notBlank(destination);
-    this.configurationId = configId;
+    this.configId = configId;
     this.failureCount = failureCount;
   }
 
   private static String notBlank(String s) {
-    if (StringUtils.isNotBlank(s)) {
+    if (!StringUtils.isBlank(s)) {
       return s;
     } else {
       throw new IllegalArgumentException("String argument may not be empty");
@@ -73,8 +87,8 @@ public class ReplicationItemImpl implements ReplicationItem {
   }
 
   @Override
-  public String getMetadataId() {
-    return metadataId;
+  public String getId() {
+    return id;
   }
 
   @Override
@@ -98,8 +112,8 @@ public class ReplicationItemImpl implements ReplicationItem {
   }
 
   @Override
-  public String getConfigurationId() {
-    return configurationId;
+  public String getConfigId() {
+    return configId;
   }
 
   @Override
@@ -116,6 +130,6 @@ public class ReplicationItemImpl implements ReplicationItem {
   public String toString() {
     return String.format(
         "ReplicationItemImpl{id=%s, resourceModified=%s, metadataModified=%s, sourceName=%s, destinationName=%s, replicatorConfigId=%s}",
-        metadataId, resourceModified, metadataModified, source, destination, configurationId);
+        id, resourceModified, metadataModified, source, destination, configId);
   }
 }

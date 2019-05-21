@@ -13,20 +13,15 @@
  */
 package org.codice.ditto.replication.api.impl;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import ddf.security.Subject;
 import java.net.URL;
-import java.security.PrivilegedAction;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
 import org.codice.ditto.replication.api.NodeAdapterType;
@@ -69,24 +64,12 @@ public class ReplicatorImplTest {
 
   @Mock Syncer syncer;
 
-  @Mock Security security;
-
   @Mock NodeAdapterFactory nodeAdapterFactory;
 
   @Before
   public void setUp() throws Exception {
-    Subject subject = mock(Subject.class);
-    Answer answer =
-        invocationOnMock -> {
-          ((Runnable) invocationOnMock.getArguments()[0]).run();
-          return null;
-        };
-    doAnswer(answer).when(subject).execute(any(Runnable.class));
-    when(security.runAsAdmin(any(PrivilegedAction.class))).thenReturn(subject);
-
     replicator =
-        new ReplicatorImpl(
-            nodeAdapters, replicatorHistoryManager, siteManager, executor, syncer, security);
+        new ReplicatorImpl(nodeAdapters, replicatorHistoryManager, siteManager, executor, syncer);
   }
 
   @Test

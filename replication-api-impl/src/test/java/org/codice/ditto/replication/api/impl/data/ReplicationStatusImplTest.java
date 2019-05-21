@@ -19,38 +19,12 @@ import static org.junit.Assert.assertThat;
 import com.jparams.verifier.tostring.NameStyle;
 import com.jparams.verifier.tostring.ToStringVerifier;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import org.codice.ditto.replication.api.Status;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ReplicationStatusImplTest {
-
-  private static final String REPLICATOR_ID = "replicator-id";
-
-  private static final String START_TIME = "start-time";
-
-  private static final String LAST_SUCCESS = "last-success";
-
-  private static final String LAST_RUN = "last-run";
-
-  private static final String DURATION = "duration";
-
-  private static final String STATUS = "status";
-
-  private static final String PUSH_COUNT = "push-count";
-
-  private static final String PULL_COUNT = "pull-count";
-
-  private static final String PUSH_FAIL_COUNT = "push-fail-count";
-
-  private static final String PULL_FAIL_COUNT = "pull-fail-count";
-
-  private static final String PUSH_BYTES = "push-bytes";
-
-  private static final String PULL_BYTES = "pull-bytes";
 
   private ReplicationStatusImpl status;
 
@@ -128,55 +102,6 @@ public class ReplicationStatusImplTest {
     status.incrementBytesTransferred(1);
     assertThat(status.getPullBytes(), is(2L));
     assertThat(status.getPushBytes(), is(1L));
-  }
-
-  @Test
-  public void toMap() {
-    Map<String, Object> map = status.toMap();
-    assertThat(map.get(REPLICATOR_ID), is(status.getReplicatorId()));
-    assertThat(map.get(START_TIME), is(status.getStartTime()));
-    assertThat(map.get(LAST_SUCCESS), is(status.getLastSuccess()));
-    assertThat(map.get(LAST_RUN), is(status.getLastRun()));
-    assertThat(map.get(DURATION), is(status.getDuration()));
-    assertThat(map.get(STATUS), is(status.getStatus()));
-    assertThat(map.get(PUSH_COUNT), is(status.getPushCount()));
-    assertThat(map.get(PULL_COUNT), is(status.getPullCount()));
-    assertThat(map.get(PUSH_FAIL_COUNT), is(status.getPushFailCount()));
-    assertThat(map.get(PULL_FAIL_COUNT), is(status.getPullFailCount()));
-    assertThat(map.get(PUSH_BYTES), is(status.getPushBytes()));
-    assertThat(map.get(PULL_BYTES), is(status.getPullBytes()));
-  }
-
-  @Test
-  public void fromMap() {
-    Map<String, Object> map = new HashMap<>();
-    map.put("id", "mainid");
-    map.put("version", 100);
-    map.put(REPLICATOR_ID, "id");
-    map.put(START_TIME, new Date(0));
-    map.put(LAST_SUCCESS, new Date(0));
-    map.put(LAST_RUN, new Date(0));
-    map.put(DURATION, 5L);
-    map.put(STATUS, "SUCCESS");
-    map.put(PUSH_COUNT, 5L);
-    map.put(PULL_COUNT, 5L);
-    map.put(PUSH_FAIL_COUNT, 5L);
-    map.put(PULL_FAIL_COUNT, 5L);
-    map.put(PUSH_BYTES, 5L);
-    map.put(PULL_BYTES, 5L);
-    status.fromMap(map);
-    assertThat(status.getReplicatorId(), is(map.get(REPLICATOR_ID)));
-    assertThat(status.getStartTime(), is(map.get(START_TIME)));
-    assertThat(status.getLastSuccess(), is(map.get(LAST_SUCCESS)));
-    assertThat(status.getLastRun(), is(map.get(LAST_RUN)));
-    assertThat(status.getDuration(), is(map.get(DURATION)));
-    assertThat(status.getStatus(), is(Status.SUCCESS));
-    assertThat(status.getPushCount(), is(map.get(PUSH_COUNT)));
-    assertThat(status.getPullCount(), is(map.get(PULL_COUNT)));
-    assertThat(status.getPushFailCount(), is(map.get(PUSH_FAIL_COUNT)));
-    assertThat(status.getPullFailCount(), is(map.get(PULL_FAIL_COUNT)));
-    assertThat(status.getPushBytes(), is(map.get(PUSH_BYTES)));
-    assertThat(status.getPullBytes(), is(map.get(PULL_BYTES)));
   }
 
   @Test

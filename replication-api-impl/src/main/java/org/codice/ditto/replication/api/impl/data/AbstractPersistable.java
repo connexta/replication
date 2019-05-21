@@ -13,10 +13,10 @@
  */
 package org.codice.ditto.replication.api.impl.data;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import org.codice.ditto.replication.api.data.Persistable;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.solr.core.mapping.Indexed;
 
 /**
  * This class defines some data that any object to be saved in persistence should have and methods
@@ -24,12 +24,11 @@ import org.codice.ditto.replication.api.data.Persistable;
  */
 public abstract class AbstractPersistable implements Persistable {
 
-  private static final String ID_KEY = "id";
-
-  private static final String VERSION_KEY = "version";
-
+  @Id
+  @Indexed(name = "id_txt")
   private String id;
 
+  @Indexed(name = "version_int")
   private int version;
 
   protected AbstractPersistable() {
@@ -53,30 +52,5 @@ public abstract class AbstractPersistable implements Persistable {
 
   public void setVersion(int version) {
     this.version = version;
-  }
-
-  /**
-   * Writes the variables of the persistable to a map. Any implementation of this method in a
-   * subclass should first make a call to the super version before performing its own functionality.
-   *
-   * @return a map containing the variable of the persistable
-   */
-  public Map<String, Object> toMap() {
-    Map<String, Object> result = new HashMap<>();
-    result.put(ID_KEY, getId());
-    result.put(VERSION_KEY, getVersion());
-    return result;
-  }
-
-  /**
-   * Attempts to populate the variables of the persistable by reading them from the given map. Any
-   * implementation of this method in a subclass should first make a call to the super version
-   * before performing its own functionality.
-   *
-   * @param properties the properties to read into the persistable's variables
-   */
-  public void fromMap(Map<String, Object> properties) {
-    setId((String) properties.get(ID_KEY));
-    setVersion((int) properties.get(VERSION_KEY));
   }
 }

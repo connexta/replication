@@ -16,7 +16,6 @@ package org.codice.ditto.replication.api.impl;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import com.google.common.annotations.VisibleForTesting;
-import ddf.security.Subject;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
@@ -29,13 +28,13 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
-import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterType;
 import org.codice.ditto.replication.api.ReplicationException;
@@ -72,30 +71,26 @@ public class ReplicatorImpl implements Replicator {
 
   private final Map<String, Syncer.Job> syncerJobMap = new ConcurrentHashMap<>();
 
-  private final Security security;
-
   public ReplicatorImpl(
+      NodeAdapters nodeAdapters,
+      ReplicatorHistoryManager history,
+      SiteManager siteManager,
+      Syncer syncer) {
+    this(nodeAdapters, history, siteManager, Executors.newSingleThreadScheduledExecutor(), syncer);
+  }
+
+  @VisibleForTesting
+  ReplicatorImpl(
       NodeAdapters nodeAdapters,
       ReplicatorHistoryManager history,
       SiteManager siteManager,
       ExecutorService executor,
       Syncer syncer) {
-    this(nodeAdapters, history, siteManager, executor, syncer, Security.getInstance());
-  }
-
-  public ReplicatorImpl(
-      NodeAdapters nodeAdapters,
-      ReplicatorHistoryManager history,
-      SiteManager siteManager,
-      ExecutorService executor,
-      Syncer syncer,
-      Security security) {
     this.nodeAdapters = notNull(nodeAdapters);
     this.history = notNull(history);
     this.executor = notNull(executor);
     this.siteManager = notNull(siteManager);
     this.syncer = syncer;
-    this.security = security;
   }
 
   public void init() {
@@ -135,60 +130,56 @@ public class ReplicatorImpl implements Replicator {
 
   @VisibleForTesting
   void executeSyncRequest(final SyncRequest syncRequest) {
-    final Subject systemSubject = security.runAsAdmin(security::getSystemSubject);
-    systemSubject.execute(
-        () -> {
-          LOGGER.trace("Executing sync request {} with subject", syncRequest);
+    LOGGER.trace("Executing sync request {} with subject", syncRequest);
 
-          ReplicationStatus status = syncRequest.getStatus();
-          status.markStartTime();
+    ReplicationStatus status = syncRequest.getStatus();
+    status.markStartTime();
 
-          ReplicatorConfig config = syncRequest.getConfig();
-          NodeAdapter node1 = null;
-          NodeAdapter node2 = null;
+    ReplicatorConfig config = syncRequest.getConfig();
+    NodeAdapter node1 = null;
+    NodeAdapter node2 = null;
 
-          try {
-            node1 = getStoreForId(config.getSource());
-            node2 = getStoreForId(config.getDestination());
-          } catch (Exception e) {
-            final Status connectionUnavailable = Status.CONNECTION_UNAVAILABLE;
-            LOGGER.debug(
-                "Error getting node adapters for replicator config {}. Setting status to {}",
-                config.getName(),
-                connectionUnavailable,
-                e);
-            status.setStatus(connectionUnavailable);
-            completeActiveSyncRequest(syncRequest, status);
-            closeQuietly(node1);
-            closeQuietly(node2);
-            return;
-          }
+    try {
+      node1 = getStoreForId(config.getSource());
+      node2 = getStoreForId(config.getDestination());
+    } catch (ReplicationException e) {
+      final Status connectionUnavailable = Status.CONNECTION_UNAVAILABLE;
+      LOGGER.debug(
+          "Error getting node adapters for replicator config {}. Setting status to {}",
+          config.getName(),
+          connectionUnavailable,
+          e);
+      status.setStatus(connectionUnavailable);
+      completeActiveSyncRequest(syncRequest, status);
+      closeQuietly(node1);
+      closeQuietly(node2);
+      return;
+    }
 
-          try (NodeAdapter store1 = node1;
-              NodeAdapter store2 = node2) {
-            Status pullStatus = Status.SUCCESS;
-            if (config.isBidirectional()) {
-              status.setStatus(Status.PULL_IN_PROGRESS);
-              pullStatus = sync(store2, store1, config, status);
-            }
+    try (NodeAdapter store1 = node1;
+        NodeAdapter store2 = node2) {
+      Status pullStatus = Status.SUCCESS;
+      if (config.isBidirectional()) {
+        status.setStatus(Status.PULL_IN_PROGRESS);
+        pullStatus = sync(store2, store1, config, status);
+      }
 
-            if (pullStatus.equals(Status.SUCCESS)) {
-              status.setStatus(Status.PUSH_IN_PROGRESS);
-              sync(store1, store2, config, status);
-            }
-          } catch (Exception e) {
-            final Status failureStatus = Status.FAILURE;
-            LOGGER.warn(
-                "Unexpected error when running config {}. Setting status to {}",
-                config.getName(),
-                failureStatus,
-                e);
-            status.setStatus(failureStatus);
-          } finally {
-            completeActiveSyncRequest(syncRequest, status);
-            syncerJobMap.remove(syncRequest.getConfig().getId());
-          }
-        });
+      if (pullStatus.equals(Status.SUCCESS)) {
+        status.setStatus(Status.PUSH_IN_PROGRESS);
+        sync(store1, store2, config, status);
+      }
+    } catch (Exception e) {
+      final Status failureStatus = Status.FAILURE;
+      LOGGER.warn(
+          "Unexpected error when running config {}. Setting status to {}",
+          config.getName(),
+          failureStatus,
+          e);
+      status.setStatus(failureStatus);
+    } finally {
+      completeActiveSyncRequest(syncRequest, status);
+      syncerJobMap.remove(syncRequest.getConfig().getId());
+    }
   }
 
   private Status sync(
@@ -224,7 +215,7 @@ public class ReplicatorImpl implements Replicator {
     Failsafe.with(retryPolicy)
         .onSuccess(
             isEmpty ->
-                LOGGER.trace(
+                LOGGER.info(
                     "Successfully waited for all pending or active sync requests to be completed"))
         .onRetry(
             isEmpty ->

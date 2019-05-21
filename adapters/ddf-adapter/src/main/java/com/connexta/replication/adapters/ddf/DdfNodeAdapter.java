@@ -288,7 +288,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean createRequest(CreateRequest createRequest) {
     List<Metadata> metadata = createRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
     metadata.forEach(this::prepareMetadata);
     return performRequestForEach(client::post, metadata);
   }
@@ -296,7 +296,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean updateRequest(UpdateRequest updateRequest) {
     List<Metadata> metadata = updateRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
     metadata.forEach(this::prepareMetadata);
     return performRequestForEach(client::put, metadata);
   }
@@ -305,14 +305,14 @@ public class DdfNodeAdapter implements NodeAdapter {
   public boolean deleteRequest(DeleteRequest deleteRequest) {
     List<String> ids =
         deleteRequest.getMetadata().stream().map(Metadata::getId).collect(Collectors.toList());
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
     return performRequestForEach(client::delete, ids);
   }
 
   @Override
   public ResourceResponse readResource(ResourceRequest resourceRequest) {
     Metadata metadata = resourceRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
     Resource resource = client.get(metadata);
     return new ResourceResponseImpl(resource);
   }
@@ -320,7 +320,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean createResource(CreateStorageRequest createStorageRequest) {
     List<Resource> resources = createStorageRequest.getResources();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     resources.forEach(e -> prepareMetadata(e.getMetadata()));
     return performRequestForEach(client::post, resources);
   }
@@ -328,7 +328,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean updateResource(UpdateStorageRequest updateStorageRequest) {
     List<Resource> resources = updateStorageRequest.getResources();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     resources.forEach(e -> prepareMetadata(e.getMetadata()));
     return performRequestForEach(client::put, resources);
   }
@@ -358,7 +358,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   private <T> boolean performRequestForEach(Function<T, Response> request, List<T> requestBodies) {
     for (T body : requestBodies) {
       Response response = request.apply(body);
-      if (response != null && !response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+      if (response == null || !response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
         return false;
       }
     }

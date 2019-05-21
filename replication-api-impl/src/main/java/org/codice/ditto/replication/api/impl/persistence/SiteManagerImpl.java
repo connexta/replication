@@ -1,16 +1,19 @@
 package org.codice.ditto.replication.api.impl.persistence;
 
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import org.codice.ditto.replication.api.NotFoundException;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
+import org.codice.ditto.replication.api.impl.spring.SiteRepository;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 
 public class SiteManagerImpl implements SiteManager {
 
-  private ReplicationPersistentStore persistentStore;
+  private SiteRepository siteRepository;
 
-  public SiteManagerImpl(ReplicationPersistentStore persistentStore) {
-    this.persistentStore = persistentStore;
+  public SiteManagerImpl(SiteRepository siteRepository) {
+    this.siteRepository = siteRepository;
   }
 
   @Override
@@ -28,18 +31,19 @@ public class SiteManagerImpl implements SiteManager {
 
   @Override
   public ReplicationSite get(String id) {
-    return persistentStore.get(ReplicationSiteImpl.class, id);
+    return siteRepository.findById(id).orElseThrow(NotFoundException::new);
   }
 
   @Override
   public Stream<ReplicationSite> objects() {
-    return persistentStore.objects(ReplicationSiteImpl.class).map(ReplicationSite.class::cast);
+    return StreamSupport.stream(siteRepository.findAll().spliterator(), false)
+        .map(ReplicationSite.class::cast);
   }
 
   @Override
   public void save(ReplicationSite site) {
     if (site instanceof ReplicationSiteImpl) {
-      persistentStore.save((ReplicationSiteImpl) site);
+      siteRepository.save((ReplicationSiteImpl) site);
     } else {
       throw new IllegalArgumentException(
           "Expected a ReplicationSiteImpl but got a " + site.getClass().getSimpleName());
@@ -48,6 +52,6 @@ public class SiteManagerImpl implements SiteManager {
 
   @Override
   public void remove(String id) {
-    persistentStore.delete(ReplicationSiteImpl.class, id);
+    siteRepository.deleteById(id);
   }
 }

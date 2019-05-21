@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 import java.net.URL;
 import java.util.Collections;
 import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
+import org.codice.ditto.replication.api.NotFoundException;
 import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ddf.admin.common.fields.common.HostField;

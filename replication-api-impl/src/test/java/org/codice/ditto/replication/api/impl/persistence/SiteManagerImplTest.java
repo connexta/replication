@@ -20,9 +20,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.stream.Stream;
+import java.util.Collections;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
+import org.codice.ditto.replication.api.impl.spring.SiteRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,19 +35,18 @@ public class SiteManagerImplTest {
 
   SiteManagerImpl store;
 
-  @Mock ReplicationPersistentStore persistentStore;
+  @Mock SiteRepository siteRepository;
 
   @Before
   public void setUp() {
     System.setProperty("org.codice.ddf.system.siteName", "testSite");
-    store = new SiteManagerImpl(persistentStore);
+    store = new SiteManagerImpl(siteRepository);
   }
 
   @Test
   public void getSites() {
     ReplicationSiteImpl site = new ReplicationSiteImpl();
-    Stream<ReplicationSiteImpl> siteStream = Stream.of(site);
-    when(persistentStore.objects(eq(ReplicationSiteImpl.class))).thenReturn(siteStream);
+    when(siteRepository.findAll()).thenReturn(Collections.singletonList(site));
 
     assertThat(store.objects().anyMatch(site::equals), is(true));
   }
@@ -67,6 +67,6 @@ public class SiteManagerImplTest {
   @Test
   public void deleteSite() {
     store.remove("id");
-    verify(persistentStore).delete(eq(ReplicationSiteImpl.class), eq("id"));
+    verify(siteRepository).deleteById(eq("id"));
   }
 }

@@ -15,14 +15,15 @@ package org.codice.ditto.replication.api.impl.persistence;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.stream.Stream;
+import java.util.Collections;
+import java.util.Optional;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
+import org.codice.ditto.replication.api.impl.spring.ConfigRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,32 +35,32 @@ public class ReplicatorConfigManagerImplTest {
 
   ReplicatorConfigManagerImpl manager;
 
-  @Mock ReplicationPersistentStore persistentStore;
+  @Mock ConfigRepository configRepository;
 
   @Before
   public void setup() {
-    manager = new ReplicatorConfigManagerImpl(persistentStore);
+    manager = new ReplicatorConfigManagerImpl(configRepository);
   }
 
   @Test
   public void getConfig() {
-    when(persistentStore.get(eq(ReplicatorConfigImpl.class), anyString()))
-        .thenReturn(new ReplicatorConfigImpl());
+    when(configRepository.findById(anyString()))
+        .thenReturn(Optional.of(new ReplicatorConfigImpl()));
     manager.get("id");
-    verify(persistentStore).get(eq(ReplicatorConfigImpl.class), anyString());
+    verify(configRepository).findById(anyString());
   }
 
   @Test
   public void getAllConfigs() {
-    when(persistentStore.objects(eq(ReplicatorConfigImpl.class))).thenReturn(Stream.empty());
+    when(configRepository.findAll()).thenReturn(Collections.emptyList());
     manager.objects();
-    verify(persistentStore).objects(eq(ReplicatorConfigImpl.class));
+    verify(configRepository).findAll();
   }
 
   @Test
   public void saveConfig() {
     manager.save(new ReplicatorConfigImpl());
-    verify(persistentStore).save(any(ReplicatorConfigImpl.class));
+    verify(configRepository).save(any(ReplicatorConfigImpl.class));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -71,6 +72,6 @@ public class ReplicatorConfigManagerImplTest {
   @Test
   public void removeConfig() {
     manager.remove("id");
-    verify(persistentStore).delete(eq(ReplicatorConfigImpl.class), anyString());
+    verify(configRepository).deleteById(anyString());
   }
 }

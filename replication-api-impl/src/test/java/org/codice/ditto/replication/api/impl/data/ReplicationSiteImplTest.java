@@ -14,25 +14,12 @@
 package org.codice.ditto.replication.api.impl.data;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ReplicationSiteImplTest {
-  private static final String ID = "id";
-
-  private static final String NAME = "name";
-
-  private static final String URL = "url";
-
-  private static final String VERSION = "version";
-
-  private static final String TEST_ID = "testId";
-
   private static final String TEST_NAME = "testName";
 
   private static final String TEST_URL = "https://host:44";
@@ -54,56 +41,5 @@ public class ReplicationSiteImplTest {
   public void testSetGetUrl() {
     site.setUrl(TEST_URL);
     assertThat(site.getUrl(), equalTo(TEST_URL));
-  }
-
-  @Test
-  public void testWriteToMap() {
-    loadSite(site);
-    Map<String, Object> map = site.toMap();
-
-    assertThat(map.get(ID), equalTo(TEST_ID));
-    assertThat(map.get(NAME), equalTo(TEST_NAME));
-    assertThat(map.get(URL), equalTo(TEST_URL));
-    assertThat(map.get(VERSION), equalTo(ReplicationSiteImpl.CURRENT_VERSION));
-  }
-
-  @Test
-  public void testReadFromMap() {
-    Map<String, Object> map = new HashMap<>();
-    map.put(ID, TEST_ID);
-    map.put(NAME, TEST_NAME);
-    map.put(URL, TEST_URL);
-    map.put(VERSION, ReplicationSiteImpl.CURRENT_VERSION);
-
-    site.fromMap(map);
-
-    assertThat(site.getId(), equalTo(TEST_ID));
-    assertThat(site.getName(), equalTo(TEST_NAME));
-    assertThat(site.getUrl(), equalTo(TEST_URL));
-    assertThat(site.getVersion(), equalTo(2));
-  }
-
-  @Test
-  public void testReadVersionOnePopulatesDefaultRemoteManagedField() {
-    Map<String, Object> map = new HashMap<>();
-    map.put(ID, TEST_ID);
-    map.put(NAME, TEST_NAME);
-    map.put(URL, TEST_URL);
-    map.put(VERSION, 1);
-
-    site.fromMap(map);
-
-    assertThat(site.getId(), is(TEST_ID));
-    assertThat(site.getName(), is(TEST_NAME));
-    assertThat(site.getUrl(), is(TEST_URL));
-    assertThat(site.isRemoteManaged(), is(false));
-    assertThat(site.getVersion(), is(2));
-  }
-
-  private ReplicationSiteImpl loadSite(ReplicationSiteImpl site) {
-    site.setId(TEST_ID);
-    site.setName(TEST_NAME);
-    site.setUrl(TEST_URL);
-    return site;
   }
 }

@@ -16,13 +16,11 @@ package org.codice.ditto.replication.api.impl;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import com.google.common.annotations.VisibleForTesting;
-import ddf.security.service.SecurityServiceException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
@@ -39,24 +37,21 @@ public class ReplicatorRunner {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicatorRunner.class);
 
-  private final Security security;
-
   private final Replicator replicator;
 
   private final ReplicatorConfigManager replicatorConfigManager;
 
   private final ScheduledExecutorService scheduledExecutor;
 
+  private final long period;
+
   private static final long STARTUP_DELAY = TimeUnit.MINUTES.toSeconds(1);
 
-  private static final String DEFAULT_REPLICATION_PERIOD_STR =
-      String.valueOf(TimeUnit.MINUTES.toSeconds(5));
+  private static final long DEFAULT_REPLICATION_PERIOD = TimeUnit.MINUTES.toSeconds(5);
 
   public ReplicatorRunner(
-      ScheduledExecutorService scheduledExecutor,
-      Replicator replicator,
-      ReplicatorConfigManager replicatorConfigManager) {
-    this(scheduledExecutor, replicator, replicatorConfigManager, Security.getInstance());
+      Replicator replicator, ReplicatorConfigManager replicatorConfigManager, long period) {
+    this(Executors.newSingleThreadScheduledExecutor(), replicator, replicatorConfigManager, period);
   }
 
   @VisibleForTesting
@@ -64,41 +59,22 @@ public class ReplicatorRunner {
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
       ReplicatorConfigManager replicatorConfigManager,
-      Security security) {
+      long period) {
     this.scheduledExecutor = notNull(scheduledExecutor);
     this.replicator = notNull(replicator);
     this.replicatorConfigManager = notNull(replicatorConfigManager);
-    this.security = security;
+    this.period = period > 0 ? period : DEFAULT_REPLICATION_PERIOD;
   }
 
   public void init() {
-    long period =
-        Long.parseLong(
-            System.getProperty("org.codice.replication.period", DEFAULT_REPLICATION_PERIOD_STR));
     scheduledExecutor.scheduleAtFixedRate(
-        this::replicateAsSystemUser, STARTUP_DELAY, period, TimeUnit.SECONDS);
+        this::scheduleReplication, STARTUP_DELAY, period, TimeUnit.SECONDS);
     LOGGER.info("Replication checks scheduled for every {} seconds.", period);
   }
 
   public void destroy() {
+    LOGGER.info("shutting down replicatorRunner");
     scheduledExecutor.shutdownNow();
-  }
-
-  @VisibleForTesting
-  void replicateAsSystemUser() {
-    security.runAsAdmin(
-        () -> {
-          try {
-            security.runWithSubjectOrElevate(
-                () -> {
-                  scheduleReplication();
-                  return null;
-                });
-          } catch (SecurityServiceException | InvocationTargetException e) {
-            LOGGER.debug("Error scheduling replication.", e);
-          }
-          return null;
-        });
   }
 
   @VisibleForTesting

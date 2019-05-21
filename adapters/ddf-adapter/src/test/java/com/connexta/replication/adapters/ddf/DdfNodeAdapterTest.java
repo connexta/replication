@@ -76,7 +76,8 @@ public class DdfNodeAdapterTest {
 
   @Before
   public void setUp() throws Exception {
-    when(ddfRestClientFactory.create(any(String.class))).thenReturn(restClient);
+    when(ddfRestClientFactory.create(any(URL.class))).thenReturn(restClient);
+    when(ddfRestClientFactory.createWithSubject(any(URL.class))).thenReturn(restClient);
     when(clientFactory.getSecureCxfClientFactory(
             any(String.class),
             any(Class.class),
