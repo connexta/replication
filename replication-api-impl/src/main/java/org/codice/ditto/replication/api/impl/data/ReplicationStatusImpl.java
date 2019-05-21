@@ -14,66 +14,62 @@
 package org.codice.ditto.replication.api.impl.data;
 
 import java.util.Date;
-import java.util.Map;
 import javax.annotation.Nullable;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
+import org.springframework.data.solr.core.mapping.Indexed;
+import org.springframework.data.solr.core.mapping.SolrDocument;
 
+@SolrDocument(collection = "replication_status")
 public class ReplicationStatusImpl extends AbstractPersistable implements ReplicationStatus {
 
-  public static final String PERSISTENCE_TYPE = "replication_status";
+  private static final String STRING = "_txt";
 
-  private static final String REPLICATOR_ID = "replicator-id";
+  private static final String DATE = "_tdt";
 
-  private static final String START_TIME = "start-time";
+  private static final String LONG = "_lng";
 
-  private static final String LAST_SUCCESS = "last-success";
-
-  private static final String LAST_RUN = "last-run";
-
-  private static final String DURATION = "duration";
-
-  private static final String STATUS = "status";
-
-  private static final String PUSH_COUNT = "push-count";
-
-  private static final String PULL_COUNT = "pull-count";
-
-  private static final String PUSH_FAIL_COUNT = "push-fail-count";
-
-  private static final String PULL_FAIL_COUNT = "pull-fail-count";
-
-  private static final String PUSH_BYTES = "push-bytes";
-
-  private static final String PULL_BYTES = "pull-bytes";
-
-  private static final String LAST_METADATA_MODIFIED = "last-metadata-modified";
-
+  @Indexed(name = "replicator-id" + STRING)
   private String replicatorId;
 
+  @Indexed(name = "start-time" + DATE)
   private Date startTime;
 
-  @Nullable private Date lastSuccess;
+  @Indexed(name = "last-success" + DATE)
+  @Nullable
+  private Date lastSuccess;
 
-  @Nullable private Date lastRun;
+  @Indexed(name = "last-run" + DATE)
+  @Nullable
+  private Date lastRun;
 
+  @Indexed(name = "duration" + LONG)
   private long duration = -1;
 
+  @Indexed(name = "status" + STRING, type = "string")
   private Status status = Status.PENDING;
 
+  @Indexed(name = "push-count" + LONG)
   private long pushCount = 0;
 
+  @Indexed(name = "pull-count" + LONG)
   private long pullCount = 0;
 
+  @Indexed(name = "push-fail-count" + LONG)
   private long pushFailCount = 0;
 
+  @Indexed(name = "pull-fail-count" + LONG)
   private long pullFailCount = 0;
 
+  @Indexed(name = "push-bytes" + LONG)
   private long pushBytes = 0;
 
+  @Indexed(name = "pull-bytes" + LONG)
   private long pullBytes = 0;
 
-  @Nullable private Date lastMetadataModified;
+  @Indexed(name = "last-metadata-modified" + DATE)
+  @Nullable
+  private Date lastMetadataModified;
 
   /** 1 - initial version. */
   private static final int CURRENT_VERSION = 1;
@@ -280,43 +276,6 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
     } else {
       pushBytes += numBytes;
     }
-  }
-
-  @Override
-  public Map<String, Object> toMap() {
-    Map<String, Object> result = super.toMap();
-    result.put(REPLICATOR_ID, getReplicatorId());
-    result.put(START_TIME, getStartTime());
-    result.put(LAST_SUCCESS, getLastSuccess());
-    result.put(LAST_RUN, getLastRun());
-    result.put(DURATION, getDuration());
-    result.put(STATUS, getStatus());
-    result.put(PUSH_COUNT, getPushCount());
-    result.put(PULL_COUNT, getPullCount());
-    result.put(PUSH_FAIL_COUNT, getPushFailCount());
-    result.put(PULL_FAIL_COUNT, getPullFailCount());
-    result.put(PUSH_BYTES, getPushBytes());
-    result.put(PULL_BYTES, getPullBytes());
-    result.put(LAST_METADATA_MODIFIED, getLastMetadataModified());
-    return result;
-  }
-
-  @Override
-  public void fromMap(Map<String, Object> properties) {
-    super.fromMap(properties);
-    setReplicatorId((String) properties.get(REPLICATOR_ID));
-    setStartTime((Date) properties.get(START_TIME));
-    setLastSuccess((Date) properties.get(LAST_SUCCESS));
-    setLastRun((Date) properties.get(LAST_RUN));
-    setDuration((Long) properties.get(DURATION));
-    setStatus(Status.valueOf((String) properties.get(STATUS)));
-    setPushCount((Long) properties.get(PUSH_COUNT));
-    setPullCount((Long) properties.get(PULL_COUNT));
-    setPushFailCount((Long) properties.get(PUSH_FAIL_COUNT));
-    setPullFailCount((Long) properties.get(PULL_FAIL_COUNT));
-    setPushBytes((Long) properties.get(PUSH_BYTES));
-    setPullBytes((Long) properties.get(PULL_BYTES));
-    setLastMetadataModified((Date) properties.get(LAST_METADATA_MODIFIED));
   }
 
   @Override

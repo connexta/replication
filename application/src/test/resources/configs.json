@@ -1,0 +1,7 @@
+[{
+    "name": "file6",
+    "bidirectional": false,
+    "source": "ditto-1",
+    "destination": "ditto-2",
+    "filter": "title like 'file6'"
+  }]

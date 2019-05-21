@@ -22,7 +22,7 @@ public interface ReplicationItem {
    * @return id for which {@link org.codice.ditto.replication.api.data.Metadata} this item
    *     represents
    */
-  String getMetadataId();
+  String getId();
 
   /** @return this last time the resource associated with this item modified */
   Date getResourceModified();
@@ -49,7 +49,7 @@ public interface ReplicationItem {
    * @return the id of the {@link org.codice.ditto.replication.api.data.ReplicatorConfig} this item
    *     belongs to
    */
-  String getConfigurationId();
+  String getConfigId();
 
   /**
    * Represents the amount of times an operation between the source and destination {@link

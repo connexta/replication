@@ -15,15 +15,16 @@ package org.codice.ditto.replication.api.impl.persistence;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.util.Collections;
 import java.util.Date;
-import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
+import java.util.Optional;
+import org.codice.ditto.replication.api.NotFoundException;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
+import org.codice.ditto.replication.api.impl.spring.HistoryRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,11 +36,11 @@ public class ReplicatorHistoryManagerImplTest {
 
   ReplicatorHistoryManagerImpl history;
 
-  @Mock ReplicationPersistentStore persistentStore;
+  @Mock HistoryRepository historyRepository;
 
   @Before
   public void setUp() throws Exception {
-    history = new ReplicatorHistoryManagerImpl(persistentStore);
+    history = new ReplicatorHistoryManagerImpl(historyRepository);
   }
 
   @Test
@@ -49,22 +50,24 @@ public class ReplicatorHistoryManagerImplTest {
 
   @Test
   public void get() {
+    when(historyRepository.findById(anyString()))
+        .thenReturn(Optional.of(new ReplicationStatusImpl()));
     history.get("test");
-    verify(persistentStore).get(ReplicationStatusImpl.class, "test");
+    verify(historyRepository).findById("test");
   }
 
   @Test
   public void objects() {
-    when(persistentStore.objects(eq(ReplicationStatusImpl.class))).thenReturn(Stream.empty());
+    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
     history.objects();
-    verify(persistentStore).objects(ReplicationStatusImpl.class);
+    verify(historyRepository).findAll();
   }
 
   @Test
   public void getByReplicatorId() {
     ReplicationStatusImpl status = new ReplicationStatusImpl();
     status.setReplicatorId("test");
-    when(persistentStore.objects(eq(ReplicationStatusImpl.class))).thenReturn(Stream.of(status));
+    when(historyRepository.findAll()).thenReturn(Collections.singletonList(status));
     assertThat(history.getByReplicatorId("test"), is(status));
   }
 
@@ -72,7 +75,7 @@ public class ReplicatorHistoryManagerImplTest {
   public void getByReplicatorIdNotFoundException() {
     ReplicationStatusImpl status = new ReplicationStatusImpl();
     status.setReplicatorId("test");
-    when(persistentStore.objects(eq(ReplicationStatusImpl.class))).thenReturn(Stream.empty());
+    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
     history.getByReplicatorId("test");
   }
 
@@ -81,10 +84,9 @@ public class ReplicatorHistoryManagerImplTest {
     ReplicationStatusImpl prevStatus = loadStatus(new ReplicationStatusImpl(), 1);
     ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 2);
     freshStatus.setReplicatorId(prevStatus.getReplicatorId());
-    when(persistentStore.objects(eq(ReplicationStatusImpl.class)))
-        .thenReturn(Stream.of(prevStatus));
+    when(historyRepository.findAll()).thenReturn(Collections.singletonList(prevStatus));
     history.save(freshStatus);
-    verify(persistentStore).save(prevStatus);
+    verify(historyRepository).save(prevStatus);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -97,9 +99,9 @@ public class ReplicatorHistoryManagerImplTest {
   public void saveFirstEvent() {
     ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 1);
     freshStatus.setStartTime(new Date(0));
-    when(persistentStore.objects(eq(ReplicationStatusImpl.class))).thenReturn(Stream.empty());
+    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
     history.save(freshStatus);
-    verify(persistentStore).save(freshStatus);
+    verify(historyRepository).save(freshStatus);
     assertThat(freshStatus.getLastRun(), is(freshStatus.getStartTime()));
     assertThat(freshStatus.getLastSuccess(), is(new Date(1)));
   }
@@ -109,9 +111,9 @@ public class ReplicatorHistoryManagerImplTest {
     ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 1);
     freshStatus.setStartTime(new Date(0));
     freshStatus.setStatus(Status.SUCCESS);
-    when(persistentStore.objects(eq(ReplicationStatusImpl.class))).thenReturn(Stream.empty());
+    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
     history.save(freshStatus);
-    verify(persistentStore).save(freshStatus);
+    verify(historyRepository).save(freshStatus);
     assertThat(freshStatus.getLastRun(), is(freshStatus.getStartTime()));
     assertThat(freshStatus.getLastSuccess(), is(freshStatus.getStartTime()));
   }
@@ -119,7 +121,7 @@ public class ReplicatorHistoryManagerImplTest {
   @Test
   public void remove() {
     history.remove("test");
-    verify(persistentStore).delete(eq(ReplicationStatusImpl.class), anyString());
+    verify(historyRepository).deleteById(anyString());
   }
 
   private ReplicationStatusImpl loadStatus(ReplicationStatusImpl status, int num) {

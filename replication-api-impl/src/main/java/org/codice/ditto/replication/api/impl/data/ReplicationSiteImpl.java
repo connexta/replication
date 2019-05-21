@@ -13,23 +13,16 @@
  */
 package org.codice.ditto.replication.api.impl.data;
 
-import java.util.Map;
 import org.codice.ditto.replication.api.data.ReplicationSite;
+import org.springframework.data.solr.core.mapping.Indexed;
+import org.springframework.data.solr.core.mapping.SolrDocument;
 
 /**
  * ReplicationSiteImpl represents a replication site and has methods that allow it to easily be
  * converted to, or from, a map.
  */
+@SolrDocument(collection = "replication_site")
 public class ReplicationSiteImpl extends AbstractPersistable implements ReplicationSite {
-
-  // public so that the persistent store can access it using reflection
-  public static final String PERSISTENCE_TYPE = "replication_site";
-
-  private static final String NAME_KEY = "name";
-
-  private static final String URL_KEY = "url";
-
-  private static final String IS_REMOTE_MANAGED_KEY = "is-remote-managed";
 
   /**
    * List of possible versions:
@@ -46,8 +39,10 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   private boolean isRemoteManaged = false;
 
+  @Indexed(name = "name_txt")
   private String name;
 
+  @Indexed(name = "url_txt")
   private String url;
 
   public ReplicationSiteImpl() {
@@ -82,28 +77,5 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   @Override
   public boolean isRemoteManaged() {
     return isRemoteManaged;
-  }
-
-  @Override
-  public Map<String, Object> toMap() {
-    Map<String, Object> result = super.toMap();
-    result.put(NAME_KEY, getName());
-    result.put(URL_KEY, getUrl());
-    result.put(IS_REMOTE_MANAGED_KEY, isRemoteManaged());
-    return result;
-  }
-
-  @Override
-  public void fromMap(Map<String, Object> properties) {
-    super.fromMap(properties);
-    setName((String) properties.get(NAME_KEY));
-    setUrl((String) properties.get(URL_KEY));
-
-    if (super.getVersion() == 1) {
-      setRemoteManaged(false);
-      super.setVersion(CURRENT_VERSION);
-    } else {
-      setRemoteManaged(Boolean.parseBoolean((String) properties.get(IS_REMOTE_MANAGED_KEY)));
-    }
   }
 }

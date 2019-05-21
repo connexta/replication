@@ -33,9 +33,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
+import org.codice.ditto.replication.api.NotFoundException;
 import org.codice.ditto.replication.api.Replication;
 import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.Status;
@@ -209,8 +209,8 @@ public class SyncerTest {
     verify(replicationStatus, never()).incrementBytesTransferred(anyLong());
 
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -287,8 +287,8 @@ public class SyncerTest {
     verify(replicationStatus, never()).incrementBytesTransferred(anyLong());
 
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -440,8 +440,8 @@ public class SyncerTest {
     verify(replicationStatus, never()).incrementBytesTransferred(anyLong());
 
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -536,8 +536,8 @@ public class SyncerTest {
     verify(replicationItemManager, times(1)).saveItem(replicationItemCaptor.capture());
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
 
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -631,8 +631,8 @@ public class SyncerTest {
     verify(replicationItemManager, times(1)).saveItem(replicationItemCaptor.capture());
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
 
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -720,8 +720,8 @@ public class SyncerTest {
     verify(replicationItemManager, times(1)).saveItem(replicationItemCaptor.capture());
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
 
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -883,8 +883,8 @@ public class SyncerTest {
     verify(replicationStatus, never()).incrementBytesTransferred(anyLong());
 
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -1052,8 +1052,8 @@ public class SyncerTest {
     ArgumentCaptor<ReplicationItem> repItem = ArgumentCaptor.forClass(ReplicationItem.class);
     verify(replicationItemManager, times(1)).saveItem(repItem.capture());
     ReplicationItem capturedItem = repItem.getValue();
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -1361,8 +1361,8 @@ public class SyncerTest {
 
     verify(replicationItemManager, times(1)).saveItem(replicationItemCaptor.capture());
     ReplicationItem capturedItem = replicationItemCaptor.getValue();
-    assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigurationId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));

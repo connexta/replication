@@ -13,33 +13,16 @@
  */
 package org.codice.ditto.replication.api.impl.data;
 
-import java.util.Map;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.springframework.data.solr.core.mapping.Indexed;
+import org.springframework.data.solr.core.mapping.SolrDocument;
 
 /**
  * ReplicatorConfigImpl represents a replication config and has methods that allow it to easily be
  * converted to, or from, a map.
  */
+@SolrDocument(collection = "replication_config")
 public class ReplicatorConfigImpl extends AbstractPersistable implements ReplicatorConfig {
-
-  // public so that the persistent store can access it using reflection
-  public static final String PERSISTENCE_TYPE = "replication_config";
-
-  private static final String NAME_KEY = "name";
-
-  private static final String SOURCE_KEY = "source";
-
-  private static final String DESTINATION_KEY = "destination";
-
-  private static final String FILTER_KEY = "filter";
-
-  private static final String RETRY_COUNT_KEY = "retry_count";
-
-  private static final String BIDIRECTIONAL_KEY = "bidirectional";
-
-  private static final String DESCRIPTION_KEY = "description";
-
-  private static final String SUSPENDED_KEY = "suspended";
 
   /**
    * 0/No Version - initial version of configs which were saved in the catalog framework. 1 - the
@@ -47,51 +30,32 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
    */
   public static final int CURRENT_VERSION = 1;
 
+  @Indexed(name = "name_txt")
   private String name;
 
+  @Indexed(name = "bidirectional_b")
   private boolean bidirectional;
 
+  @Indexed(name = "source_txt")
   private String source;
 
+  @Indexed(name = "destination_txt")
   private String destination;
 
+  @Indexed(name = "filter_txt")
   private String filter;
 
+  @Indexed(name = "retry_count_int")
   private int failureRetryCount;
 
+  @Indexed(name = "description_txt")
   private String description;
 
+  @Indexed(name = "suspended_b")
   private boolean suspended;
 
   public ReplicatorConfigImpl() {
     super.setVersion(CURRENT_VERSION);
-  }
-
-  @Override
-  public Map<String, Object> toMap() {
-    Map<String, Object> result = super.toMap();
-    result.put(NAME_KEY, getName());
-    result.put(SOURCE_KEY, getSource());
-    result.put(DESTINATION_KEY, getDestination());
-    result.put(FILTER_KEY, getFilter());
-    result.put(BIDIRECTIONAL_KEY, Boolean.toString(isBidirectional()));
-    result.put(RETRY_COUNT_KEY, getFailureRetryCount());
-    result.put(DESCRIPTION_KEY, getDescription());
-    result.put(SUSPENDED_KEY, Boolean.toString(isSuspended()));
-    return result;
-  }
-
-  @Override
-  public void fromMap(Map<String, Object> properties) {
-    super.fromMap(properties);
-    setName((String) properties.get(NAME_KEY));
-    setSource((String) properties.get(SOURCE_KEY));
-    setDestination((String) properties.get(DESTINATION_KEY));
-    setFilter((String) properties.get(FILTER_KEY));
-    setBidirectional(Boolean.valueOf((String) properties.get(BIDIRECTIONAL_KEY)));
-    setFailureRetryCount((int) properties.get(RETRY_COUNT_KEY));
-    setDescription((String) properties.get(DESCRIPTION_KEY));
-    setSuspended(Boolean.valueOf((String) properties.get(SUSPENDED_KEY)));
   }
 
   @Override

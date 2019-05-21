@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
-import javax.ws.rs.NotFoundException;
+import org.codice.ditto.replication.api.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.codice.ddf.admin.api.fields.ListField;
 import org.codice.ddf.admin.common.fields.common.AddressField;

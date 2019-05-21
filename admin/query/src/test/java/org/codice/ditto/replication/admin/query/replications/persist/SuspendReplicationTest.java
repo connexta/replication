@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.ws.rs.NotFoundException;
+import org.codice.ditto.replication.api.NotFoundException;
 import org.codice.ddf.admin.api.report.ErrorMessage;
 import org.codice.ddf.admin.api.report.FunctionReport;
 import org.codice.ddf.admin.common.report.message.DefaultMessages;

@@ -14,19 +14,21 @@
 package org.codice.ditto.replication.api.impl.persistence;
 
 import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
+import java.util.stream.StreamSupport;
+import org.codice.ditto.replication.api.NotFoundException;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
+import org.codice.ditto.replication.api.impl.spring.HistoryRepository;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 
 /** A persistent store based implementation of the ReplicatorHistoryManager interface */
 public class ReplicatorHistoryManagerImpl implements ReplicatorHistoryManager {
 
-  private final ReplicationPersistentStore persistentStore;
+  private final HistoryRepository historyRepository;
 
-  public ReplicatorHistoryManagerImpl(ReplicationPersistentStore persistentStore) {
-    this.persistentStore = persistentStore;
+  public ReplicatorHistoryManagerImpl(HistoryRepository historyRepository) {
+    this.historyRepository = historyRepository;
   }
 
   @Override
@@ -36,12 +38,13 @@ public class ReplicatorHistoryManagerImpl implements ReplicatorHistoryManager {
 
   @Override
   public ReplicationStatus get(String id) {
-    return persistentStore.get(ReplicationStatusImpl.class, id);
+    return historyRepository.findById(id).orElseThrow(NotFoundException::new);
   }
 
   @Override
   public Stream<ReplicationStatus> objects() {
-    return persistentStore.objects(ReplicationStatusImpl.class).map(ReplicationStatus.class::cast);
+    return StreamSupport.stream(historyRepository.findAll().spliterator(), false)
+        .map(ReplicationStatus.class::cast);
   }
 
   @Override
@@ -65,18 +68,18 @@ public class ReplicatorHistoryManagerImpl implements ReplicatorHistoryManager {
     try {
       ReplicationStatus previous = getByReplicatorId(status.getReplicatorId());
       previous.addStats(status);
-      persistentStore.save((ReplicationStatusImpl) previous);
+      historyRepository.save((ReplicationStatusImpl) previous);
     } catch (NotFoundException e) {
       status.setLastRun(status.getStartTime());
       if (status.getStatus().equals(Status.SUCCESS)) {
         status.setLastSuccess(status.getStartTime());
       }
-      persistentStore.save((ReplicationStatusImpl) status);
+      historyRepository.save((ReplicationStatusImpl) status);
     }
   }
 
   @Override
   public void remove(String id) {
-    persistentStore.delete(ReplicationStatusImpl.class, id);
+    historyRepository.deleteById(id);
   }
 }

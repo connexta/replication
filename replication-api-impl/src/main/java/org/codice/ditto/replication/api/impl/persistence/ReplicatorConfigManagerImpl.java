@@ -1,18 +1,20 @@
 package org.codice.ditto.replication.api.impl.persistence;
 
 import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
+import java.util.stream.StreamSupport;
+import org.codice.ditto.replication.api.NotFoundException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
+import org.codice.ditto.replication.api.impl.spring.ConfigRepository;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 
 public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
 
-  private ReplicationPersistentStore persistentStore;
+  private ConfigRepository configRepository;
 
-  public ReplicatorConfigManagerImpl(ReplicationPersistentStore persistentStore) {
-    this.persistentStore = persistentStore;
+  public ReplicatorConfigManagerImpl(ConfigRepository configRepository) {
+    this.configRepository = configRepository;
   }
 
   @Override
@@ -22,18 +24,19 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
 
   @Override
   public ReplicatorConfig get(String id) {
-    return persistentStore.get(ReplicatorConfigImpl.class, id);
+    return configRepository.findById(id).orElseThrow(NotFoundException::new);
   }
 
   @Override
   public Stream<ReplicatorConfig> objects() {
-    return persistentStore.objects(ReplicatorConfigImpl.class).map(ReplicatorConfig.class::cast);
+    return StreamSupport.stream(configRepository.findAll().spliterator(), false)
+        .map(ReplicatorConfig.class::cast);
   }
 
   @Override
   public void save(ReplicatorConfig replicatorConfig) {
     if (replicatorConfig instanceof ReplicatorConfigImpl) {
-      persistentStore.save((ReplicatorConfigImpl) replicatorConfig);
+      configRepository.save((ReplicatorConfigImpl) replicatorConfig);
     } else {
       throw new IllegalArgumentException(
           "Expected a ReplicatorConfigImpl but got a "
@@ -43,13 +46,13 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
 
   @Override
   public void remove(String id) {
-    persistentStore.delete(ReplicatorConfigImpl.class, id);
+    configRepository.deleteById(id);
   }
 
   @Override
   public boolean configExists(String configId) {
     try {
-      persistentStore.get(ReplicatorConfigImpl.class, configId);
+      configRepository.findById(configId);
     } catch (NotFoundException | ReplicationPersistenceException e) {
       return false;
     }

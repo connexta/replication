@@ -22,17 +22,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.security.PrivilegedAction;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,8 +40,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class ReplicatorRunnerTest {
 
   private ReplicatorRunner runner;
-
-  @Mock Security security;
 
   @Mock Replicator replicator;
 
@@ -59,17 +53,8 @@ public class ReplicatorRunnerTest {
 
   @Before
   public void setUp() throws Exception {
-    when(security.runWithSubjectOrElevate(any(Callable.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call());
-    when(security.runAsAdmin(any(PrivilegedAction.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, PrivilegedAction.class).run());
-    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, security);
+    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, 0);
     configStream = Stream.of(config);
-  }
-
-  @After
-  public void after() {
-    System.clearProperty("org.codice.replication.period");
   }
 
   @Test
@@ -83,8 +68,8 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void initNonDefaultPeriod() {
+    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, 1);
     ArgumentCaptor<Long> period = ArgumentCaptor.forClass(Long.class);
-    System.setProperty("org.codice.replication.period", "1");
     runner.init();
     verify(scheduledExecutor)
         .scheduleAtFixedRate(any(Runnable.class), anyLong(), period.capture(), any(TimeUnit.class));
@@ -126,13 +111,5 @@ public class ReplicatorRunnerTest {
     runner.scheduleReplication();
     verify(replicator).submitSyncRequest(request.capture());
     assertThat(request.getValue().getConfig().getName(), is("test"));
-  }
-
-  @Test
-  public void scheduleReplicationAsSystemUser() throws Exception {
-    when(configManager.objects()).thenReturn(Stream.empty());
-    runner.replicateAsSystemUser();
-    verify(security).runAsAdmin(any(PrivilegedAction.class));
-    verify(security).runWithSubjectOrElevate(any(Callable.class));
   }
 }

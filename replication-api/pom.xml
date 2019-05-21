@@ -21,7 +21,6 @@
     </parent>
     <artifactId>replication-api</artifactId>
     <name>Replication :: API</name>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
@@ -30,18 +29,5 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+
 </project>
