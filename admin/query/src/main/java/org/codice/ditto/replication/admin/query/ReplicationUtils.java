@@ -15,23 +15,31 @@ package org.codice.ditto.replication.admin.query;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.codice.ddf.admin.api.fields.ListField;
+import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
+import org.codice.ditto.replication.admin.query.status.fields.ReplicationStats;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.ReplicatorHistory;
+import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
@@ -45,6 +53,8 @@ public class ReplicationUtils {
   private static final long BYTES_PER_MB = 1024L * 1024L;
 
   private static final String DEFAULT_CONTEXT = "services";
+
+  private static final String NOT_RUN = "NOT_RUN";
 
   private final SiteManager siteManager;
 
@@ -245,12 +255,15 @@ public class ReplicationUtils {
     field.biDirectional(config.isBidirectional());
     field.modified(config.getModified());
     field.version(config.getVersion());
+    field.suspended(config.isSuspended());
+
+    ReplicationStats stats = new ReplicationStats();
     List<ReplicationStatus> statusList = history.getReplicationEvents(config.getName());
     if (!statusList.isEmpty()) {
       ReplicationStatus lastStatus = statusList.get(0);
-      field.lastRun(lastStatus.getLastRun());
-      field.firstRun(lastStatus.getStartTime());
-      field.lastSuccess(lastStatus.getLastSuccess());
+      stats.setLastRun(lastStatus.getLastRun());
+      stats.setStartTime(lastStatus.getStartTime());
+      stats.setLastSuccess(lastStatus.getLastSuccess());
     }
 
     replicator
@@ -260,22 +273,80 @@ public class ReplicationUtils {
         .map(SyncRequest::getStatus)
         .forEach(status -> statusList.add(0, status));
 
-    long bytesTransferred = 0;
-    long itemsTransferred = 0;
-    for (ReplicationStatus status : statusList) {
-      bytesTransferred += status.getPullBytes() + status.getPushBytes();
-      itemsTransferred += status.getPullCount() + status.getPushCount();
-    }
     if (statusList.isEmpty()) {
-      field.status("NOT_RUN");
+      stats.setStatus(NOT_RUN);
+      stats.setPullBytes(0L);
+      stats.setPushBytes(0L);
+      stats.setPullCount(0L);
+      stats.setPushCount(0L);
+      stats.setPullFailCount(0L);
+      stats.setPushFailCount(0L);
+      stats.setDuration(0L);
     } else {
-      field.status(statusList.get(0).getStatus().name());
+      ReplicationStatus status = statusList.get(0);
+      stats.setPid(status.getId());
+      stats.setStatus(status.getStatus().name());
+      stats.setPullBytes(status.getPullBytes() / BYTES_PER_MB);
+      stats.setPushBytes(status.getPushBytes() / BYTES_PER_MB);
+      stats.setPullCount(status.getPullCount());
+      stats.setPushCount(status.getPushCount());
+      stats.setPullFailCount(status.getPullFailCount());
+      stats.setPushFailCount(status.getPushFailCount());
+      stats.setDuration(status.getDuration());
     }
 
-    field.suspended(config.isSuspended());
-    field.dataTransferred(String.format("%d MB", bytesTransferred / BYTES_PER_MB));
-    field.itemsTransferred((int) itemsTransferred);
+    field.stats(stats);
     return field;
+  }
+
+  /**
+   * Saves stats for a replication identified by the replication's name. If there is an existing
+   * {@link ReplicationStatus} with the id {@link ReplicationStats#getPid()}, then it will first be
+   * deleted then re-saved with the new information.
+   *
+   * @param stats stats object to convert to {@link ReplicationStatus} to be saved
+   * @return {@code true} if the stats were successfully saved, otherwise false.
+   */
+  public boolean updateReplicationStats(StringField replicationName, ReplicationStats stats) {
+    final String repName = replicationName.getValue();
+    ReplicationStatus status = new ReplicationStatusImpl(stats.getPid(), repName);
+    status.setDuration(stats.getDuration());
+    status.setStartTime(getDate(stats.getStartTime()));
+    status.setLastSuccess(getDate(stats.getLastSuccess()));
+    status.setLastRun(getDate(stats.getLastRun()));
+    status.setStatus(Status.valueOf(stats.getStatus()));
+    status.setPullBytes(stats.getPullBytes());
+    status.setPullCount(stats.getPullCount());
+    status.setPullFailCount(stats.getPullFailCount());
+    status.setPushBytes(stats.getPushBytes());
+    status.setPushCount(stats.getPushCount());
+    status.setPushFailCount(stats.getPushFailCount());
+
+    try {
+      Set<String> statusIds =
+          history
+              .getReplicationEvents(repName)
+              .stream()
+              .map(ReplicationStatus::getId)
+              .collect(Collectors.toSet());
+      history.removeReplicationEvents(statusIds);
+
+      history.addReplicationEvent(status);
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.debug(
+          "Failed to save replication stats for replication {}", replicationName.getValue(), e);
+      return false;
+    }
+
+    return true;
+  }
+
+  @Nullable
+  private Date getDate(String iso8601) {
+    if (iso8601 != null) {
+      return Date.from(Instant.parse(iso8601));
+    }
+    return null;
   }
 
   public @Nullable ReplicationSiteField getSiteFieldForSite(ReplicationSite site) {

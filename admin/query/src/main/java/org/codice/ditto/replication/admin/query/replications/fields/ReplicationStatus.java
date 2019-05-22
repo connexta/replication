@@ -59,9 +59,9 @@ public class ReplicationStatus extends BaseEnumField<String> {
     private String value;
     private String description;
 
-    public ReplicationStatusEnum(String value, String desscription) {
+    public ReplicationStatusEnum(String value, String description) {
       this.value = value;
-      this.description = desscription;
+      this.description = description;
     }
 
     @Override

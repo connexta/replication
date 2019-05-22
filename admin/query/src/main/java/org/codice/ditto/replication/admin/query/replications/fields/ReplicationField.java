@@ -26,6 +26,7 @@ import org.codice.ddf.admin.common.fields.base.scalar.IntegerField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.PidField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
+import org.codice.ditto.replication.admin.query.status.fields.ReplicationStats;
 
 public class ReplicationField extends BaseObjectField {
 
@@ -42,23 +43,13 @@ public class ReplicationField extends BaseObjectField {
 
   private CqlExpressionField filter;
 
-  private IntegerField itemsTransferred;
-
-  private StringField dataTransferred;
-
   private BooleanField biDirectional;
-
-  private ReplicationStatus status;
 
   private BooleanField suspended;
 
-  private DateField lastRun;
+  private ReplicationStats stats;
 
-  private DateField firstRun;
-
-  private DateField lastSuccess;
-
-  private DateField modified;
+  private Iso8601Field modified;
 
   private IntegerField version;
 
@@ -69,16 +60,11 @@ public class ReplicationField extends BaseObjectField {
     source = new ReplicationSiteField("source");
     destination = new ReplicationSiteField("destination");
     filter = new CqlExpressionField("filter");
-    itemsTransferred = new IntegerField("itemsTransferred");
-    dataTransferred = new StringField("dataTransferred");
     biDirectional = new BooleanField("biDirectional");
-    status = new ReplicationStatus();
     suspended = new BooleanField("suspended");
-    lastRun = new DateField("lastRun");
-    firstRun = new DateField("firstRun");
-    lastSuccess = new DateField("lastSuccess");
-    modified = new DateField("modified");
+    modified = new Iso8601Field("modified");
     version = new IntegerField("version");
+    stats = new ReplicationStats();
   }
 
   // setters
@@ -112,53 +98,17 @@ public class ReplicationField extends BaseObjectField {
     return this;
   }
 
-  public ReplicationField itemsTransferred(int itemsTransferred) {
-    this.itemsTransferred.setValue(itemsTransferred);
+  public ReplicationField stats(ReplicationStats stats) {
+    this.stats = stats;
     return this;
   }
 
-  public ReplicationField dataTransferred(String dataTransferred) {
-    this.dataTransferred.setValue(dataTransferred);
-    return this;
-  }
-
-  public ReplicationField status(String status) {
-    this.status.setValue(status);
-    return this;
+  public ReplicationStats getStats() {
+    return this.stats;
   }
 
   public ReplicationField suspended(Boolean suspended) {
     this.suspended.setValue(suspended);
-    return this;
-  }
-
-  public ReplicationField lastRun(String last) {
-    this.lastRun.setValue(last);
-    return this;
-  }
-
-  public ReplicationField lastRun(Date last) {
-    this.lastRun.setValue(getInstantOrNull(last));
-    return this;
-  }
-
-  public ReplicationField firstRun(String first) {
-    this.firstRun.setValue(first);
-    return this;
-  }
-
-  public ReplicationField firstRun(Date first) {
-    this.firstRun.setValue(getInstantOrNull(first));
-    return this;
-  }
-
-  public ReplicationField lastSuccess(String success) {
-    this.lastSuccess.setValue(success);
-    return this;
-  }
-
-  public ReplicationField lastSuccess(Date success) {
-    this.lastSuccess.setValue(getInstantOrNull(success));
     return this;
   }
 
@@ -221,43 +171,11 @@ public class ReplicationField extends BaseObjectField {
     return biDirectional.getValue();
   }
 
-  public int itemsTransferred() {
-    return itemsTransferred.getValue();
-  }
-
-  public IntegerField itemsTransferredField() {
-    return itemsTransferred;
-  }
-
-  public String dataTransferred() {
-    return dataTransferred.getValue();
-  }
-
-  public StringField dataTransferredField() {
-    return dataTransferred;
-  }
-
-  public ReplicationStatus status() {
-    return status;
-  }
-
   public Boolean suspended() {
     return suspended.getValue();
   }
 
-  public DateField lastRun() {
-    return lastRun;
-  }
-
-  public DateField lastSuccess() {
-    return lastSuccess;
-  }
-
-  public DateField firstRun() {
-    return firstRun;
-  }
-
-  public DateField modified() {
+  public Iso8601Field modified() {
     return modified;
   }
 
@@ -268,21 +186,7 @@ public class ReplicationField extends BaseObjectField {
   @Override
   public List<Field> getFields() {
     return ImmutableList.of(
-        id,
-        name,
-        source,
-        destination,
-        filter,
-        itemsTransferred,
-        dataTransferred,
-        biDirectional,
-        status,
-        suspended,
-        lastRun,
-        lastSuccess,
-        firstRun,
-        modified,
-        version);
+        id, name, source, destination, filter, biDirectional, suspended, modified, version, stats);
   }
 
   public static class ListImpl extends BaseListField<ReplicationField> {
