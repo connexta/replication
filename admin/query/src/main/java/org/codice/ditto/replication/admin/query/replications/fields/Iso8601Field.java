@@ -13,38 +13,37 @@
  */
 package org.codice.ditto.replication.admin.query.replications.fields;
 
+import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import org.codice.ddf.admin.api.report.ErrorMessage;
 import org.codice.ddf.admin.common.fields.base.BaseListField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.codice.ditto.replication.admin.query.ReplicationMessages;
 
-// TODO: delete or complete this class depending on the outcome of future api decisions
-/** A decorator for the StringField class intended to keep our String date in the proper format. */
-public class DateField extends StringField {
+public class Iso8601Field extends StringField {
 
-  public static final Logger LOGGER = LoggerFactory.getLogger(DateField.class);
+  public static final String DEFAULT_DATE_FIELD_NAME = "iso8601";
 
-  public static final String DEFAULT_DATE_FIELD_NAME = "date";
-
-  public static final String DEFAULT_DATE_TYPE_NAME = "Date";
+  public static final String DEFAULT_DATE_TYPE_NAME = "Iso8601";
 
   public static final String DESCRIPTION =
       "A date represented as a string. "
           + "Dates should have an ISO-8601 format and be represented in UTC time. "
           + "For example: '2011-12-03T10:15:30Z'";
 
-  protected DateField(String fieldName, String fieldTypeName, String description) {
+  protected Iso8601Field(String fieldName, String fieldTypeName, String description) {
     super(fieldName, fieldTypeName, description);
   }
 
-  public DateField(String fieldName) {
+  public Iso8601Field(String fieldName) {
     this(fieldName, DEFAULT_DATE_TYPE_NAME, DESCRIPTION);
   }
 
-  public DateField() {
+  public Iso8601Field() {
     this(DEFAULT_DATE_FIELD_NAME);
   }
 
@@ -58,27 +57,44 @@ public class DateField extends StringField {
 
   @Override
   public void setValue(String value) {
-    if (value != null) {
-      try {
-        Instant.parse(value);
-      } catch (DateTimeParseException e) {
-        // TODO:  the date format should be handled during validation and an error message added to
-        // the
-        // response when validation is implemented.
-        LOGGER.debug("Invalid date format received {}", value, e);
-      }
-    }
     super.setValue(value);
   }
 
-  public static class ListImpl extends BaseListField<DateField> {
+  @Override
+  public List<ErrorMessage> validate() {
+    List<ErrorMessage> validationMsgs = super.validate();
+    if (!validationMsgs.isEmpty()) {
+      return validationMsgs;
+    }
+
+    final String date = getValue();
+    if (date != null) {
+      try {
+        Instant.parse(date);
+      } catch (DateTimeParseException e) {
+        validationMsgs.add(ReplicationMessages.invalidIso8601(getPath()));
+      }
+    }
+
+    return validationMsgs;
+  }
+
+  @Override
+  public Set<String> getErrorCodes() {
+    return new ImmutableSet.Builder<String>()
+        .addAll(super.getErrorCodes())
+        .add(ReplicationMessages.INVALID_ISO8601)
+        .build();
+  }
+
+  public static class ListImpl extends BaseListField<Iso8601Field> {
 
     public static final String DEFAULT_FIELD_NAME = "dates";
-    private Callable<DateField> newDate;
+    private Callable<Iso8601Field> newDate;
 
     public ListImpl(String fieldName) {
       super(fieldName);
-      newDate = DateField::new;
+      newDate = Iso8601Field::new;
     }
 
     public ListImpl() {
@@ -86,7 +102,7 @@ public class DateField extends StringField {
     }
 
     @Override
-    public Callable<DateField> getCreateListEntryCallable() {
+    public Callable<Iso8601Field> getCreateListEntryCallable() {
       return newDate;
     }
   }

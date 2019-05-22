@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.admin.query;
 
+import java.util.List;
 import org.codice.ddf.admin.api.report.ErrorMessage;
 import org.codice.ddf.admin.common.report.message.ErrorMessageImpl;
 
@@ -37,6 +38,8 @@ public class ReplicationMessages {
   public static final String DESTINATION_DOES_NOT_EXIST = "DESTINATION_DOES_NOT_EXIST";
 
   public static final String CONFIG_DOES_NOT_EXIST = "CONFIG_DOES_NOT_EXIST";
+
+  public static final String INVALID_ISO8601 = "INVALID_ISO8601";
 
   private ReplicationMessages() {}
 
@@ -70,5 +73,9 @@ public class ReplicationMessages {
 
   public static ErrorMessage destinationDoesNotExist() {
     return new ErrorMessageImpl(DESTINATION_DOES_NOT_EXIST);
+  }
+
+  public static ErrorMessage invalidIso8601(List<Object> path) {
+    return new ErrorMessageImpl(INVALID_ISO8601, path);
   }
 }
