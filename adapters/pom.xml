@@ -16,5 +16,6 @@
 
   <modules>
     <module>ddf-adapter</module>
+    <module>ion-adapter</module>
   </modules>
 </project>
