@@ -56,9 +56,9 @@ public class OldSiteTest {
 
     assertThat(site.getId(), equalTo(TEST_ID));
     assertThat(site.getName(), equalTo(TEST_NAME));
-    assertThat(site.getUrl(), equalTo(TEST_URL));
+    assertThat(site.getUrl(), equalTo(TEST_URL + "/services"));
     assertThat(site.isRemoteManaged(), equalTo(false));
-    assertThat(site.getVerifiedUrl(), equalTo(TEST_URL));
+    assertThat(site.getVerifiedUrl(), equalTo(TEST_URL + "/services"));
     assertThat(site.getVersion(), equalTo(ReplicationSiteImpl.CURRENT_VERSION));
   }
 }

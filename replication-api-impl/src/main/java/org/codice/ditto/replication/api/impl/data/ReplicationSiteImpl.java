@@ -13,8 +13,11 @@
  */
 package org.codice.ditto.replication.api.impl.data;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.apache.commons.lang.StringUtils;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,7 +164,20 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   private void fromVersionOneMap(Map<String, Object> properties) {
     setName((String) properties.get(NAME_KEY));
-    setUrl((String) properties.get(URL_KEY));
+
+    String oldUrl = (String) properties.get(URL_KEY);
+    try {
+      URL url = new URL(oldUrl);
+      if (StringUtils.isEmpty(url.getPath())) {
+        setUrl(oldUrl + "/services");
+      } else {
+        // should never hit this since old urls do not have context paths
+        setUrl(oldUrl);
+      }
+    } catch (MalformedURLException e) {
+      // saved URLs will not have invalid URLs
+    }
+
     setVerifiedUrl(getUrl()); // do this after setUrl()
     setRemoteManaged(false);
   }

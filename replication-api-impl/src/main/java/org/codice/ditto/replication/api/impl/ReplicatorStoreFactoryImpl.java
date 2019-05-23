@@ -23,7 +23,6 @@ import ddf.catalog.resource.ResourceReader;
 import ddf.security.encryption.EncryptionService;
 import ddf.security.service.SecurityManager;
 import java.net.URL;
-import org.apache.commons.lang.StringUtils;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswAxisOrder;
@@ -89,13 +88,8 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
       return new LocalCatalogResourceStore(framework);
     }
 
-    String baseUrl = url.toString();
-    if (StringUtils.isEmpty(url.getPath())) {
-      baseUrl = baseUrl + "/services";
-    }
-
     CswSourceConfiguration cswConfiguration = new CswSourceConfiguration(encryptionService);
-    cswConfiguration.setCswUrl(baseUrl + "/csw");
+    cswConfiguration.setCswUrl(url.toString() + "/csw");
     cswConfiguration.setConnectionTimeout(CONNECTION_TIMEOUT);
     cswConfiguration.setCswAxisOrder(COORDINATE_ORDER);
     cswConfiguration.setDisableCnCheck(DISABLE_CN_CHECK);

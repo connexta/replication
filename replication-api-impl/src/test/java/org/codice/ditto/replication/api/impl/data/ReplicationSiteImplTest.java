@@ -40,9 +40,11 @@ public class ReplicationSiteImplTest {
 
   private static final String TEST_NAME = "testName";
 
-  private static final String TEST_URL = "https://host:44";
+  private static final String TEST_URL = "https://host:44/services";
 
-  private static final String TEST_VERIFIED_URL = "https://host2:44";
+  private static final String TEST_VERIFIED_URL = "https://host2:44/services";
+
+  private static final String V1_URL = "https://host3:33";
 
   private static final String REMOTE_MANAGED = "false";
 
@@ -158,15 +160,15 @@ public class ReplicationSiteImplTest {
     Map<String, Object> map = new HashMap<>();
     map.put(ID, TEST_ID);
     map.put(NAME, TEST_NAME);
-    map.put(URL, TEST_URL);
+    map.put(URL, V1_URL);
     map.put(VERSION, 1);
 
     site.fromMap(map);
 
     assertThat(site.getId(), is(TEST_ID));
     assertThat(site.getName(), is(TEST_NAME));
-    assertThat(site.getUrl(), is(TEST_URL));
-    assertThat(site.getVerifiedUrl(), is(TEST_URL));
+    assertThat(site.getUrl(), is(V1_URL + "/services"));
+    assertThat(site.getVerifiedUrl(), is(V1_URL + "/services"));
     assertThat(site.isRemoteManaged(), is(false));
     assertThat(site.getVersion(), equalTo(ReplicationSiteImpl.CURRENT_VERSION));
   }
