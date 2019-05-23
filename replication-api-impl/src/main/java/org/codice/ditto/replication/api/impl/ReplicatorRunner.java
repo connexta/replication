@@ -19,13 +19,17 @@ import com.google.common.annotations.VisibleForTesting;
 import ddf.security.service.SecurityServiceException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.ws.rs.NotFoundException;
 import org.codice.ddf.security.common.Security;
-import org.codice.ditto.replication.api.ReplicationPersistenceException;
+import org.codice.ditto.replication.api.Heartbeater;
 import org.codice.ditto.replication.api.Replicator;
+import org.codice.ditto.replication.api.data.Persistable;
+import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
@@ -46,6 +50,8 @@ public class ReplicatorRunner {
 
   private final Replicator replicator;
 
+  private final Heartbeater heartbeater;
+
   private final ReplicatorConfigManager replicatorConfigManager;
 
   private final ScheduledExecutorService scheduledExecutor;
@@ -56,15 +62,19 @@ public class ReplicatorRunner {
 
   private static final String DEFAULT_REPLICATION_PERIOD_STR =
       String.valueOf(TimeUnit.MINUTES.toSeconds(5));
+  private static final String DEFAULT_HEARTBEAT_PERIOD_STR =
+      String.valueOf(TimeUnit.MINUTES.toSeconds(1));
 
   public ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
+      Heartbeater heartbeater,
       ReplicatorConfigManager replicatorConfigManager,
       SiteManager siteManager) {
     this(
         scheduledExecutor,
         replicator,
+        heartbeater,
         replicatorConfigManager,
         siteManager,
         Security.getInstance());
@@ -74,23 +84,33 @@ public class ReplicatorRunner {
   ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
+      Heartbeater heartbeater,
       ReplicatorConfigManager replicatorConfigManager,
       SiteManager siteManager,
       Security security) {
     this.scheduledExecutor = notNull(scheduledExecutor);
     this.replicator = notNull(replicator);
+    this.heartbeater = notNull(heartbeater);
     this.replicatorConfigManager = notNull(replicatorConfigManager);
     this.siteManager = notNull(siteManager);
     this.security = security;
   }
 
   public void init() {
-    long period =
+    final long replicationPeriod =
         Long.parseLong(
             System.getProperty("org.codice.replication.period", DEFAULT_REPLICATION_PERIOD_STR));
+    final long heartbeatPeriod =
+        Long.parseLong(
+            System.getProperty(
+                "org.codice.replication.heartbeat.period", DEFAULT_HEARTBEAT_PERIOD_STR));
+
     scheduledExecutor.scheduleAtFixedRate(
-        this::replicateAsSystemUser, STARTUP_DELAY, period, TimeUnit.SECONDS);
-    LOGGER.info("Replication checks scheduled for every {} seconds.", period);
+        this::replicateAsSystemUser, STARTUP_DELAY, replicationPeriod, TimeUnit.SECONDS);
+    LOGGER.info("Replication checks scheduled for every {} seconds.", replicationPeriod);
+    scheduledExecutor.scheduleAtFixedRate(
+        this::heartbeatAsSystemUser, STARTUP_DELAY, heartbeatPeriod, TimeUnit.SECONDS);
+    LOGGER.info("Heartbeats scheduled for every {} seconds.", heartbeatPeriod);
   }
 
   public void destroy() {
@@ -102,11 +122,7 @@ public class ReplicatorRunner {
     security.runAsAdmin(
         () -> {
           try {
-            security.runWithSubjectOrElevate(
-                () -> {
-                  scheduleReplication();
-                  return null;
-                });
+            security.runWithSubjectOrElevate(this::scheduleReplication);
           } catch (SecurityServiceException | InvocationTargetException e) {
             LOGGER.debug("Error scheduling replication.", e);
           }
@@ -115,38 +131,85 @@ public class ReplicatorRunner {
   }
 
   @VisibleForTesting
-  void scheduleReplication() {
-    List<ReplicatorConfig> configsToSchedule =
+  void heartbeatAsSystemUser() {
+    security.runAsAdmin(
+        () -> {
+          try {
+            security.runWithSubjectOrElevate(this::scheduleHeartbeat);
+          } catch (SecurityServiceException | InvocationTargetException e) {
+            LOGGER.debug("Error scheduling heartbeat.", e);
+          }
+          return null;
+        });
+  }
+
+  @VisibleForTesting
+  Void scheduleReplication() {
+    final Map<String, ReplicationSite> sites =
+        siteManager.objects().collect(Collectors.toMap(Persistable::getId, Function.identity()));
+    final List<ReplicatorConfig> configsToSchedule =
         replicatorConfigManager
             .objects()
-            .filter(c -> !c.isSuspended())
+            .filter(((Predicate<ReplicatorConfig>) ReplicatorConfig::isSuspended).negate())
             .collect(Collectors.toList());
 
     try {
       for (ReplicatorConfig config : configsToSchedule) {
-        if (sourceOrDestinationIsRemotelyManaged(config)) {
-          LOGGER.trace(
-              "One of config {}'s sites are remotely managed, not running the config",
+        final String sourceId = config.getSource();
+        final ReplicationSite source = sites.get(sourceId);
+        final String destinationId = config.getDestination();
+        final ReplicationSite destination = sites.get(destinationId);
+
+        if (source == null) {
+          LOGGER.debug(
+              "Unable to determine the source '{}' for replication '{}'. This replication will not be run.",
+              sourceId,
               config.getName());
-          continue;
+        } else if (destination == null) {
+          LOGGER.debug(
+              "Unable to determine the destination '{}' for replication '{}'. This replication will not be run.",
+              destinationId,
+              config.getName());
+        } else if (source.isRemoteManaged()) {
+          LOGGER.trace(
+              "Config {}'s source site is remotely managed, not running the config",
+              config.getName());
+        } else if (destination.isRemoteManaged()) {
+          LOGGER.trace(
+              "Config {}'s destination site is remotely managed, not running the config",
+              config.getName());
+        } else {
+          replicator.submitSyncRequest(
+              new SyncRequestImpl(
+                  config, source, destination, new ReplicationStatusImpl(config.getName())));
         }
-        replicator.submitSyncRequest(
-            new SyncRequestImpl(config, new ReplicationStatusImpl(config.getName())));
       }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+    return null;
+  }
+
+  @VisibleForTesting
+  Void scheduleHeartbeat() {
+    siteManager
+        .objects()
+        .filter(ReplicatorRunner::isRemoteOrNotVerified)
+        .forEach(this::scheduleHeartbeat);
+    return null;
+  }
+
+  private void scheduleHeartbeat(ReplicationSite site) {
+    try {
+      heartbeater.heartbeat(site);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
   }
 
-  private boolean sourceOrDestinationIsRemotelyManaged(ReplicatorConfig replicatorConfig) {
-    try {
-      return siteManager.get(replicatorConfig.getSource()).isRemoteManaged()
-          || siteManager.get(replicatorConfig.getDestination()).isRemoteManaged();
-    } catch (NotFoundException | ReplicationPersistenceException e) {
-      LOGGER.debug(
-          "Unable to determine if replication {} should be run based on its sites. This replication will not be run.",
-          replicatorConfig.getName());
-      return true;
-    }
+  private static boolean isRemoteOrNotVerified(ReplicationSite site) {
+    // even if not verified yet, try the heartbeater as it will first verify it and skip it if
+    // it turns out it ain't remotely managed
+    return site.isRemoteManaged() || (site.getVerifiedUrl() == null);
   }
 }

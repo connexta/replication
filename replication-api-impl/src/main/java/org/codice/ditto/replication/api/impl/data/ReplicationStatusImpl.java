@@ -25,29 +25,29 @@ public class ReplicationStatusImpl implements ReplicationStatus {
 
   private final String replicatorName;
 
-  private Date startTime;
+  private volatile Date startTime;
 
-  @Nullable private Date lastSuccess;
+  @Nullable private volatile Date lastSuccess;
 
-  @Nullable private Date lastRun;
+  @Nullable private volatile Date lastRun;
 
-  @Nullable private Date lastMetadataModified;
+  @Nullable private volatile Date lastMetadataModified;
 
-  private long duration = -1;
+  private volatile long duration = -1;
 
-  private Status status = Status.PENDING;
+  private volatile Status status = Status.PENDING;
 
-  private long pushCount = 0;
+  private volatile long pushCount = 0;
 
-  private long pullCount = 0;
+  private volatile long pullCount = 0;
 
-  private long pushFailCount = 0;
+  private volatile long pushFailCount = 0;
 
-  private long pullFailCount = 0;
+  private volatile long pullFailCount = 0;
 
-  private long pushBytes = 0;
+  private volatile long pushBytes = 0;
 
-  private long pullBytes = 0;
+  private volatile long pullBytes = 0;
 
   public ReplicationStatusImpl(String replicatorName) {
     this.replicatorName = replicatorName;

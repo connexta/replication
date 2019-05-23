@@ -18,6 +18,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,13 +50,15 @@ public class OldSiteTest {
     map.put(ID, TEST_ID);
     map.put(NAME, TEST_NAME);
     map.put(URL, TEST_URL);
-    map.put(VERSION, OldSite.CURRENT_VERSION);
+    map.put(VERSION, -9999);
 
     site.fromMap(map);
 
     assertThat(site.getId(), equalTo(TEST_ID));
     assertThat(site.getName(), equalTo(TEST_NAME));
     assertThat(site.getUrl(), equalTo(TEST_URL));
-    assertThat(site.getVersion(), equalTo(2));
+    assertThat(site.isRemoteManaged(), equalTo(false));
+    assertThat(site.getVerifiedUrl(), equalTo(TEST_URL));
+    assertThat(site.getVersion(), equalTo(ReplicationSiteImpl.CURRENT_VERSION));
   }
 }

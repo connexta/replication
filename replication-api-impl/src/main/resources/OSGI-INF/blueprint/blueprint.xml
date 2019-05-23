@@ -135,12 +135,33 @@
 
     <service ref="historyService" interface="org.codice.ditto.replication.api.ReplicatorHistory"/>
 
+    <bean id="heartbeater_verifier" class="org.codice.ditto.replication.api.impl.HeartbeaterAndVerifierImpl"
+          init-method="init"
+          destroy-method="cleanUp">
+        <argument ref="historyService"/>
+        <argument ref="siteManager"/>
+        <argument ref="heartbeaterImplExecutor"/>
+    </bean>
+
+    <bean id="heartbeaterImplExecutor" class="java.util.concurrent.Executors"
+          factory-method="newSingleThreadScheduledExecutor">
+        <argument ref="heartbeaterImplThreadFactory"/>
+    </bean>
+
+    <bean id="heartbeaterImplThreadFactory" class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          factory-method="newThreadFactory">
+        <argument value="heartbeaterImplProcessorThread"/>
+    </bean>
+
+    <service ref="heartbeater_verifier" interface="org.codice.ditto.replication.api.Heartbeater"/>
+    <service ref="heartbeater_verifier" interface="org.codice.ditto.replication.api.Verifier"/>
+
     <bean id="replicator" class="org.codice.ditto.replication.api.impl.ReplicatorImpl" init-method="init"
           destroy-method="cleanUp">
         <argument ref="catalogResourceStoreFactory"/>
         <argument ref="historyService"/>
         <argument ref="replicationItemManager"/>
-        <argument ref="siteManager"/>
+        <argument ref="heartbeater_verifier"/>
         <argument ref="replicatorImplExecutor"/>
         <argument ref="filterBuilder"/>
     </bean>
@@ -160,12 +181,14 @@
           destroy-method="destroy">
         <argument ref="replicatorRunnerExecutor"/>
         <argument ref="replicator"/>
+        <argument ref="heartbeater_verifier"/>
         <argument ref="configManager"/>
         <argument ref="siteManager"/>
     </bean>
 
     <bean id="replicatorRunnerExecutor" class="java.util.concurrent.Executors"
-          factory-method="newSingleThreadScheduledExecutor">
+          factory-method="newScheduledThreadPool">
+        <argument value="2"/>
         <argument ref="replicatorRunnerFactory"/>
     </bean>
 

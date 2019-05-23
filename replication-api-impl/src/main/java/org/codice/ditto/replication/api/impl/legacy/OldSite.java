@@ -22,5 +22,7 @@ public class OldSite extends ReplicationSiteImpl {
 
     setName((String) properties.get(NAME_KEY));
     setUrl((String) properties.get(URL_KEY));
+    setVerifiedUrl(getUrl()); // do this after setUrl()
+    setRemoteManaged(false);
   }
 }
