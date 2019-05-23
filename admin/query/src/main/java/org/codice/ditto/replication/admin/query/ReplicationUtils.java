@@ -50,8 +50,6 @@ public class ReplicationUtils {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationUtils.class);
 
-  private static final long BYTES_PER_MB = 1024L * 1024L;
-
   private static final String DEFAULT_CONTEXT = "services";
 
   private static final String NOT_RUN = "NOT_RUN";
@@ -286,8 +284,8 @@ public class ReplicationUtils {
       ReplicationStatus status = statusList.get(0);
       stats.setPid(status.getId());
       stats.setStatus(status.getStatus().name());
-      stats.setPullBytes(status.getPullBytes() / BYTES_PER_MB);
-      stats.setPushBytes(status.getPushBytes() / BYTES_PER_MB);
+      stats.setPullBytes(status.getPullBytes());
+      stats.setPushBytes(status.getPushBytes());
       stats.setPullCount(status.getPullCount());
       stats.setPushCount(status.getPushCount());
       stats.setPullFailCount(status.getPullFailCount());
