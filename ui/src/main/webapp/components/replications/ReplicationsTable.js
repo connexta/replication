@@ -87,7 +87,9 @@ class ReplicationRow extends React.Component {
           {replication.stats.pullCount + replication.stats.pushCount}
         </TableCell>
         <TableCell>
-          {replication.stats.pushBytes + replication.stats.pullBytes}
+          {Replications.formatBytes(
+            replication.stats.pushBytes + replication.stats.pullBytes
+          )}
         </TableCell>
         <TableCell>{this.state.lastRun}</TableCell>
         <TableCell>{this.state.lastSuccess}</TableCell>
@@ -134,7 +136,7 @@ class ReplicationsTable extends React.Component {
               <TableCell>Bidirectional</TableCell>
               <TableCell>Filter</TableCell>
               <TableCell>Items Transferred</TableCell>
-              <TableCell>MB Transferred</TableCell>
+              <TableCell>Data Transferred</TableCell>
               <TableCell>Last Run</TableCell>
               <TableCell>Last Success</TableCell>
               <TableCell />

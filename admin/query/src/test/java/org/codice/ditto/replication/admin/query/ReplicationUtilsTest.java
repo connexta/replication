@@ -185,9 +185,9 @@ public class ReplicationUtilsTest {
 
     ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setPushCount(1L);
-    status.setPushBytes(1024 * 1024 * 5L);
+    status.setPushBytes(5L);
     status.setPullCount(2L);
-    status.setPullBytes(1024 * 1024 * 10L);
+    status.setPullBytes(10L);
     status.setLastRun(LAST_RUN);
     status.setLastSuccess(LAST_SUCCESS);
     status.setStartTime(START_TIME);
@@ -391,7 +391,7 @@ public class ReplicationUtilsTest {
     status.setPushCount(1L);
     status.setPushBytes(5L);
     status.setPullCount(2L);
-    status.setPullBytes(1024 * 1024 * 10L);
+    status.setPullBytes(10L);
     status.setLastRun(LAST_RUN);
     status.setLastSuccess(LAST_SUCCESS);
     status.setStartTime(START_TIME);
@@ -522,9 +522,9 @@ public class ReplicationUtilsTest {
 
     ReplicationStatus status = new ReplicationStatusImpl("test");
     status.setPushCount(1L);
-    status.setPushBytes(1024 * 1024 * 5L);
+    status.setPushBytes(5L);
     status.setPullCount(2L);
-    status.setPullBytes(1024 * 1024 * 10L);
+    status.setPullBytes(10L);
     status.setLastRun(LAST_RUN);
     status.setLastSuccess(LAST_SUCCESS);
     status.setStartTime(START_TIME);

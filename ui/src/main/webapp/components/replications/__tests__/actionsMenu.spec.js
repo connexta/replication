@@ -34,8 +34,10 @@ test('push in progress status renders cancel action', () => {
     <ActionsMenu
       replication={{
         id: '1234',
-        replicationStatus: Replications.Status.PUSH_IN_PROGRESS,
         suspended: false,
+        stats: {
+          replicationStatus: Replications.Status.PUSH_IN_PROGRESS,
+        },
       }}
       menuId='1234'
       anchorEl={null}
@@ -50,8 +52,10 @@ test('pull in progress status renders cancel action', () => {
     <ActionsMenu
       replication={{
         id: '1234',
-        replicationStatus: Replications.Status.PULL_IN_PROGRESS,
         suspended: false,
+        stats: {
+          replicationStatus: Replications.Status.PULL_IN_PROGRESS,
+        },
       }}
       menuId='1234'
       anchorEl={null}
@@ -66,8 +70,10 @@ test('pending status renders cancel action', () => {
     <ActionsMenu
       replication={{
         id: '1234',
-        replicationStatus: Replications.Status.PENDING,
         suspended: false,
+        stats: {
+          replicationStatus: Replications.Status.PENDING,
+        },
       }}
       menuId='1234'
       anchorEl={null}
@@ -82,8 +88,10 @@ test('suspended config renders enable action', () => {
     <ActionsMenu
       replication={{
         id: '1234',
-        replicationStatus: Replications.Status.PENDING,
         suspended: true,
+        stats: {
+          replicationStatus: Replications.Status.PENDING,
+        },
       }}
       menuId='1234'
       anchorEl={null}
@@ -98,8 +106,10 @@ test('enabled config renders suspend action', () => {
     <ActionsMenu
       replication={{
         id: '1234',
-        replicationStatus: Replications.Status.PENDING,
         suspended: false,
+        stats: {
+          replicationStatus: Replications.Status.PENDING,
+        },
       }}
       menuId='1234'
       anchorEl={null}
