@@ -41,7 +41,8 @@ import org.osgi.framework.BundleContext;
 @RestoreSystemProperties
 public class ReplicatorStoreFactoryImplTest {
 
-  ReplicatorStoreFactoryImpl factory;
+  private ReplicatorStoreFactoryImpl factory;
+
   @Mock BundleContext bundleContext;
 
   @Mock Converter provider;
@@ -82,7 +83,8 @@ public class ReplicatorStoreFactoryImplTest {
 
   @Test
   public void createReplicatorStoreLocal() throws Exception {
-    ReplicationStore store = factory.createReplicatorStore(new URL("https://localhost:8993"));
+    ReplicationStore store =
+        factory.createReplicatorStore(new URL("https://localhost:8993/services"));
     assertThat(store.getClass().getName(), is(LocalCatalogResourceStore.class.getName()));
   }
 }
