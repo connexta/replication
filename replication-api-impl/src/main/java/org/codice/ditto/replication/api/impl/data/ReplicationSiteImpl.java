@@ -47,14 +47,12 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
    *   <li>2 - Adds
    *       <ul>
    *         <li>is-remote-managed field of type boolean, defaults to false
-   *       </ul>
-   *   <li>3 - Adds
-   *       <ul>
+   *         <li>
    *         <li>verified-url, defaults to url
    *       </ul>
    * </ul>
    */
-  public static final int CURRENT_VERSION = 3;
+  public static final int CURRENT_VERSION = 2;
 
   private boolean isRemoteManaged = false;
 
@@ -65,7 +63,7 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   /**
    * The verified url corresponds to the URL that should be used to replicate to/from or send a
-   * heartbeat to this site. It will typically be the same as the configured url above but you be
+   * heartbeat to this site. It will typically be the same as the configured url above but should be
    * changed if permanent redirects are received.
    */
   @Nullable private String verifiedUrl = null;
@@ -154,9 +152,6 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
       case 1:
         fromVersionOneMap(properties);
         break;
-      case 2:
-        fromVersionTwoMap(properties);
-        break;
       default:
         LOGGER.error("unsupported {} version: {}", ReplicationSiteImpl.PERSISTENCE_TYPE, version);
         throw new IllegalStateException("Unsupported version: " + version);
@@ -169,12 +164,5 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     setUrl((String) properties.get(URL_KEY));
     setVerifiedUrl(getUrl()); // do this after setUrl()
     setRemoteManaged(false);
-  }
-
-  private void fromVersionTwoMap(Map<String, Object> properties) {
-    setName((String) properties.get(NAME_KEY));
-    setUrl((String) properties.get(URL_KEY));
-    setVerifiedUrl(getUrl()); // do this after setUrl()
-    setRemoteManaged(Boolean.parseBoolean((String) properties.get(IS_REMOTE_MANAGED_KEY)));
   }
 }

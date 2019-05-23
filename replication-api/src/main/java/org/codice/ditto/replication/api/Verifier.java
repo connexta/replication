@@ -16,7 +16,7 @@ package org.codice.ditto.replication.api;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 
 /**
- * This interface is design to provide various implementations capable of verifying if a site is a
+ * This interface is designed to provide various implementations capable of verifying if a site is a
  * remote one. The verification process is used to identify if sites should be managed locally or
  * remotely. Remotely managed sites will not be replicated to or from here; the replication
  * responsibility will be left to those sites.

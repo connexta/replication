@@ -32,7 +32,7 @@ public class ReplicationSiteImplTest {
 
   private static final String VERIFIED_URL = "verified-url";
 
-  private static final String IS_REMOTE_MANAGED_KEY = "is-remote-managed";
+  private static final String IS_REMOTE_MANAGED = "is-remote-managed";
 
   private static final String VERSION = "version";
 
@@ -43,6 +43,8 @@ public class ReplicationSiteImplTest {
   private static final String TEST_URL = "https://host:44";
 
   private static final String TEST_VERIFIED_URL = "https://host2:44";
+
+  private static final String REMOTE_MANAGED = "false";
 
   private ReplicationSiteImpl site;
 
@@ -103,6 +105,7 @@ public class ReplicationSiteImplTest {
     map.put(NAME, TEST_NAME);
     map.put(URL, TEST_URL);
     map.put(VERIFIED_URL, TEST_VERIFIED_URL);
+    map.put(IS_REMOTE_MANAGED, REMOTE_MANAGED);
     map.put(VERSION, ReplicationSiteImpl.CURRENT_VERSION);
 
     site.fromMap(map);
@@ -110,6 +113,7 @@ public class ReplicationSiteImplTest {
     assertThat(site.getId(), equalTo(TEST_ID));
     assertThat(site.getName(), equalTo(TEST_NAME));
     assertThat(site.getUrl(), equalTo(TEST_URL));
+    assertThat(site.isRemoteManaged(), is(false));
     assertThat(site.getVerifiedUrl(), equalTo(TEST_VERIFIED_URL));
     assertThat(site.getVersion(), equalTo(ReplicationSiteImpl.CURRENT_VERSION));
   }
@@ -164,25 +168,6 @@ public class ReplicationSiteImplTest {
     assertThat(site.getUrl(), is(TEST_URL));
     assertThat(site.getVerifiedUrl(), is(TEST_URL));
     assertThat(site.isRemoteManaged(), is(false));
-    assertThat(site.getVersion(), equalTo(ReplicationSiteImpl.CURRENT_VERSION));
-  }
-
-  @Test
-  public void testReadVersionTwo() {
-    Map<String, Object> map = new HashMap<>();
-    map.put(ID, TEST_ID);
-    map.put(NAME, TEST_NAME);
-    map.put(URL, TEST_URL);
-    map.put(IS_REMOTE_MANAGED_KEY, "true");
-    map.put(VERSION, 2);
-
-    site.fromMap(map);
-
-    assertThat(site.getId(), is(TEST_ID));
-    assertThat(site.getName(), is(TEST_NAME));
-    assertThat(site.getUrl(), is(TEST_URL));
-    assertThat(site.getVerifiedUrl(), is(TEST_URL));
-    assertThat(site.isRemoteManaged(), is(true));
     assertThat(site.getVersion(), equalTo(ReplicationSiteImpl.CURRENT_VERSION));
   }
 

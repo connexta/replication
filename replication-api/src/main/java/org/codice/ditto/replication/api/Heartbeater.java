@@ -16,8 +16,8 @@ package org.codice.ditto.replication.api;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 
 /**
- * This interface is design to provide various implementations capable of generating a heartbeat to
- * sites.
+ * This interface is designed to provide various implementations capable of generating a heartbeat
+ * to sites.
  */
 public interface Heartbeater {
   /**

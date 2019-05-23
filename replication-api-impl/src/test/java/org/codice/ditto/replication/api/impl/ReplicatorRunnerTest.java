@@ -162,11 +162,9 @@ public class ReplicatorRunnerTest {
     when(config.isSuspended()).thenReturn(true);
     when(configManager.objects()).thenReturn(Stream.of(config));
 
-    ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
-
     runner.scheduleReplication();
 
-    verify(replicator, never()).submitSyncRequest(request.capture());
+    verify(replicator, never()).submitSyncRequest(any());
   }
 
   @ClearInterruptions
