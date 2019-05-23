@@ -48,8 +48,6 @@ public class ReplicationUtils {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationUtils.class);
 
-  private static final long BYTES_PER_MB = 1024L * 1024L;
-
   private static final String DEFAULT_CONTEXT = "services";
 
   private static final String NOT_RUN = "NOT_RUN";
