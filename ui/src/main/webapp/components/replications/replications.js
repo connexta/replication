@@ -71,10 +71,26 @@ function repSort(a, b) {
   return 0
 }
 
+function formatBytes(bytes, disableBytes = true) {
+  if (bytes === 0) return '0 MB'
+
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+  let i = Math.floor(Math.log(bytes) / Math.log(k))
+  if (disableBytes && i === 0) {
+    // don't allow Bytes display if less than KB, force to KB
+    i = 1
+  }
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
 export default {
   Status,
   isInProgress,
   statusDisplayName,
   cancelable,
   repSort,
+  formatBytes,
 }
