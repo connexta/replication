@@ -27,7 +27,7 @@ public class UpdateRequestImpl implements UpdateRequest {
   }
 
   @Override
-  public List<Metadata> getUpdatedMetadata() {
+  public List<Metadata> getMetadata() {
     return metadata;
   }
 }

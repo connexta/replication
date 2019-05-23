@@ -28,7 +28,7 @@
         <releases.repository.url />
         <admin-query.version>1.2.8-SNAPSHOT</admin-query.version>
         <ddf.support.version>2.3.12</ddf.support.version>
-        <ddf.version>2.13.7</ddf.version>
+        <ddf.version>2.13.9</ddf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <surefire.version>2.20.1</surefire.version>
         <karaf.version>4.2.1</karaf.version>
@@ -50,10 +50,10 @@
         <thirdparty.ogc.version>1.1.0_5</thirdparty.ogc.version>
         <ogc.tools.version>1.0.3</ogc.tools.version>
         <jts.version>1.14.0</jts.version>
-        <jaxb.version>0.9.4</jaxb.version>
+        <jaxb.version>2.2.11</jaxb.version>
         <cxf.frontent.version>3.2.5</cxf.frontent.version>
         <validation.version>1.1.0.Final</validation.version>
-        <xstream.version>1.4.9</xstream.version>
+        <xstream.version>1.4.11.1</xstream.version>
         <xerces.version>2.10.0</xerces.version>
         <jsr305.version>3.0.2_1</jsr305.version>
         <jetty.version>9.4.11.v20180605</jetty.version>
@@ -670,12 +670,12 @@
     </pluginRepositories>
     <modules>
         <module>replication-api</module>
+        <module>commons</module>
         <module>replication-api-impl</module>
         <module>admin</module>
+        <module>adapters</module>
         <module>docs</module>
         <module>ui</module>
         <module>distributions</module>
-        <module>adapters</module>
-        <module>commons</module>
     </modules>
 </project>

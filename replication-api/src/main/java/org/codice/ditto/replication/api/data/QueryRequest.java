@@ -56,4 +56,18 @@ public interface QueryRequest {
    * @return the modified after {@link Date}
    */
   Date getModifiedAfter();
+
+  /**
+   * The result index at which the query results should start from
+   *
+   * @return
+   */
+  int getStartIndex();
+
+  /**
+   * The maximum number of results to return for any single query run
+   *
+   * @return
+   */
+  int getPageSize();
 }

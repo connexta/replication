@@ -11,20 +11,27 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api.data;
+package com.connexta.replication.adapters.ddf.csw;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
-/**
- * An update request object to be sent to {@link org.codice.ditto.replication.api.NodeAdapter}s to
- * update {@link Metadata}.
- */
-public interface UpdateRequest {
+import java.io.StringWriter;
+import org.junit.Test;
 
-  /**
-   * Gets a list of {@link Metadata} to be updated.
-   *
-   * @return the list of {@link Metadata}
-   */
-  List<Metadata> getMetadata();
+public class EscapingPrintWriterTest {
+
+  @Test
+  public void testXmlMetaCharacters() {
+    String unescaped = "& > < \" \'";
+    String escaped = "&amp; &gt; &lt; &quot; &apos;";
+
+    StringWriter stringWriter = new StringWriter(128);
+    EscapingPrintWriter escapingPrintWriter = new EscapingPrintWriter(stringWriter);
+    escapingPrintWriter.setValue(unescaped);
+
+    escapingPrintWriter.flush();
+    String processed = stringWriter.toString();
+
+    assertEquals(escaped, processed);
+  }
 }

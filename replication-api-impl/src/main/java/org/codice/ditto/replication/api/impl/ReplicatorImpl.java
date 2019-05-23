@@ -123,6 +123,8 @@ public class ReplicatorImpl implements Replicator {
             } catch (InterruptedException e) {
               Thread.currentThread().interrupt();
               break;
+            } catch (Exception e) {
+              LOGGER.error("Unexpected exception in replication management thread.", e);
             }
           }
         });
