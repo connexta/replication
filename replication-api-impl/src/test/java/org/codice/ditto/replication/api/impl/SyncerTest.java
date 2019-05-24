@@ -1372,10 +1372,10 @@ public class SyncerTest {
   @Test
   public void testFailedItemsAndMofifiedAfterIncludedInQuery() {
     // setup
-    ReplicationStatus replicationStatus = mock(ReplicationStatus.class);
+    ReplicationStatus status = mock(ReplicationStatus.class);
     Date lastMetadataModified = new Date();
-    when(replicationStatus.getLastMetadataModified()).thenReturn(lastMetadataModified);
-    when(replicatorHistoryManager.getByReplicatorId(REPLICATOR_ID)).thenReturn(replicationStatus);
+    when(status.getLastMetadataModified()).thenReturn(lastMetadataModified);
+    when(replicatorHistoryManager.getByReplicatorId(REPLICATOR_ID)).thenReturn(status);
 
     final int failtureRetryCount = 5;
     when(replicatorConfig.getFailureRetryCount()).thenReturn(failtureRetryCount);
@@ -1389,7 +1389,7 @@ public class SyncerTest {
         .thenReturn(failedItemIds);
 
     final String metadataId = "metadataId";
-    final Date modifiedDate = new Date();
+    final Date modifiedDate = new Date(System.currentTimeMillis() + 10000);
     Metadata metadata = mockMetadata(metadataId);
     when(metadata.isDeleted()).thenReturn(false);
     when(metadata.getResourceUri()).thenReturn(null);
@@ -1412,14 +1412,14 @@ public class SyncerTest {
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
     // doesn't matter. do to avoid an NPE when creating sync response
-    when(replicationStatus.getStatus()).thenReturn(Status.SUCCESS);
+    when(status.getStatus()).thenReturn(Status.SUCCESS);
 
     ArgumentCaptor<CreateRequest> createRequestCaptor =
         ArgumentCaptor.forClass(CreateRequest.class);
     when(destination.createRequest(createRequestCaptor.capture())).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, replicationStatus);
+    Job job = syncer.create(source, destination, replicatorConfig, status);
     job.sync();
 
     // then
@@ -1428,16 +1428,16 @@ public class SyncerTest {
     assertThat(queryRequest.getExcludedNodes(), is(Collections.singletonList(DESTINATION_NAME)));
     assertThat(queryRequest.getFailedItemIds(), is(failedItemIds));
     assertThat(queryRequest.getModifiedAfter(), is(lastMetadataModified));
-    verify(replicationStatus).setLastMetadataModified(any(Date.class));
+    verify(status).setLastMetadataModified(any(Date.class));
   }
 
   @Test
   public void testFailedItemsAndMofifiedBeforeLastModifed() {
     // setup
-    ReplicationStatus replicationStatus = mock(ReplicationStatus.class);
+    ReplicationStatus status = mock(ReplicationStatus.class);
     Date lastMetadataModified = new Date();
-    when(replicationStatus.getLastMetadataModified()).thenReturn(lastMetadataModified);
-    when(replicatorHistoryManager.getByReplicatorId(REPLICATOR_ID)).thenReturn(replicationStatus);
+    when(status.getLastMetadataModified()).thenReturn(lastMetadataModified);
+    when(replicatorHistoryManager.getByReplicatorId(REPLICATOR_ID)).thenReturn(status);
 
     final int failtureRetryCount = 5;
     when(replicatorConfig.getFailureRetryCount()).thenReturn(failtureRetryCount);
@@ -1474,21 +1474,20 @@ public class SyncerTest {
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
     // doesn't matter. do to avoid an NPE when creating sync response
-    when(replicationStatus.getStatus()).thenReturn(Status.SUCCESS);
+    when(status.getStatus()).thenReturn(Status.SUCCESS);
 
     ArgumentCaptor<CreateRequest> createRequestCaptor =
         ArgumentCaptor.forClass(CreateRequest.class);
     when(destination.createRequest(createRequestCaptor.capture())).thenReturn(true);
 
-    when(replicationStatus.getLastMetadataModified())
-        .thenReturn(new Date(new Date().getTime() + 100000));
+    when(status.getLastMetadataModified()).thenReturn(new Date(System.currentTimeMillis() + 10000));
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, replicationStatus);
+    Job job = syncer.create(source, destination, replicatorConfig, status);
     job.sync();
 
     // then
-    verify(replicationStatus, never()).setLastMetadataModified(any(Date.class));
+    verify(status, never()).setLastMetadataModified(any(Date.class));
   }
 
   private Metadata mockMetadata(String id) {
