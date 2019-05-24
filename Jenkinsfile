@@ -168,8 +168,7 @@ pipeline {
                 stage ('SonarCloud') {
                     when {
                         allOf {
-                            expression { env.CHANGE_ID == null }
-                            branch 'master'
+                            branch '0.2.x'
                             environment name: 'JENKINS_ENV', value: 'prod'
                         }
                     }
