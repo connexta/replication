@@ -135,11 +135,16 @@
 
     <service ref="historyService" interface="org.codice.ditto.replication.api.ReplicatorHistory"/>
 
+    <reference id="branding" interface="org.codice.ddf.branding.BrandingPlugin"/>
+
     <bean id="heartbeater_verifier" class="org.codice.ditto.replication.api.impl.HeartbeaterAndVerifierImpl"
           init-method="init"
           destroy-method="cleanUp">
         <argument ref="historyService"/>
         <argument ref="siteManager"/>
+        <argument ref="configManager"/>
+        <argument ref="clientFactoryFactory"/>
+        <argument ref="branding"/>
         <argument ref="heartbeaterImplExecutor"/>
     </bean>
 

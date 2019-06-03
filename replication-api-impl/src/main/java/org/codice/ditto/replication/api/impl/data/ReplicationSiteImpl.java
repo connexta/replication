@@ -143,6 +143,21 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     }
   }
 
+  @Override
+  public int hashCode() {
+    return getId().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    } else if (obj instanceof ReplicationSiteImpl) {
+      return getId().equals(((ReplicationSiteImpl) obj).getId());
+    }
+    return false;
+  }
+
   private void fromCurrentMap(Map<String, Object> properties) {
     setName((String) properties.get(NAME_KEY));
     setUrl((String) properties.get(URL_KEY));

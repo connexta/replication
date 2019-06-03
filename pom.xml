@@ -31,6 +31,7 @@
         <ddf.version>2.13.9</ddf.version>
         <codice-maven.version>0.2</codice-maven.version>
         <codice-test.version>0.9</codice-test.version>
+        <discovery-api.version>1.0.1</discovery-api.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 

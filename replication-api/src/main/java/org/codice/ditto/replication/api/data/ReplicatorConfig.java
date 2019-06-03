@@ -65,6 +65,18 @@ public interface ReplicatorConfig extends Persistable {
   void setDestination(String destinationId);
 
   /**
+   * Checks if this configuration source or destination corresponds to the specified site
+   * identifier.
+   *
+   * @param id the site id to check for
+   * @return <code>true</code> if either the source or the destination corresponds to <code>id
+   *     </code>; false otherwise
+   */
+  default boolean sourceOrDestinationIs(String id) {
+    return id.equals(getSource()) || id.equals(getDestination());
+  }
+
+  /**
    * Get the filter used for determining the data set to replicate
    *
    * @return replication cql filter

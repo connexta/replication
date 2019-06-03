@@ -24,6 +24,10 @@
     <name>Replication :: API Impl</name>
     <packaging>bundle</packaging>
 
+    <properties>
+        <jackson.version>2.9.8</jackson.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>replication</groupId>
@@ -238,6 +242,34 @@
             <version>${ddf.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- cxf discovery client -->
+        <dependency>
+            <groupId>com.connexta.discovery</groupId>
+            <artifactId>discovery-api-cxf-client</artifactId>
+            <version>${discovery-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.connexta.discovery</groupId>
+            <artifactId>discovery-api-rest-models</artifactId>
+            <version>${discovery-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ddf.platform</groupId>
+            <artifactId>branding-api</artifactId>
+            <version>${ddf.version}</version>
+        </dependency>
+        <!-- cxf discovery client -->
     </dependencies>
     <build>
         <resources>
@@ -280,6 +312,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Import-Package>
                             !org.jvnet.staxex,
+                            !io.swagger.annotations,
                             ddf.security.permission,
                             ddf.security.encryption;version="[1.0.0, 3.0.0]",
                             *
@@ -287,7 +320,17 @@
                         <Export-Package>
                             org.codice.ditto.replication.api.impl.data,
                             org.codice.ditto.replication.api.impl.mcard,
-                            org.codice.ditto.replication.api.impl.modern
+                            org.codice.ditto.replication.api.impl.modern,
+
+                            <!-- cxf discovery client -->
+                            com.connexta.discovery.rest.cxf.client,
+                            com.connexta.discovery.rest.models,
+                            com.fasterxml.jackson.databind.*,
+                            com.fasterxml.jackson.core.*,
+                            com.fasterxml.jackson.annotation,
+                            com.fasterxml.jackson.jaxrs.*,
+                            com.fasterxml.jackson.module.jaxb.*
+                            <!-- cxf discovery client -->
                         </Export-Package>
                         <Embed-Dependency>
                             spatial-csw-source-common,
@@ -304,7 +347,13 @@
                             jaxb2-basics-runtime,
                             commons-lang3,
                             geospatial,
-                            security-core-impl
+                            security-core-impl,
+
+                            <!-- cxf discovery client -->
+                            discovery-api-cxf-client,
+                            discovery-api-rest-models,
+                            jackson-datatype-jsr310 <!-- Allows jackson parsing of OffsetDateTime -->
+                            <!-- cxf discovery client -->
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>

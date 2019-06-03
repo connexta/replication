@@ -209,7 +209,7 @@ public class ReplicatorRunner {
 
   private static boolean isRemoteOrNotVerified(ReplicationSite site) {
     // even if not verified yet, try the heartbeater as it will first verify it and skip it if
-    // it turns out it ain't remotely managed
+    // it turns out it isn't remotely managed
     return site.isRemoteManaged() || (site.getVerifiedUrl() == null);
   }
 }

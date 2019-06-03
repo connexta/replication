@@ -357,20 +357,21 @@ public class ReplicationUtils {
     field.modified(site.getModified());
     field.version(site.getVersion());
     AddressField address = new AddressField();
+    String siteUrl = site.getVerifiedUrl() != null ? site.getVerifiedUrl() : site.getUrl();
     URL url;
 
     try {
-      url = new URL(site.getUrl());
+      url = new URL(siteUrl);
     } catch (MalformedURLException e) {
       throw new ReplicationException("Malformed URL: " + site.getUrl(), e);
     }
 
-    address.url(site.getUrl());
+    address.url(siteUrl);
     address.hostname(url.getHost());
     address.port(url.getPort());
     field.address(address);
     field.rootContext(StringUtils.isEmpty(url.getPath()) ? DEFAULT_CONTEXT : url.getPath());
-    field.isDisableLocal(site.isRemoteManaged());
+    field.isRemoteManaged(site.isRemoteManaged());
     return field;
   }
 
