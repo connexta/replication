@@ -22,6 +22,7 @@ import {
   Tooltip,
 } from '@material-ui/core'
 import DeleteForever from '@material-ui/icons/DeleteForever'
+import Cloud from '@material-ui/icons/Cloud'
 import CardActions from '@material-ui/core/CardActions'
 import { Mutation } from 'react-apollo'
 import { allSites } from './gql/queries'
@@ -58,7 +59,14 @@ const styles = {
 
 class Site extends React.Component {
   render() {
-    const { name, content, id, classes, enqueueSnackbar } = this.props
+    const {
+      name,
+      content,
+      remoteManaged,
+      id,
+      classes,
+      enqueueSnackbar,
+    } = this.props
 
     return (
       <Card className={classes.card}>
@@ -138,6 +146,11 @@ class Site extends React.Component {
               {content}
             </Typography>
           </Tooltip>
+          {remoteManaged ? (
+            <Tooltip title='This Node has been identified as Cloud ready and any Replication involving this Node will be remotely managed, and will no longer run locally.'>
+              <Cloud />
+            </Tooltip>
+          ) : null}
         </CardContent>
       </Card>
     )
@@ -148,6 +161,7 @@ Site.propTypes = {
   name: PropTypes.string.isRequired,
   content: PropTypes.string.isRequired,
   id: PropTypes.string.isRequired,
+  remoteManaged: PropTypes.bool.isRequired,
 }
 
 export default withStyles(styles)(withSnackbar(Site))

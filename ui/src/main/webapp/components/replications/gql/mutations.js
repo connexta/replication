@@ -12,6 +12,7 @@
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
 import gql from 'graphql-tag'
+import { replications } from './fragments'
 
 export const addReplication = gql`
   mutation createReplication(
@@ -28,37 +29,10 @@ export const addReplication = gql`
       filter: $filter
       biDirectional: $biDirectional
     ) {
-      name
-      id
-      source {
-        id
-        name
-        address {
-          url
-        }
-      }
-      destination {
-        id
-        name
-        address {
-          url
-        }
-      }
-      biDirectional
-      filter
-      suspended
-      stats {
-        replicationStatus
-        pushCount
-        pullCount
-        pushBytes
-        pullBytes
-        lastRun
-        lastSuccess
-        startTime
-      }
+      ...ReplicationConfig
     }
   }
+  ${replications}
 `
 export const suspendReplication = gql`
   mutation suspendReplication($id: Pid!, $suspend: Boolean!) {

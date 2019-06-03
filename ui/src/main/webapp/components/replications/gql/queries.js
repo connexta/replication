@@ -12,41 +12,15 @@
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
 import gql from 'graphql-tag'
+import { replications } from './fragments'
 
 export const allReplications = gql`
   {
     replication {
       replications {
-        id
-        name
-        source {
-          id
-          name
-          address {
-            url
-          }
-        }
-        destination {
-          id
-          name
-          address {
-            url
-          }
-        }
-        biDirectional
-        filter
-        suspended
-        stats {
-          replicationStatus
-          pushCount
-          pullCount
-          pushBytes
-          pullBytes
-          lastRun
-          lastSuccess
-          startTime
-        }
+        ...ReplicationConfig
       }
     }
   }
+  ${replications}
 `
