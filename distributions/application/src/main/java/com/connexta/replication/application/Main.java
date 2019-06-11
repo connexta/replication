@@ -38,7 +38,9 @@ public class Main {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
+  @SuppressWarnings("squid:S2189")
   public static void main(String[] args) throws Exception {
+    // Need to load some system properties before anything else is done
     loadBootSystemProperties();
     SpringApplication application = new SpringApplication(Main.class);
     application.setWebApplicationType(WebApplicationType.NONE);
@@ -49,7 +51,7 @@ public class Main {
   }
 
   @Bean
-  public ConfigFileReader configFileReader(
+  public ConfigFileReader configReader(
       ReplicatorConfigManager configManager,
       SiteManager siteManager,
       ReplicatorHistoryManager historyManager) {
@@ -69,10 +71,15 @@ public class Main {
       return;
     }
     Properties properties = new Properties();
-    try {
-      properties.load(new FileInputStream(sslPropertiesFile));
-      properties.putAll(System.getProperties());
-      System.setProperties(properties);
+    try (FileInputStream fis = new FileInputStream(sslPropertiesFile)) {
+      properties.load(fis);
+      properties.forEach(
+          (name, value) -> {
+            // properties passed in on the command line take precedence
+            if (System.getProperty((String) name) == null) {
+              System.setProperty((String) name, (String) value);
+            }
+          });
       LOGGER.trace("System properties {}", System.getProperties());
     } catch (IOException e) {
       LOGGER.error("Error loading ssl system properties.", e);

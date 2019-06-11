@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>docker</artifactId>
+    <groupId>replication.distributions</groupId>
+    <version>0.3.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>replication-docker</artifactId>
+  <name>Replication :: Distros :: Docker :: Replication</name>
+  <packaging>pom</packaging>
+
+  <properties>
+    <app.artifactId>replication-distros-spring</app.artifactId>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>replication.distributions</groupId>
+      <artifactId>${app.artifactId}</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <images>
+            <image>
+              <name>cnxta/replication:${project.version}</name>
+              <build>
+                <dockerFile>Dockerfile</dockerFile>
+                <assembly>
+                  <descriptor>files.xml</descriptor>
+                </assembly>
+              </build>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

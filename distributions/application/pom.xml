@@ -42,6 +42,11 @@
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.codice.test</groupId>
+            <artifactId>junit-extensions</artifactId>
+            <version>${junit-ext.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

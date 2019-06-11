@@ -22,11 +22,31 @@ public class ReplicationProperties {
 
   private long period;
 
+  private String configsJson;
+
+  private String sitesJson;
+
   public long getPeriod() {
     return period;
   }
 
   public void setPeriod(long period) {
     this.period = period;
+  }
+
+  public String getConfigsJson() {
+    return configsJson;
+  }
+
+  public void setConfigsJson(String configsJson) {
+    this.configsJson = configsJson;
+  }
+
+  public String getSitesJson() {
+    return sitesJson;
+  }
+
+  public void setSitesJson(String sitesJson) {
+    this.sitesJson = sitesJson;
   }
 }
