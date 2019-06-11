@@ -103,7 +103,9 @@ public class ConfigFileReader {
       JsonReader jsonReader = new JsonReader(new FileReader(sitesPath.toString()));
       Gson gson = new Gson();
       ReplicationSiteImpl[] sites = gson.fromJson(jsonReader, ReplicationSiteImpl[].class);
+      LOGGER.trace("Retrieving sites from solr");
       List<ReplicationSite> existingSites = siteManager.objects().collect(Collectors.toList());
+      LOGGER.trace("Retrieved {} sites from solr", existingSites.size());
       for (ReplicationSite site : sites) {
         String name = site.getName();
         if (existingSites.stream().map(ReplicationSite::getName).noneMatch(name::equals)) {
