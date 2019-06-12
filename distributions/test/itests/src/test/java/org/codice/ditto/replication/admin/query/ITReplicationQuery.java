@@ -13,8 +13,14 @@
  */
 package org.codice.ditto.replication.admin.query;
 
-import static com.jayway.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
+import static org.codice.ditto.replication.admin.query.TestUtils.asAdmin;
+import static org.codice.ditto.replication.admin.query.TestUtils.makeCreateSiteQuery;
+import static org.codice.ditto.replication.admin.query.TestUtils.makeDeleteSiteQuery;
+import static org.codice.ditto.replication.admin.query.TestUtils.makeGetSiteByIdQuery;
+import static org.codice.ditto.replication.admin.query.TestUtils.makeGetSitesQuery;
+import static org.codice.ditto.replication.admin.query.TestUtils.makeUpdateSiteQuery;
+import static org.codice.ditto.replication.admin.query.TestUtils.writeUrl;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
@@ -23,14 +29,15 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 import com.jayway.restassured.response.Response;
-import com.jayway.restassured.specification.RequestSpecification;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import org.codice.ddf.dominion.commons.options.DDFCommonOptions;
 import org.codice.ditto.replication.dominion.options.ReplicationOptions;
 import org.codice.dominion.Dominion;
 import org.codice.dominion.interpolate.Interpolate;
+import org.codice.dominion.options.karaf.KarafOptions.InstallBundle;
 import org.codice.junit.TestDelimiter;
+import org.codice.maven.MavenUrl;
 import org.codice.pax.exam.junit.ConfigurationAdmin;
 import org.codice.pax.exam.junit.ServiceAdmin;
 import org.junit.After;
@@ -45,6 +52,14 @@ import org.junit.runner.RunWith;
 @TestDelimiter(stdout = true, elapsed = true)
 @ServiceAdmin
 @ConfigurationAdmin
+@InstallBundle(
+  bundle =
+      @MavenUrl(
+        groupId = "org.awaitility",
+        artifactId = "awaitility",
+        version = MavenUrl.AS_IN_PROJECT
+      )
+)
 @RunWith(Dominion.class)
 public class ITReplicationQuery {
 
@@ -343,50 +358,6 @@ public class ITReplicationQuery {
         .body("data.createReplicationSite.id", is(notNullValue()));
 
     return createResponse;
-  }
-
-  private static String writeUrl(String hostname, int port, String rootContext) {
-    return String.format("https://%s:%d/%s", hostname, port, rootContext);
-  }
-
-  private static RequestSpecification asAdmin() {
-    return given()
-        .log()
-        .all()
-        .header("Content-Type", "application/json")
-        .relaxedHTTPSValidation()
-        .auth()
-        .preemptive()
-        .basic("admin", "admin")
-        .header("X-Requested-With", "XMLHttpRequest");
-  }
-
-  private static String makeCreateSiteQuery(String name, String url) {
-    return String.format(
-        "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
-        name, url);
-  }
-
-  private static String makeGetSitesQuery() {
-    return "{\"query\":\"{ replication{ sites{ id name address{ host{ hostname port } url }}}}\"}";
-  }
-
-  private static String makeGetSiteByIdQuery(String siteId) {
-    return String.format(
-        "{\"query\":\"{ replication{ sites(id: \\\"%s\\\"){ id name address{ host{ hostname port } url }}}}\"}",
-        siteId);
-  }
-
-  private static String makeUpdateSiteQuery(
-      String id, String name, String hostname, int port, String rootContext) {
-    return String.format(
-        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { host: { hostname: \\\"%s\\\", port: %d}}, rootContext: \\\"%s\\\")}\"}",
-        id, name, hostname, port, rootContext);
-  }
-
-  private String makeDeleteSiteQuery(String siteId) {
-    return String.format(
-        "{\"query\":\"mutation{ deleteReplicationSite(id: \\\"%s\\\")}\"}", siteId);
   }
 
   // ----------------------------------- General Tests -----------------------------------//
