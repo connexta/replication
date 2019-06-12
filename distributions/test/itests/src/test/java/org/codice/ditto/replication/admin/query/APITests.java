@@ -16,7 +16,6 @@ package org.codice.ditto.replication.admin.query;
 import static com.jayway.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -24,36 +23,16 @@ import static org.hamcrest.core.Is.is;
 
 import com.jayway.restassured.response.Response;
 import com.jayway.restassured.specification.RequestSpecification;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import org.codice.ddf.dominion.commons.options.DDFCommonOptions;
-import org.codice.ditto.replication.dominion.options.ReplicationOptions;
-import org.codice.dominion.Dominion;
-import org.codice.dominion.interpolate.Interpolate;
-import org.codice.junit.TestDelimiter;
-import org.codice.pax.exam.junit.ConfigurationAdmin;
-import org.codice.pax.exam.junit.ServiceAdmin;
 import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@DDFCommonOptions.ConfigureVMOptionsForTesting
-@DDFCommonOptions.ConfigureDebugging
-@DDFCommonOptions.ConfigurePorts
-@DDFCommonOptions.ConfigureLogging
-@ReplicationOptions.Install
-@TestDelimiter(stdout = true, elapsed = true)
-@ServiceAdmin
-@ConfigurationAdmin
-@RunWith(Dominion.class)
-public class ITReplicationQuery {
+public class APITests {
 
-  private static final String NO_EXISTING_CONFIG = "NO_EXISTING_CONFIG";
+  private static String GRAPHQL_ENDPOINT = "https://localhost:8993/admin/hub/graphql";
 
-  @Interpolate
-  private static String GRAPHQL_ENDPOINT = "https://localhost:{port.https}/admin/hub/graphql";
-
-  private static final String URL = "https://localhost:9999/services";
+  private static String DELETE_SITES =
+      "http://localhost:8994/solr/replication_site/update?commit=true&stream.body=<delete><query>*:*</query></delete>";
 
   private static String HOST = "host";
 
@@ -70,111 +49,6 @@ public class ITReplicationQuery {
 
   private void cleanupSite(String siteId) {
     asAdmin().body(makeDeleteSiteQuery(siteId)).when().post(GRAPHQL_ENDPOINT);
-  }
-
-  // ----------------------------------- Site Tests -----------------------------------//
-
-  @Test
-  public void createReplicationSite() throws MalformedURLException {
-    String name = "create";
-    createSite(name, HOST, PORT, SERVICES);
-  }
-
-  @Test
-  public void createReplicationSiteWithHostnameAndPort() {
-    String name = "createHostnameAndPort";
-    asAdmin()
-        .body(
-            String.format(
-                "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { host: { hostname: \\\"localhost\\\" port: 9999 }}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
-                name))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("data.createReplicationSite.name", is(name))
-        .body("data.createReplicationSite.address.url", is(URL))
-        .body("data.createReplicationSite.address.host.hostname", is("localhost"))
-        .body("data.createReplicationSite.address.host.port", is(9999))
-        .body("data.createReplicationSite.id", is(notNullValue()));
-  }
-
-  @Test
-  public void createReplicationSiteWithEmptyName() {
-    asAdmin()
-        .body(makeCreateSiteQuery("", URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem("EMPTY_FIELD"));
-  }
-
-  @Test
-  public void createReplicationSiteWithInvalidUrl() {
-    asAdmin()
-        .body(makeCreateSiteQuery("badUrl", "localhost:9999"))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem("INVALID_URL"));
-  }
-
-  @Test
-  public void createReplicationSiteWithIntegerName() {
-    asAdmin()
-        .body(
-            String.format(
-                "{\"query\":\"mutation{ createReplicationSite(name: 25, address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
-                URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body(
-            "errors.errorType",
-            hasItem("ValidationError")); // returns an empty body for queries it doesn't recognize
-  }
-
-  @Test
-  public void getReplicationSites() {
-    asAdmin()
-        .body(makeGetSitesQuery())
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors", is(nullValue()));
-  }
-
-  @Test
-  public void updateReplicationSiteContractTest() {
-    asAdmin()
-        .body(makeUpdateSiteQuery("siteId", "newName", HOST, PORT, SERVICES))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem(NO_EXISTING_CONFIG));
-  }
-
-  @Test
-  public void deleteReplicationSiteContractTest() {
-    asAdmin()
-        .body(makeDeleteSiteQuery("fakeId"))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem(NO_EXISTING_CONFIG));
   }
 
   /*Tests the create and get queries for sites but the focus here is making sure delete works*/
@@ -388,19 +262,4 @@ public class ITReplicationQuery {
     return String.format(
         "{\"query\":\"mutation{ deleteReplicationSite(id: \\\"%s\\\")}\"}", siteId);
   }
-
-  // ----------------------------------- General Tests -----------------------------------//
-
-  @Test
-  public void undefinedFieldInQuery() {
-    asAdmin()
-        .body("{\"query\":\"mutation{ unknownField }\"}")
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.errorType", hasItem("ValidationError"));
-  }
-
 }

@@ -44,7 +44,7 @@ public class GetReplicationSites extends BaseFunctionField<ListField<Replication
   public GetReplicationSites(ReplicationUtils replicationUtils) {
     super(FIELD_NAME, DESCRIPTION);
     this.replicationUtils = replicationUtils;
-    this.id = new PidField();
+    this.id = new PidField("id");
   }
 
   @Override
