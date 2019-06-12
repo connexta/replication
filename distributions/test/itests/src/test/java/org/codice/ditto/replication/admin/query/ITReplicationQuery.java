@@ -402,5 +402,4 @@ public class ITReplicationQuery {
         .header("Content-Type", is("application/json;charset=utf-8"))
         .body("errors.errorType", hasItem("ValidationError"));
   }
-
 }
