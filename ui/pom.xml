@@ -22,7 +22,6 @@
 
     <artifactId>replication-ui</artifactId>
     <name>Replication :: UI</name>
-    <packaging>bundle</packaging>
 
     <properties>
         <node.version>v10.14.1</node.version>

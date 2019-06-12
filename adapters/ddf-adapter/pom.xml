@@ -75,11 +75,16 @@
     <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-      <version>${cxf.frontent.version}</version>
+      <version>${cxf.frontend.version}</version>
     </dependency>
 
 
     <!-- XML dependencies -->
+    <dependency>
+      <groupId>javax.xml.soap</groupId>
+      <artifactId>javax.xml.soap-api</artifactId>
+      <version>${javax.xml.soap.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.jvnet.ogc</groupId>
       <artifactId>ogc-tools-gml-jts</artifactId>
@@ -89,6 +94,11 @@
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
       <version>${xstream.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>${jaxb.version}</version>
     </dependency>
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
@@ -176,7 +186,6 @@
               <haltOnFailure>true</haltOnFailure>
               <rules>
                 <rule>
-                  <element>BUNDLE</element>
                   <limits>
                     <limit implementation="org.codice.jacoco.LenientLimit">
                       <counter>INSTRUCTION</counter>

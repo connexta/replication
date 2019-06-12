@@ -22,8 +22,6 @@
 
     <artifactId>replication-admin-query</artifactId>
     <name>Replication :: Admin Console :: Query</name>
-    <packaging>bundle</packaging>
-
 
     <dependencies>
         <dependency>
