@@ -79,6 +79,12 @@
         <maven.assembly.plugin.version>3.1.0</maven.assembly.plugin.version>
         <jbake.maven.plugin.version>0.3.1</jbake.maven.plugin.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
+        <jackson.version>2.9.9</jackson.version>
+        <spring.version>5.1.7.RELEASE</spring.version>
+        <spring-test.version>3.2.2.RELEASE</spring-test.version>
+        <annotation.version>1.3.1</annotation.version>
+        <reactive-streams.version>1.0.2</reactive-streams.version>
+
         <project.report.output.directory>project-info</project.report.output.directory>
 
         <!-- documentation replacements -->

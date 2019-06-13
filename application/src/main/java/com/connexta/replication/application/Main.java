@@ -17,6 +17,7 @@ import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +31,9 @@ import org.springframework.data.solr.repository.config.EnableSolrRepositories;
 public class Main {
 
   public static void main(String[] args) throws Exception {
-    SpringApplication.run(Main.class, args);
+    SpringApplication application = new SpringApplication(Main.class);
+    application.setWebApplicationType(WebApplicationType.NONE);
+    application.run(args);
     while (true) {
       Thread.sleep(1000);
     }

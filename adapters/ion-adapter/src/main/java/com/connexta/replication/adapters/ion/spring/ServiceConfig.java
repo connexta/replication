@@ -11,9 +11,17 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api;
+package com.connexta.replication.adapters.ion.spring;
 
-public enum NodeAdapterType {
-  DDF,
-  ION
+import com.connexta.replication.adapters.ion.IonNodeAdapterFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration("ion-adapter")
+public class ServiceConfig {
+
+  @Bean
+  public IonNodeAdapterFactory ionNodeAdapterFactory() {
+    return new IonNodeAdapterFactory();
+  }
 }

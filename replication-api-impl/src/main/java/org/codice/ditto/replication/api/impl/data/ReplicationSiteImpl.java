@@ -37,6 +37,7 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
    */
   public static final int CURRENT_VERSION = 2;
 
+  @Indexed(name = "remote-managed_b")
   private boolean isRemoteManaged = false;
 
   @Indexed(name = "name_txt")
@@ -44,6 +45,9 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   @Indexed(name = "url_txt")
   private String url;
+
+  @Indexed(name = "type_txt")
+  private String type;
 
   public ReplicationSiteImpl() {
     super.setVersion(CURRENT_VERSION);
@@ -77,5 +81,15 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   @Override
   public boolean isRemoteManaged() {
     return isRemoteManaged;
+  }
+
+  @Override
+  public String getType() {
+    return type;
+  }
+
+  @Override
+  public void setType(String type) {
+    this.type = type;
   }
 }

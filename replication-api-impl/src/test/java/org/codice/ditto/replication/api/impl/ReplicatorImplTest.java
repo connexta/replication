@@ -13,6 +13,9 @@
  */
 package org.codice.ditto.replication.api.impl;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -30,6 +33,7 @@ import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.junit.Before;
@@ -84,8 +88,10 @@ public class ReplicatorImplTest {
 
     ReplicationSite sourceSite = mock(ReplicationSite.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
     ReplicationSite destinationSite = mock(ReplicationSite.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -133,8 +139,10 @@ public class ReplicatorImplTest {
 
     ReplicationSite sourceSite = mock(ReplicationSite.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
     ReplicationSite destinationSite = mock(ReplicationSite.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -178,8 +186,10 @@ public class ReplicatorImplTest {
 
     ReplicationSite sourceSite = mock(ReplicationSite.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
     ReplicationSite destinationSite = mock(ReplicationSite.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -241,8 +251,10 @@ public class ReplicatorImplTest {
 
     ReplicationSite sourceSite = mock(ReplicationSite.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
     ReplicationSite destinationSite = mock(ReplicationSite.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -278,6 +290,27 @@ public class ReplicatorImplTest {
 
     // then
     verify(job).cancel();
+  }
+
+  @Test
+  public void testGetStoreForIdNoType() throws Exception {
+    ReplicationSite destinationSite = new ReplicationSiteImpl();
+    destinationSite.setUrl(DESTINATION_URL);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
+
+    NodeAdapter destinationNode = mock(NodeAdapter.class);
+    when(destinationNode.isAvailable()).thenReturn(true);
+
+    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+
+    when(nodeAdapters.factoryFor(NodeAdapterType.ION)).thenReturn(nodeAdapterFactory);
+    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenThrow(new RuntimeException("error"));
+
+    replicator.getStoreForId(DESTINATION_ID);
+
+    assertThat(destinationSite.getType(), is(NodeAdapterType.ION.name()));
+    verify(siteManager).save(destinationSite);
+    verify(nodeAdapters, times(3)).factoryFor(any(NodeAdapterType.class));
   }
 
   private ReplicatorConfig mockConfig() {

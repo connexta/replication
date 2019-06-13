@@ -23,6 +23,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>replication-adapters</groupId>
+            <artifactId>ion-adapter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>replication</groupId>
             <artifactId>replication-api</artifactId>
             <version>${project.version}</version>
