@@ -72,7 +72,7 @@
         <project.report.output.directory>project-info</project.report.output.directory>
 
         <!-- documentation replacements -->
-        <platform>DDF Base</platform>
+        <branding>DDF Base</branding>
         <admin-console>Admin Console</admin-console>
         <command-console>Command Console</command-console>
 

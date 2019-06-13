@@ -146,6 +146,7 @@
             Not using the hadoop-auth feature.
         </notes>
         <cve>CVE-2018-11766</cve>
+        <cve>CVE-2018-8029</cve>
     </suppress>
     <!-- ************************************************************************************* -->
     <!-- END DDF related suppression -->

@@ -1,5 +1,5 @@
-:title: Upgrading
-:type: using
+:title: Upgrading Replication
+:type: configuration
 :status: published
 :parent: Replication
 :summary: Instructions for upgrading replication.
@@ -12,6 +12,6 @@ If there is an existing Replication installation, it can be upgraded via a kar f
 === Upgrading via the Command Line
 
 . Uninstall the replication feature by running `feature:uninstall replication`
-. Run `feature:remove-repo replication-x.y.z`, where x.y.z is the current version of the replication feature.
+. Run `feature:repo-remove replication-x.y.z`, where x.y.z is the current version of the replication feature.
   * To find the version, run `feature:list | grep -i replication`.
-. Copy the new replication kar file into `<ddf-home>/deploy`
+. Copy the new replication kar file into `<${branding}-home>/deploy`

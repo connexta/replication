@@ -1,5 +1,5 @@
-:title: Configuring
-:type: using
+:title: Configuring Replication
+:type: configuration
 :status: published
 :parent: Replication
 :summary: Instructions for configuring replication.
@@ -13,7 +13,6 @@ The following sections describe the console commands that are provided for confi
 [TIP]
 ====
 Details about these commands can also be viewed from the ${command-console} using the `--help` option.
-See http://codice.org/ddf/documentation.html#_console_command_help[Console Command Help].
 ====
 
 === Adding a Replication Configuration
@@ -27,25 +26,25 @@ To add a new replication configuration, use the `replication:config-add` command
 `replication:config-add --cql "<query-filter>" --direction <PUSH|BOTH> -t <METACARD|RESOURCE> --destination "<URL>" --source "<URL>" "<name>"`
 
 For example, the following command will add a replication configuration with the name "bostonCards" that
-will PUSH any local METACARDs with the word "Boston" in the title, to a remote ${platform} with the URL
+will PUSH any local METACARDs with the word "Boston" in the title, to a remote ${branding} with the URL
 "https://hostname:7777".
 
 `replication:config-add --destination "https://hostname:7777" --cql "title like 'Boston'" --replicationType METACARD --direction PUSH "bostonCards"`
 
 The `replicationType` option can have a value of `METACARD` or `RESOURCE`. Setting the value to `METACARD`
-will replicate only the metacards that match those filters. With this setting the ${platform} that receives the replicated
+will replicate only the metacards that match those filters. With this setting the ${branding} that receives the replicated
 metacards will not be able perform actions on the resource, such as downloading or exporting.
 Setting the value to `RESOURCE` will replicate both the metacards that match the filter and their associated
-resources. This setting will store a copy of the resource on the receiving ${platform}, allowing users
+resources. This setting will store a copy of the resource on the receiving ${branding}, allowing users
 to download and export the resource.
 
 The `direction` option can be set to `PUSH`, `PULL`, or `BOTH`. The PULL option has been deprecated. The `PUSH` setting replicates source
-records to the ${platform} at the given destination url, `PULL` replicates records from the destination ${platform} at the
-given url to the source ${platform}, and `BOTH`, does PUSH and PULL.
+records to the ${branding} at the given destination url, `PULL` replicates records from the destination ${branding} at the
+given url to the source ${branding}, and `BOTH`, does PUSH and PULL.
 
 [WARNING]
 ====
-It is strongly recommended to only replicate to a ${platform} that has replication installed. This
+It is strongly recommended to only replicate to a ${branding} that has replication installed. This
 will allow the replicated metadata to be saved with the "Replication Origins" tag. The origins tag
 plays a role in telling replication what data it should replicate and without it data may be undesirably
 replicated back to its source.
@@ -59,25 +58,23 @@ cql query, allowing the user to add a variety of filters to a replication config
 |Query|Effect
 
 |`title like 'example'`
-|Replicates records with the word "example" in the http://codice.org/ddf/documentation.html#_title[title].
+|Replicates records with the word "example" in the title.
 
 |`modified before 2012-09-01T12:30:00Z`
-|Replicates records for which the resource was last http://codice.org/ddf/documentation.html#_modified[modified] before the given date.
+|Replicates records for which the resource was last modified before the given date.
 
 |`DWITHIN(anyGeo, POINT (1 2) , 10, kilometers)`
-|Replicates records associated with a http://codice.org/ddf/documentation.html#_location[location] inside of the given point radius.
+|Replicates records associated with a location inside of the given point radius.
 
 |`DWITHIN(anyGeo, LINESTRING (1 2, 3 4) , 10, kilometers)`
-|Replicates records associated with a http://codice.org/ddf/documentation.html#_location[location] within 10 kilometers of a line drawn between the given coordinates.
+|Replicates records associated with a location within 10 kilometers of a line drawn between the given coordinates.
 
 |`INTERSECTS(anyGeo, POLYGON ( (1 2, 1 3, 2 3, 2 2, 1 2 )))`
-|Replicates records associated with a http://codice.org/ddf/documentation.html#_location[location] within a polygon. In this case the polygon is a bounding box.
+|Replicates records associated with a location within a polygon. In this case the polygon is a bounding box.
 
 |`modified after 2012-09-01T12:30:00Z AND modified before 2014-09-01T12:30:00Z OR title like 'Presidential'`
-|Replicates records for which the resource was last http://codice.org/ddf/documentation.html#_modified[modified] between the given dates or that have "Presidential" in the http://codice.org/ddf/documentation.html#_title[title].
+|Replicates records for which the resource was last modified between the given dates or that have "Presidential" in the title.
 |===
-
-For more information about CQL, see http://codice.org/ddf/documentation.html#_cql_syntax[CQL Syntax].
 
 === Deleting a Replication Configuration
 
