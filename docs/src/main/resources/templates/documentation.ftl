@@ -1,6 +1,6 @@
 = Replication Documentation
-include::${project.build.directory}/doc-contents/content/_using/config.adoc[]
+include::${project.build.directory}/doc-contents/content/config.adoc[]
 
-<#include "build/using.ftl">
+<#include "build/configuring.ftl">
 
 include::${project.build.directory}/doc-contents/content/scripts.html[]

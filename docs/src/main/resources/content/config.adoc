@@ -12,7 +12,7 @@ Version ${project.version}. Connexta
 :data-uri:
 :sectnums:
 :sectnumlevels: 5
-:platform: DDF Base
+:branding: DDF Base
 :download-url:
 :release-notes-url:
 :adoc-include: ${project.build.directory}/doc-contents/_contents

@@ -1,5 +1,5 @@
-:title: Running
-:type: using
+:title: Running Replication
+:type: configuration
 :status: published
 :parent: Replication
 :summary: Instructions for running replication.

@@ -1,14 +1,14 @@
-:title: Introduction
-:type: using
+:title: Replication
+:type: configuringIntro
 :status: published
 :summary: Instructions for performing replication.
-:order: 01
+:order: 081
 
 == {title}
 
 Replication is the process of creating a copy of a subset of data and storing it on another
-${platform}. Data can be pulled from a remote ${platform} and saved locally, or it can be pushed
-from the user's ${platform} to a remote ${platform}. Metacards produced by replication are marked
+${branding}. Data can be pulled from a remote ${branding} and saved locally, or it can be pushed
+from the user's ${branding} to a remote ${branding}. Metacards produced by replication are marked
 with a "Replication Origins" attribute and a tag of "replicated".
 Replication will automatically start transferring data once an admin creates a replication configuration.
 
