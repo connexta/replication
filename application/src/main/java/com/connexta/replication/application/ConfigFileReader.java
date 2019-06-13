@@ -19,6 +19,7 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -97,10 +98,9 @@ public class ConfigFileReader {
 
   @VisibleForTesting
   void readSites(Path sitesPath) {
-
     LOGGER.trace("Attempting to read sites from: {}", sitesPath.toString());
-    try {
-      JsonReader jsonReader = new JsonReader(new FileReader(sitesPath.toString()));
+
+    try (JsonReader jsonReader = new JsonReader(new FileReader(sitesPath.toString()))) {
       Gson gson = new Gson();
       ReplicationSiteImpl[] sites = gson.fromJson(jsonReader, ReplicationSiteImpl[].class);
       List<ReplicationSite> existingSites = siteManager.objects().collect(Collectors.toList());
@@ -124,14 +124,16 @@ public class ConfigFileReader {
       LOGGER.warn("Sites file not found");
     } catch (JsonSyntaxException jse) {
       LOGGER.warn("Sites file contained syntax errors", jse);
+    } catch (IOException ie) {
+      LOGGER.warn("IOException reading sites file: ", ie);
     }
   }
 
   @VisibleForTesting
   void readConfigs(Path configsPath) {
     LOGGER.trace("Attempting to read configs from: {}", configsPath.toString());
-    try {
-      JsonReader jsonReader = new JsonReader(new FileReader(configsPath.toString()));
+
+    try (JsonReader jsonReader = new JsonReader(new FileReader(configsPath.toString()))) {
       Gson gson = new Gson();
       ReplicatorConfigImpl[] configs = gson.fromJson(jsonReader, ReplicatorConfigImpl[].class);
       List<ReplicatorConfig> existingConfigs = configManager.objects().collect(Collectors.toList());
@@ -185,6 +187,8 @@ public class ConfigFileReader {
       LOGGER.warn("Configs file not found");
     } catch (JsonSyntaxException jse) {
       LOGGER.warn("Configs file contained syntax errors", jse);
+    } catch (IOException ie) {
+      LOGGER.warn("IOException reading configs file: ", ie);
     }
   }
 }
