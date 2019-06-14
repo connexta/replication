@@ -21,45 +21,27 @@ A volume for storing replication stats and progress named `replication-data`
 docker volume create replication-data
 ```
 ######Configuration
-There are a few configurations that replication uses that need to be populated in docker config
+The configuration that replication uses that need to be populated in docker config
 
 |Config Name | Description|
 |------------|------------|
-|replication-sites| The json config holding the site configurations. Example below.|
-|replication-jobs| The json config holding the replication jobs. Example below.|
 |replication-spring-config| The spring-boot application.properties for replication. Example below.|
 
-Example replication-sites
-```json
-[{
-    "name": "site1",
-    "url": "https://host1:8993/services"
- },
- {
-    "name": "site2",
-    "url": "https://host2:8993/services"
- }]
-```
-Example replication-jobs
-```json
-[{
-     "name": "pdf-harvest",
-     "bidirectional": false,
-     "source": "site1",
-     "destination": "site2",
-     "filter": "\"media.type\" like 'application/pdf'"
- }]
-```
+
 Example replication-spring-config
-```properties
-logging.level.root=INFO
-logging.level.org.apache.cxf.interceptor.LoggingOutInterceptor=WARN
-logging.level.org.apache.cxf.interceptor.LoggingInInterceptor=WARN
-
-# replication frequency in seconds
-replication.period=300
-
-spring.data.solr.host=http://replication-solr:8983/solr
+```yaml
+logging:
+  level:
+    root: INFO
+    org.apache.cxf.interceptor.LoggingOutInterceptor: WARN
+    org.apache.cxf.interceptor.LoggingInInterceptor: WARN
+    javax.xml.soap: ERROR
+spring:
+  data:
+    solr:
+      host: http://localhost:8983/solr
+replication:
+  period: 63
 ```
 
 ######Secrets
@@ -83,4 +65,68 @@ Running the stack will start up a solr service and the replication service.
 
 ```
 docker stack deploy -c docker-compose.yml repsync
+```
+
+####Adding Replication Configuration
+Replication can be configured by using the Solr rest endpoint.
+```
+curl -H "Content-Type: application/json" \
+-d @/path/to/json/config/file.json \
+http://localhost:8983/solr/<target-core>/update?commitWithin=1000
+``` 
+###### Adding Site Example
+Example sites.json
+```json
+  [
+      {
+        "remote-managed_b":false,
+        "name_txt":"RepSync-Node1",
+        "url_txt":"https://host1:8993/services/",
+        "id_txt":"some-unique-id-1234",
+        "version_int":2
+       },
+      {
+        "remote-managed_b":false,
+        "name_txt":"RepSync-Node2",
+        "url_txt":"https://host2:8993/services",
+        "id_txt":"another-unique-id-5678",
+        "version_int":2
+      }
+   ]
+```
+```
+curl -H "Content-Type: application/json" \
+-d @sites.json \
+http://localhost:8983/solr/replication_site/update?commitWithin=1000
+```
+###### Adding Replication Jobs Example
+Example jobs.json
+```json
+  [
+    {
+      "name_txt":"pdf-harvest",
+      "bidirectional_b":false,
+      "source_txt":"some-unique-id-1234",
+      "destination_txt":"another-unique-id-5678",
+      "filter_txt":"\"media.type\" like 'application/pdf'",
+      "retry_count_int":5,
+      "suspended_b":false,
+      "id_txt":"unique-job-id-98765",
+      "version_int":1
+    }
+  ]
+```
+```
+curl -H "Content-Type: application/json" \
+-d @jobs.json \
+http://localhost:8983/solr/replication_config/update?commitWithin=1000
+```
+
+#### Removing Replication Configuration
+Example removing all sites with the name 'Test'
+```
+curl -X POST \
+  'http://localhost:8983/solr/replication_site/update?commit=true' \
+  -H 'Content-Type: application/xml' \
+  -d '<delete><query>name_txt:Test</query></delete>'
 ```

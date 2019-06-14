@@ -17,16 +17,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
-import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
-import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.solr.repository.config.EnableSolrRepositories;
 
 @SpringBootApplication(
@@ -48,16 +44,6 @@ public class Main {
     while (true) {
       Thread.sleep(1000);
     }
-  }
-
-  @Bean
-  public ConfigFileReader configReader(
-      ReplicatorConfigManager configManager,
-      SiteManager siteManager,
-      ReplicatorHistoryManager historyManager) {
-    ConfigFileReader reader = new ConfigFileReader(configManager, siteManager, historyManager);
-    reader.run();
-    return reader;
   }
 
   public static void loadBootSystemProperties() {
