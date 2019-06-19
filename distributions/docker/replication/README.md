@@ -6,16 +6,16 @@
 |------|---------|------------
 |truststore_pass|changeit|Password for accessing truststore
 |truststore_type|jks|The type of truststore
-|truststore_file|/opt/replication/demo-config/keystores/serverTruststore.jks| The truststore file location.
+|truststore_file|/opt/replication/onfig/keystores/serverTruststore.jks| The truststore file location.
 |keystore_pass|changeit|Password for accessing keystore
 |keystore_type|jks|The type of keystore
-|keystore_file|/opt/replication/demo-config/keystores/serverKeystore.jks| The keystore file location.
-|app_config_file|/opt/replication/demo-config/application.properties|The spring boot application.properties file to use.
+|keystore_file|/opt/replication/config/keystores/serverKeystore.jks| The keystore file location.
+|app_config_file|/opt/replication/config/application.yml|The spring boot application.yml file to use.
 
 ##Example Configuration Files
 
 
-application.properties
+application.yml
 ```yaml
 logging:
   level:

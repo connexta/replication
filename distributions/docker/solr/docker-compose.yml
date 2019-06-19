@@ -8,15 +8,7 @@ services:
       - replication-data:/var/solr
     networks:
       - replication
-    entrypoint:
-      - bash
-      - "-c"
-      - "precreate-core replication_item; precreate-core replication_site; precreate-core replication_status; precreate-core replication_config; exec solr -f"
 volumes:
   replication-data:
-    external: true
-    name: replication-data
 networks:
   replication:
-    external: true
-    name: replication

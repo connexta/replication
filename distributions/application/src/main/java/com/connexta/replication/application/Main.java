@@ -16,6 +16,7 @@ package com.connexta.replication.application;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class Main {
   @SuppressWarnings("squid:S2189")
   public static void main(String[] args) throws Exception {
     // Need to load some system properties before anything else is done
-    loadBootSystemProperties();
+    loadSslSystemProperties();
     SpringApplication application = new SpringApplication(Main.class);
     application.setWebApplicationType(WebApplicationType.NONE);
     application.run(args);
@@ -46,29 +47,48 @@ public class Main {
     }
   }
 
-  public static void loadBootSystemProperties() {
-    String sslPropertiesPath = System.getProperty("ssl.system.properties");
-    if (sslPropertiesPath == null) {
-      sslPropertiesPath = "ssl.properties";
+  /**
+   * Loads the ssl system properties using the following precedence 1. Java system properties 2.
+   * External ssl.properties 3. Internal(Default) ssl.properties
+   */
+  public static void loadSslSystemProperties() {
+    Properties properties = getDefaultSslProperties();
+    properties.putAll(getExternalSslProperties());
+    LOGGER.trace("ssl.properties: {}", properties);
+    properties.forEach(Main::putPropertyIfMissing);
+    LOGGER.trace("Final system properties {}", System.getProperties());
+  }
+
+  private static void putPropertyIfMissing(Object name, Object value) {
+    // properties passed in on the command line take precedence
+    if (System.getProperty((String) name) == null) {
+      System.setProperty((String) name, (String) value);
     }
-    File sslPropertiesFile = new File(sslPropertiesPath);
-    if (!sslPropertiesFile.exists()) {
-      LOGGER.info("No ssl properties found at {}", sslPropertiesPath);
-      return;
-    }
+  }
+
+  public static Properties getDefaultSslProperties() {
     Properties properties = new Properties();
+    try (InputStream is = Main.class.getClassLoader().getResource("ssl.properties").openStream()) {
+      properties.load(is);
+    } catch (IOException e) {
+      LOGGER.error("Error loading default ssl system properties.", e);
+    }
+    return properties;
+  }
+
+  public static Properties getExternalSslProperties() {
+    String sslPropertiesPath = System.getProperty("ssl.system.properties", "config/ssl.properties");
+    File sslPropertiesFile = new File(sslPropertiesPath);
+    Properties properties = new Properties();
+    if (!sslPropertiesFile.exists()) {
+      LOGGER.debug("No external ssl.properties found");
+      return new Properties();
+    }
     try (FileInputStream fis = new FileInputStream(sslPropertiesFile)) {
       properties.load(fis);
-      properties.forEach(
-          (name, value) -> {
-            // properties passed in on the command line take precedence
-            if (System.getProperty((String) name) == null) {
-              System.setProperty((String) name, (String) value);
-            }
-          });
-      LOGGER.trace("System properties {}", System.getProperties());
     } catch (IOException e) {
-      LOGGER.error("Error loading ssl system properties.", e);
+      LOGGER.error("Error loading external ssl system properties.", e);
     }
+    return properties;
   }
 }

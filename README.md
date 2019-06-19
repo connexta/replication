@@ -6,26 +6,35 @@
 |SonarQube | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=replication&metric=alert_status)](https://sonarcloud.io/dashboard?id=replication)|
 |Snyk | [![Known Vulnerabilities](https://snyk.io/test/github/connexta/replication/badge.svg)](https://snyk.io/test/github/connexta/replication)|
 
+##Overview
+Replication is the process of creating a copy of a subset of data and storing it on another DDF or ION based System. Data can be pulled from a remote DDF and saved to another DDF or ION system. Metacards produced by replication are marked with a "Replication Origins" attribute and a tag of "replicated". Replication will automatically start transferring data once an admin creates a replication configuration.
+
+
+##Known Issues, Limitations, and Assumptions
+Replication is still at an early stage in its lifecycle, so there are a few details that the user should be aware of.
+
+####Fanout Proxies
+Replicating from a DDF system that is configured as a Fanout Proxy will result in the replication of records from sources configured in that system.
+
+Replicating to a DDF system that is configured as a Fanout Proxy will result in the replication of records only to the fanout and not its sources.
+
+####Connected Sources
+Replicating from a DDF sytem that is configured with Connected Sources will result in the replication of records from the Connected Sources in addition to any local records.
+
+####Derived Resources
+Derived resources, from products such as NITFs, will not be replicated.
+
 ##Docker Compose Deployment
 
 ####Prerequisites
 The replication docker stack requires the following to be configured on the swarm before deploying:
-######Network
-An overlay network named `replication`
-```
-docker network create -d overlay replication
-```
-######Volume
-A volume for storing replication stats and progress named `replication-data`
-```
-docker volume create replication-data
-```
+
 ######Configuration
 The configuration that replication uses that need to be populated in docker config
 
 |Config Name | Description|
 |------------|------------|
-|replication-spring-config| The spring-boot application.properties for replication. Example below.|
+|replication-spring-config| The spring-boot application.yml for replication. Example below.|
 
 
 Example replication-spring-config
@@ -39,9 +48,9 @@ logging:
 spring:
   data:
     solr:
-      host: http://localhost:8983/solr
+      host: http://replication-solr:8983/solr
 replication:
-  period: 63
+  period: 300
 ```
 
 ######Secrets
@@ -56,10 +65,12 @@ Replication requires certs and ssl configurations in order to talk with remote D
 Example replication-ssl
 ```properties
 javax.net.ssl.trustStorePassword=changeit
-javax.net.ssl.keyStorePassword=changeit
 javax.net.ssl.trustStoreType=jks
+javax.net.ssl.keyStorePassword=changeit
 javax.net.ssl.keyStoreType=jks
 ```
+Only the properties that differ from the defaults above need to be specified in replication-ssl
+
 ####Running
 Running the stack will start up a solr service and the replication service.
 

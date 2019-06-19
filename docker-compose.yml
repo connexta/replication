@@ -8,32 +8,20 @@ services:
       - replication-data:/var/solr
     networks:
       - replication
-    entrypoint:
-      - bash
-      - "-c"
-      - "precreate-core replication_item; precreate-core replication_site; precreate-core replication_status; precreate-core replication_config; exec solr -f"
   ion-replication:
     image: cnxta/replication:0.3.0-SNAPSHOT
     networks:
       - replication
-    entrypoint:
-      - bash
-      - "-c"
-      - "java \
-        -Dssl.system.properties=/opt/replication/ssl.properties \
-        -Djavax.net.ssl.keyStore=/opt/replication/serverKeystore.jks
-        -Djavax.net.ssl.trustStore=/opt/replication/serverTruststore.jks
-        -jar /opt/replication/app.jar --spring.config.location=file:/opt/replication/"
     secrets:
       - source: replication-keystore
-        target: /opt/replication/serverKeystore.jks
+        target: /opt/replication/config/keystores/serverKeystore.jks
       - source: replication-truststore
-        target: /opt/replication/serverTruststore.jks
+        target: /opt/replication/config/keystores/serverTruststore.jks
       - source: replication-ssl
-        target: /opt/replication/ssl.properties
+        target: /opt/replication/config/ssl.properties
     configs:
       - source: replication-spring-config
-        target: /opt/replication/application.properties
+        target: /opt/replication/config/application.yml
 configs:
   replication-spring-config:
     external: true
@@ -46,9 +34,5 @@ secrets:
     external: true
 volumes:
   replication-data:
-    external: true
-    name: replication-data
 networks:
   replication:
-    external: true
-    name: replication

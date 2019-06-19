@@ -2,10 +2,10 @@
 
 The replication solr docker images adds 4 cores that have a custom solr schema.
 The cores created are
-- replication_sites
-- replication_configs
+- replication_site
+- replication_config
 - replication_status
-- replication_items
+- replication_item
 
 The image exposes port 8983.
 ##Running

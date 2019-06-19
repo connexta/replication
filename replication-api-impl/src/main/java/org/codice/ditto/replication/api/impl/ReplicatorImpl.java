@@ -287,6 +287,9 @@ public class ReplicatorImpl implements Replicator {
     if (site.getType() == null) {
       determineType(site);
     }
+    if (site.getType() == null) {
+      throw new ReplicationException("Could not determine site type for " + site.getUrl());
+    }
     try {
       store =
           nodeAdapters
@@ -301,6 +304,8 @@ public class ReplicatorImpl implements Replicator {
     return store;
   }
 
+  @SuppressWarnings(
+      "squid:S2629" /*type.name() is inexpensive so don't need to add the conditional*/)
   private void determineType(ReplicationSite site) {
     for (NodeAdapterType type : NodeAdapterType.values()) {
       LOGGER.debug("Checking if site {} is of type {}", site.getName(), type.name());

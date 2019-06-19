@@ -1,7 +1,6 @@
 package com.connexta.replication.application;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.codice.junit.rules.RestoreSystemProperties;
@@ -17,11 +16,20 @@ public class MainTest {
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
   @Test
-  public void testLoadBootSystemProperties() {
+  public void testLoadSslExternalSystemProperties() {
     System.setProperty(
         "ssl.system.properties",
-        getClass().getClassLoader().getResource("ssl.properties").getFile());
-    Main.loadBootSystemProperties();
+        getClass().getClassLoader().getResource("external-ssl.properties").getFile());
+    Main.loadSslSystemProperties();
+    assertThat(System.getProperty("javax.net.ssl.trustStorePassword"), is("pass"));
+    assertThat(System.getProperty("javax.net.ssl.keyStorePassword"), is("pass"));
+    assertThat(System.getProperty("javax.net.ssl.trustStoreType"), is("abc"));
+    assertThat(System.getProperty("javax.net.ssl.keyStoreType"), is("abc"));
+  }
+
+  @Test
+  public void testLoadSslSystemPropertiesNoExternal() {
+    Main.loadSslSystemProperties();
     assertThat(System.getProperty("javax.net.ssl.trustStorePassword"), is("changeit"));
     assertThat(System.getProperty("javax.net.ssl.keyStorePassword"), is("changeit"));
     assertThat(System.getProperty("javax.net.ssl.trustStoreType"), is("jks"));
@@ -29,21 +37,9 @@ public class MainTest {
   }
 
   @Test
-  public void testLoadBootSystemPropertiesNoFileDefined() {
-    Main.loadBootSystemProperties();
-    assertThat(System.getProperty("javax.net.ssl.trustStorePassword"), is(nullValue()));
-    assertThat(System.getProperty("javax.net.ssl.keyStorePassword"), is(nullValue()));
-    assertThat(System.getProperty("javax.net.ssl.trustStoreType"), is(nullValue()));
-    assertThat(System.getProperty("javax.net.ssl.keyStoreType"), is(nullValue()));
-  }
-
-  @Test
-  public void testLoadBootSystemPropertiesWithExistingProperty() {
-    System.setProperty(
-        "ssl.system.properties",
-        getClass().getClassLoader().getResource("ssl.properties").getFile());
+  public void testLoadSslSystemPropertiesWithExistingProperty() {
     System.setProperty("javax.net.ssl.trustStorePassword", "mypass");
-    Main.loadBootSystemProperties();
+    Main.loadSslSystemProperties();
     assertThat(System.getProperty("javax.net.ssl.trustStorePassword"), is("mypass"));
     assertThat(System.getProperty("javax.net.ssl.keyStorePassword"), is("changeit"));
     assertThat(System.getProperty("javax.net.ssl.trustStoreType"), is("jks"));
@@ -54,10 +50,10 @@ public class MainTest {
   public void testLoadBootSystemPropertiesBadProperties() {
     System.setProperty(
         "ssl.system.properties", getClass().getClassLoader().getResource("bad.json").getFile());
-    Main.loadBootSystemProperties();
-    assertThat(System.getProperty("javax.net.ssl.trustStorePassword"), is(nullValue()));
-    assertThat(System.getProperty("javax.net.ssl.keyStorePassword"), is(nullValue()));
-    assertThat(System.getProperty("javax.net.ssl.trustStoreType"), is(nullValue()));
-    assertThat(System.getProperty("javax.net.ssl.keyStoreType"), is(nullValue()));
+    Main.loadSslSystemProperties();
+    assertThat(System.getProperty("javax.net.ssl.trustStorePassword"), is("changeit"));
+    assertThat(System.getProperty("javax.net.ssl.keyStorePassword"), is("changeit"));
+    assertThat(System.getProperty("javax.net.ssl.trustStoreType"), is("jks"));
+    assertThat(System.getProperty("javax.net.ssl.keyStoreType"), is("jks"));
   }
 }
