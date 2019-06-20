@@ -76,8 +76,6 @@
         <failsafe.version>1.1.0</failsafe.version>
         <spring-data-solr.version>4.0.8.RELEASE</spring-data-solr.version>
         <opengis.version>19.1</opengis.version>
-        <maven.assembly.plugin.version>3.1.0</maven.assembly.plugin.version>
-        <jbake.maven.plugin.version>0.3.1</jbake.maven.plugin.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
         <jackson.version>2.9.9</jackson.version>
         <spring.version>5.1.7.RELEASE</spring.version>
@@ -615,7 +613,6 @@
         <module>commons</module>
         <module>replication-api-impl</module>
         <module>adapters</module>
-        <module>docs</module>
         <module>application</module>
         <module>distributions</module>
     </modules>
