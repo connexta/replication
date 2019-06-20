@@ -156,6 +156,17 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
   }
 
   @Override
+  public void updateReplicationEvent(ReplicationStatus replicationStatus) {
+    Metacard statusMetacard = getMetacardFromStatus(replicationStatus);
+    try {
+      provider.update(new UpdateRequestImpl(statusMetacard.getId(), statusMetacard));
+    } catch (IngestException e) {
+      throw new ReplicationPersistenceException(
+          "Error updating replication history item " + replicationStatus.getReplicatorName(), e);
+    }
+  }
+
+  @Override
   public void removeReplicationEvent(ReplicationStatus replicationStatus) {
     try {
       provider.delete(new DeleteRequestImpl(replicationStatus.getId()));

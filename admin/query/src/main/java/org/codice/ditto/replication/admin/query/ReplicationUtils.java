@@ -357,16 +357,15 @@ public class ReplicationUtils {
     field.modified(site.getModified());
     field.version(site.getVersion());
     AddressField address = new AddressField();
-    String siteUrl = site.getVerifiedUrl() != null ? site.getVerifiedUrl() : site.getUrl();
     URL url;
 
     try {
-      url = new URL(siteUrl);
+      url = new URL(site.getUrl());
     } catch (MalformedURLException e) {
       throw new ReplicationException("Malformed URL: " + site.getUrl(), e);
     }
 
-    address.url(siteUrl);
+    address.url(site.getUrl());
     address.hostname(url.getHost());
     address.port(url.getPort());
     field.address(address);

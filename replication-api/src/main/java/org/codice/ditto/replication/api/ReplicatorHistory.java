@@ -37,11 +37,20 @@ public interface ReplicatorHistory {
   /**
    * Add a replication event to the history
    *
-   * @param replicationStatus ReplicationConfig event to store
+   * @param replicationStatus {@link ReplicationStatus} event to store
    * @throws ReplicationPersistenceException if there is an error adding the {@link
    *     ReplicationStatus}
    */
   void addReplicationEvent(ReplicationStatus replicationStatus);
+
+  /**
+   * Updates an existing replication event
+   *
+   * @param replicationStatus {@link ReplicationStatus} event to update
+   * @throws ReplicationPersistenceException if there is an error adding the {@link
+   *     ReplicationStatus}
+   */
+  void updateReplicationEvent(ReplicationStatus replicationStatus);
 
   /**
    * Remove a replication event from the history
