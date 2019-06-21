@@ -36,6 +36,7 @@ import javax.ws.rs.RedirectionException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.http.HttpStatus;
@@ -53,6 +54,7 @@ import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.Verifier;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
@@ -95,7 +97,7 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
 
   private final Security security;
 
-  private final Set<String> badRequestSites = new HashSet<>();
+  private final Set<String> sitesToSkip = Collections.synchronizedSet(new HashSet<>());
 
   // very small chance of holding duplicates (see {@link #hearbeat) below
   private final BlockingQueue<ReplicationSite> pending = new LinkedBlockingQueue<>();
@@ -159,7 +161,7 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
 
   @Override
   public void verify(ReplicationSite site) {
-    if (badRequestSites.contains(site.getId())) {
+    if (sitesToSkip.contains(site.getId())) {
       LOGGER.debug(
           "Heartbeat to Site {} skipped since last request was a bad request. Restart the system to trigger a retry of this site.",
           site.getUrl());
@@ -167,40 +169,15 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
     }
 
     if (site.getVerifiedUrl() == null) {
-      int numRedirects = 0;
-      String url = site.getUrl();
-      do {
-        HeartbeatResult heartbeatResult = doDiscovery(url);
-
-        boolean redirected = handleHeartbeatResult(heartbeatResult, site);
-        if (redirected) {
-          url = heartbeatResult.getRedirectUrl();
-          numRedirects++;
-
-          if (heartbeatResult.isPermRedirect()) {
-            site.setRemoteManaged(true);
-            site.setVerifiedUrl(url);
-            siteManager.save(site);
-          }
-        } else {
-          break;
-        }
-      } while (numRedirects <= maxRedirects);
-
-      if (numRedirects > maxRedirects) {
-        LOGGER.warn(
-            "Maximum allowed redirects exceeded when heartbeating site {}. The site will be retried next interval.",
-            site.getUrl());
-      }
+      doHeartbeat(site, site.getUrl());
     }
   }
 
-  private HeartbeatResult doHeartbeat(ReplicationSite site) {
+  private HeartbeatResult doHeartbeat(ReplicationSite site, String url) {
     int numRedirects = 0;
-    String url = site.getUrl();
-    HeartbeatResult heartbeatResult = doDiscovery(url);
-
+    HeartbeatResult heartbeatResult = doDiscovery(url, site.getId());
     do {
+
       boolean redirected = handleHeartbeatResult(heartbeatResult, site);
       if (redirected) {
         url = heartbeatResult.getRedirectUrl();
@@ -214,9 +191,9 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
       } else {
         break;
       }
-    } while (numRedirects <= DEFAULT_MAX_REDIRECTS);
+    } while (numRedirects <= maxRedirects);
 
-    if (numRedirects > DEFAULT_MAX_REDIRECTS) {
+    if (numRedirects > maxRedirects) {
       LOGGER.warn(
           "Maximum allowed redirects exceeded when heartbeating site {}. The site will be retried next interval.",
           site.getUrl());
@@ -226,8 +203,8 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
   }
 
   /**
-   * @param heartbeatResult
-   * @param site
+   * @param heartbeatResult result to process
+   * @param site site for which the result was generated
    * @return {@code true} if redirected, otherwise {@code false}
    */
   private boolean handleHeartbeatResult(
@@ -240,7 +217,7 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
     } else if (heartbeatResult.isTmpRedirect() || heartbeatResult.isPermRedirect()) {
       return true;
     } else if (heartbeatResult.isBadRequest()) {
-      badRequestSites.add(site.getId());
+      sitesToSkip.add(site.getId());
     } else if (!heartbeatResult.shouldRetryHeartbeat()) {
       LOGGER.trace("Heartbeat protocol not supported for site {}. Making REST head call.", url);
       if (restSupported(url)) {
@@ -269,7 +246,14 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
     // implementation supports it
     SecureCxfClientFactory<WebClient> restClientFactory =
         clientFactoryFactory.getSecureCxfClientFactory(
-            url + "/" + RESTService.CONTEXT_ROOT, WebClient.class);
+            url + "/" + RESTService.CONTEXT_ROOT,
+            WebClient.class,
+            Collections.emptyList(),
+            null,
+            false,
+            true,
+            connectionTimeoutMs,
+            receiveTimeoutMs);
 
     WebClient restService = restClientFactory.getClientForSubject(security.getSystemSubject());
 
@@ -282,19 +266,20 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
     return false;
   }
 
-  private HeartbeatResult doDiscovery(final String url) {
+  private HeartbeatResult doDiscovery(final String url, final String siteId) {
     DiscoveryApi discovery = createDiscoveryClient(url);
 
     ContactInfo contactInfo = new ContactInfo().email(SystemInfo.getSiteContatct());
     com.connexta.discovery.rest.models.SystemInfo systemInfo =
         new com.connexta.discovery.rest.models.SystemInfo()
             .contact(contactInfo)
-            .id(System.getProperty("org.codice.ddf.system.registry-id"))
-            .name(SystemInfo.getSiteName())
+            .id(getRequiredArg("id", System.getProperty("org.codice.ddf.system.registry-id")))
+            .name(getRequiredArg("name", SystemInfo.getSiteName()))
             .organization(SystemInfo.getOrganization())
-            .version(SystemInfo.getVersion())
-            .url(SystemBaseUrl.EXTERNAL.getBaseUrl())
-            .product(System.getProperty("org.codice.ddf.system.branding"));
+            .version(getRequiredArg("version", SystemInfo.getVersion()))
+            .url(getRequiredArg("url", SystemBaseUrl.EXTERNAL.getBaseUrl()))
+            .product(
+                getRequiredArg("product", System.getProperty("org.codice.ddf.system.branding")));
 
     final HeartbeatResult heartbeatResult = new HeartbeatResult();
     try {
@@ -316,8 +301,13 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
       final int code = msg.getCode();
       // we should never get 501001 (cannot understand version) server error code since client
       // version 1.0.1 is hardcoded
-      if (code == 501002 || code == 501003 || code == 501004) {
-        LOGGER.debug("Client version unsupported by heartbeat server {}", url);
+      if (code == 501002) {
+        LOGGER.debug("Client major version no longer supported.");
+        sitesToSkip.add(siteId);
+      } else if (code == 501003 || code == 501004) {
+        LOGGER.debug(
+            "Client version unsupported by heartbeat server {}. Heartbeats will be retried next interval.",
+            url);
       }
     } catch (RedirectionException e) {
       final Response response = e.getResponse();
@@ -338,7 +328,7 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
             e);
       } else {
         LOGGER.debug(
-            "Unexpected processing exception sending heartbeat request for site {}. This site will not be heartbeated again until a restart.",
+            "Unexpected processing exception sending heartbeat request for site {}. This site will be checked for REST support.",
             url,
             e);
       }
@@ -350,12 +340,21 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
   private void processSite(ReplicationSite site) {
     final Subject systemSubject = security.runAsAdmin(security::getSystemSubject);
 
-    systemSubject.execute(() -> processSiteAsAdmin(site));
+    systemSubject.execute(
+        () -> {
+          try {
+            processSiteAsAdmin(site);
+          } catch (Exception e) {
+            LOGGER.debug("Error while processing site {}.", site.getUrl(), e);
+          }
+        });
   }
 
   /**
-   * If the heartbeat fails, get all configurations that involve that site and mark their status to
-   * Status.CONNECTION_LOST if the current status was XXXX_IN_PROGRESS and to
+   * Verify the Site. If the site is already verified, run a heartbeat and:
+   *
+   * <p>If the heartbeat fails, get all configurations that involve that site and mark their status
+   * to Status.CONNECTION_LOST if the current status was XXXX_IN_PROGRESS and to
    * Status.CONNECTION_UNAVAILABLE for any other status
    *
    * <p>If the heartbeat succeeds, get all configurations that involves that site and if their
@@ -378,7 +377,7 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
       changeConfigStatusFor(
           site,
           (replicationStatus, status) -> {
-            HeartbeatResult result = doHeartbeat(site);
+            HeartbeatResult result = doHeartbeat(site, site.getVerifiedUrl());
             if (result.isHeartbeatSupported()
                 && (status == Status.CONNECTION_LOST || status == Status.CONNECTION_UNAVAILABLE)) {
               replicationStatus.setStatus(Status.PENDING);
@@ -398,6 +397,7 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
     configManager
         .objects()
         .filter(config -> config.sourceOrDestinationIs(site.getId()))
+        .filter(config -> !config.isSuspended())
         .forEach(
             config -> {
               ReplicationStatus replicationStatus = statusFor(config).orElse(null);
@@ -411,9 +411,23 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
                       "Failed to update status while heartbeating site {}", site.getUrl(), e);
                 }
               } else {
-                LOGGER.warn("No existing status to update for config {}", config.getName());
+                ReplicationStatus newStatus = createStatus(config);
+                updater.accept(newStatus, newStatus.getStatus());
+
+                try {
+                  history.createReplicationEvent(newStatus);
+                } catch (ReplicationPersistenceException e) {
+                  LOGGER.debug(
+                      "Failed to create status while heartbeating site {}", site.getUrl(), e);
+                }
               }
             });
+  }
+
+  private ReplicationStatus createStatus(ReplicatorConfig config) {
+    ReplicationStatus status = new ReplicationStatusImpl(config.getName());
+    status.setStatus(null);
+    return status;
   }
 
   private Optional<ReplicationStatus> statusFor(ReplicatorConfig config) {
@@ -446,7 +460,7 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
                 new JacksonJaxbJsonProvider(
                     objectMapper, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS)),
             null,
-            true /* disableCnCheck */,
+            false /* disableCnCheck */,
             false /* allowRedirects */,
             connectionTimeoutMs /* connectionTimeout */,
             receiveTimeoutMs /* receiveTimeout */);
@@ -538,5 +552,13 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
           defaultValue);
     }
     return defaultValue;
+  }
+
+  private String getRequiredArg(String argName, String value) {
+    if (StringUtils.isEmpty(value)) {
+      throw new IllegalArgumentException(
+          String.format("Illegal discovery argument of %s = %s", argName, value));
+    }
+    return value;
   }
 }

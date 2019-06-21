@@ -15,6 +15,7 @@ package org.codice.ditto.replication.api;
 
 import java.util.List;
 import java.util.Set;
+import org.codice.ditto.replication.api.mcard.Replication;
 
 /** Persistence interface for storing, retrieving, and deleting history items */
 public interface ReplicatorHistory {
@@ -46,11 +47,19 @@ public interface ReplicatorHistory {
   /**
    * Updates an existing replication event
    *
-   * @param replicationStatus {@link ReplicationStatus} event to update
+   * @param replicationStatus the {@link ReplicationStatus} event to update
    * @throws ReplicationPersistenceException if there is an error adding the {@link
    *     ReplicationStatus}
    */
   void updateReplicationEvent(ReplicationStatus replicationStatus);
+
+  /**
+   * Creates a new replication event. Use {@link #addReplicationEvent(ReplicationStatus)} if the
+   * {@link org.codice.ditto.replication.api.data.ReplicatorConfig} already has a status.
+   *
+   * @param replicationStatus the {@link ReplicationStatus} to save
+   */
+  void createReplicationEvent(ReplicationStatus replicationStatus);
 
   /**
    * Remove a replication event from the history

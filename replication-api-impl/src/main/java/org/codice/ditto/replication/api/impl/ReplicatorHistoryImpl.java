@@ -133,8 +133,7 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
   public void addReplicationEvent(ReplicationStatus replicationStatus) {
     try {
       ReplicationStatus previous =
-          getReplicationEvents(replicationStatus.getReplicatorName())
-              .stream()
+          getReplicationEvents(replicationStatus.getReplicatorName()).stream()
               .findFirst()
               .orElse(null);
       if (previous != null) {
@@ -162,7 +161,20 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
       provider.update(new UpdateRequestImpl(statusMetacard.getId(), statusMetacard));
     } catch (IngestException e) {
       throw new ReplicationPersistenceException(
-          "Error updating replication history item " + replicationStatus.getReplicatorName(), e);
+          "Error updating replication history item for " + replicationStatus.getReplicatorName(),
+          e);
+    }
+  }
+
+  @Override
+  public void createReplicationEvent(ReplicationStatus replicationStatus) {
+    Metacard statusMetacard = getMetacardFromStatus(replicationStatus);
+    try {
+      provider.create(new CreateRequestImpl(statusMetacard));
+    } catch (IngestException e) {
+      throw new ReplicationPersistenceException(
+          "Error creating replication history item for " + replicationStatus.getReplicatorName(),
+          e);
     }
   }
 
@@ -282,8 +294,7 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
           try {
             security.runWithSubjectOrElevate(
                 () -> {
-                  getReplicationEvents()
-                      .stream()
+                  getReplicationEvents().stream()
                       .map(ReplicationStatus::getReplicatorName)
                       .distinct()
                       .map(this::getReplicationEvents)

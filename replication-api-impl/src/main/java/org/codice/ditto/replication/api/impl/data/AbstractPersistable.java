@@ -70,6 +70,21 @@ public abstract class AbstractPersistable implements Persistable {
     this.modified = modified != null ? modified : new Date(0);
   }
 
+  @Override
+  public int hashCode() {
+    return getId().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    } else if (obj instanceof AbstractPersistable) {
+      return getId().equals(((AbstractPersistable) obj).getId());
+    }
+    return false;
+  }
+
   /**
    * Writes the variables of the persistable to a map. Since this method is intended to be called
    * just before the persistable is saved, it will set the modified date to the current time. Any

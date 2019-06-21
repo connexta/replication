@@ -259,14 +259,18 @@ public class ReplicationUtils {
     List<ReplicationStatus> statusList = history.getReplicationEvents(config.getName());
     if (!statusList.isEmpty()) {
       ReplicationStatus lastStatus = statusList.get(0);
-      stats.setLastRun(lastStatus.getLastRun());
-      stats.setStartTime(lastStatus.getStartTime());
-      stats.setLastSuccess(lastStatus.getLastSuccess());
+      if (lastStatus.getLastRun() != null) {
+        stats.setLastRun(lastStatus.getLastRun());
+      }
+      if (lastStatus.getStartTime() != null) {
+        stats.setStartTime(lastStatus.getStartTime());
+      }
+      if (lastStatus.getLastSuccess() != null) {
+        stats.setLastSuccess(lastStatus.getLastSuccess());
+      }
     }
 
-    replicator
-        .getActiveSyncRequests()
-        .stream()
+    replicator.getActiveSyncRequests().stream()
         .filter(sync -> sync.getConfig().getId().equals(config.getId()))
         .map(SyncRequest::getStatus)
         .forEach(status -> statusList.add(0, status));
@@ -322,9 +326,7 @@ public class ReplicationUtils {
 
     try {
       Set<String> statusIds =
-          history
-              .getReplicationEvents(repName)
-              .stream()
+          history.getReplicationEvents(repName).stream()
               .map(ReplicationStatus::getId)
               .collect(Collectors.toSet());
       history.removeReplicationEvents(statusIds);
