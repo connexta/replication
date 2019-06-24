@@ -20,6 +20,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,7 +54,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SyncHelperTest {
@@ -77,12 +80,67 @@ public class SyncHelperTest {
     helper = new SyncHelper(source, destination, config, status, persistentStore, history, builder);
   }
 
+  // verify a replication with no failures to retry doesn't try to query DDF with an empty list of
+  // Ids
+  @Test
+  public void noFailureIds() throws Exception {
+    setConfigDefaults();
+    SourceResponse response = mock(SourceResponse.class);
+    when(response.getResults()).thenReturn(Collections.emptyList());
+    when(source.query(any(QueryRequest.class))).thenReturn(response);
+    when(persistentStore.getFailureList(anyInt(), anyString(), anyString()))
+        .thenReturn(Collections.emptyList());
+    when(history.getReplicationEvents("test")).thenReturn(Collections.emptyList());
+    helper.sync();
+
+    // if only one query is made then we skipped the failedItems query and the test passes
+    verify(source, times(1)).query(any(QueryRequest.class));
+  }
+
+  // verify we don't continue trying to replicate if we lose connection during the attempt to retry
+  // failed items
+  @Test
+  public void connectionLostDuringFailedItemQuery() throws Exception {
+    setConfigDefaults();
+    SourceResponse response = mock(SourceResponse.class);
+    when(response.getResults()).thenReturn(Collections.emptyList());
+    when(persistentStore.getFailureList(anyInt(), anyString(), anyString()))
+        .thenReturn(Collections.singletonList("someId"));
+    when(source.query(any(QueryRequest.class)))
+        .then(
+            new Answer() {
+              public Object answer(InvocationOnMock invocation) {
+                status.setStatus(Status.CONNECTION_LOST);
+                return response;
+              }
+            });
+    // only called if we build the change set filter, which we shouldn't
+    verify(history, never()).getReplicationEvents(any(String.class));
+  }
+
+  @Test
+  public void canceledDuringFailedItemQuery() throws Exception {
+    setConfigDefaults();
+    SourceResponse response = mock(SourceResponse.class);
+    when(response.getResults()).thenReturn(Collections.emptyList());
+    when(persistentStore.getFailureList(anyInt(), anyString(), anyString()))
+        .thenReturn(Collections.singletonList("someId"));
+    when(source.query(any(QueryRequest.class)))
+        .then(
+            new Answer() {
+              public Object answer(InvocationOnMock invocation) {
+                helper.cancel();
+                return response;
+              }
+            });
+    // only called if we build the change set filter, which we shouldn't
+    verify(history, never()).getReplicationEvents(any(String.class));
+  }
+
   @Test
   public void cancel() throws Exception {
     helper.cancel();
-    when(config.getName()).thenReturn("test");
-    when(config.getFilter()).thenReturn("title like '*'");
-    when(config.getFailureRetryCount()).thenReturn(5);
+    setConfigDefaults();
     SourceResponse response = mock(SourceResponse.class);
     MetacardImpl mcard = new MetacardImpl();
     mcard.setId("id");
@@ -105,10 +163,7 @@ public class SyncHelperTest {
     ThreadContext.bind(subject);
     CreateResponse createResponse = mock(CreateResponse.class);
     when(createResponse.getProcessingErrors()).thenReturn(Collections.emptySet());
-    when(config.getId()).thenReturn("1234");
-    when(config.getName()).thenReturn("test");
-    when(config.getFilter()).thenReturn("title like '*'");
-    when(config.getFailureRetryCount()).thenReturn(5);
+    setConfigDefaults();
     when(destination.create(any(CreateRequest.class))).thenReturn(createResponse);
     SourceResponse response = mock(SourceResponse.class);
     MetacardImpl mcard = new MetacardImpl();
@@ -134,10 +189,7 @@ public class SyncHelperTest {
     CreateResponse createResponse = mock(CreateResponse.class);
     when(createResponse.getProcessingErrors())
         .thenReturn(Collections.singleton(new ProcessingDetailsImpl()));
-    when(config.getId()).thenReturn("1234");
-    when(config.getName()).thenReturn("test");
-    when(config.getFilter()).thenReturn("title like '*'");
-    when(config.getFailureRetryCount()).thenReturn(5);
+    setConfigDefaults();
     when(destination.create(any(CreateRequest.class))).thenReturn(createResponse);
     when(destination.isAvailable()).thenReturn(true);
     SourceResponse response = mock(SourceResponse.class);
@@ -163,5 +215,12 @@ public class SyncHelperTest {
     assertThat(helper.isCanceled(), is(false));
     helper.cancel();
     assertThat(helper.isCanceled(), is(true));
+  }
+
+  private void setConfigDefaults() {
+    when(config.getId()).thenReturn("1234");
+    when(config.getName()).thenReturn("test");
+    when(config.getFilter()).thenReturn("title like '*'");
+    when(config.getFailureRetryCount()).thenReturn(5);
   }
 }
