@@ -114,7 +114,7 @@ class SyncHelper {
 
   private volatile boolean canceled = false;
 
-  private ReplicationStatus status;
+  private final ReplicationStatus status;
 
   public SyncHelper(
       ReplicationStore source,
@@ -139,9 +139,26 @@ class SyncHelper {
   }
 
   public SyncResponse sync() {
-    for (Result metacardResult : getMetacardChangeSet()) {
+    // Failed items and new items are replicated separately due to a bug in DDF that was only fixed
+    // recently
+    List<Filter> failedItemFilters = createFailedMetacardFilters();
+    if (!failedItemFilters.isEmpty()) {
+      replicateSubset(builder.anyOf(failedItemFilters));
+    }
+
+    // if the connection was lost while replicating failed items don't continue replicating
+    if (!canceled && status.getStatus() != Status.CONNECTION_LOST) {
+      replicateSubset(buildChangeSetFilter());
+    }
+
+    status.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
+    return new SyncResponse(syncCount, failCount, bytesTransferred, status.getStatus());
+  }
+
+  private void replicateSubset(Filter filter) {
+    for (Result metacardResult : getMetacards(filter)) {
       if (canceled) {
-        break;
+        return;
       }
       mcard = metacardResult.getMetacard();
       existingReplicationItem = persistentStore.getItem(mcard.getId(), sourceName, destinationName);
@@ -153,7 +170,7 @@ class SyncHelper {
         if (causedByConnectionLoss(e)) {
           logConnectionLoss();
           status.setStatus(Status.CONNECTION_LOST);
-          return new SyncResponse(syncCount, failCount, bytesTransferred, status.getStatus());
+          return;
         } else {
           recordItemFailure(e);
         }
@@ -167,8 +184,6 @@ class SyncHelper {
       }
       status.setLastMetadataModified(modifiedDate);
     }
-    status.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
-    return new SyncResponse(syncCount, failCount, bytesTransferred, status.getStatus());
   }
 
   @SuppressWarnings("squid:S3655" /*isUpdatable performs the needed optional check*/)
@@ -194,9 +209,7 @@ class SyncHelper {
     return this.canceled;
   }
 
-  private Iterable<Result> getMetacardChangeSet() {
-    Filter filter = buildFilter();
-
+  private Iterable<Result> getMetacards(Filter filter) {
     final QueryRequest request =
         new QueryRequestImpl(
             new QueryImpl(
@@ -209,10 +222,9 @@ class SyncHelper {
     return ResultIterable.resultIterable(source::query, request);
   }
 
-  private Filter buildFilter() {
+  private Filter buildChangeSetFilter() {
     final Filter ecqlFilter;
     final List<Filter> filters = createBasicMetacardFilters();
-    final List<Filter> failureFilters = createFailedMetacardFilters();
     Filter finalFilter;
 
     try {
@@ -233,9 +245,6 @@ class SyncHelper {
       finalFilter = builder.allOf(filters);
     }
 
-    if (!failureFilters.isEmpty()) {
-      finalFilter = builder.anyOf(finalFilter, builder.anyOf(failureFilters));
-    }
     return finalFilter;
   }
 
