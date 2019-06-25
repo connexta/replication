@@ -1,0 +1,12 @@
+query GetReplications {
+    replication {
+        replications {
+            name
+            id
+            filter
+            biDirectional
+            suspended
+            version
+        }
+    }
+}

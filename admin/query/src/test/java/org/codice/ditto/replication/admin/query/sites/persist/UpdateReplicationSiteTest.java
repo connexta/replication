@@ -17,6 +17,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -65,7 +66,7 @@ public class UpdateReplicationSiteTest {
 
   private static final String SITE_HOSTNAME = "siteHostname";
 
-  private static final boolean SITE_IS_DISABLED_LOCAL = true;
+  private static final boolean IS_REMOTE_MANAGED = true;
 
   private UpdateReplicationSite updateReplicationSite;
 
@@ -88,7 +89,7 @@ public class UpdateReplicationSiteTest {
     input.put(NAME, SITE_NAME);
     input.put(ROOT_CONTEXT, SITE_CONTEXT);
     input.put(ADDRESS, addressField);
-    input.put(REMOTE_MANAGED, SITE_IS_DISABLED_LOCAL);
+    input.put(REMOTE_MANAGED, IS_REMOTE_MANAGED);
   }
 
   @Test
@@ -100,13 +101,14 @@ public class UpdateReplicationSiteTest {
 
     final boolean updateResult = true;
     when(replicationUtils.updateSite(
-            anyString(), anyString(), any(AddressField.class), anyString()))
+            anyString(), anyString(), any(AddressField.class), anyString(), anyBoolean()))
         .thenReturn(updateResult);
 
     ArgumentCaptor<AddressField> addressFieldCaptor = ArgumentCaptor.forClass(AddressField.class);
     ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> contextCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Boolean> remoteManagedCaptor = ArgumentCaptor.forClass(Boolean.class);
 
     // when
     FunctionReport<BooleanField> report = updateReplicationSite.execute(input, null);
@@ -119,7 +121,8 @@ public class UpdateReplicationSiteTest {
             idCaptor.capture(),
             nameCaptor.capture(),
             addressFieldCaptor.capture(),
-            contextCaptor.capture());
+            contextCaptor.capture(),
+            remoteManagedCaptor.capture());
 
     AddressField address = addressFieldCaptor.getValue();
     assertThat(address.host().hostname(), is(SITE_HOSTNAME));
@@ -127,6 +130,7 @@ public class UpdateReplicationSiteTest {
     assertThat(idCaptor.getValue(), is(SITE_ID));
     assertThat(nameCaptor.getValue(), is(SITE_NAME));
     assertThat(contextCaptor.getValue(), is(SITE_CONTEXT));
+    assertThat(remoteManagedCaptor.getValue(), is(IS_REMOTE_MANAGED));
   }
 
   @Test

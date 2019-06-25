@@ -1,0 +1,3 @@
+mutation DeleteReplication($id: Pid!) {
+    deleteReplication(id: $id)
+}

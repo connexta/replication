@@ -1,0 +1,3 @@
+mutation UpdateSite($id: Pid!, $name: String, $address: Address, $rootContext: String, $remoteManaged: Boolean){
+    updateReplicationSite(id: $id, name: $name, address: $address, rootContext: $rootContext, remoteManaged: $remoteManaged)
+}
