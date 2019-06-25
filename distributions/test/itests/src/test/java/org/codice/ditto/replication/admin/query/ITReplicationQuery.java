@@ -13,21 +13,26 @@
  */
 package org.codice.ditto.replication.admin.query;
 
-import static com.jayway.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-import com.jayway.restassured.specification.RequestSpecification;
-import java.net.MalformedURLException;
+import java.util.HashMap;
+import java.util.Map;
+import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ddf.dominion.commons.options.DDFCommonOptions;
+import org.codice.ditto.replication.admin.query.requests.ReplicationsGraphQL;
+import org.codice.ditto.replication.admin.query.requests.SitesGraphQL;
+import org.codice.ditto.replication.admin.query.requests.StatsGraphQL;
+import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.dominion.options.ReplicationOptions;
 import org.codice.dominion.Dominion;
 import org.codice.dominion.interpolate.Interpolate;
+import org.codice.dominion.options.karaf.KarafOptions.InstallBundle;
 import org.codice.junit.TestDelimiter;
+import org.codice.maven.MavenUrl;
 import org.codice.pax.exam.junit.ConfigurationAdmin;
 import org.codice.pax.exam.junit.ServiceAdmin;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -37,178 +42,148 @@ import org.junit.runner.RunWith;
 @DDFCommonOptions.ConfigureLogging
 @ReplicationOptions.Install
 @TestDelimiter(stdout = true, elapsed = true)
+@InstallBundle(bundle = @MavenUrl(groupId = "org.awaitility", artifactId = "awaitility"))
 @ServiceAdmin
 @ConfigurationAdmin
 @RunWith(Dominion.class)
 public class ITReplicationQuery {
 
-  private static final String NO_EXISTING_CONFIG = "NO_EXISTING_CONFIG";
-
   @Interpolate
   private static String GRAPHQL_ENDPOINT = "https://localhost:{port.https}/admin/hub/graphql";
 
-  private static final String URL = "https://localhost:9999/services";
+  private final SitesGraphQL sitesGraphql = new SitesGraphQL(GRAPHQL_ENDPOINT);
 
-  // ----------------------------------- Site Tests -----------------------------------//
+  private final ReplicationsGraphQL replicationsGraphql = new ReplicationsGraphQL(GRAPHQL_ENDPOINT);
 
-  @Test
-  public void createReplicationSite() throws MalformedURLException {
-    String name = "create";
-    asAdmin()
-        .body(makeCreateSiteQuery(name, URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("data.createReplicationSite.name", is(name))
-        .body("data.createReplicationSite.address.url", is(URL))
-        .body("data.createReplicationSite.address.host.hostname", is("localhost"))
-        .body("data.createReplicationSite.address.host.port", is(9999))
-        .body("data.createReplicationSite.id", is(notNullValue()));
+  private final StatsGraphQL statsGraphql = new StatsGraphQL(GRAPHQL_ENDPOINT);
+
+  @Before
+  public void before() {
+    sitesGraphql.waitForSitesInSchema();
   }
 
   @Test
-  public void createReplicationSiteWithHostnameAndPort() {
-    String name = "createHostnameAndPort";
-    asAdmin()
-        .body(
-            String.format(
-                "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { host: { hostname: \\\"localhost\\\" port: 9999 }}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
-                name))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("data.createReplicationSite.name", is(name))
-        .body("data.createReplicationSite.address.url", is(URL))
-        .body("data.createReplicationSite.address.host.hostname", is("localhost"))
-        .body("data.createReplicationSite.address.host.port", is(9999))
-        .body("data.createReplicationSite.id", is(notNullValue()));
+  public void testReplicationSites() {
+    // create site
+    AddressField address = new AddressField().hostname("localhost").port(8993);
+    Map<String, Object> config = sitesGraphql.createSite("siteName", "/services", address, false);
+    final String siteId = (String) config.get("id");
+
+    sitesGraphql.waitForSite(config);
+
+    // update site
+    AddressField updatedAddress = new AddressField().hostname("anotherone").port(8080);
+    boolean updated =
+        sitesGraphql.updateSite(siteId, "newSiteName", "/potato", updatedAddress, true);
+
+    assertThat("update site", updated, is(true));
+
+    sitesGraphql.waitForSiteWithName("newSiteName");
+
+    // delete site
+    boolean deleted = sitesGraphql.deleteSite(siteId);
+    assertThat("deleted site", deleted, is(true));
   }
 
   @Test
-  public void createReplicationSiteWithEmptyName() {
-    asAdmin()
-        .body(makeCreateSiteQuery("", URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem("EMPTY_FIELD"));
+  public void testReplications() {
+    // create sites
+    AddressField address = new AddressField().hostname("localhost").port(8993);
+    Map<String, Object> sourceSite = sitesGraphql.createSite("source", "/services", address, false);
+    final String sourceId = (String) sourceSite.get("id");
+    sitesGraphql.waitForSite(sourceSite);
+
+    Map<String, Object> destinationSite =
+        sitesGraphql.createSite("destination", "/services", address, false);
+    final String destinationId = (String) destinationSite.get("id");
+    sitesGraphql.waitForSite(destinationSite);
+
+    // create replication
+    Map<String, Object> replicationConfig =
+        replicationsGraphql.createReplication(
+            "replicationName", sourceId, destinationId, "title like '*'", false, false);
+    final String replicationId = (String) replicationConfig.get("id");
+
+    replicationsGraphql.waitForReplication(replicationConfig);
+
+    // update replication
+    boolean updated =
+        replicationsGraphql.updateReplication(
+            replicationId, "newName", sourceId, destinationId, "title like 'potato'", true, true);
+
+    assertThat("replication updated", updated, is(true));
+
+    replicationsGraphql.waitForReplicationWithName("newName");
+
+    // delete replication
+    boolean deleted = replicationsGraphql.deleteReplication(replicationId);
+    assertThat("delete replication", deleted, is(true));
+
+    // make sure we can delete sites
+    replicationsGraphql.waitForNoReplications();
+
+    // cleanup sites
+    boolean sourceDeleted = sitesGraphql.deleteSite(sourceId);
+    assertThat("delete source site", sourceDeleted, is(true));
+
+    boolean destinationDeleted = sitesGraphql.deleteSite(destinationId);
+    assertThat("delete destination site", destinationDeleted, is(true));
   }
 
   @Test
-  public void createReplicationSiteWithInvalidUrl() {
-    asAdmin()
-        .body(makeCreateSiteQuery("badUrl", "localhost:9999"))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem("INVALID_URL"));
+  public void updateReplicationStats() {
+    // create sites
+    AddressField address = new AddressField().hostname("localhost").port(8993);
+    Map<String, Object> sourceSite = sitesGraphql.createSite("source", "/services", address, false);
+    final String sourceId = (String) sourceSite.get("id");
+    sitesGraphql.waitForSite(sourceSite);
+
+    Map<String, Object> destinationSite =
+        sitesGraphql.createSite("destination", "/services", address, false);
+    final String destinationId = (String) destinationSite.get("id");
+    sitesGraphql.waitForSite(destinationSite);
+
+    // create replication
+    Map<String, Object> replicationConfig =
+        replicationsGraphql.createReplication(
+            "replicationName", sourceId, destinationId, "title like '*'", false, false);
+    final String replicationId = (String) replicationConfig.get("id");
+
+    replicationsGraphql.waitForReplication(replicationConfig);
+
+    // update replication stats
+    boolean updated = statsGraphql.updateStats("replicationName", createStatsMap());
+    assertThat("replication stats updated", updated, is(true));
+
+    // delete replication
+    boolean deleted = replicationsGraphql.deleteReplication(replicationId);
+    assertThat("delete replication", deleted, is(true));
+
+    // make sure we can delete sites
+    replicationsGraphql.waitForNoReplications();
+
+    // cleanup sites
+    boolean sourceDeleted = sitesGraphql.deleteSite(sourceId);
+    assertThat("delete source site", sourceDeleted, is(true));
+
+    boolean destinationDeleted = sitesGraphql.deleteSite(destinationId);
+    assertThat("delete destination site", destinationDeleted, is(true));
   }
 
-  @Test
-  public void createReplicationSiteWithIntegerName() {
-    asAdmin()
-        .body(
-            String.format(
-                "{\"query\":\"mutation{ createReplicationSite(name: 25, address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
-                URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body(
-            "errors.errorType",
-            hasItem("ValidationError")); // returns an empty body for queries it doesn't recognize
-  }
-
-  @Test
-  public void getReplicationSites() {
-    asAdmin()
-        .body(makeGetSitesQuery())
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors", is(nullValue()));
-  }
-
-  @Test
-  public void updateReplicationSite() {
-    asAdmin()
-        .body(makeUpdateSiteQuery("siteId", "newName", URL))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem(NO_EXISTING_CONFIG));
-  }
-
-  @Test
-  public void deleteReplicationSite() {
-    asAdmin()
-        .body(makeDeleteSiteQuery("fakeId"))
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.message", hasItem(NO_EXISTING_CONFIG));
-  }
-
-  // ----------------------------------- General Tests -----------------------------------//
-
-  @Test
-  public void undefinedFieldInQuery() {
-    asAdmin()
-        .body("{\"query\":\"mutation{ unknownField }\"}")
-        .when()
-        .post(GRAPHQL_ENDPOINT)
-        .then()
-        .statusCode(200)
-        .header("Content-Type", is("application/json;charset=utf-8"))
-        .body("errors.errorType", hasItem("ValidationError"));
-  }
-
-  private static RequestSpecification asAdmin() {
-    return given()
-        .log()
-        .all()
-        .header("Content-Type", "application/json")
-        .relaxedHTTPSValidation()
-        .auth()
-        .preemptive()
-        .basic("admin", "admin")
-        .header("X-Requested-With", "XMLHttpRequest");
-  }
-
-  private static String makeCreateSiteQuery(String name, String url) {
-    return String.format(
-        "{\"query\":\"mutation{ createReplicationSite(name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\"){ id name address{ host{ hostname port } url }}}\"}",
-        name, url);
-  }
-
-  private static String makeGetSitesQuery() {
-    return "{\"query\":\"{ replication{ sites{ id name address{ host{ hostname port } url }}}}\"}";
-  }
-
-  private static String makeUpdateSiteQuery(String id, String name, String url) {
-    return String.format(
-        "{\"query\":\"mutation{ updateReplicationSite(id: \\\"%s\\\", name: \\\"%s\\\", address: { url: \\\"%s\\\"}, rootContext: \\\"services\\\")}\"}",
-        id, name, url);
-  }
-
-  private String makeDeleteSiteQuery(String siteId) {
-    return String.format(
-        "{\"query\":\"mutation{ deleteReplicationSite(id: \\\"%s\\\")}\"}", siteId);
+  public Map<String, Object> createStatsMap() {
+    Map<String, Object> stats = new HashMap<>();
+    stats.put("pid", "testPid1234");
+    stats.put("startTime", "2019-04-20T15:25:46.327Z");
+    stats.put("lastRun", "2019-05-20T15:25:46.327Z");
+    stats.put("lastSuccess", "2019-06-20T15:25:46.327Z");
+    stats.put("duration", 5);
+    stats.put("replicationStatus", Status.FAILURE);
+    stats.put("pushCount", 32);
+    stats.put("pullCount", 37);
+    stats.put("pushFailCount", 2);
+    stats.put("pullFailCount", 1);
+    stats.put("pushBytes", 524288099999999L);
+    stats.put("pullBytes", 524288099999999L);
+    return stats;
   }
 }

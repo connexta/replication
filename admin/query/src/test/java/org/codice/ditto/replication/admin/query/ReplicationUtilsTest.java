@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.crypto.tink.subtle.Random;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -49,7 +48,6 @@ import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
-import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.codice.junit.RestoreSystemProperties;
@@ -199,7 +197,7 @@ public class ReplicationUtilsTest {
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true);
+    ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true, true);
 
     // then
     assertThat(field.name(), is("test"));
@@ -207,6 +205,7 @@ public class ReplicationUtilsTest {
     assertThat(field.destination().id(), is("destId"));
     assertThat(field.filter(), is("cql"));
     assertThat(field.biDirectional(), is(true));
+    assertThat(field.suspended(), is(true));
     assertThat(field.getStats().getStatus(), is(Status.SUCCESS.toString()));
     assertThat(field.getStats().getPushCount(), is(1L));
     assertThat(field.getStats().getPullCount(), is(2L));
@@ -242,7 +241,7 @@ public class ReplicationUtilsTest {
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true);
+    ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true, true);
 
     // then
     assertThat(field.name(), is("test"));
@@ -250,6 +249,7 @@ public class ReplicationUtilsTest {
     assertThat(field.destination().id(), is("destId"));
     assertThat(field.filter(), is("cql"));
     assertThat(field.biDirectional(), is(true));
+    assertThat(field.suspended(), is(true));
     assertThat(field.getStats().getStatus(), is("NOT_RUN"));
     assertThat(field.getStats().getPushCount(), is(0L));
     assertThat(field.getStats().getPullCount(), is(0L));
@@ -285,44 +285,24 @@ public class ReplicationUtilsTest {
     config.setFilter("oldCql");
     config.setFailureRetryCount(7);
     when(configManager.get(REP_ID)).thenReturn(config);
-    ReplicationStatus status = new ReplicationStatusImpl("test");
-    status.setPushCount(1L);
-    status.setPushBytes(5L);
-    status.setPullCount(2L);
-    status.setPullBytes(10L);
-    status.setLastRun(LAST_RUN);
-    status.setLastSuccess(LAST_SUCCESS);
-    status.setStartTime(START_TIME);
-    status.setDuration(9L);
-    status.setPullFailCount(99L);
-    status.setPushFailCount(100L);
-    status.setStatus(Status.SUCCESS);
-    when(history.getReplicationEvents("test")).thenReturn(Collections.singletonList(status));
-    when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    ReplicationField field =
-        utils.updateReplication(REP_ID, "test", "srcId", "destId", "cql", true);
+    boolean field = utils.updateReplication(REP_ID, "test", "srcId", "destId", "cql", true);
+
+    ArgumentCaptor<ReplicatorConfig> replicatorConfigCaptor =
+        ArgumentCaptor.forClass(ReplicatorConfig.class);
 
     // then
-    assertThat(field.name(), is("test"));
-    assertThat(field.source().id(), is("srcId"));
-    assertThat(field.destination().id(), is("destId"));
-    assertThat(field.filter(), is("cql"));
-    assertThat(field.biDirectional(), is(true));
-    assertThat(field.getStats().getStatus(), is(Status.SUCCESS.toString()));
-    assertThat(field.getStats().getPushCount(), is(1L));
-    assertThat(field.getStats().getPullCount(), is(2L));
-    assertThat(field.getStats().getPushBytes(), is(5L));
-    assertThat(field.getStats().getPullBytes(), is(10L));
-    assertThat(field.getStats().getDuration(), is(9L));
-    assertThat(field.getStats().getPullFailCount(), is(99L));
-    assertThat(field.getStats().getPushFailCount(), is(100L));
-    assertThat(field.getStats().getLastRun(), is(LAST_RUN.toInstant().toString()));
-    assertThat(field.getStats().getLastSuccess(), is(LAST_SUCCESS.toInstant().toString()));
-    assertThat(field.getStats().getStartTime(), is(START_TIME.toInstant().toString()));
+    assertThat(field, is(true));
+    verify(configManager).save(replicatorConfigCaptor.capture());
 
-    verify(configManager).save(any(ReplicatorConfig.class));
+    ReplicatorConfig savedConfig = replicatorConfigCaptor.getValue();
+    assertThat(savedConfig.getName(), is("test"));
+    assertThat(savedConfig.getSource(), is("srcId"));
+    assertThat(savedConfig.getDestination(), is("destId"));
+    assertThat(savedConfig.getFilter(), is("cql"));
+    assertThat(savedConfig.isBidirectional(), is(true));
+    assertThat(savedConfig.getFailureRetryCount(), is(7));
   }
 
   @Test
@@ -387,93 +367,24 @@ public class ReplicationUtilsTest {
     config.setBidirectional(true);
     config.setFailureRetryCount(7);
     when(configManager.get(REP_ID)).thenReturn(config);
-    ReplicationStatus status = new ReplicationStatusImpl("test");
-    status.setPushCount(1L);
-    status.setPushBytes(5L);
-    status.setPullCount(2L);
-    status.setPullBytes(10L);
-    status.setLastRun(LAST_RUN);
-    status.setLastSuccess(LAST_SUCCESS);
-    status.setStartTime(START_TIME);
-    status.setDuration(9L);
-    status.setPullFailCount(99L);
-    status.setPushFailCount(100L);
-    status.setStatus(Status.SUCCESS);
-    when(history.getReplicationEvents("test")).thenReturn(Collections.singletonList(status));
-    when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    ReplicationField field = utils.updateReplication(REP_ID, null, null, null, null, null);
+    boolean field = utils.updateReplication(REP_ID, null, null, null, null, null);
+
+    ArgumentCaptor<ReplicatorConfig> replicatorConfigCaptor =
+        ArgumentCaptor.forClass(ReplicatorConfig.class);
 
     // then
-    assertThat(field.name(), is("test"));
-    assertThat(field.source().id(), is("srcId"));
-    assertThat(field.destination().id(), is("destId"));
-    assertThat(field.filter(), is("cql"));
-    assertThat(field.biDirectional(), is(true));
-    assertThat(field.getStats().getStatus(), is(Status.SUCCESS.toString()));
-    assertThat(field.getStats().getPushCount(), is(1L));
-    assertThat(field.getStats().getPullCount(), is(2L));
-    assertThat(field.getStats().getPushBytes(), is(5L));
-    assertThat(field.getStats().getPullBytes(), is(10L));
-    assertThat(field.getStats().getDuration(), is(9L));
-    assertThat(field.getStats().getPullFailCount(), is(99L));
-    assertThat(field.getStats().getPushFailCount(), is(100L));
-    assertThat(field.getStats().getLastRun(), is(LAST_RUN.toInstant().toString()));
-    assertThat(field.getStats().getLastSuccess(), is(LAST_SUCCESS.toInstant().toString()));
-    assertThat(field.getStats().getStartTime(), is(START_TIME.toInstant().toString()));
-    verify(configManager).save(any(ReplicatorConfig.class));
-  }
+    assertThat(field, is(true));
+    verify(configManager).save(replicatorConfigCaptor.capture());
 
-  @Test
-  public void updateReplicationActiveSyncRequest() {
-    // setup
-    ReplicationSiteImpl src = new ReplicationSiteImpl();
-    src.setId("srcId");
-    src.setName("source");
-    src.setUrl("https://localhost:1234");
-
-    ReplicationSiteImpl dest = new ReplicationSiteImpl();
-    dest.setId("destId");
-    dest.setName("destination");
-    dest.setUrl("https://otherhost:1234");
-
-    when(siteManager.get("srcId")).thenReturn(src);
-    when(siteManager.get("destId")).thenReturn(dest);
-    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
-    config.setId(REP_ID);
-    config.setName("oldName");
-    config.setFilter("oldCql");
-    config.setFailureRetryCount(7);
-    when(configManager.get(REP_ID)).thenReturn(config);
-    ReplicationStatusImpl status = new ReplicationStatusImpl("test");
-    status.setStatus(Status.PUSH_IN_PROGRESS);
-    when(history.getReplicationEvents("test")).thenReturn(new ArrayList<>());
-    SyncRequestImpl syncRequest = new SyncRequestImpl(config, src, dest, status);
-    when(replicator.getActiveSyncRequests()).thenReturn(Collections.singleton(syncRequest));
-
-    // when
-    ReplicationField field =
-        utils.updateReplication(REP_ID, "test", "srcId", "destId", "cql", true);
-
-    // then
-    assertThat(field.name(), is("test"));
-    assertThat(field.source().id(), is("srcId"));
-    assertThat(field.destination().id(), is("destId"));
-    assertThat(field.filter(), is("cql"));
-    assertThat(field.biDirectional(), is(true));
-    assertThat(field.getStats().getStatus(), is(Status.PUSH_IN_PROGRESS.toString()));
-    assertThat(field.getStats().getPushCount(), is(0L));
-    assertThat(field.getStats().getPullCount(), is(0L));
-    assertThat(field.getStats().getPushBytes(), is(0L));
-    assertThat(field.getStats().getPullBytes(), is(0L));
-    assertThat(field.getStats().getDuration(), is(-1L));
-    assertThat(field.getStats().getPullFailCount(), is(0L));
-    assertThat(field.getStats().getPushFailCount(), is(0L));
-    assertThat(field.getStats().getLastRun(), is(nullValue()));
-    assertThat(field.getStats().getLastSuccess(), is(nullValue()));
-    assertThat(field.getStats().getStartTime(), is(nullValue()));
-    verify(configManager).save(any(ReplicatorConfig.class));
+    ReplicatorConfig savedConfig = replicatorConfigCaptor.getValue();
+    assertThat(savedConfig.getName(), is("test"));
+    assertThat(savedConfig.getSource(), is("srcId"));
+    assertThat(savedConfig.getDestination(), is("destId"));
+    assertThat(savedConfig.getFilter(), is("cql"));
+    assertThat(savedConfig.isBidirectional(), is(true));
+    assertThat(savedConfig.getFailureRetryCount(), is(7));
   }
 
   @Test
@@ -644,7 +555,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get(SITE_ID)).thenReturn(site);
 
     // when
-    utils.updateSite(SITE_ID, newName, mockAddress(null, null), null);
+    utils.updateSite(SITE_ID, newName, mockAddress(null, null), null, false);
 
     // then
     verify(site).setName(newName);
@@ -662,7 +573,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get(SITE_ID)).thenReturn(site);
 
     // when
-    utils.updateSite(SITE_ID, null, mockAddress("updatedHost", null), null);
+    utils.updateSite(SITE_ID, null, mockAddress("updatedHost", null), null, false);
 
     // then
     verify(site, never()).setName(anyString());
@@ -680,7 +591,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get(SITE_ID)).thenReturn(site);
 
     // when
-    utils.updateSite(SITE_ID, null, mockAddress(null, 4321), null);
+    utils.updateSite(SITE_ID, null, mockAddress(null, 4321), null, false);
 
     // then
     verify(site, never()).setName(anyString());
@@ -698,7 +609,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get(SITE_ID)).thenReturn(site);
 
     // when
-    utils.updateSite(SITE_ID, null, mockAddress(null, null), "updatedContext");
+    utils.updateSite(SITE_ID, null, mockAddress(null, null), "updatedContext", false);
 
     // then
     verify(site, never()).setName(anyString());

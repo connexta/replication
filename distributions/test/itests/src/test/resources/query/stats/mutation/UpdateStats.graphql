@@ -1,0 +1,3 @@
+mutation UpdateStats($replicationName: String!, $stats: ReplicationStats!) {
+    updateReplicationStats(replicationName: $replicationName, stats: $stats)
+}

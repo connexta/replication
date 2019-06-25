@@ -34,16 +34,18 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CreateReplicationTest {
-  CreateReplication create;
 
-  Map<String, Object> input;
+  private CreateReplication create;
+
+  private Map<String, Object> input;
 
   @Mock ReplicationUtils utils;
 
   @Before
   public void setUp() throws Exception {
     create = new CreateReplication(utils);
-    when(utils.createReplication(anyString(), anyString(), anyString(), anyString(), anyBoolean()))
+    when(utils.createReplication(
+            anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(new ReplicationField());
     input = new HashMap<>();
     input.put("id", "myid");
@@ -52,6 +54,7 @@ public class CreateReplicationTest {
     input.put("sourceId", "srcId");
     input.put("destinationId", "destId");
     input.put("biDirectional", false);
+    input.put("suspended", false);
   }
 
   @Test

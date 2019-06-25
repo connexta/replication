@@ -34,7 +34,7 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
   public static final String FIELD_NAME = "createReplication";
 
   public static final String DESCRIPTION =
-      "Creates a replication. biDirectional defaults to false.";
+      "Creates a replication. If biDirectional is not provided, it defaults to false. If suspended is not provided, it defaults to false.";
 
   public static final ReplicationField RETURN_TYPE = new ReplicationField();
 
@@ -48,6 +48,8 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
 
   private BooleanField biDirectional;
 
+  private BooleanField suspended;
+
   private ReplicationUtils replicationUtils;
 
   public CreateReplication(ReplicationUtils replicationUtils) {
@@ -58,6 +60,9 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
     destination = new PidField("destinationId");
     filter = new StringField("filter");
     biDirectional = new BooleanField("biDirectional");
+    biDirectional.setValue(false);
+    suspended = new BooleanField("suspended");
+    suspended.setValue(false);
     name.isRequired(true);
     source.isRequired(true);
     destination.isRequired(true);
@@ -71,7 +76,8 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
         source.getValue(),
         destination.getValue(),
         filter.getValue(),
-        biDirectional.getValue() == null ? false : biDirectional.getValue());
+        biDirectional.getValue(),
+        suspended.getValue());
   }
 
   @Override
@@ -81,7 +87,7 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(name, source, destination, filter, biDirectional);
+    return ImmutableList.of(name, source, destination, filter, biDirectional, suspended);
   }
 
   @Override
