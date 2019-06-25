@@ -46,4 +46,33 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>owasp</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <configuration>
+              <suppressionFiles>
+                <suppressionFile>
+                  ${highest-basedir}/adapters/ddf-adapter/owasp-suppressions.xml
+                </suppressionFile>
+                <suppressionFile>
+                  ${highest-basedir}/adapters/ion-adapter/owasp-suppressions.xml
+                </suppressionFile>
+                <suppressionFile>
+                  ${highest-basedir}/replication-api-impl/owasp-suppressions.xml
+                </suppressionFile>
+              </suppressionFiles>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

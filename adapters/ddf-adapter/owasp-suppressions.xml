@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
+  <suppress>
+    <notes>
+      These CVEs are comming from mimepull-1.9.11.jar (cpe:/a:eclipse:eclipse_ide:1.9.11,
+      org.jvnet.mimepull:mimepull:1.9.11) which are XSS vulnerabilities related to eclipse ide. Not
+      an issue for replication.
+    </notes>
+    <cve>CVE-2010-4647</cve>
+    <cve>CVE-2008-7271</cve>
+  </suppress>
+  <suppress>
+    <notes>
+      External Entity (XXE) vulnerability in jaxb-impl processing. This is not an issue as there is
+      no endpoint an attacker could send the xml message to.
+    </notes>
+    <cve>CVE-2018-1000840</cve>
+  </suppress>
+  <suppress>
+    <notes>
+      These are false matches on DDFs security-rest-cxfwrapper 2.13.10. Owasp thinks it is using cxf
+      version 2.13.10 which it is not.
+    </notes>
+    <cve>CVE-2017-3156</cve>
+    <cve>CVE-2018-8039</cve>
+    <cve>CVE-2016-6812</cve>
+    <cve>CVE-2016-8739</cve>
+  </suppress>
+</suppressions>
