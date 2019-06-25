@@ -24,15 +24,14 @@ import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.PidField;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
-import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 
-public class UpdateReplication extends BaseFunctionField<ReplicationField> {
+public class UpdateReplication extends BaseFunctionField<BooleanField> {
 
   public static final String FIELD_NAME = "updateReplication";
 
   public static final String DESCRIPTION = "Updates a replication.";
 
-  public static final ReplicationField RETURN_TYPE = new ReplicationField();
+  public static final BooleanField RETURN_TYPE = new BooleanField();
 
   private PidField id;
 
@@ -46,6 +45,8 @@ public class UpdateReplication extends BaseFunctionField<ReplicationField> {
 
   private BooleanField biDirectional;
 
+  private BooleanField suspended;
+
   private ReplicationUtils replicationUtils;
 
   public UpdateReplication(ReplicationUtils replicationUtils) {
@@ -57,33 +58,35 @@ public class UpdateReplication extends BaseFunctionField<ReplicationField> {
     destination = new PidField("destinationId");
     filter = new StringField("filter");
     biDirectional = new BooleanField("biDirectional");
+    suspended = new BooleanField("suspended");
 
     id.isRequired(true);
   }
 
   @Override
-  public ReplicationField performFunction() {
-    return replicationUtils.updateReplication(
-        id.getValue(),
-        name.getValue(),
-        source.getValue(),
-        destination.getValue(),
-        filter.getValue(),
-        biDirectional.getValue());
+  public BooleanField performFunction() {
+    return new BooleanField(
+        replicationUtils.updateReplication(
+            id.getValue(),
+            name.getValue(),
+            source.getValue(),
+            destination.getValue(),
+            filter.getValue(),
+            biDirectional.getValue()));
   }
 
   @Override
-  public ReplicationField getReturnType() {
+  public BooleanField getReturnType() {
     return RETURN_TYPE;
   }
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(id, name, source, destination, filter, biDirectional);
+    return ImmutableList.of(id, name, source, destination, filter, biDirectional, suspended);
   }
 
   @Override
-  public FunctionField<ReplicationField> newInstance() {
+  public FunctionField<BooleanField> newInstance() {
     return new UpdateReplication(replicationUtils);
   }
 

@@ -27,6 +27,7 @@ import org.codice.ddf.admin.common.fields.common.PidField;
 import org.codice.ddf.admin.common.report.message.DefaultMessages;
 import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
+import org.codice.ditto.replication.admin.query.sites.fields.RemoteManagedField;
 
 public class UpdateReplicationSite extends BaseFunctionField<BooleanField> {
 
@@ -44,6 +45,8 @@ public class UpdateReplicationSite extends BaseFunctionField<BooleanField> {
 
   private StringField rootContext;
 
+  private RemoteManagedField remoteManagedField;
+
   private ReplicationUtils replicationUtils;
 
   public UpdateReplicationSite(ReplicationUtils replicationUtils) {
@@ -54,6 +57,8 @@ public class UpdateReplicationSite extends BaseFunctionField<BooleanField> {
     this.name = new StringField("name");
     this.address = new AddressField();
     this.rootContext = new StringField("rootContext");
+    this.remoteManagedField = new RemoteManagedField();
+    remoteManagedField.setValue(false);
 
     this.id.isRequired(true);
   }
@@ -62,7 +67,11 @@ public class UpdateReplicationSite extends BaseFunctionField<BooleanField> {
   public BooleanField performFunction() {
     return new BooleanField(
         replicationUtils.updateSite(
-            id.getValue(), name.getValue(), address, rootContext.getValue()));
+            id.getValue(),
+            name.getValue(),
+            address,
+            rootContext.getValue(),
+            remoteManagedField.getValue()));
   }
 
   @Override
@@ -72,7 +81,7 @@ public class UpdateReplicationSite extends BaseFunctionField<BooleanField> {
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(id, name, address, rootContext);
+    return ImmutableList.of(id, name, address, rootContext, remoteManagedField);
   }
 
   @Override

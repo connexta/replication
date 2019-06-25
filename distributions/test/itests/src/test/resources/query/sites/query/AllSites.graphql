@@ -1,0 +1,14 @@
+query allSites {
+  replication {
+    sites {
+      id
+      name
+      rootContext
+      address {
+        url
+      }
+      version
+      remoteManaged
+    }
+  }
+}

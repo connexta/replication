@@ -1,0 +1,3 @@
+mutation UpdateReplication($id: Pid!, $name: String!, $sourceId: Pid!, $destinationId: Pid!, $filter: String!, $biDirectional: Boolean, $suspended: Boolean) {
+    updateReplication(id: $id, name: $name, sourceId: $sourceId, destinationId: $destinationId, filter: $filter, biDirectional: $biDirectional, suspended: $suspended)
+}

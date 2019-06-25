@@ -1,0 +1,12 @@
+mutation CreateReplicationSite($name: String!, $address: Address!, $rootContext: String!, $remoteManaged: Boolean) {
+    createReplicationSite(name: $name, address: $address, rootContext: $rootContext, remoteManaged: $remoteManaged) {
+        id
+        name
+        rootContext
+        address {
+            url
+        }
+        version
+        remoteManaged
+    }
+}
