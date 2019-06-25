@@ -94,8 +94,8 @@ public class ReplicationSiteField extends BaseObjectField {
     return this;
   }
 
-  public ReplicationSiteField isDisableLocal(boolean isDisableLocal) {
-    this.remoteManaged.setValue(isDisableLocal);
+  public ReplicationSiteField isRemoteManaged(boolean isRemoteManaged) {
+    this.remoteManaged.setValue(isRemoteManaged);
     return this;
   }
 

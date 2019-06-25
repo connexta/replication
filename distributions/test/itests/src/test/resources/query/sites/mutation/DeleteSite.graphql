@@ -1,0 +1,3 @@
+mutation DeleteReplicationSite ($id: Pid!) {
+    deleteReplicationSite (id: $id)
+}

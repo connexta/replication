@@ -1,0 +1,10 @@
+mutation CreateReplication($name: String!, $sourceId: Pid!, $destinationId: Pid!, $filter: String!, $biDirectional: Boolean, $suspended: Boolean) {
+    createReplication(name: $name, sourceId: $sourceId, destinationId: $destinationId, filter: $filter, biDirectional: $biDirectional, suspended: $suspended) {
+        name
+        id
+        filter
+        biDirectional
+        suspended
+        version
+    }
+}
