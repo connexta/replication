@@ -86,11 +86,6 @@
       <version>${javax.xml.soap.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.jvnet.ogc</groupId>
-      <artifactId>ogc-tools-gml-jts</artifactId>
-      <version>${ogc.tools.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
       <version>${xstream.version}</version>
@@ -211,4 +206,27 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>owasp</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <configuration>
+              <suppressionFiles>
+                <suppressionFile>
+                  ${basedir}/owasp-suppressions.xml
+                </suppressionFile>
+              </suppressionFiles>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
+  <suppress>
+    <notes>
+      This is for a vulnerability in org.apache.karaf.jaas.boot-4.2.1 coming in through the DDF
+      security-core-api artifact. This is not an issue for replication because we are not running
+      karaf.
+    </notes>
+    <cve>CVE-2018-11788</cve>
+    <cve>CVE-2019-0191</cve>
+    <cve>CVE-2019-0226</cve>
+  </suppress>
+  <suppress>
+    <notes>
+      geronimo-javamail_1.4_mail-1.8.4.jar vulnerability coming through ddf-security-common
+      artifact. Currently suppressed in DDF. There doesn't appear to be any use of the javamail
+      library in
+      DDF.
+    </notes>
+    <cve>CVE-2011-5034</cve>
+  </suppress>
+  <suppress>
+    <notes>
+      These CVEs apply to the Eclipse IDE. OWASP flagged it because eclipse is in the group
+      id. pax-url-aether-2.5.2.jar/META-INF/maven/org.eclipse.aether/aether-spi/pom.xml
+    </notes>
+    <cve>CVE-2010-4647</cve>
+    <cve>CVE-2008-7271</cve>
+  </suppress>
+  <suppress>
+    <notes>
+      These are jackson-databind issues coming in through DDF CXF dependencies. These are all
+      related to json deserialization. Replication doesn't currently expose any endpoint through
+      which an attacker could send the attack messages.
+    </notes>
+    <cve>CVE-2018-14719</cve>
+    <cve>CVE-2018-1000873</cve>
+    <cve>CVE-2018-14718</cve>
+    <cve>CVE-2018-19362</cve>
+    <cve>CVE-2018-19361</cve>
+    <cve>CVE-2019-12814</cve>
+    <cve>CVE-2018-19360</cve>
+    <cve>CVE-2019-12086</cve>
+    <cve>CVE-2018-14721</cve>
+    <cve>CVE-2018-14720</cve>
+  </suppress>
+  <suppress>
+    <notes>
+      External Entity (XXE) vulnerability in jaxb-impl processing. This is not an issue as there is
+      no endpoint an attacker could send the xml message to.
+    </notes>
+    <cve>CVE-2018-1000840</cve>
+  </suppress>
+  <suppress>
+    <notes>
+      This is a guava 20.0 AtomicDoubleArray deserialization issue pulled in through DDF security
+      dependencies. The DDF libraries do not appear to use the AtomicDoubleArray so this isn't an
+      issue.
+    </notes>
+    <cve>CVE-2018-10237</cve>
+  </suppress>
+</suppressions>

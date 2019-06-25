@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
+  <suppress>
+    <notes>
+      This is for a vulnerability in jackson-databind 2.9.9 coming in through the jackson-jaxrs-* artifacts.
+      This is not an issue for replication because we don't expose any json endpoints at this time.
+    </notes>
+    <cve>CVE-2019-12814</cve>
+  </suppress>
+</suppressions>
