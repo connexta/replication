@@ -1,0 +1,38 @@
+version: '3.7'
+services:
+  replication-solr:
+    image: cnxta/replication-solr:0.3.0-SNAPSHOT
+    ports:
+     - "8983:8983"
+    volumes:
+      - replication-data:/var/solr
+    networks:
+      - replication
+  ion-replication:
+    image: cnxta/replication:0.3.0-SNAPSHOT
+    networks:
+      - replication
+    secrets:
+      - source: replication-keystore
+        target: /opt/replication/config/keystores/serverKeystore.jks
+      - source: replication-truststore
+        target: /opt/replication/config/keystores/serverTruststore.jks
+      - source: replication-ssl
+        target: /opt/replication/config/ssl.properties
+    configs:
+      - source: replication-spring-config
+        target: /opt/replication/config/application.yml
+configs:
+  replication-spring-config:
+    external: true
+secrets:
+  replication-keystore:
+    external: true
+  replication-truststore:
+    external: true
+  replication-ssl:
+    external: true
+volumes:
+  replication-data:
+networks:
+  replication:

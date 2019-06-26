@@ -1,0 +1,14 @@
+logging:
+  level:
+    root: INFO
+    org.apache.cxf.interceptor.LoggingOutInterceptor: WARN
+    org.apache.cxf.interceptor.LoggingInInterceptor: WARN
+    javax.xml.soap: ERROR
+    org.codice.ditto: DEBUG
+    com.connexta: DEBUG
+spring:
+  data:
+    solr:
+      host: http://localhost:8983/solr
+replication:
+  period: 60

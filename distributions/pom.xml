@@ -25,5 +25,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>test</module>
+        <module>application</module>
+        <module>docker</module>
     </modules>
 </project>
