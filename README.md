@@ -6,30 +6,30 @@
 |SonarQube | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=replication&metric=alert_status)](https://sonarcloud.io/dashboard?id=replication)|
 |Snyk | [![Known Vulnerabilities](https://snyk.io/test/github/connexta/replication/badge.svg)](https://snyk.io/test/github/connexta/replication)|
 
-##Overview
+## Overview
 Replication is the process of creating a copy of a subset of data and storing it on another DDF or ION based System. Data can be pulled from a remote DDF and saved to another DDF or ION system. Metacards produced by replication are marked with a "Replication Origins" attribute and a tag of "replicated". Replication will automatically start transferring data once an admin creates a replication configuration.
 
 
-##Known Issues, Limitations, and Assumptions
+## Known Issues, Limitations, and Assumptions
 Replication is still at an early stage in its lifecycle, so there are a few details that the user should be aware of.
 
-####Fanout Proxies
+#### Fanout Proxies
 Replicating from a DDF system that is configured as a Fanout Proxy will result in the replication of records from sources configured in that system.
 
 Replicating to a DDF system that is configured as a Fanout Proxy will result in the replication of records only to the fanout and not its sources.
 
-####Connected Sources
+#### Connected Sources
 Replicating from a DDF sytem that is configured with Connected Sources will result in the replication of records from the Connected Sources in addition to any local records.
 
-####Derived Resources
+#### Derived Resources
 Derived resources, from products such as NITFs, will not be replicated.
 
-##Docker Compose Deployment
+# #Docker Compose Deployment
 
-####Prerequisites
+#### Prerequisites
 The replication docker stack requires the following to be configured on the swarm before deploying:
 
-######Configuration
+###### Configuration
 The configuration that replication uses that need to be populated in docker config
 
 |Config Name | Description|
@@ -53,7 +53,7 @@ replication:
   period: 300
 ```
 
-######Secrets
+###### Secrets
 Replication requires certs and ssl configurations in order to talk with remote DDF based systems. This information is stored in docker secrets.
 
 |Secret Name | Description|
@@ -71,14 +71,14 @@ javax.net.ssl.keyStoreType=jks
 ```
 Only the properties that differ from the defaults above need to be specified in replication-ssl
 
-####Running
+#### Running
 Running the stack will start up a solr service and the replication service.
 
 ```
 docker stack deploy -c docker-compose.yml repsync
 ```
 
-####Adding Replication Configuration
+#### Adding Replication Configuration
 Replication can be configured by using the Solr rest endpoint.
 ```
 curl -H "Content-Type: application/json" \
