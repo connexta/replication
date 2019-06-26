@@ -140,28 +140,28 @@ public interface ReplicationStatus extends Persistable {
   void setStatus(Status status);
 
   /**
-   * Gets the total number of items pushed (source -> destination)
+   * Gets the total number of items pushed from the source to the destination
    *
    * @return the number of items pushed
    */
   long getPushCount();
 
   /**
-   * Sets the total number of items pushed (source -> destination)
+   * Sets the total number of items pushed from the source to the destination
    *
    * @param count the number of items pushed
    */
   void setPushCount(long count);
 
   /**
-   * Gets the total number of items pulled (destination -> source)
+   * Gets the total number of items pulled from the destination to source
    *
    * @return the number of items pulled
    */
   long getPullCount();
 
   /**
-   * Sets the total number of items pulled (destination -> source)
+   * Sets the total number of items pulled from the destination to the source
    *
    * @param count the number of items pulled
    */
