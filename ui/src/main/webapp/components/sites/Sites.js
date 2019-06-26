@@ -27,6 +27,7 @@ export default function Sites(props) {
             name={site.name}
             content={site.address.url}
             id={site.id}
+            remoteManaged={site.remoteManaged}
           />
         ))}
     </Fragment>
