@@ -15,6 +15,7 @@ package com.connexta.replication.adapters.ddf;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -38,6 +39,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.ws.rs.core.MediaType;
@@ -234,6 +236,32 @@ public class DdfNodeAdapterTest {
   }
 
   @Test
+  public void createFailedItemsQueryRequest() {
+    Date modified = new Date();
+    QueryRequest request =
+        new QueryRequestImpl(
+            "title like '*'",
+            Collections.singletonList("node1"),
+            Collections.singletonList("123456789"),
+            modified);
+    assertThat(
+        adapter.createDdfFailedItemQueryRequest(request).getCql(),
+        is("[ [ \"id\" = '123456789' ] ]"));
+  }
+
+  @Test
+  public void createFailedItemsQueryRequestNoFailedIds() {
+    Date modified = new Date();
+    QueryRequest request =
+        new QueryRequestImpl(
+            "title like '*'",
+            Collections.singletonList("node1"),
+            Collections.emptyList(),
+            modified);
+    assertThat(adapter.createDdfFailedItemQueryRequest(request), is(nullValue()));
+  }
+
+  @Test
   public void createQueryFilter() {
     Date modified = new Date();
     String modifiedString = modified.toInstant().toString();
@@ -244,10 +272,10 @@ public class DdfNodeAdapterTest {
             Collections.singletonList("123456789"),
             modified);
     assertThat(
-        adapter.createQueryFilter(request),
+        adapter.createDdfQueryRequest(request).getCql(),
         is(
             String.format(
-                "[ [ [ title like '*' ] AND [ [ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ \"metacard.modified\" after %s ] ] OR [ [ \"metacard.version.versioned-on\" after %s ] AND [ \"metacard-tags\" = 'revision' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ] OR [ [ [ \"id\" = '123456789' ] OR [ [ \"metacard.version.id\" = '123456789' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ] ]",
+                "[ [ [ title like '*' ] AND [ [ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ \"metacard.modified\" after %s ] ] OR [ [ \"metacard.version.versioned-on\" after %s ] AND [ \"metacard-tags\" = 'revision' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ] OR [ [ [ \"metacard.version.id\" = '123456789' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ]",
                 modifiedString, modifiedString)));
   }
 
@@ -256,7 +284,17 @@ public class DdfNodeAdapterTest {
     QueryRequest request =
         new QueryRequestImpl("title like '*'", Collections.singletonList("node1"));
     assertThat(
-        adapter.createQueryFilter(request),
+        adapter.createDdfQueryRequest(request).getCql(),
+        is(
+            "[ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ title like '*' ] ]"));
+  }
+
+  @Test
+  public void createFilterAlreadyHasBrackets() {
+    QueryRequest request =
+        new QueryRequestImpl("[ title like '*' ]", Collections.singletonList("node1"));
+    assertThat(
+        adapter.createDdfQueryRequest(request).getCql(),
         is(
             "[ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ title like '*' ] ]"));
   }
@@ -270,7 +308,7 @@ public class DdfNodeAdapterTest {
         Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, "string", "tag"));
     map.put("title", new MetacardAttribute("title", null, "mytitle"));
 
-    return new MetadataImpl(map, Map.class, "123456789", new Date());
+    return new MetadataImpl(map, Map.class, UUID.randomUUID().toString(), new Date());
   }
 
   private Resource getResource() {

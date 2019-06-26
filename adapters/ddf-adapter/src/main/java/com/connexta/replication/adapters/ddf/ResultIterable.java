@@ -15,15 +15,18 @@ package com.connexta.replication.adapters.ddf;
 
 import static com.google.common.collect.Iterators.limit;
 import static org.apache.commons.lang.Validate.isTrue;
+import static org.apache.commons.lang.Validate.notEmpty;
 import static org.apache.commons.lang.Validate.notNull;
 
 import com.connexta.replication.data.QueryRequestImpl;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
@@ -51,20 +54,21 @@ public class ResultIterable implements Iterable<Metadata> {
 
   private final Function<QueryRequest, List<Metadata>> queryFunction;
 
-  private final QueryRequest queryRequest;
+  private final List<QueryRequest> queryRequests;
 
   private final int maxResultCount;
 
   private ResultIterable(
       Function<QueryRequest, List<Metadata>> queryFunction,
-      QueryRequest queryRequest,
+      List<QueryRequest> queryRequests,
       int maxResultCount) {
     notNull(queryFunction, "Query function cannot be null");
-    notNull(queryRequest, "Query request cannot be null");
+    queryRequests.removeIf(Objects::isNull);
+    notEmpty(queryRequests, "Must have at least one non-null query request");
     isTrue(maxResultCount >= 0, "Max Results cannot be negative", maxResultCount);
 
     this.queryFunction = queryFunction;
-    this.queryRequest = queryRequest;
+    this.queryRequests = queryRequests;
     this.maxResultCount = maxResultCount;
   }
 
@@ -74,10 +78,16 @@ public class ResultIterable implements Iterable<Metadata> {
    *
    * @param queryFunction reference to the {@link Function} to call to retrieve the results.
    * @param queryRequest request used to retrieve the results.
+   * @param queryRequests subsequent requests to retrieve results after the first is completed.
    */
   public static ResultIterable resultIterable(
-      Function<QueryRequest, List<Metadata>> queryFunction, QueryRequest queryRequest) {
-    return new ResultIterable(queryFunction, queryRequest, 0);
+      Function<QueryRequest, List<Metadata>> queryFunction,
+      @Nullable QueryRequest queryRequest,
+      QueryRequest... queryRequests) {
+    List<QueryRequest> queryRequestList = new ArrayList<>();
+    queryRequestList.add(queryRequest);
+    queryRequestList.addAll(Arrays.asList(queryRequests));
+    return new ResultIterable(queryFunction, queryRequestList, 0);
   }
 
   private static Stream<Metadata> stream(Iterator<Metadata> iterator) {
@@ -88,9 +98,9 @@ public class ResultIterable implements Iterable<Metadata> {
   @Override
   public Iterator<Metadata> iterator() {
     if (maxResultCount > 0) {
-      return limit(new ResultIterator(queryFunction, queryRequest), maxResultCount);
+      return limit(new ResultIterator(queryFunction, queryRequests), maxResultCount);
     }
-    return new ResultIterator(queryFunction, queryRequest);
+    return new ResultIterator(queryFunction, queryRequests);
   }
 
   public Stream<Metadata> stream() {
@@ -100,19 +110,27 @@ public class ResultIterable implements Iterable<Metadata> {
   private static class ResultIterator implements Iterator<Metadata> {
 
     private final Function<QueryRequest, List<Metadata>> queryFunction;
-    private final Set<String> foundIds = new HashSet<>(2048);
+    private final Iterator<QueryRequest> requestIterator;
     private int currentIndex;
-    private QueryRequest queryRequestCopy;
     private Iterator<Metadata> results = Collections.emptyIterator();
     private boolean finished = false;
 
+    /** A list of IDs kept to identify and remove duplicates in query results */
+    private final Set<String> foundIds = new HashSet<>(2048);
+
+    /** A copy of the request currently being used to fetch new results */
+    private QueryRequest currentRequestCopy;
+
     ResultIterator(
-        Function<QueryRequest, List<Metadata>> queryFunction, QueryRequest queryRequest) {
+        Function<QueryRequest, List<Metadata>> queryFunction,
+        Iterable<QueryRequest> queryRequests) {
       this.queryFunction = queryFunction;
+      this.requestIterator = queryRequests.iterator();
+      QueryRequest firstRequest = requestIterator.next();
 
-      copyQueryRequestAndQuery(queryRequest, queryRequest.getStartIndex());
+      cloneRequestAndSetStartIndex(firstRequest, firstRequest.getStartIndex());
 
-      this.currentIndex = queryRequestCopy.getStartIndex();
+      this.currentIndex = currentRequestCopy.getStartIndex();
     }
 
     @Override
@@ -150,10 +168,10 @@ public class ResultIterable implements Iterable<Metadata> {
     }
 
     private void fetchNextResults() {
-      copyQueryRequestAndQuery(queryRequestCopy, currentIndex);
+      cloneRequestAndSetStartIndex(currentRequestCopy, currentIndex);
 
       try {
-        final List<Metadata> resultList = queryFunction.apply(queryRequestCopy);
+        final List<Metadata> resultList = queryFunction.apply(currentRequestCopy);
 
         currentIndex += resultList.size();
 
@@ -168,7 +186,7 @@ public class ResultIterable implements Iterable<Metadata> {
         this.results = dedupedResults.iterator();
 
         if (dedupedResults.isEmpty()) {
-          finished = true;
+          nextRequestOrSignalFinished();
         }
       } catch (Exception e) {
         throw new ReplicationException(e);
@@ -179,9 +197,19 @@ public class ResultIterable implements Iterable<Metadata> {
       return result != null && (result.getId() == null || !foundIds.contains(result.getId()));
     }
 
-    private void copyQueryRequestAndQuery(QueryRequest request, int index) {
+    private void nextRequestOrSignalFinished() {
+      if (requestIterator.hasNext()) {
+        QueryRequest nextRequest = requestIterator.next();
+        cloneRequestAndSetStartIndex(nextRequest, nextRequest.getStartIndex());
+        currentIndex = nextRequest.getStartIndex();
+        fetchNextResults();
+      } else {
+        finished = true;
+      }
+    }
 
-      this.queryRequestCopy =
+    private void cloneRequestAndSetStartIndex(QueryRequest request, int index) {
+      this.currentRequestCopy =
           new QueryRequestImpl(
               request.getCql(),
               request.getExcludedNodes(),
