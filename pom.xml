@@ -206,7 +206,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.10.3</version>
+                    <version>2.10.4</version>
                     <configuration>
                         <aggregate>true</aggregate>
                         <show>protected</show>
@@ -216,6 +216,8 @@
                         <excludePackageNames>
                             mil.*,net.opengis.gml,us.gov.*,oasis.*,org.w3
                         </excludePackageNames>
+                        <!-- Work around for https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+                        <source>8</source>
                     </configuration>
                 </plugin>
                 <plugin>
