@@ -52,7 +52,7 @@
         <codice-test.version>0.9</codice-test.version>
         <commons.lang3.version>3.7</commons.lang3.version>
         <commons.collection4.version>4.1</commons.collection4.version>
-        <guava.version>20.0</guava.version>
+        <guava.version>28.0-jre</guava.version>
         <ogc.version>1.1.0</ogc.version>
         <thirdparty.ogc.version>1.1.0_5</thirdparty.ogc.version>
         <ogc.tools.version>1.0.3</ogc.tools.version>
@@ -61,7 +61,7 @@
         <cxf.frontend.version>3.3.2</cxf.frontend.version>
         <validation.version>1.1.0.Final</validation.version>
         <xstream.version>1.4.11.1</xstream.version>
-        <xerces.version>2.10.0</xerces.version>
+        <xerces.version>2.12.0</xerces.version>
         <jsr305.version>3.0.2_1</jsr305.version>
         <jetty.version>9.4.11.v20180605</jetty.version>
         <common.codec.version>1.11</common.codec.version>
@@ -75,7 +75,7 @@
         <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
         <maven-jacoco-plugin.version>0.8.4</maven-jacoco-plugin.version>
         <failsafe.version>1.1.0</failsafe.version>
-        <spring-data-solr.version>4.0.8.RELEASE</spring-data-solr.version>
+        <spring-data-solr.version>4.0.9.RELEASE</spring-data-solr.version>
         <opengis.version>19.1</opengis.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
         <jackson.version>2.9.9</jackson.version>
@@ -85,6 +85,7 @@
         <fabric8.docker.plugin.version>0.30.0</fabric8.docker.plugin.version>
 
         <project.report.output.directory>project-info</project.report.output.directory>
+        <owasp.version>5.0.0</owasp.version>
 
         <!-- documentation replacements -->
         <platform>DDF Base</platform>
@@ -245,7 +246,7 @@
                 <plugin>
                     <groupId>org.owasp</groupId>
                     <artifactId>dependency-check-maven</artifactId>
-                    <version>1.4.5</version>
+                    <version>${owasp.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>io.fabric8</groupId>
@@ -367,7 +368,7 @@
                         <plugin>
                             <groupId>org.owasp</groupId>
                             <artifactId>dependency-check-maven</artifactId>
-                            <version>3.1.1</version>
+                            <version>${owasp.version}</version>
                             <configuration>
                                 <!-- The following properties enable using a mirror for nist NVD data -->
                                 <cveUrl12Modified>${owasp.cveUrl12Modified}</cveUrl12Modified>
@@ -375,8 +376,18 @@
                                 <cveUrl12Base>${owasp.cveUrl12Base}</cveUrl12Base>
                                 <cveUrl20Base>${owasp.cveUrl20Base}</cveUrl20Base>
                                 <!-- End NVD mirror configuration -->
-                                <failBuildOnCVSS>7</failBuildOnCVSS>
+
+                                <failBuildOnCVSS>4</failBuildOnCVSS>
                                 <skipTestScope>true</skipTestScope>
+
+
+                                <!-- The following properties enable using a centralized nvd server -->
+                                <autoUpdate>${owasp.autoUpdate}</autoUpdate>
+                                <databaseDriverName>${owasp.database.driverName}</databaseDriverName>
+                                <connectionString>${owasp.database.url}</connectionString>
+                                <serverId>${owasp.serverId}</serverId>
+                                <!-- End Centralized NVD Server Configuration -->
+
                                 <!--Disable by plugin maintainer recommendation on https://github.com/jeremylong/DependencyCheck/issues/978#issuecomment-349620687-->
                                 <centralAnalyzerEnabled>false</centralAnalyzerEnabled>
                                 <!--Disable because we have a separate NSP analysis step and this plugin has no way to suppress NSP issues as of 3.0.2-->
@@ -392,13 +403,6 @@
                                 <autoconfAnalyzerEnabled>false</autoconfAnalyzerEnabled>
                                 <rubygemsAnalyzerEnabled>false</rubygemsAnalyzerEnabled>
                                 <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
-                                <!--Always include root-level suppression file-->
-                                <suppressionFiles>
-                                    <suppressionFile>
-                                        <!--IDE can show variable as undefined because a plugin dynamically creates the property-->
-                                        ${highest-basedir}/dependency-check-maven-config.xml
-                                    </suppressionFile>
-                                </suppressionFiles>
                             </configuration>
                             <executions>
                                 <execution>
@@ -408,6 +412,13 @@
                                     </goals>
                                 </execution>
                             </executions>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.mariadb.jdbc</groupId>
+                                    <artifactId>mariadb-java-client</artifactId>
+                                    <version>2.4.1</version>
+                                </dependency>
+                            </dependencies>
                         </plugin>
                     </plugins>
                 </pluginManagement>

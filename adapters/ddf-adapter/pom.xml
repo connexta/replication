@@ -46,16 +46,54 @@
       <groupId>ddf.platform.security</groupId>
       <artifactId>security-rest-clientapi</artifactId>
       <version>${ddf.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>net.sf.ehcache</groupId>
+          <artifactId>ehcache</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>ddf.security.core</groupId>
       <artifactId>security-core-api</artifactId>
       <version>${ddf.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.karaf.jaas</groupId>
+          <artifactId>org.apache.karaf.jaas.boot</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>net.sf.ehcache</groupId>
+          <artifactId>ehcache</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>ddf.security</groupId>
       <artifactId>ddf-security-common</artifactId>
       <version>${ddf.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.karaf.jaas</groupId>
+          <artifactId>org.apache.karaf.jaas.boot</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.geronimo.javamail</groupId>
+          <artifactId>geronimo-javamail_1.4_mail</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.codice.ddf.spatial</groupId>
@@ -66,6 +104,12 @@
       <groupId>ddf.platform.util</groupId>
       <artifactId>platform-util</artifactId>
       <version>${ddf.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>ddf.platform.security</groupId>
@@ -77,6 +121,11 @@
       <artifactId>cxf-rt-frontend-jaxrs</artifactId>
       <version>${cxf.frontend.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
 
 
     <!-- XML dependencies -->
@@ -84,11 +133,6 @@
       <groupId>javax.xml.soap</groupId>
       <artifactId>javax.xml.soap-api</artifactId>
       <version>${javax.xml.soap.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet.ogc</groupId>
-      <artifactId>ogc-tools-gml-jts</artifactId>
-      <version>${ogc.tools.version}</version>
     </dependency>
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
@@ -211,4 +255,27 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>owasp</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <configuration>
+              <suppressionFiles>
+                <suppressionFile>
+                  ${basedir}/owasp-suppressions.xml
+                </suppressionFile>
+              </suppressionFiles>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
