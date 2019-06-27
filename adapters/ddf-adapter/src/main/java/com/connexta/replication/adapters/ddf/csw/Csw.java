@@ -32,6 +32,7 @@ public interface Csw {
    * @param request
    * @return
    */
+  @SuppressWarnings("squid:S00112" /* Pulled from DDF to match that interface */)
   @POST
   @Consumes({MediaType.TEXT_XML, MediaType.APPLICATION_XML})
   @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_XML})
@@ -43,6 +44,7 @@ public interface Csw {
    * @param request
    * @return
    */
+  @SuppressWarnings("squid:S00112" /* Pulled from DDF to match that interface */)
   @POST
   @Consumes({MediaType.TEXT_XML, MediaType.APPLICATION_XML})
   @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_XML})

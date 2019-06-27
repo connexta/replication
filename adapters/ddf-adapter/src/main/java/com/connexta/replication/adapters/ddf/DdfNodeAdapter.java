@@ -398,17 +398,21 @@ public class DdfNodeAdapter implements NodeAdapter {
       deletedFilters.add(after(VERSIONED_ON, modifiedAfter));
       deletedFilters.add(equalTo(METACARD_TAGS, VERSION_TAG));
       deletedFilters.add(like(ACTION, "Deleted*"));
-      LOGGER.debug("Time and type filter: {}", allOf(filters));
-      LOGGER.debug("Deleted items filter: {}", allOf(deletedFilters));
-      finalFilter = allOf(cql, anyOf(allOf(filters), allOf(deletedFilters)));
+
+      String timeTypeFilter = allOf(filters);
+      String deletedItemsFilter = allOf(deletedFilters);
+      LOGGER.debug("Time and type filter: {}", timeTypeFilter);
+      LOGGER.debug("Deleted items filter: {}", deletedItemsFilter);
+      finalFilter = allOf(cql, anyOf(timeTypeFilter, deletedItemsFilter));
     } else {
       filters.add(cql);
       finalFilter = allOf(filters);
     }
 
     if (!failedItemFilters.isEmpty()) {
-      LOGGER.debug("Failed items filter: {}", anyOf(failedItemFilters));
-      finalFilter = anyOf(finalFilter, anyOf(failedItemFilters));
+      String failedItemsFilter = anyOf(failedItemFilters);
+      LOGGER.debug("Failed items filter: {}", failedItemsFilter);
+      finalFilter = anyOf(finalFilter, failedItemsFilter);
     }
     LOGGER.debug("Final cql query filter: {}", finalFilter);
     return finalFilter;

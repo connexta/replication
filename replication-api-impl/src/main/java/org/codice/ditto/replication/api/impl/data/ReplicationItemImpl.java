@@ -66,10 +66,6 @@ public class ReplicationItemImpl implements ReplicationItem {
       String configId,
       int failureCount) {
     this.id = notBlank(metadataId);
-    // TODO these dates don't matter for delete requests that fail. Need to make a way to
-    // instantiate a failed ReplicationItem for failed deletes.
-    //    this.resourceModified = notNull(resourceModified);
-    //    this.metadataModified = notNull(metadataModified);
     this.resourceModified = resourceModified;
     this.metadataModified = metadataModified;
     this.source = notBlank(source);
