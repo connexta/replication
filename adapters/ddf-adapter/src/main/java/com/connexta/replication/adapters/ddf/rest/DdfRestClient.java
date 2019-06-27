@@ -137,7 +137,7 @@ public class DdfRestClient {
         null,
         (InputStream) response.getEntity(),
         response.getMediaType().toString(),
-        response.getLength(),
+        metadata.getResourceSize(),
         metadata);
   }
 
