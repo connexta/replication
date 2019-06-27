@@ -142,13 +142,13 @@ public class DdfRestClientTest {
   @Test
   public void getResource() {
     Metadata metadata = getMetadata("123456789");
+    metadata.setResourceSize(123L);
     Response response = mock(Response.class);
     when(response.getHeaderString("Content-Disposition")).thenReturn("filename=myfile.txt");
     StatusType status = mock(StatusType.class);
     when(status.getFamily()).thenReturn(Family.SUCCESSFUL);
     when(response.getStatusInfo()).thenReturn(status);
     when(response.getMediaType()).thenReturn(MediaType.APPLICATION_OCTET_STREAM_TYPE);
-    when(response.getLength()).thenReturn(123);
     when(webClient.get()).thenReturn(response);
     when(webClient.getCurrentURI())
         .thenReturn(URI.create("https://host:1234/context/catalog/123456789"));

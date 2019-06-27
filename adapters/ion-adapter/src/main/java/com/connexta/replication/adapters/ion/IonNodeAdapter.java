@@ -131,7 +131,7 @@ public class IonNodeAdapter implements NodeAdapter {
         ResponseEntity<String> response =
             restOps.exchange(
                 this.ionUrl.toString() + "/ingest", HttpMethod.POST, requestEntity, String.class);
-        if (response.getStatusCodeValue() != 202) {
+        if (!response.getStatusCode().is2xxSuccessful()) {
           LOGGER.debug(
               "Failed to replicate {}. Message: {}", resource.getName(), response.getBody());
           success = false;

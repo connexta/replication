@@ -80,22 +80,33 @@ public class IonNodeAdapterTest {
   }
 
   @Test
-  public void createResourceFailed401() {
+  public void createResource200() {
     mockServer
         .expect(requestTo("http://localhost:1234/ingest"))
         .andExpect(method(HttpMethod.POST))
-        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.UNAUTHORIZED));
+        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.OK));
+
+    assertThat(adapter.createResource(getCreateStorageRequest()), is(true));
+    mockServer.verify();
+  }
+
+  @Test
+  public void createResourceFailed300() {
+    mockServer
+        .expect(requestTo("http://localhost:1234/ingest"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.MULTIPLE_CHOICES));
 
     assertThat(adapter.createResource(getCreateStorageRequest()), is(false));
     mockServer.verify();
   }
 
   @Test
-  public void createResourceFailed200() {
+  public void createResourceFailed401() {
     mockServer
         .expect(requestTo("http://localhost:1234/ingest"))
         .andExpect(method(HttpMethod.POST))
-        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.OK));
+        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.UNAUTHORIZED));
 
     assertThat(adapter.createResource(getCreateStorageRequest()), is(false));
     mockServer.verify();
