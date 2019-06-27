@@ -21,23 +21,68 @@
         <version>2.1.5.RELEASE</version>
     </parent>
 
-    <groupId>replication</groupId>
-    <artifactId>replication</artifactId>
+    <name>Replication :: Service</name>
+    <groupId>com.connexta.ion.replication</groupId>
+    <artifactId>replication-service</artifactId>
     <version>0.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Replication</name>
+    <inceptionYear>2018</inceptionYear>
+
     <organization>
         <name>Connexta</name>
+        <url>https://connexta.com/</url>
     </organization>
+
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public v3</name>
+            <url>http://www.gnu.org/licenses/lgpl.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>http://github.com/connexta/replication.git</url>
+        <connection>scm:git:http://github.com/connexta/replication.git</connection>
+        <developerConnection>scm:git:http://github.com/connexta/replication.git
+        </developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ion-snapshots</id>
+            <url>http://nexus.phx.connexta.com:8081/nexus/content/repositories/ion-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>ion-releases</id>
+            <url>http://nexus.phx.connexta.com:8081/nexus/content/repositories/ion-releases/</url>
+        </repository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>ossrh</id>
+            <name>OSSRH Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <layout>default</layout>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <java.version>1.11</java.version>
         <snapshots.repository.url />
         <releases.repository.url />
-        <admin-query.version>1.2.8-SNAPSHOT</admin-query.version>
         <ddf.support.version>2.3.12</ddf.support.version>
-        <ddf.version>2.13.10</ddf.version>
+        <ddf.version>2.16.0</ddf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <surefire.version>2.22.1</surefire.version>
 
@@ -84,32 +129,27 @@
         <annotation.version>1.3.1</annotation.version>
         <reactive-streams.version>1.0.2</reactive-streams.version>
         <fabric8.docker.plugin.version>0.30.0</fabric8.docker.plugin.version>
-
         <project.report.output.directory>project-info</project.report.output.directory>
         <owasp.version>5.0.0</owasp.version>
+        <slf4j.version>1.7.1</slf4j.version>
+        <gpg-plugin.version>1.6</gpg-plugin.version>
 
         <!-- documentation replacements -->
         <platform>DDF Base</platform>
         <admin-console>Admin Console</admin-console>
         <command-console>Command Console</command-console>
     </properties>
-    <scm>
-        <url>http://github.com/connexta/replication.git</url>
-        <connection>scm:git:http://github.com/connexta/replication.git</connection>
-        <developerConnection>scm:git:http://github.com/connexta/replication.git
-        </developerConnection>
-        <tag>HEAD</tag>
-    </scm>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <url>${snapshots.repository.url}</url>
-        </snapshotRepository>
-        <repository>
-            <id>releases</id>
-            <url>${releases.repository.url}</url>
-        </repository>
-    </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter</artifactId>
+                <version>${spring-boot-starter.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <!--Hamcrest first, then JUnit, then Mockito. See http://goo.gl/e5bJA5-->
@@ -423,6 +463,24 @@
                                 </dependency>
                             </dependencies>
                         </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-gpg-plugin</artifactId>
+                            <version>${gpg-plugin.version}</version>
+                            <configuration>
+                                <passphraseServerId>ion-signing</passphraseServerId>
+                                <useAgent>false</useAgent>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>sign-artifacts</id>
+                                    <phase>verify</phase>
+                                    <goals>
+                                        <goal>sign</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
                     </plugins>
                 </pluginManagement>
                 <plugins>
@@ -524,21 +582,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <reporting>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-checkstyle-plugin</artifactId>
-                        <version>${maven-checkstyle-plugin.version}</version>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.owasp</groupId>
-                        <artifactId>dependency-check-maven</artifactId>
-                    </plugin>
-                </plugins>
-            </reporting>
         </profile>
         <profile>
             <id>release</id>
@@ -546,94 +589,21 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <artifactId>maven-source-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>attach-sources</id>
-                                    <goals>
-                                        <goal>jar-no-fork</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
                 <plugins>
                     <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>generate-javadocs</id>
-                                <goals>
-                                    <goal>aggregate</goal>
-                                </goals>
-                                <phase>pre-site</phase>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/docs/
-                                    </outputDirectory>
-                                    <reportOutputDirectory>
-                                        ${project.reporting.outputDirectory}/docs/
-                                    </reportOutputDirectory>
-                                    <destDir>api</destDir>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-gpg-plugin</artifactId>
                     </plugin>
                 </plugins>
             </build>
-            <reporting>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-project-info-reports-plugin</artifactId>
-                        <version>2.7</version>
-                        <reportSets>
-                            <reportSet>
-                                <reports>
-                                </reports>
-                            </reportSet>
-                        </reportSets>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.owasp</groupId>
-                        <artifactId>dependency-check-maven</artifactId>
-                        <reportSets>
-                            <reportSet>
-                                <reports>
-                                    <report>aggregate</report>
-                                </reports>
-                            </reportSet>
-                        </reportSets>
-                    </plugin>
-                </plugins>
-            </reporting>
         </profile>
     </profiles>
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>Central Repository</name>
-            <url>https://repo.maven.apache.org/maven2</url>
-            <layout>default</layout>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>codice</id>
-            <name>Codice Repository</name>
-            <url>https://artifacts.codice.org/content/groups/public/</url>
-        </repository>
-    </repositories>
+
     <pluginRepositories>
         <pluginRepository>
             <id>central</id>

@@ -4,23 +4,22 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <artifactId>adapters</artifactId>
-    <groupId>replication</groupId>
+    <groupId>com.connexta.ion.replication.adapters</groupId>
     <version>0.3.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>ion-adapter</artifactId>
   <name>Replication :: Adapters :: ION</name>
-  <groupId>replication-adapters</groupId>
 
   <dependencies>
     <dependency>
-      <groupId>replication</groupId>
+      <groupId>com.connexta.ion.replication</groupId>
       <artifactId>replication-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>replication</groupId>
+      <groupId>com.connexta.ion.replication</groupId>
       <artifactId>commons</artifactId>
       <version>${project.version}</version>
     </dependency>
