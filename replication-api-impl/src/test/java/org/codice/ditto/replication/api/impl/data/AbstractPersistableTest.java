@@ -17,7 +17,6 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.util.UUID;
 import org.junit.Test;
 
 public class AbstractPersistableTest {
@@ -28,12 +27,6 @@ public class AbstractPersistableTest {
     AbstractPersistable persistable = new TestPersistable();
     persistable.setId(id);
     assertThat(persistable.getId(), equalTo(id));
-  }
-
-  @Test
-  public void generateId() {
-    AbstractPersistable persistable = new TestPersistable();
-    UUID.fromString(persistable.getId()); // will throw an exception if a valid id wasn't generated
   }
 
   @Test

@@ -165,8 +165,10 @@ public class CswRecordConverter implements Converter {
               IOUtils.toInputStream(writer.toString(), StandardCharsets.UTF_8.name())),
           parser);
     } catch (IOException e) {
-      LOGGER.debug("Unable create reader with UTF-8 encoding, Exception {}", e);
-      return new XppReader(new InputStreamReader(IOUtils.toInputStream(writer.toString())), parser);
+      LOGGER.debug("Unable create reader with UTF-8 encoding", e);
+      return new XppReader(
+          new InputStreamReader(IOUtils.toInputStream(writer.toString(), StandardCharsets.UTF_8)),
+          parser);
     }
   }
 
@@ -175,7 +177,7 @@ public class CswRecordConverter implements Converter {
       return null;
     }
     /* Dates are strings and expected to be in ISO8601 format, YYYY-MM-DD'T'hh:mm:ss.sss,
-    per annotations in the CSW Record schema. At least the date portion must be present;
+    per annotations in the CSW Record schema. At least the date portion must be present -
     the time zone and time are optional.*/
     try {
       return ISODateTimeFormat.dateOptionalTimeParser().parseDateTime(value.getValue()).toDate();

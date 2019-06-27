@@ -91,17 +91,17 @@ public class GetRecordsMessageBodyReader implements MessageBodyReader<CswRecordC
 
     // Save original input stream for any exception message that might need to be
     // created
-    String originalInputStream = IOUtils.toString(inStream, "UTF-8");
+    String originalInputStream = IOUtils.toString(inStream, StandardCharsets.UTF_8);
     LOGGER.trace("Converting to CswRecordCollection: \n {}", originalInputStream);
 
     // Re-create the input stream (since it has already been read for potential
     // exception message creation)
-    inStream = new ByteArrayInputStream(originalInputStream.getBytes("UTF-8"));
+    inStream = new ByteArrayInputStream(originalInputStream.getBytes(StandardCharsets.UTF_8));
 
-    try {
+    try (InputStream stream = inStream) {
       HierarchicalStreamReader reader =
           new XppReader(
-              new InputStreamReader(inStream, StandardCharsets.UTF_8),
+              new InputStreamReader(stream, StandardCharsets.UTF_8),
               XmlPullParserFactory.newInstance().newPullParser());
       cswRecords = (CswRecordCollection) xstream.unmarshal(reader, null, argumentHolder);
     } catch (XmlPullParserException e) {
@@ -122,9 +122,8 @@ public class GetRecordsMessageBodyReader implements MessageBodyReader<CswRecordC
       responseBuilder.type("text/xml");
       Response response = responseBuilder.build();
       throw new WebApplicationException(e, response);
-    } finally {
-      IOUtils.closeQuietly(inStream);
     }
+
     return cswRecords;
   }
 }
