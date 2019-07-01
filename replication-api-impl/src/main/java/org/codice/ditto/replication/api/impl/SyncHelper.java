@@ -163,9 +163,9 @@ class SyncHelper {
       mcard = metacardResult.getMetacard();
       existingReplicationItem = persistentStore.getItem(mcard.getId(), sourceName, destinationName);
 
-      boolean deletedMetacard = isDeletedMetacard();
+      boolean isDeletedMetacard = isDeletedMetacard();
       try {
-        process(deletedMetacard);
+        process(isDeletedMetacard);
       } catch (Exception e) {
         if (causedByConnectionLoss(e)) {
           logConnectionLoss();
@@ -177,7 +177,7 @@ class SyncHelper {
       }
 
       final Date modifiedDate;
-      if (deletedMetacard) {
+      if (isDeletedMetacard) {
         modifiedDate = (Date) mcard.getAttribute(MetacardVersion.VERSIONED_ON).getValue();
       } else {
         modifiedDate = (Date) mcard.getAttribute(Core.METACARD_MODIFIED).getValue();
@@ -187,8 +187,9 @@ class SyncHelper {
   }
 
   @SuppressWarnings("squid:S3655" /*isUpdatable performs the needed optional check*/)
-  private void process(boolean deletedMetacard) throws IngestException, SourceUnavailableException {
-    if (deletedMetacard) {
+  private void process(boolean isDeletedMetacard)
+      throws IngestException, SourceUnavailableException {
+    if (isDeletedMetacard) {
       processDeletedMetacard();
     } else if (isUpdatable()) {
       processUpdate(existingReplicationItem.get());
