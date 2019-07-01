@@ -105,3 +105,17 @@ of the replication configuration regardless of the results of the above options.
 
 To view a list of all currently saved replication configurations, simply execute `replication:config-list`
 in the ${command-console}.
+
+=== Setting Timeouts
+
+By default, requests made by the replication feature have a connection timeout of 30 seconds and a receive
+timeout of 60 seconds. If your network is slow, or the ${branding} you are trying to replicate with is
+slow to respond, these timeouts can be increased to allow more time for transferring information.
+Here's how you can set these timeouts:
+
+. Navigate to the `<${branding}-home>/etc` directory.
+. Open the `custom.system.properties` file.
+. Create an entry specifying the connection timeout in seconds ex: `replication.connection.timeout=30`.
+. Create an entry specifying the receive timeout in seconds ex: `replication.receive.timeout=60`.
+. Save the file.
+. Restart the ${branding} if it is running.

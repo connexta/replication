@@ -49,7 +49,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
-import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -91,6 +90,10 @@ public class HybridStore extends AbstractCswStore implements ReplicationStore {
 
   private static final String CONTENT_DISPOSITION = "Content-Disposition";
 
+  private static final int DEFAULT_CONNECTION_TIMEOUT = 30;
+
+  private static final int DEFAULT_RECEIVE_TIMEOUT = 60;
+
   private SecureCxfClientFactory<RESTService> restClientFactory;
 
   private String remoteName;
@@ -101,11 +104,9 @@ public class HybridStore extends AbstractCswStore implements ReplicationStore {
       Converter provider,
       ClientFactoryFactory clientFactoryFactory,
       EncryptionService encryptionService,
-      URL url) {
+      SecureCxfClientFactory<RESTService> restClientFactory) {
     super(context, cswSourceConfiguration, provider, clientFactoryFactory, encryptionService);
-    this.restClientFactory =
-        clientFactoryFactory.getSecureCxfClientFactory(
-            url.toString() + "/catalog", RESTService.class);
+    this.restClientFactory = restClientFactory;
   }
 
   @Override

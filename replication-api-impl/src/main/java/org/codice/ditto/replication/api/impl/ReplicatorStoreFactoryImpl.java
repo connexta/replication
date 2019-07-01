@@ -15,6 +15,7 @@ package org.codice.ditto.replication.api.impl;
 
 import static org.codice.ddf.spatial.ogc.csw.catalog.common.CswAxisOrder.LON_LAT;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.thoughtworks.xstream.converters.Converter;
 import ddf.catalog.CatalogFramework;
 import ddf.catalog.filter.FilterAdapter;
@@ -23,8 +24,11 @@ import ddf.catalog.resource.ResourceReader;
 import ddf.security.encryption.EncryptionService;
 import ddf.security.service.SecurityManager;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
+import org.codice.ddf.cxf.client.SecureCxfClientFactory;
+import org.codice.ddf.endpoints.rest.RESTService;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswAxisOrder;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswSourceConfiguration;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter;
@@ -32,8 +36,12 @@ import org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerMana
 import org.codice.ditto.replication.api.ReplicationStore;
 import org.codice.ditto.replication.api.ReplicatorStoreFactory;
 import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicatorStoreFactoryImpl.class);
 
   private static final String ID = "CSWFederatedSource";
 
@@ -45,9 +53,9 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   private static final Integer POLL_INTERVAL_MINUTES = 5;
 
-  private static final Integer CONNECTION_TIMEOUT = 30000;
+  private static final Integer DEFAULT_CONNECTION_TIMEOUT_SECS = 30;
 
-  private static final Integer RECEIVE_TIMEOUT = 60000;
+  private static final Integer DEFAULT_RECEIVE_TIMEOUT_SECS = 60;
 
   private static final boolean IS_CQL_FORCED = false;
 
@@ -82,15 +90,66 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
   private CatalogFramework framework;
 
   public ReplicationStore createReplicatorStore(URL url) {
-
     if (url.toString().startsWith(SystemBaseUrl.INTERNAL.getBaseUrl())
         || url.toString().startsWith(SystemBaseUrl.EXTERNAL.getBaseUrl())) {
       return new LocalCatalogResourceStore(framework);
     }
 
+    HybridStore hybridStore = createHybridStore(url);
+    hybridStore.init();
+
+    return hybridStore;
+  }
+
+  @VisibleForTesting
+  HybridStore createHybridStore(URL url) {
+    int connectionTimeout =
+        Integer.getInteger("replication.connection.timeout", DEFAULT_CONNECTION_TIMEOUT_SECS);
+    int receiveTimeout =
+        Integer.getInteger("replication.receive.timeout", DEFAULT_RECEIVE_TIMEOUT_SECS);
+    LOGGER.debug(
+        "Creating a HybridStore with a connection timeout of {} and a receive timeout of {}",
+        connectionTimeout,
+        receiveTimeout);
+
+    int connectionTimeoutMs = Math.toIntExact(TimeUnit.SECONDS.toMillis(connectionTimeout));
+    int receiveTimeoutMs = Math.toIntExact(TimeUnit.SECONDS.toMillis(receiveTimeout));
+    SecureCxfClientFactory<RESTService> restClientFactory =
+        clientFactoryFactory.getSecureCxfClientFactory(
+            url.toString() + "/catalog",
+            RESTService.class,
+            null,
+            null,
+            false,
+            false,
+            connectionTimeoutMs,
+            receiveTimeoutMs);
+    CswSourceConfiguration cswConfig = createCswConfig(url, connectionTimeoutMs, receiveTimeoutMs);
+
+    HybridStore hybridStore =
+        new HybridStore(
+            bundleContext,
+            cswConfig,
+            provider,
+            clientFactoryFactory,
+            encryptionService,
+            restClientFactory);
+    hybridStore.setFilterBuilder(filterBuilder);
+    hybridStore.setFilterAdapter(filterAdapter);
+    hybridStore.setResourceReader(resourceReader);
+    hybridStore.setSecurityManager(securityManager);
+    hybridStore.setSchemaTransformerManager(metacardTransformerManager);
+    hybridStore.setCswTransactionWriter(cswTransactionWriter);
+
+    return hybridStore;
+  }
+
+  @VisibleForTesting
+  CswSourceConfiguration createCswConfig(URL url, int connectionTimeoutMs, int receiveTimeoutMs) {
     CswSourceConfiguration cswConfiguration = new CswSourceConfiguration(encryptionService);
     cswConfiguration.setCswUrl(url.toString() + "/csw");
-    cswConfiguration.setConnectionTimeout(CONNECTION_TIMEOUT);
+    cswConfiguration.setConnectionTimeout(connectionTimeoutMs);
+    cswConfiguration.setReceiveTimeout(receiveTimeoutMs);
     cswConfiguration.setCswAxisOrder(COORDINATE_ORDER);
     cswConfiguration.setDisableCnCheck(DISABLE_CN_CHECK);
     cswConfiguration.setIsCqlForced(IS_CQL_FORCED);
@@ -101,27 +160,9 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
     cswConfiguration.setPollIntervalMinutes(POLL_INTERVAL_MINUTES);
     cswConfiguration.setQueryTypeNamespace(QUERY_TYPE_NAMESPACE);
     cswConfiguration.setQueryTypeName(QUERY_TYPE_NAME);
-    cswConfiguration.setReceiveTimeout(RECEIVE_TIMEOUT);
     cswConfiguration.setUsePosList(USE_POS_LIST);
     cswConfiguration.setRegisterForEvents(REGISTER_FOR_EVENTS);
-
-    HybridStore hybridStore =
-        new HybridStore(
-            bundleContext,
-            cswConfiguration,
-            provider,
-            clientFactoryFactory,
-            encryptionService,
-            url);
-    hybridStore.setFilterBuilder(filterBuilder);
-    hybridStore.setFilterAdapter(filterAdapter);
-    hybridStore.setResourceReader(resourceReader);
-    hybridStore.setSecurityManager(securityManager);
-    hybridStore.setSchemaTransformerManager(metacardTransformerManager);
-    hybridStore.setCswTransactionWriter(cswTransactionWriter);
-    hybridStore.init();
-
-    return hybridStore;
+    return cswConfiguration;
   }
 
   public void setBundleContext(BundleContext bundleContext) {
