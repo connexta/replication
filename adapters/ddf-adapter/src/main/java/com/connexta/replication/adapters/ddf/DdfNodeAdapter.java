@@ -31,10 +31,7 @@ import static com.connexta.replication.adapters.ddf.csw.Constants.VERSION_TAG;
 
 import com.connexta.replication.adapters.ddf.csw.Constants;
 import com.connexta.replication.adapters.ddf.csw.Csw;
-import com.connexta.replication.adapters.ddf.csw.CswJAXBElementProvider;
 import com.connexta.replication.adapters.ddf.csw.CswRecordCollection;
-import com.connexta.replication.adapters.ddf.csw.CswResponseExceptionMapper;
-import com.connexta.replication.adapters.ddf.csw.GetRecordsMessageBodyReader;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClient;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
 import com.connexta.replication.data.QueryRequestImpl;
@@ -48,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -58,12 +54,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.xml.namespace.QName;
-import net.opengis.cat.csw.v_2_0_2.AcknowledgementType;
 import net.opengis.cat.csw.v_2_0_2.CapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.ElementSetNameType;
 import net.opengis.cat.csw.v_2_0_2.ElementSetType;
 import net.opengis.cat.csw.v_2_0_2.GetCapabilitiesType;
-import net.opengis.cat.csw.v_2_0_2.GetRecordsResponseType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsType;
 import net.opengis.cat.csw.v_2_0_2.ObjectFactory;
 import net.opengis.cat.csw.v_2_0_2.QueryConstraintType;
@@ -73,7 +67,6 @@ import net.opengis.filter.v_1_1_0.PropertyNameType;
 import net.opengis.filter.v_1_1_0.SortByType;
 import net.opengis.filter.v_1_1_0.SortOrderType;
 import net.opengis.filter.v_1_1_0.SortPropertyType;
-import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
@@ -92,6 +85,7 @@ import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** An adapter used for communicating with a DDF node. */
 public class DdfNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DdfNodeAdapter.class);
@@ -104,65 +98,20 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   private SecureCxfClientFactory<Csw> factory;
 
-  private List<String> jaxbElementClassNames = new ArrayList<>();
-
-  private Map<String, String> jaxbElementClassMap = new HashMap<>();
-
+  /**
+   * Creates a DdfNodeAdapter.
+   *
+   * @param ddfRestClientFactory a factory for creating rest clients
+   * @param ddfCswClientFactory a factory for creating csw clients
+   * @param hostUrl the url of the DDF to create clients for
+   */
   public DdfNodeAdapter(
-      DdfRestClientFactory ddfRestClientFactory, ClientFactoryFactory clientFactory, URL hostUrl) {
+      DdfRestClientFactory ddfRestClientFactory,
+      SecureCxfClientFactory<Csw> ddfCswClientFactory,
+      URL hostUrl) {
     this.ddfRestClientFactory = ddfRestClientFactory;
     this.hostUrl = hostUrl;
-    factory =
-        clientFactory.getSecureCxfClientFactory(
-            hostUrl.toString() + "/csw",
-            Csw.class,
-            initProviders(),
-            null,
-            true,
-            false,
-            30000,
-            30000);
-  }
-
-  private List<Object> initProviders() {
-
-    CswJAXBElementProvider getRecordsTypeProvider = new CswJAXBElementProvider<>();
-    getRecordsTypeProvider.setMarshallAsJaxbElement(true);
-
-    // Adding class names that need to be marshalled/unmarshalled to
-    // jaxbElementClassNames list
-    jaxbElementClassNames.add(GetRecordsType.class.getName());
-    jaxbElementClassNames.add(CapabilitiesType.class.getName());
-    jaxbElementClassNames.add(GetCapabilitiesType.class.getName());
-    jaxbElementClassNames.add(GetRecordsResponseType.class.getName());
-    jaxbElementClassNames.add(AcknowledgementType.class.getName());
-
-    getRecordsTypeProvider.setJaxbElementClassNames(jaxbElementClassNames);
-
-    // Adding map entry of <Class Name>,<Qualified Name> to jaxbElementClassMap
-    String expandedName = new QName(Constants.CSW_OUTPUT_SCHEMA, Constants.GET_RECORDS).toString();
-    String message = "{} expanded name: {}";
-    LOGGER.debug(message, Constants.GET_RECORDS, expandedName);
-    jaxbElementClassMap.put(GetRecordsType.class.getName(), expandedName);
-
-    String getCapsExpandedName =
-        new QName(Constants.CSW_OUTPUT_SCHEMA, Constants.GET_CAPABILITIES).toString();
-    LOGGER.debug(message, Constants.GET_CAPABILITIES, expandedName);
-    jaxbElementClassMap.put(GetCapabilitiesType.class.getName(), getCapsExpandedName);
-
-    String capsExpandedName =
-        new QName(Constants.CSW_OUTPUT_SCHEMA, Constants.CAPABILITIES).toString();
-    LOGGER.debug(message, Constants.CAPABILITIES, capsExpandedName);
-    jaxbElementClassMap.put(CapabilitiesType.class.getName(), capsExpandedName);
-
-    String acknowledgmentName =
-        new QName(Constants.CSW_OUTPUT_SCHEMA, "Acknowledgement").toString();
-    jaxbElementClassMap.put(AcknowledgementType.class.getName(), acknowledgmentName);
-    getRecordsTypeProvider.setJaxbElementClassMap(jaxbElementClassMap);
-
-    GetRecordsMessageBodyReader grmbr = new GetRecordsMessageBodyReader();
-
-    return Arrays.asList(getRecordsTypeProvider, new CswResponseExceptionMapper(), grmbr);
+    this.factory = ddfCswClientFactory;
   }
 
   @Override

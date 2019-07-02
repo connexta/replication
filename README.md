@@ -45,6 +45,8 @@ spring:
       host: http://replication-solr:8983/solr
 replication:
   period: 300
+  connectionTimeout: 30
+  receiveTimeout: 60
 ```
 
 ###### Secrets

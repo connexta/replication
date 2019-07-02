@@ -13,15 +13,29 @@
  */
 package com.connexta.replication.adapters.ion.spring;
 
+import com.connexta.replication.adapters.ion.IonNodeAdapter;
 import com.connexta.replication.adapters.ion.IonNodeAdapterFactory;
+import com.connexta.replication.spring.ReplicationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
+/** A class for instantiating beans in this module */
 @Configuration("ion-adapter")
 public class ServiceConfig {
 
+  /**
+   * Instantiates an {@link IonNodeAdapterFactory} bean.
+   *
+   * @param replicationProperties application properties containing the timeouts for any client this
+   *     factory creates
+   * @return A factory for creating {@link IonNodeAdapter}s
+   */
   @Bean
-  public IonNodeAdapterFactory ionNodeAdapterFactory() {
-    return new IonNodeAdapterFactory();
+  public IonNodeAdapterFactory ionNodeAdapterFactory(ReplicationProperties replicationProperties) {
+    return new IonNodeAdapterFactory(
+        new SimpleClientHttpRequestFactory(),
+        replicationProperties.getConnectionTimeout(),
+        replicationProperties.getReceiveTimeout());
   }
 }

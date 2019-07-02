@@ -27,8 +27,23 @@ public class DdfRestClientFactory {
 
   private final ClientFactoryFactory clientFactoryFactory;
 
-  public DdfRestClientFactory(ClientFactoryFactory clientFactoryFactory) {
+  private final int connectionTimeout;
+
+  private final int receiveTimeout;
+
+  /**
+   * creates a DdfRestClientFactory
+   *
+   * @param clientFactoryFactory a factory for the {@link SecureCxfClientFactory}s which will create
+   *     the rest clients
+   * @param connectionTimeout the connection timeout for clients created by this factory
+   * @param receiveTimeout the receive timeout for clients created by this factory
+   */
+  public DdfRestClientFactory(
+      ClientFactoryFactory clientFactoryFactory, int connectionTimeout, int receiveTimeout) {
     this.clientFactoryFactory = clientFactoryFactory;
+    this.connectionTimeout = connectionTimeout;
+    this.receiveTimeout = receiveTimeout;
   }
 
   /**
@@ -47,7 +62,15 @@ public class DdfRestClientFactory {
 
     WebClient whoamiClient =
         clientFactoryFactory
-            .getSecureCxfClientFactory(pathlessUrl, RESTService.class)
+            .getSecureCxfClientFactory(
+                pathlessUrl,
+                RESTService.class,
+                null,
+                null,
+                false,
+                false,
+                connectionTimeout,
+                receiveTimeout)
             .getWebClient();
     whoamiClient.path("/whoami");
     whoamiClient.accept(MediaType.APPLICATION_XML);
@@ -62,7 +85,14 @@ public class DdfRestClientFactory {
   private WebClient initializeClient(URL url) {
     final SecureCxfClientFactory<RESTService> restClientFactory =
         clientFactoryFactory.getSecureCxfClientFactory(
-            url + DEFAULT_REST_ENDPOINT, RESTService.class);
+            url.toString() + DEFAULT_REST_ENDPOINT,
+            RESTService.class,
+            null,
+            null,
+            false,
+            false,
+            connectionTimeout,
+            receiveTimeout);
 
     WebClient webClient = restClientFactory.getWebClient();
     webClient.accept(MediaType.APPLICATION_XML);
