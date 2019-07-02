@@ -21,7 +21,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 
 import com.connexta.replication.adapters.ddf.csw.Csw;
-import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
 import java.net.URL;
 import java.util.List;
 import org.apache.cxf.interceptor.Interceptor;
@@ -33,14 +32,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DdfNodeAdapterFactoryTest {
-  @Mock DdfRestClientFactory ddfRestClientFactory;
-
   @Mock ClientFactoryFactory clientFactoryFactory;
 
   @Test
   public void create() throws Exception {
-    DdfNodeAdapterFactory factory =
-        new DdfNodeAdapterFactory(ddfRestClientFactory, clientFactoryFactory);
+    DdfNodeAdapterFactory factory = new DdfNodeAdapterFactory(clientFactoryFactory, 30000, 60000);
     assertThat(factory.create(new URL("https://localhost:8993/context")), is(notNullValue()));
     verify(clientFactoryFactory)
         .getSecureCxfClientFactory(
@@ -51,6 +47,6 @@ public class DdfNodeAdapterFactoryTest {
             eq(true),
             eq(false),
             eq(30000),
-            eq(30000));
+            eq(60000));
   }
 }

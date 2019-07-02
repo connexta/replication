@@ -127,7 +127,6 @@
       <version>${guava.version}</version>
     </dependency>
 
-
     <!-- XML dependencies -->
     <dependency>
       <groupId>javax.xml.soap</groupId>

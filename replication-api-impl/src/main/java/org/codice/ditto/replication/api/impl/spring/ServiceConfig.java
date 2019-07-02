@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.api.impl.spring;
 
+import com.connexta.replication.spring.ReplicationProperties;
 import java.util.List;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
 import org.codice.ditto.replication.api.Replicator;
@@ -31,6 +32,7 @@ import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/** A class for instantiating beans in this module */
 @Configuration("replication-api-impl")
 public class ServiceConfig {
 

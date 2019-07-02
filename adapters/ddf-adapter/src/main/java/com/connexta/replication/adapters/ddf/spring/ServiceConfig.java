@@ -13,13 +13,16 @@
  */
 package com.connexta.replication.adapters.ddf.spring;
 
+import com.connexta.replication.adapters.ddf.DdfNodeAdapter;
 import com.connexta.replication.adapters.ddf.DdfNodeAdapterFactory;
-import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
+import com.connexta.replication.spring.ReplicationProperties;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
+import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ddf.cxf.client.impl.ClientFactoryFactoryImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/** A class for instantiating beans in this module */
 @Configuration("ddf-adapter")
 public class ServiceConfig {
 
@@ -28,14 +31,20 @@ public class ServiceConfig {
     return new ClientFactoryFactoryImpl();
   }
 
-  @Bean
-  public DdfRestClientFactory ddfRestClientFactory(ClientFactoryFactory clientFactoryFactory) {
-    return new DdfRestClientFactory(clientFactoryFactory);
-  }
-
+  /**
+   * Instantiates a {@link DdfNodeAdapterFactory} bean.
+   *
+   * @param clientFactoryFactory a factory for {@link SecureCxfClientFactory}s
+   * @param replicationProperties application properties used to obtain the timeouts for any clients
+   *     created by this bean
+   * @return A factory for creating {@link DdfNodeAdapter}s
+   */
   @Bean
   public DdfNodeAdapterFactory ddfNodeAdapterFactory(
-      DdfRestClientFactory ddfRestClientFactory, ClientFactoryFactory clientFactoryFactory) {
-    return new DdfNodeAdapterFactory(ddfRestClientFactory, clientFactoryFactory);
+      ClientFactoryFactory clientFactoryFactory, ReplicationProperties replicationProperties) {
+    return new DdfNodeAdapterFactory(
+        clientFactoryFactory,
+        replicationProperties.getConnectionTimeout(),
+        replicationProperties.getReceiveTimeout());
   }
 }

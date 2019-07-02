@@ -16,6 +16,7 @@ package com.connexta.replication.adapters.ddf.rest;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -23,9 +24,11 @@ import static org.mockito.Mockito.when;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
@@ -46,10 +49,22 @@ public class DdfRestClientFactoryTest {
   @Mock SecureCxfClientFactory secureCxfClientFactory;
   @Mock WebClient webClient;
 
+  private static final int DEFAULT_CONNECTION_TIMEOUT_MILLIS = 30000;
+
+  private static final int DEFAULT_RECEIVE_TIMEOUT_MILLIS = 60000;
+
   @Before
   public void setUp() throws Exception {
     ThreadContext.bind(subject);
-    when(clientFactory.getSecureCxfClientFactory(any(String.class), any(Class.class)))
+    when(clientFactory.getSecureCxfClientFactory(
+            any(String.class),
+            any(Class.class),
+            any(List.class),
+            any(Interceptor.class),
+            anyBoolean(),
+            anyBoolean(),
+            any(Integer.class),
+            any(Integer.class)))
         .thenReturn(secureCxfClientFactory);
   }
 
@@ -61,10 +76,20 @@ public class DdfRestClientFactoryTest {
   @Test
   public void create() throws Exception {
     when(secureCxfClientFactory.getWebClient()).thenReturn(webClient);
-    DdfRestClientFactory factory = new DdfRestClientFactory(clientFactory);
+    DdfRestClientFactory factory =
+        new DdfRestClientFactory(
+            clientFactory, DEFAULT_CONNECTION_TIMEOUT_MILLIS, DEFAULT_RECEIVE_TIMEOUT_MILLIS);
     DdfRestClient client = factory.create(new URL("https://host:1234/context"));
     verify(clientFactory)
-        .getSecureCxfClientFactory("https://host:1234/context/catalog", RESTService.class);
+        .getSecureCxfClientFactory(
+            "https://host:1234/context/catalog",
+            RESTService.class,
+            null,
+            null,
+            false,
+            false,
+            DEFAULT_CONNECTION_TIMEOUT_MILLIS,
+            DEFAULT_RECEIVE_TIMEOUT_MILLIS);
     verify(secureCxfClientFactory).getWebClient();
   }
 
@@ -72,7 +97,9 @@ public class DdfRestClientFactoryTest {
   public void createWithSubject() throws Exception {
     WebClient whoamiClient = mock(WebClient.class);
     when(secureCxfClientFactory.getWebClient()).thenReturn(whoamiClient, webClient);
-    DdfRestClientFactory factory = new DdfRestClientFactory(clientFactory);
+    DdfRestClientFactory factory =
+        new DdfRestClientFactory(
+            clientFactory, DEFAULT_CONNECTION_TIMEOUT_MILLIS, DEFAULT_RECEIVE_TIMEOUT_MILLIS);
     Response mockResponse = mock(Response.class);
     NewCookie mockCookie = mock(NewCookie.class);
     Map<String, NewCookie> cookies = new HashMap<>();
@@ -81,7 +108,15 @@ public class DdfRestClientFactoryTest {
     when(mockResponse.getCookies()).thenReturn(cookies);
     DdfRestClient client = factory.createWithSubject(new URL("https://host:1234/context"));
     verify(clientFactory)
-        .getSecureCxfClientFactory("https://host:1234/context/catalog", RESTService.class);
+        .getSecureCxfClientFactory(
+            "https://host:1234/context/catalog",
+            RESTService.class,
+            null,
+            null,
+            false,
+            false,
+            DEFAULT_CONNECTION_TIMEOUT_MILLIS,
+            DEFAULT_RECEIVE_TIMEOUT_MILLIS);
     verify(secureCxfClientFactory, times(2)).getWebClient();
     ArgumentCaptor<NewCookie> resultCookie = ArgumentCaptor.forClass(NewCookie.class);
     verify(webClient).cookie(resultCookie.capture());

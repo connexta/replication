@@ -37,7 +37,6 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -49,8 +48,6 @@ import javax.ws.rs.core.Response.StatusType;
 import net.opengis.cat.csw.v_2_0_2.CapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetCapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsType;
-import org.apache.cxf.interceptor.Interceptor;
-import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.data.Metadata;
@@ -66,7 +63,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class DdfNodeAdapterTest {
   @Mock DdfRestClientFactory ddfRestClientFactory;
-  @Mock ClientFactoryFactory clientFactory;
 
   @Mock DdfRestClient restClient;
 
@@ -80,20 +76,10 @@ public class DdfNodeAdapterTest {
   public void setUp() throws Exception {
     when(ddfRestClientFactory.create(any(URL.class))).thenReturn(restClient);
     when(ddfRestClientFactory.createWithSubject(any(URL.class))).thenReturn(restClient);
-    when(clientFactory.getSecureCxfClientFactory(
-            any(String.class),
-            any(Class.class),
-            any(List.class),
-            any(Interceptor.class),
-            any(Boolean.class),
-            any(Boolean.class),
-            any(Integer.class),
-            any(Integer.class)))
-        .thenReturn(secureFactory);
     when(secureFactory.getClient()).thenReturn(csw);
     adapter =
         new DdfNodeAdapter(
-            ddfRestClientFactory, clientFactory, new URL("https://localhost:8994/searvice"));
+            ddfRestClientFactory, secureFactory, new URL("https://localhost:8994/searvice"));
   }
 
   @Test

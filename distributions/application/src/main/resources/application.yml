@@ -12,3 +12,5 @@ spring:
       host: http://localhost:8983/solr
 replication:
   period: 60
+  connectionTimeout: 30
+  receiveTimeout: 60
