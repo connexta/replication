@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   replication-solr:
-    image: cnxta/replication-solr:0.3.0-SNAPSHOT
+    image: r.ion.phx.connexta.com/replication-solr:0.3.0-SNAPSHOT
     ports:
       - "8983:8983"
     volumes:

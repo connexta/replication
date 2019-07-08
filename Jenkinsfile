@@ -28,14 +28,20 @@ pipeline {
         cron(env.BRANCH_NAME == "master" ? "H H(21-23) * * *" : "")
     }
     environment {
+        ION_GPG_KEYRING = credentials('ion-releases-key')
         LINUX_MVN_RANDOM = '-Djava.security.egd=file:/dev/./urandom'
-        COVERAGE_EXCLUSIONS = '**/test/**/*,**/itests/**/*,**/*Test*,**/sdk/**/*,**/*.js,**/node_modules/**/*,**/jaxb/**/*,**/wsdl/**/*,**/nces/sws/**/*,**/*.adoc,**/*.txt,**/*.xml'
+        COVERAGE_EXCLUSIONS = '**/test/**/*,**/itests/**/*,**/*Test*,**/sdk/**/*,**/*.js,**/node_modules/**/*,**/jaxb/**/*,**/wsdl/**/*,**/nces/sws/**/*,**/*.adoc,**/*.txt,**/*.xml,/**/IT*.java'
         DISABLE_DOWNLOAD_PROGRESS_OPTS = '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn '
     }
     stages {
         stage('Calculating build parameters'){
             steps {
-                dockerd {}
+                script {
+                  dockerd {
+                      insecureRegistries = ['r.ion.phx.connexta.com']
+                  }
+                }
+
                 script {
                     if(params.RELEASE == true) {
                         if(params.RELEASE_VERSION != 'NA'){
@@ -63,113 +69,62 @@ pipeline {
                 }
             }
         }
-        // The incremental build will be triggered only for PRs. It will build the differences between the PR and the target branch
-        stage('Incremental Build') {
+        stage('Build') {
+            steps {
+                withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'cx-internal', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                    script {
+                        if(params.RELEASE == true) {
+                            sh "mvn -B -Dtag=${env.RELEASE_TAG} -DreleaseVersion=${env.RELEASE_VERSION} -DdevelopmentVersion=${env.NEXT_VERSION} release:prepare -Dgpg.secretKeyring=$ION_GPG_KEYRING -Dgpg.publicKeyring=$ION_GPG_KEYRING"
+                            env.RELEASE_COMMIT =  sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+                        } else {
+                            sh 'mvn clean install -B $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                        }
+                    }
+                }
+            }
+        }
+        stage('Owasp') {
+            steps {
+                withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'cx-internal', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                            // If this build is not a pull request, run full owasp scan. Otherwise run incremental scan
+                    script {
+                        if(params.RELEASE == true) {
+                            sh "git checkout ${env.RELEASE_TAG}"
+                        }
+                        if (env.CHANGE_ID == null) {
+                            sh 'mvn install -B -Powasp -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                        } else {
+                            sh 'mvn install -B -Powasp -DskipTests=true  -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                        }
+                    }
+                }
+            }
+
+        }
+        stage('SonarCloud') {
             when {
                 allOf {
-                    expression { env.CHANGE_ID != null }
-                    expression { env.CHANGE_TARGET != null }
+                    expression { env.CHANGE_ID == null }
+                    branch 'master'
+                    environment name: 'JENKINS_ENV', value: 'prod'
                 }
             }
-            parallel {
-                stage ('Linux') {
-                    steps {
-                        // TODO: Maven downgraded to work around a linux build issue. Falling back to system java to work around a linux build issue. re-investigate upgrading later
-                        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            sh 'mvn install -B -DskipStatic=true -DskipTests=true $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                            sh 'mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                        }
+            steps {
+                script {
+                    if(params.RELEASE == true) {
+                        sh "git checkout ${env.RELEASE_TAG}"
                     }
                 }
-                //Commenting this out for now as the windows build is currently failing due to external environment issues and we may no longer need windows builds going forward
-                //stage ('Windows') {
-                //    agent { label 'server-2016-small' }
-                //    steps {
-                //        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
-                //             bat 'mvn install -B -DskipStatic=true -DskipTests=true  %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                //             bat 'mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/%CHANGE_TARGET% %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                //        }
-                //    }
-                //}
-            }
-        }
-        stage('Full Build') {
-            when { expression { env.CHANGE_ID == null } }
-            parallel {
-                stage ('Linux') {
-                    steps {
-                        // TODO: Maven downgraded to work around a linux build issue. Falling back to system java to work around a linux build issue. re-investigate upgrading later
-                        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            script {
-                                if(params.RELEASE == true) {
-                                    sh "mvn -B -Dtag=${env.RELEASE_TAG} -DreleaseVersion=${env.RELEASE_VERSION} -DdevelopmentVersion=${env.NEXT_VERSION} release:prepare"
-                                    env.RELEASE_COMMIT =  sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
-                                } else {
-                                    sh 'mvn clean install -B $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                                }
-                            }
-                        }
-                    }
-                }
-                //stage ('Windows') {
-                //    agent { label 'server-2016-small' }
-                //    steps {
-                //        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
-                //            bat 'mvn clean install -B %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                //        }
-                //    }
-                //}
-            }
-        }
-        stage('Security Analysis') {
-            parallel {
-                stage ('Owasp') {
-                    steps {
-                        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            // If this build is not a pull request, run full owasp scan. Otherwise run incremental scan
-                            script {
-                                if(params.RELEASE == true) {
-                                    sh "git checkout ${env.RELEASE_TAG}"
-                                }
-                                if (env.CHANGE_ID == null) {
-                                    sh 'mvn install -B -Powasp -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                                } else {
-                                    sh 'mvn install -B -Powasp -DskipTests=true  -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('Quality Analysis') {
-            parallel {
-                // Sonar stage only runs against master
-                stage ('SonarCloud') {
-                    when {
-                        allOf {
-                            expression { env.CHANGE_ID == null }
-                            branch 'master'
-                            environment name: 'JENKINS_ENV', value: 'prod'
-                        }
-                    }
-                    steps {
+                withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'cx-internal', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                    withCredentials([string(credentialsId: 'SonarQubeGithubToken', variable: 'SONARQUBE_GITHUB_TOKEN'), string(credentialsId: 'cxbot-sonarcloud', variable: 'SONAR_TOKEN')]) {
                         script {
-                            if(params.RELEASE == true) {
-                                sh "git checkout ${env.RELEASE_TAG}"
-                            }
-                        }
-                        withMaven(maven: 'M35', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            withCredentials([string(credentialsId: 'SonarQubeGithubToken', variable: 'SONARQUBE_GITHUB_TOKEN'), string(credentialsId: 'cxbot-sonarcloud', variable: 'SONAR_TOKEN')]) {
-                                script {
-                                    sh 'mvn -q -B -Dcheckstyle.skip=true org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN  -Dsonar.organization=cx -Dsonar.projectKey=replication -Dsonar.exclusions=${COVERAGE_EXCLUSIONS} $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                            sh 'mvn -q -B -Dcheckstyle.skip=true org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN  -Dsonar.organization=cx -Dsonar.projectKey=replication -Dsonar.exclusions=${COVERAGE_EXCLUSIONS} $DISABLE_DOWNLOAD_PROGRESS_OPTS'
 
-                                 }
-                            }
                         }
                     }
                 }
             }
+
         }
         stage('Release Tag'){
             when { expression { params.RELEASE == true } }
@@ -194,6 +149,9 @@ pipeline {
          It will also only deploy in the presence of an environment variable JENKINS_ENV = 'prod'. This can be passed in globally from the jenkins master node settings.
         */
         stage('Deploy') {
+            environment {
+                ION_GPG_KEYRING = credentials('ion-releases-key')
+            }
             when {
                 allOf {
                     expression { env.CHANGE_ID == null }
@@ -211,9 +169,15 @@ pipeline {
                     }
                 }
 
-                withMaven(maven: 'Maven 3.5.3', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'cx-internal', mavenOpts: '${LINUX_MVN_RANDOM}') {
                     sh 'mvn javadoc:aggregate -B -DskipStatic=true -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                    sh 'mvn deploy -B -DskipStatic=true -DskipTests=true -DretryFailedDeploymentCount=10 -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                    script {
+                        if(params.RELEASE == true) {
+                            sh 'mvn deploy -Prelease -B -DskipStatic=true -DskipTests=true -DretryFailedDeploymentCount=10 -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS -Dgpg.secretKeyring=$ION_GPG_KEYRING -Dgpg.publicKeyring=$ION_GPG_KEYRING'
+                        } else {
+                            sh 'mvn deploy -B -DskipStatic=true -DskipTests=true -DretryFailedDeploymentCount=10 -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                        }
+                    }
                 }
             }
         }
