@@ -1,0 +1,8 @@
+query AllQueries {
+    replication {
+        queries {
+            title
+            cql
+        }
+    }
+}

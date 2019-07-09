@@ -19,6 +19,15 @@
     <reference id="persistentStore" interface="org.codice.ddf.persistence.PersistentStore"/>
     <reference id="catalog" interface="ddf.catalog.CatalogFramework"/>
     <reference id="filterBuilder" interface="ddf.catalog.filter.FilterBuilder"/>
+    <reference id="xmlTransformer" interface="ddf.catalog.transform.InputTransformer" filter="(id=xml)" />
+
+    <bean id="QueryService" class="org.codice.ditto.replication.api.impl.QueryServiceImpl">
+        <argument ref="catalog"/>
+        <argument ref="filterBuilder"/>
+        <argument ref="xmlTransformer"/>
+    </bean>
+
+    <service ref="QueryService" interface="org.codice.ditto.replication.api.QueryService"/>
 
     <bean id="replicatorDeleterExecutorThreadFactory"
       class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
