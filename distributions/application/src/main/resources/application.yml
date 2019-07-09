@@ -7,7 +7,7 @@ logging:
 spring:
   data:
     solr:
-      host: http://localhost:8983/solr
+      host: http://replication-solr:8983/solr
 replication:
   period: 300
   connectionTimeout: 30
