@@ -148,6 +148,12 @@
         <cve>CVE-2018-11766</cve>
         <cve>CVE-2018-8029</cve>
     </suppress>
+    <suppress>
+        <notes>
+            We don't use iBatis and we don't use Jackson default typing.
+        </notes>
+        <cve>CVE-2018-11307</cve>
+    </suppress>
     <!-- ************************************************************************************* -->
     <!-- END DDF related suppression -->
     <!-- ************************************************************************************* -->
