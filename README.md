@@ -64,6 +64,7 @@ javax.net.ssl.trustStorePassword=changeit
 javax.net.ssl.trustStoreType=jks
 javax.net.ssl.keyStorePassword=changeit
 javax.net.ssl.keyStoreType=jks
+javax.net.ssl.certAlias=localhost
 ```
 Only the properties that differ from the defaults above need to be specified in replication-ssl
 
