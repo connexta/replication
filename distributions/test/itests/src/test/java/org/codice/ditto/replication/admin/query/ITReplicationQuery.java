@@ -13,13 +13,21 @@
  */
 package org.codice.ditto.replication.admin.query;
 
+import static com.jayway.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.jayway.restassured.specification.RequestSpecification;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ddf.dominion.commons.options.DDFCommonOptions;
+import org.codice.ditto.replication.admin.query.requests.QueriesGraphQL;
 import org.codice.ditto.replication.admin.query.requests.ReplicationsGraphQL;
 import org.codice.ditto.replication.admin.query.requests.SitesGraphQL;
 import org.codice.ditto.replication.admin.query.requests.StatsGraphQL;
@@ -27,14 +35,18 @@ import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.dominion.options.ReplicationOptions;
 import org.codice.dominion.Dominion;
 import org.codice.dominion.interpolate.Interpolate;
+import org.codice.dominion.options.Options.SetSystemProperty;
 import org.codice.dominion.options.karaf.KarafOptions.InstallBundle;
 import org.codice.junit.TestDelimiter;
 import org.codice.maven.MavenUrl;
 import org.codice.pax.exam.junit.ConfigurationAdmin;
 import org.codice.pax.exam.junit.ServiceAdmin;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @DDFCommonOptions.ConfigureVMOptionsForTesting
 @DDFCommonOptions.ConfigureDebugging
@@ -42,14 +54,33 @@ import org.junit.runner.RunWith;
 @DDFCommonOptions.ConfigureLogging
 @ReplicationOptions.Install
 @TestDelimiter(stdout = true, elapsed = true)
-@InstallBundle(bundle = @MavenUrl(groupId = "org.awaitility", artifactId = "awaitility"))
+@InstallBundle(
+  bundle =
+      @MavenUrl(
+        groupId = "org.awaitility",
+        artifactId = "awaitility",
+        version = MavenUrl.AS_IN_PROJECT
+      )
+)
 @ServiceAdmin
 @ConfigurationAdmin
+// keeps solr from changing the password so we can use "admin:admin" with basic auth to contact solr
+@SetSystemProperty(key = "solr.attemptAutoPasswordChange", value = "false")
 @RunWith(Dominion.class)
 public class ITReplicationQuery {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ITReplicationQuery.class);
+
   @Interpolate
   private static String GRAPHQL_ENDPOINT = "https://localhost:{port.https}/admin/hub/graphql";
+
+  @Interpolate
+  private static String WORKSPACES_API_PATH =
+      "https://localhost:{port.https}/search/catalog/internal/workspaces";
+
+  @Interpolate
+  private static String SOLR_DELETE_ENDPOINT =
+      "https://localhost:{solr.http.port}/solr/catalog/update?commit=true";
 
   private final SitesGraphQL sitesGraphql = new SitesGraphQL(GRAPHQL_ENDPOINT);
 
@@ -57,9 +88,26 @@ public class ITReplicationQuery {
 
   private final StatsGraphQL statsGraphql = new StatsGraphQL(GRAPHQL_ENDPOINT);
 
+  private final QueriesGraphQL queriesGraphql = new QueriesGraphQL(GRAPHQL_ENDPOINT);
+
   @Before
   public void before() {
     sitesGraphql.waitForSitesInSchema();
+  }
+
+  @After
+  public void after() {
+    // clears the catalog
+    given()
+        .log()
+        .all()
+        .header("Content-Type", "application/xml")
+        .auth()
+        .preemptive()
+        .basic("admin", "admin")
+        .header("X-Requested-With", "XMLHttpRequest")
+        .body("<delete><query>*:*</query></delete>")
+        .post(SOLR_DELETE_ENDPOINT);
   }
 
   @Test
@@ -168,6 +216,53 @@ public class ITReplicationQuery {
 
     boolean destinationDeleted = sitesGraphql.deleteSite(destinationId);
     assertThat("delete destination site", destinationDeleted, is(true));
+  }
+
+  @Test
+  public void testQueries() throws Exception {
+    Map<String, Object> query = ImmutableMap.of("title", "test title", "cql", "test cql");
+    List<Map<String, Object>> queries = ImmutableList.of(query);
+    Map<String, Object> workspace = ImmutableMap.of("queries", queries);
+    Gson gson = new Gson();
+    String json = gson.toJson(workspace);
+
+    asAdmin()
+        .header("Origin", WORKSPACES_API_PATH)
+        .body(json)
+        .expect()
+        .statusCode(201)
+        .when()
+        .post(WORKSPACES_API_PATH);
+
+    Map<String, Object> query2 = ImmutableMap.of("title", "test title2", "cql", "test cql2");
+    List<Map<String, Object>> queries2 = ImmutableList.of(query2);
+    Map<String, Object> workspace2 = ImmutableMap.of("queries", queries2);
+    String json2 = gson.toJson(workspace2);
+
+    asAdmin()
+        .header("Origin", WORKSPACES_API_PATH)
+        .body(json2)
+        .expect()
+        .statusCode(201)
+        .when()
+        .post(WORKSPACES_API_PATH);
+
+    queriesGraphql.waitForQuery(query2);
+    List<Map<String, Object>> resultingQueries = queriesGraphql.getAllQueries();
+    // Since the queries are meant to be sorted by last modified date,
+    // we assert that we received them in the correct order.
+    assertThat(resultingQueries, contains(query2, query));
+  }
+
+  private static RequestSpecification asAdmin() {
+    return given()
+        .log()
+        .all()
+        .header("Content-Type", "application/json")
+        .auth()
+        .preemptive()
+        .basic("admin", "admin")
+        .header("X-Requested-With", "XMLHttpRequest");
   }
 
   public Map<String, Object> createStatsMap() {
