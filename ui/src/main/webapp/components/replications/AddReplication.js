@@ -34,6 +34,7 @@ import Immutable from 'immutable'
 import { allReplications } from './gql/queries'
 import { addReplication } from './gql/mutations'
 import { withStyles } from '@material-ui/core/styles'
+import QuerySelector from './QuerySelector'
 
 const styles = {
   tooltip: {
@@ -106,12 +107,12 @@ class AddReplication extends React.Component {
     this.state = defaultFormState
   }
 
-  filterSites = function(sites, siteFilterId) {
+  filterSites = (sites, siteFilterId) => {
     const filteredSites = sites.filter(site => site.id !== siteFilterId)
     return Immutable.List(filteredSites).sort(alphabetical)
   }
 
-  sitesToMenuItems = function(sites, siteFilterId) {
+  sitesToMenuItems = (sites, siteFilterId) => {
     const filteredSites = sites.filter(site => site.id !== siteFilterId)
     const sorted = Immutable.List(filteredSites).sort(alphabetical)
     return sorted
@@ -129,6 +130,10 @@ class AddReplication extends React.Component {
 
   handleChange = map => name => event => {
     this.setState({ [map[name]]: event.target.value })
+  }
+
+  handleSelectorChange = option => {
+    this.setState({ filter: option ? option.value : '' })
   }
 
   handleCheck = name => event => {
@@ -260,6 +265,7 @@ class AddReplication extends React.Component {
                 )
               }}
             </Query>
+            <QuerySelector onChange={this.handleSelectorChange} />
 
             <WrappedTextField
               label='Filter *'
