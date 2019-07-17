@@ -109,7 +109,6 @@ public class IonNodeAdapter implements NodeAdapter {
     for (Resource resource : createStorageRequest.getResources()) {
 
       MultipartBodyBuilder builder = new MultipartBodyBuilder();
-      builder.part("title", resource.getId());
 
       builder.part("fileSize", resource.getSize());
 
@@ -155,6 +154,7 @@ public class IonNodeAdapter implements NodeAdapter {
     // nothing to close
   }
 
+  @SuppressWarnings("squid:S2160" /*Super equals/hashCode is sufficient here*/)
   private class MultipartInputStreamResource extends InputStreamResource {
 
     private final String filename;
