@@ -13,6 +13,7 @@
  */
 package com.connexta.ion.replication.adapters.ddf.rest;
 
+import com.connexta.ion.replication.ReplicationConstants;
 import java.net.URL;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -59,7 +60,6 @@ public class DdfRestClientFactory {
 
   public DdfRestClient createWithSubject(URL url) {
     String pathlessUrl = url.getProtocol() + "://" + url.getHost() + ":" + url.getPort();
-
     WebClient whoamiClient =
         clientFactoryFactory
             .getSecureCxfClientFactory(
@@ -70,7 +70,10 @@ public class DdfRestClientFactory {
                 false,
                 false,
                 connectionTimeout,
-                receiveTimeout)
+                receiveTimeout,
+                ReplicationConstants.getCertAlias(),
+                ReplicationConstants.getKeystore(),
+                ReplicationConstants.TLS_PROTOCOL)
             .getWebClient();
     whoamiClient.path("/whoami");
     whoamiClient.accept(MediaType.APPLICATION_XML);
@@ -92,7 +95,10 @@ public class DdfRestClientFactory {
             false,
             false,
             connectionTimeout,
-            receiveTimeout);
+            receiveTimeout,
+            ReplicationConstants.getCertAlias(),
+            ReplicationConstants.getKeystore(),
+            ReplicationConstants.TLS_PROTOCOL);
 
     WebClient webClient = restClientFactory.getWebClient();
     webClient.accept(MediaType.APPLICATION_XML);

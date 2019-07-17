@@ -22,6 +22,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.connexta.ion.replication.ReplicationConstants;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -34,8 +35,10 @@ import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
+import org.codice.junit.rules.RestoreSystemProperties;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -44,6 +47,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DdfRestClientFactoryTest {
+
+  @Rule
+  public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
   @Mock Subject subject;
   @Mock ClientFactoryFactory clientFactory;
   @Mock SecureCxfClientFactory secureCxfClientFactory;
@@ -56,6 +63,8 @@ public class DdfRestClientFactoryTest {
   @Before
   public void setUp() throws Exception {
     ThreadContext.bind(subject);
+    System.setProperty("javax.net.ssl.keyStore", "/my/keystore.jks");
+    System.setProperty("javax.net.ssl.certAlias", "myAlias");
     when(clientFactory.getSecureCxfClientFactory(
             any(String.class),
             any(Class.class),
@@ -64,7 +73,10 @@ public class DdfRestClientFactoryTest {
             anyBoolean(),
             anyBoolean(),
             any(Integer.class),
-            any(Integer.class)))
+            any(Integer.class),
+            any(String.class),
+            any(String.class),
+            any(String.class)))
         .thenReturn(secureCxfClientFactory);
   }
 
@@ -89,7 +101,10 @@ public class DdfRestClientFactoryTest {
             false,
             false,
             DEFAULT_CONNECTION_TIMEOUT_MILLIS,
-            DEFAULT_RECEIVE_TIMEOUT_MILLIS);
+            DEFAULT_RECEIVE_TIMEOUT_MILLIS,
+            "myAlias",
+            "/my/keystore.jks",
+            ReplicationConstants.TLS_PROTOCOL);
     verify(secureCxfClientFactory).getWebClient();
   }
 
@@ -116,7 +131,10 @@ public class DdfRestClientFactoryTest {
             false,
             false,
             DEFAULT_CONNECTION_TIMEOUT_MILLIS,
-            DEFAULT_RECEIVE_TIMEOUT_MILLIS);
+            DEFAULT_RECEIVE_TIMEOUT_MILLIS,
+            "myAlias",
+            "/my/keystore.jks",
+            ReplicationConstants.TLS_PROTOCOL);
     verify(secureCxfClientFactory, times(2)).getWebClient();
     ArgumentCaptor<NewCookie> resultCookie = ArgumentCaptor.forClass(NewCookie.class);
     verify(webClient).cookie(resultCookie.capture());

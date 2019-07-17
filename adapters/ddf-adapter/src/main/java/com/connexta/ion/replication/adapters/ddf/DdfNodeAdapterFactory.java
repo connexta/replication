@@ -13,6 +13,7 @@
  */
 package com.connexta.ion.replication.adapters.ddf;
 
+import com.connexta.ion.replication.ReplicationConstants;
 import com.connexta.ion.replication.adapters.ddf.csw.Constants;
 import com.connexta.ion.replication.adapters.ddf.csw.Csw;
 import com.connexta.ion.replication.adapters.ddf.csw.CswJAXBElementProvider;
@@ -84,7 +85,10 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
             true,
             false,
             connectionTimeout,
-            receiveTimeout);
+            receiveTimeout,
+            ReplicationConstants.getCertAlias(),
+            ReplicationConstants.getKeystore(),
+            ReplicationConstants.TLS_PROTOCOL);
     return new DdfNodeAdapter(ddfRestClientFactory, ddfCswClientFactory, url);
   }
 
