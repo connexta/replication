@@ -13,7 +13,7 @@
  */
 package com.connexta.ion.replication.api.data;
 
-import com.connexta.ion.replication.api.ReplicationItem;
+import java.util.Date;
 import javax.annotation.Nullable;
 
 /**
@@ -108,16 +108,16 @@ public interface ReplicatorConfig extends Persistable {
   void setDescription(@Nullable String description);
 
   /**
-   * Returns the amount of times a {@link ReplicationItem} will attempt to be retried if it
-   * previously failed to replicate.
+   * Returns the amount of times a {@link com.connexta.ion.replication.api.ReplicationItem} will
+   * attempt to be retried if it previously failed to replicate.
    *
    * @return failure retry count
    */
   int getFailureRetryCount();
 
   /**
-   * Sets how many attempts will be made to replicate a {@link ReplicationItem} that fails to
-   * replicate.
+   * Sets how many attempts will be made to replicate a {@link
+   * com.connexta.ion.replication.api.ReplicationItem} that fails to replicate.
    *
    * @param retries the number of any item that fails to replicate should be retried.
    */
@@ -136,4 +136,40 @@ public interface ReplicatorConfig extends Persistable {
    * @param suspended the suspended state to give this config
    */
   void setSuspended(boolean suspended);
+
+  /**
+   * @return the date at which the configuration was last run, or {@code null} if it hasn't been run
+   */
+  @Nullable
+  Date getLastRun();
+
+  /** @param lastRun the date at which the configuration was last run */
+  void setLastRun(@Nullable Date lastRun);
+
+  /**
+   * @return the last time the configuration was successfully run, or {@code null} if there has been
+   *     no successful run
+   */
+  @Nullable
+  Date getLastSuccess();
+
+  /**
+   * See {@link #getLastMetadataModified()}.
+   *
+   * @param lastMetadataModified the {@link Metadata}'s modified date
+   */
+  void setLastMetadataModified(@Nullable Date lastMetadataModified);
+
+  /**
+   * A {@link Date} which represents the modified date of the last {@link Metadata} that was
+   * attempted to be replicated. If available, this should be used by the {@link
+   * QueryRequest#getModifiedAfter()}.
+   *
+   * @return the {@link Date}, or {@code null} if no metadata has attempted to be replicated
+   */
+  @Nullable
+  Date getLastMetadataModified();
+
+  /** @param lastSuccess the last time the configuration was successfully run */
+  void setLastSuccess(@Nullable Date lastSuccess);
 }

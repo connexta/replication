@@ -23,11 +23,43 @@ public interface ReplicationItem {
   /** @return id for which {@link Metadata} this item represents */
   String getId();
 
+  /** @return the id of the {@link ReplicatorConfig} this item belongs to */
+  String getConfigId();
+
   /** @return this last time the resource associated with this item modified */
   Date getResourceModified();
 
   /** @return the last time the {@link Metadata} associated with this item was modified */
   Date getMetadataModified();
+
+  /** @return the size in bytes of this item's resource */
+  long getResourceSize();
+
+  /** @return the size in bytes of this item's metadata */
+  long getMetadataSize();
+
+  /**
+   * @return the time at which this item began transferring, or {@code null} if it has not begun
+   *     transferring
+   */
+  Date getStartTime();
+
+  /** Called when the item begins transfer, setting the {@link #getStartTime()} to now. */
+  void markStartTime();
+
+  /** Called when the item ends transfer, setting the {@link #getDuration()}. */
+  void markDoneTime();
+
+  /**
+   * @return the time in milliseconds it took transfer this item, or -1 if it has not transferred
+   */
+  long getDuration();
+
+  /** @return the status of this replication item */
+  Status getStatus();
+
+  /** @return the speed of transfer in bytes per second, or -1 if the item has not transferred */
+  double getTransferRate();
 
   /**
    * @return the name for the source {@link NodeAdapter} the metadata/resource was being replicated
@@ -40,18 +72,4 @@ public interface ReplicationItem {
    *     replicated to.
    */
   String getDestination();
-
-  /** @return the id of the {@link ReplicatorConfig} this item belongs to */
-  String getConfigId();
-
-  /**
-   * Represents the amount of times an operation between the source and destination {@link
-   * NodeAdapter}s failed.
-   *
-   * @return the failure count
-   */
-  int getFailureCount();
-
-  /** Increments the failure count by 1. See {@link #getFailureCount()}. */
-  void incrementFailureCount();
 }

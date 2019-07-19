@@ -14,6 +14,8 @@
 package com.connexta.ion.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
+import java.util.Date;
+import javax.annotation.Nullable;
 import org.springframework.data.solr.core.mapping.Indexed;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
@@ -23,6 +25,8 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
  */
 @SolrDocument(collection = "replication_config")
 public class ReplicatorConfigImpl extends AbstractPersistable implements ReplicatorConfig {
+
+  private static final String DATE = "_tdt";
 
   /**
    * 0/No Version - initial version of configs which were saved in the catalog framework. 1 - the
@@ -53,6 +57,18 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   @Indexed(name = "suspended_b")
   private boolean suspended;
+
+  @Indexed(name = "last-success" + DATE)
+  @Nullable
+  private Date lastSuccess;
+
+  @Indexed(name = "last-run" + DATE)
+  @Nullable
+  private Date lastRun;
+
+  @Indexed(name = "last-metadata-modified" + DATE)
+  @Nullable
+  private Date lastMetadataModified;
 
   public ReplicatorConfigImpl() {
     super.setVersion(CURRENT_VERSION);
@@ -136,5 +152,36 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public void setSuspended(boolean suspended) {
     this.suspended = suspended;
+  }
+
+  @Override
+  public @Nullable Date getLastRun() {
+    return lastRun;
+  }
+
+  @Override
+  public void setLastRun(@Nullable Date lastRun) {
+    this.lastRun = lastRun;
+  }
+
+  @Override
+  public @Nullable Date getLastSuccess() {
+    return lastSuccess;
+  }
+
+  @Override
+  public void setLastMetadataModified(Date lastMetadataModified) {
+    this.lastMetadataModified = lastMetadataModified;
+  }
+
+  @Nullable
+  @Override
+  public Date getLastMetadataModified() {
+    return lastMetadataModified;
+  }
+
+  @Override
+  public void setLastSuccess(@Nullable Date lastSuccess) {
+    this.lastSuccess = lastSuccess;
   }
 }

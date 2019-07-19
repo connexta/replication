@@ -18,31 +18,25 @@ import static org.apache.commons.lang3.Validate.notNull;
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterType;
 import com.connexta.ion.replication.api.ReplicationException;
+import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
-import com.connexta.ion.replication.api.Status;
 import com.connexta.ion.replication.api.SyncRequest;
 import com.connexta.ion.replication.api.data.ReplicationSite;
-import com.connexta.ion.replication.api.data.ReplicationStatus;
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
-import com.connexta.ion.replication.api.persistence.ReplicatorHistoryManager;
 import com.connexta.ion.replication.api.persistence.SiteManager;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
@@ -54,8 +48,6 @@ public class ReplicatorImpl implements Replicator {
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicatorImpl.class);
 
   private final NodeAdapters nodeAdapters;
-
-  private final ReplicatorHistoryManager history;
 
   private final SiteManager siteManager;
 
@@ -69,25 +61,16 @@ public class ReplicatorImpl implements Replicator {
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
 
-  private final Map<String, Syncer.Job> syncerJobMap = new ConcurrentHashMap<>();
+  private final Set<Consumer<ReplicationItem>> callbacks = new HashSet<>();
 
-  public ReplicatorImpl(
-      NodeAdapters nodeAdapters,
-      ReplicatorHistoryManager history,
-      SiteManager siteManager,
-      Syncer syncer) {
-    this(nodeAdapters, history, siteManager, Executors.newSingleThreadScheduledExecutor(), syncer);
+  public ReplicatorImpl(NodeAdapters nodeAdapters, SiteManager siteManager, Syncer syncer) {
+    this(nodeAdapters, siteManager, Executors.newSingleThreadScheduledExecutor(), syncer);
   }
 
   @VisibleForTesting
   ReplicatorImpl(
-      NodeAdapters nodeAdapters,
-      ReplicatorHistoryManager history,
-      SiteManager siteManager,
-      ExecutorService executor,
-      Syncer syncer) {
+      NodeAdapters nodeAdapters, SiteManager siteManager, ExecutorService executor, Syncer syncer) {
     this.nodeAdapters = notNull(nodeAdapters);
-    this.history = notNull(history);
     this.executor = notNull(executor);
     this.siteManager = notNull(siteManager);
     this.syncer = syncer;
@@ -131,10 +114,6 @@ public class ReplicatorImpl implements Replicator {
   @VisibleForTesting
   void executeSyncRequest(final SyncRequest syncRequest) {
     LOGGER.trace("Executing sync request {} with subject", syncRequest);
-
-    ReplicationStatus status = syncRequest.getStatus();
-    status.markStartTime();
-
     ReplicatorConfig config = syncRequest.getConfig();
     NodeAdapter node1 = null;
     NodeAdapter node2 = null;
@@ -143,14 +122,8 @@ public class ReplicatorImpl implements Replicator {
       node1 = getStoreForId(config.getSource());
       node2 = getStoreForId(config.getDestination());
     } catch (ReplicationException e) {
-      final Status connectionUnavailable = Status.CONNECTION_UNAVAILABLE;
-      LOGGER.debug(
-          "Error getting node adapters for replicator config {}. Setting status to {}",
-          config.getName(),
-          connectionUnavailable,
-          e);
-      status.setStatus(connectionUnavailable);
-      completeActiveSyncRequest(syncRequest, status);
+      LOGGER.debug("Error getting node adapters for replicator config {}.", config.getName(), e);
+      completeActiveSyncRequest(syncRequest);
       closeQuietly(node1);
       closeQuietly(node2);
       return;
@@ -158,51 +131,29 @@ public class ReplicatorImpl implements Replicator {
 
     try (NodeAdapter store1 = node1;
         NodeAdapter store2 = node2) {
-      Status pullStatus = Status.SUCCESS;
       if (config.isBidirectional()) {
-        status.setStatus(Status.PULL_IN_PROGRESS);
-        pullStatus = sync(store2, store1, config, status);
-      }
-
-      if (pullStatus.equals(Status.SUCCESS)) {
-        status.setStatus(Status.PUSH_IN_PROGRESS);
-        sync(store1, store2, config, status);
+        sync(store2, store1, config);
+        sync(store1, store2, config);
+      } else {
+        sync(store1, store2, config);
       }
     } catch (Exception e) {
-      final Status failureStatus = Status.FAILURE;
-      LOGGER.warn(
-          "Unexpected error when running config {}. Setting status to {}",
-          config.getName(),
-          failureStatus,
-          e);
-      status.setStatus(failureStatus);
+      LOGGER.warn("Unexpected error when running config {}", config.getName(), e);
     } finally {
-      completeActiveSyncRequest(syncRequest, status);
-      syncerJobMap.remove(syncRequest.getConfig().getId());
+      completeActiveSyncRequest(syncRequest);
     }
   }
 
-  private Status sync(
-      NodeAdapter source,
-      NodeAdapter destination,
-      ReplicatorConfig config,
-      ReplicationStatus status) {
-    Syncer.Job job = syncer.create(source, destination, config, status);
-    syncerJobMap.put(config.getId(), job);
-    SyncResponse response = job.sync();
-    syncerJobMap.remove(config.getId());
-    return response.getStatus();
+  private void sync(NodeAdapter source, NodeAdapter destination, ReplicatorConfig config) {
+    Syncer.Job job = syncer.create(source, destination, config, callbacks);
+    job.sync();
   }
 
-  private void completeActiveSyncRequest(SyncRequest syncRequest, ReplicationStatus status) {
-    status.setDuration();
+  private void completeActiveSyncRequest(SyncRequest syncRequest) {
     LOGGER.trace("Removing sync request {} from the active queue", syncRequest);
     if (!activeSyncRequests.remove(syncRequest)) {
       LOGGER.debug("Failed to remove sync request {} from the active queue", syncRequest);
     }
-    LOGGER.trace("Adding replication event to history: {}", status);
-    history.save(status);
-    LOGGER.trace("Successfully added replication event to history: {}", status);
   }
 
   public void cleanUp() {
@@ -245,29 +196,8 @@ public class ReplicatorImpl implements Replicator {
           "The pendingSyncRequests already contains sync request {}, or it is already running. Not adding again to pending requests.",
           syncRequest);
     } else {
-      syncRequest.getStatus().setStatus(Status.PENDING);
       pendingSyncRequests.put(syncRequest);
     }
-  }
-
-  @Override
-  public void cancelSyncRequest(SyncRequest syncRequest) {
-    if (pendingSyncRequests.remove(syncRequest)) {
-      LOGGER.debug("Removed pending request with name: {}", syncRequest.getConfig().getName());
-    }
-
-    Syncer.Job job = syncerJobMap.remove(syncRequest.getConfig().getId());
-    if (job != null) {
-      job.cancel();
-    }
-  }
-
-  @Override
-  public void cancelSyncRequest(String configId) {
-    Stream.of(getPendingSyncRequests(), getActiveSyncRequests())
-        .flatMap(Collection::stream)
-        .filter(req -> req.getConfig().getId().equals(configId))
-        .forEach(this::cancelSyncRequest);
   }
 
   @Override
@@ -277,7 +207,12 @@ public class ReplicatorImpl implements Replicator {
 
   @Override
   public Set<SyncRequest> getActiveSyncRequests() {
-    return Collections.unmodifiableSet(new HashSet<>(activeSyncRequests));
+    return Set.copyOf(new HashSet<>(activeSyncRequests));
+  }
+
+  @Override
+  public void registerCompletionCallback(Consumer<ReplicationItem> callback) {
+    callbacks.add(callback);
   }
 
   @VisibleForTesting
@@ -324,7 +259,7 @@ public class ReplicatorImpl implements Replicator {
   }
 
   @VisibleForTesting
-  public void setPendingSyncRequestsQueue(BlockingQueue blockingQueue) {
+  void setPendingSyncRequestsQueue(BlockingQueue blockingQueue) {
     this.pendingSyncRequests = blockingQueue;
   }
 

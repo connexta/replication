@@ -14,6 +14,7 @@
 package com.connexta.ion.replication.api.impl.persistence;
 
 import com.connexta.ion.replication.api.ReplicationItem;
+import com.connexta.ion.replication.api.Status;
 import com.connexta.ion.replication.api.impl.data.ReplicationItemImpl;
 import com.connexta.ion.replication.api.impl.spring.ItemRepository;
 import com.connexta.ion.replication.api.persistence.ReplicationItemManager;
@@ -41,7 +42,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
     Optional<ReplicationItemImpl> result =
         itemRepository.findByIdAndSourceAndDestination(metadataId, source, destination);
 
-    if (!result.isPresent()) {
+    if (result.isEmpty()) {
       LOGGER.debug(
           "couldn't find persisted item with id: {}, source: {}, and destination: {}. This is expected during initial replication.",
           metadataId,
@@ -80,15 +81,9 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public List<String> getFailureList(int maximumFailureCount, String source, String destination) {
-    return itemRepository
-        .findByFailureCountBetweenAndSourceAndDestination(
-            1,
-            maximumFailureCount - 1,
-            source,
-            destination,
-            PageRequest.of(DEFAULT_START_INDEX, 50))
-        .stream()
+  public List<String> getFailureList(String configId) {
+    return itemRepository.findByConfigId(configId, PageRequest.of(DEFAULT_START_INDEX, 50)).stream()
+        .filter(item -> item.getStatus().equals(Status.FAILURE))
         .map(ReplicationItemImpl::getId)
         .collect(Collectors.toList());
   }

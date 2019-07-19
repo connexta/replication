@@ -13,7 +13,6 @@
  */
 package com.connexta.ion.replication.api;
 
-import com.connexta.ion.replication.api.data.ReplicationStatus;
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
 
 public interface SyncRequest {
@@ -24,11 +23,4 @@ public interface SyncRequest {
    * @return The configuration of this request
    */
   ReplicatorConfig getConfig();
-
-  /**
-   * Get the status of this request. Status will be updated during processing.
-   *
-   * @return The status of this request
-   */
-  ReplicationStatus getStatus();
 }

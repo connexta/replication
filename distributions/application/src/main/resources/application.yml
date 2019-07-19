@@ -4,11 +4,27 @@ logging:
     org.apache.cxf.interceptor.LoggingOutInterceptor: WARN
     org.apache.cxf.interceptor.LoggingInInterceptor: WARN
     javax.xml.soap: ERROR
+
 spring:
   data:
     solr:
       host: http://replication-solr:8983/solr
 replication:
-  period: 300
+  period: 60
   connectionTimeout: 30
   receiveTimeout: 60
+
+management:
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: 'prometheus,metrics,health,info'
+  metrics:
+    export:
+      prometheus:
+        enabled: true

@@ -78,7 +78,7 @@ public interface ReplicationItemManager {
    * @param destination the destination {@link NodeAdapter} name
    * @return list of string ids of items that have failed to previously transfer
    */
-  List<String> getFailureList(int maximumFailureCount, String source, String destination);
+  List<String> getFailureList(String configId);
 
   /**
    * Deletes all the items for a {@link ReplicatorConfig}.

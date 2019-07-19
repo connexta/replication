@@ -13,130 +13,115 @@
  */
 package com.connexta.ion.replication.api.impl.persistence;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
-
-import com.connexta.ion.replication.api.NotFoundException;
-import com.connexta.ion.replication.api.Status;
-import com.connexta.ion.replication.api.data.ReplicationStatus;
-import com.connexta.ion.replication.api.impl.data.ReplicationStatusImpl;
-import com.connexta.ion.replication.api.impl.spring.HistoryRepository;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Optional;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ReplicatorHistoryManagerImplTest {
 
-  ReplicatorHistoryManagerImpl history;
-
-  @Mock HistoryRepository historyRepository;
-
-  @Before
-  public void setUp() throws Exception {
-    history = new ReplicatorHistoryManagerImpl(historyRepository);
-  }
-
-  @Test
-  public void create() {
-    assertThat(history.create(), instanceOf(ReplicationStatusImpl.class));
-  }
-
-  @Test
-  public void get() {
-    when(historyRepository.findById(anyString()))
-        .thenReturn(Optional.of(new ReplicationStatusImpl()));
-    history.get("test");
-    verify(historyRepository).findById("test");
-  }
-
-  @Test
-  public void objects() {
-    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
-    history.objects();
-    verify(historyRepository).findAll();
-  }
-
-  @Test
-  public void getByReplicatorId() {
-    ReplicationStatusImpl status = new ReplicationStatusImpl();
-    status.setReplicatorId("test");
-    when(historyRepository.findAll()).thenReturn(Collections.singletonList(status));
-    assertThat(history.getByReplicatorId("test"), is(status));
-  }
-
-  @Test(expected = NotFoundException.class)
-  public void getByReplicatorIdNotFoundException() {
-    ReplicationStatusImpl status = new ReplicationStatusImpl();
-    status.setReplicatorId("test");
-    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
-    history.getByReplicatorId("test");
-  }
-
-  @Test
-  public void save() {
-    ReplicationStatusImpl prevStatus = loadStatus(new ReplicationStatusImpl(), 1);
-    ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 2);
-    freshStatus.setReplicatorId(prevStatus.getReplicatorId());
-    when(historyRepository.findAll()).thenReturn(Collections.singletonList(prevStatus));
-    history.save(freshStatus);
-    verify(historyRepository).save(prevStatus);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void saveInvalidStatus() {
-    ReplicationStatus mockStatus = mock(ReplicationStatus.class);
-    history.save(mockStatus);
-  }
-
-  @Test
-  public void saveFirstEvent() {
-    ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 1);
-    freshStatus.setStartTime(new Date(0));
-    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
-    history.save(freshStatus);
-    verify(historyRepository).save(freshStatus);
-    assertThat(freshStatus.getLastRun(), is(freshStatus.getStartTime()));
-    assertThat(freshStatus.getLastSuccess(), is(new Date(1)));
-  }
-
-  @Test
-  public void saveSuccessfulFirstEvent() {
-    ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 1);
-    freshStatus.setStartTime(new Date(0));
-    freshStatus.setStatus(Status.SUCCESS);
-    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
-    history.save(freshStatus);
-    verify(historyRepository).save(freshStatus);
-    assertThat(freshStatus.getLastRun(), is(freshStatus.getStartTime()));
-    assertThat(freshStatus.getLastSuccess(), is(freshStatus.getStartTime()));
-  }
-
-  @Test
-  public void remove() {
-    history.remove("test");
-    verify(historyRepository).deleteById(anyString());
-  }
-
-  private ReplicationStatusImpl loadStatus(ReplicationStatusImpl status, int num) {
-    status.setReplicatorId("id" + num);
-    status.setStartTime(new Date(num));
-    status.setLastSuccess(new Date(num));
-    status.setLastRun(new Date(num));
-    status.setDuration(num);
-    status.setStatus(Status.values()[num]);
-    status.setPushCount(num);
-    status.setPullCount(num);
-    status.setPushFailCount(num);
-    status.setPullFailCount(num);
-    status.setPushBytes(num);
-    status.setPullBytes(num);
-    return status;
-  }
+  //  ReplicatorHistoryManagerImpl history;
+  //
+  //  @Mock HistoryRepository historyRepository;
+  //
+  //  @Before
+  //  public void setUp() throws Exception {
+  //    history = new ReplicatorHistoryManagerImpl(historyRepository);
+  //  }
+  //
+  //  @Test
+  //  public void create() {
+  //    assertThat(history.create(), instanceOf(ReplicationStatusImpl.class));
+  //  }
+  //
+  //  @Test
+  //  public void get() {
+  //    when(historyRepository.findById(anyString()))
+  //        .thenReturn(Optional.of(new ReplicationStatusImpl()));
+  //    history.get("test");
+  //    verify(historyRepository).findById("test");
+  //  }
+  //
+  //  @Test
+  //  public void objects() {
+  //    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
+  //    history.objects();
+  //    verify(historyRepository).findAll();
+  //  }
+  //
+  //  @Test
+  //  public void getByReplicatorId() {
+  //    ReplicationStatusImpl status = new ReplicationStatusImpl();
+  //    status.setReplicatorId("test");
+  //    when(historyRepository.findAll()).thenReturn(Collections.singletonList(status));
+  //    assertThat(history.getByReplicatorId("test"), is(status));
+  //  }
+  //
+  //  @Test(expected = NotFoundException.class)
+  //  public void getByReplicatorIdNotFoundException() {
+  //    ReplicationStatusImpl status = new ReplicationStatusImpl();
+  //    status.setReplicatorId("test");
+  //    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
+  //    history.getByReplicatorId("test");
+  //  }
+  //
+  //  @Test
+  //  public void save() {
+  //    ReplicationStatusImpl prevStatus = loadStatus(new ReplicationStatusImpl(), 1);
+  //    ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 2);
+  //    freshStatus.setReplicatorId(prevStatus.getReplicatorId());
+  //    when(historyRepository.findAll()).thenReturn(Collections.singletonList(prevStatus));
+  //    history.save(freshStatus);
+  //    verify(historyRepository).save(prevStatus);
+  //  }
+  //
+  //  @Test(expected = IllegalArgumentException.class)
+  //  public void saveInvalidStatus() {
+  //    ReplicationStatus mockStatus = mock(ReplicationStatus.class);
+  //    history.save(mockStatus);
+  //  }
+  //
+  //  @Test
+  //  public void saveFirstEvent() {
+  //    ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 1);
+  //    freshStatus.setStartTime(new Date(0));
+  //    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
+  //    history.save(freshStatus);
+  //    verify(historyRepository).save(freshStatus);
+  //    assertThat(freshStatus.getLastRun(), is(freshStatus.getStartTime()));
+  //    assertThat(freshStatus.getLastSuccess(), is(new Date(1)));
+  //  }
+  //
+  //  @Test
+  //  public void saveSuccessfulFirstEvent() {
+  //    ReplicationStatusImpl freshStatus = loadStatus(new ReplicationStatusImpl(), 1);
+  //    freshStatus.setStartTime(new Date(0));
+  //    freshStatus.setStatus(Status.SUCCESS);
+  //    when(historyRepository.findAll()).thenReturn(Collections.emptyList());
+  //    history.save(freshStatus);
+  //    verify(historyRepository).save(freshStatus);
+  //    assertThat(freshStatus.getLastRun(), is(freshStatus.getStartTime()));
+  //    assertThat(freshStatus.getLastSuccess(), is(freshStatus.getStartTime()));
+  //  }
+  //
+  //  @Test
+  //  public void remove() {
+  //    history.remove("test");
+  //    verify(historyRepository).deleteById(anyString());
+  //  }
+  //
+  //  private ReplicationStatusImpl loadStatus(ReplicationStatusImpl status, int num) {
+  //    status.setReplicatorId("id" + num);
+  //    status.setStartTime(new Date(num));
+  //    status.setLastSuccess(new Date(num));
+  //    status.setLastRun(new Date(num));
+  //    status.setDuration(num);
+  //    status.setStatus(Status.values()[num]);
+  //    status.setPushCount(num);
+  //    status.setPullCount(num);
+  //    status.setPushFailCount(num);
+  //    status.setPullFailCount(num);
+  //    status.setPushBytes(num);
+  //    status.setPullBytes(num);
+  //    return status;
+  //  }
 }

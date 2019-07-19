@@ -58,6 +58,10 @@ public interface Metadata {
   /** @param resourceSize the size of the {@link Resource} represented by this metadata */
   void setResourceSize(long resourceSize);
 
+  long getMetadataSize();
+
+  void setMetadataSize(long metadataSize);
+
   /** @return the {@link Date} this metadata was last modified */
   Date getMetadataModified();
 

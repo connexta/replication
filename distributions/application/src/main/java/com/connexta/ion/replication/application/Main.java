@@ -21,7 +21,6 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.solr.repository.config.EnableSolrRepositories;
@@ -37,12 +36,7 @@ public class Main {
   public static void main(String[] args) throws Exception {
     // Need to load some system properties before anything else is done
     loadSslSystemProperties();
-    SpringApplication application = new SpringApplication(Main.class);
-    application.setWebApplicationType(WebApplicationType.NONE);
-    application.run(args);
-    while (true) {
-      Thread.sleep(1000);
-    }
+    new SpringApplication(Main.class).run(args);
   }
 
   /**

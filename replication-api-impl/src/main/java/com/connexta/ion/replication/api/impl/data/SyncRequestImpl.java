@@ -14,7 +14,6 @@
 package com.connexta.ion.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.SyncRequest;
-import com.connexta.ion.replication.api.data.ReplicationStatus;
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -22,21 +21,13 @@ public class SyncRequestImpl implements SyncRequest {
 
   private ReplicatorConfig config;
 
-  private ReplicationStatus status;
-
-  public SyncRequestImpl(ReplicatorConfig config, ReplicationStatus status) {
+  public SyncRequestImpl(ReplicatorConfig config) {
     this.config = config;
-    this.status = status;
   }
 
   @Override
   public ReplicatorConfig getConfig() {
     return config;
-  }
-
-  @Override
-  public ReplicationStatus getStatus() {
-    return status;
   }
 
   @Override
@@ -54,6 +45,6 @@ public class SyncRequestImpl implements SyncRequest {
 
   @Override
   public String toString() {
-    return String.format("SyncRequestImpl{config=%s, status=%s}", config, status);
+    return String.format("SyncRequestImpl{config=%s}", config);
   }
 }

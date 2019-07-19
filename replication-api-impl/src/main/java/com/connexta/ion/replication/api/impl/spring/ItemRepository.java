@@ -18,6 +18,6 @@ public interface ItemRepository extends PagingAndSortingRepository<ReplicationIt
 
   void deleteByConfigId(String configId);
 
-  Page<ReplicationItemImpl> findByFailureCountBetweenAndSourceAndDestination(
-      int min, int max, String source, String destination, Pageable pageable);
+  //  Page<ReplicationItemImpl> findByConfigIdAndStatus(
+  //      String configId, Status status, Pageable pageable);
 }
