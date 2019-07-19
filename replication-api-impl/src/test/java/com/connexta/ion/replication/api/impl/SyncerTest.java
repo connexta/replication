@@ -45,6 +45,7 @@ import com.connexta.ion.replication.api.data.ResourceResponse;
 import com.connexta.ion.replication.api.data.UpdateRequest;
 import com.connexta.ion.replication.api.data.UpdateStorageRequest;
 import com.connexta.ion.replication.api.impl.Syncer.Job;
+import com.connexta.ion.replication.api.impl.data.ReplicationItemImpl;
 import com.connexta.ion.replication.api.persistence.ReplicationItemManager;
 import com.connexta.ion.replication.api.persistence.ReplicatorHistoryManager;
 import java.net.URI;
@@ -448,6 +449,78 @@ public class SyncerTest {
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
     assertThat(capturedItem.getResourceModified(), is(nullValue()));
     assertThat(capturedItem.getFailureCount(), is(1));
+  }
+
+  @Test
+  public void testSyncCreateMultipleFailures() {
+    // setup
+    doThrow(NotFoundException.class)
+        .when(replicatorHistoryManager)
+        .getByReplicatorId(REPLICATOR_ID);
+
+    final int failtureRetryCount = 5;
+    final String metadataId = "metadataId";
+    final Date modifiedDate = new Date();
+
+    when(replicatorConfig.getFailureRetryCount()).thenReturn(failtureRetryCount);
+
+    when(replicationItemManager.getFailureList(failtureRetryCount, SOURCE_NAME, DESTINATION_NAME))
+        .thenReturn(Collections.emptyList(), Collections.singletonList(metadataId));
+
+    Metadata metadata = mockMetadata(metadataId);
+    when(metadata.isDeleted()).thenReturn(false);
+    when(metadata.getResourceUri()).thenReturn(null);
+    when(metadata.getMetadataModified()).thenReturn(modifiedDate);
+    when(metadata.getResourceModified()).thenReturn(null);
+
+    when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
+        .thenReturn(
+            Optional.empty(),
+            Optional.of(
+                new ReplicationItemImpl(
+                    metadataId,
+                    modifiedDate,
+                    modifiedDate,
+                    SOURCE_NAME,
+                    DESTINATION_NAME,
+                    REPLICATOR_ID,
+                    1)));
+
+    Iterable<Metadata> iterable = mock(Iterable.class);
+    Iterator<Metadata> iterator = mock(Iterator.class);
+    when(iterator.hasNext()).thenReturn(true).thenReturn(false).thenReturn(true).thenReturn(false);
+    when(iterator.next()).thenReturn(metadata);
+    when(iterable.iterator()).thenReturn(iterator);
+
+    QueryResponse queryResponse = mock(QueryResponse.class);
+    when(queryResponse.getMetadata()).thenReturn(iterable);
+
+    ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
+    when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse, queryResponse);
+
+    // doesn't matter. do to avoid an NPE when creating sync response
+    when(replicationStatus.getStatus()).thenReturn(Status.SUCCESS);
+
+    ArgumentCaptor<CreateRequest> createRequestCaptor =
+        ArgumentCaptor.forClass(CreateRequest.class);
+    when(destination.createRequest(createRequestCaptor.capture())).thenThrow(Exception.class);
+
+    when(source.isAvailable()).thenReturn(true);
+    when(destination.isAvailable()).thenReturn(true);
+
+    // when
+    Job job = syncer.create(source, destination, replicatorConfig, replicationStatus);
+    job.sync();
+    job = syncer.create(source, destination, replicatorConfig, replicationStatus);
+    job.sync();
+    // then
+    ArgumentCaptor<ReplicationItem> replicationItemCaptor =
+        ArgumentCaptor.forClass(ReplicationItem.class);
+
+    verify(replicationItemManager, times(2)).saveItem(replicationItemCaptor.capture());
+
+    final ReplicationItem capturedItem = replicationItemCaptor.getAllValues().get(1);
+    assertThat(capturedItem.getFailureCount(), is(2));
   }
 
   @Test
