@@ -148,7 +148,7 @@ public class Syncer {
           } else if (destination.exists(metadata) && replicationItem.isPresent()) {
             doUpdate(metadata, replicationItem.get());
           } else {
-            doCreate(metadata);
+            doCreate(metadata, replicationItem);
           }
         } catch (VirtualMachineError e) {
           throw e;
@@ -171,7 +171,7 @@ public class Syncer {
             replicationItemManager.saveItem(item);
             replicationStatus.incrementFailure();
           } else {
-            ReplicationItem item = createReplicationItem(metadata);
+            ReplicationItem item = createReplicationItem(metadata, replicationItem);
             item.incrementFailureCount();
             replicationItemManager.saveItem(item);
             replicationStatus.incrementFailure();
@@ -200,7 +200,7 @@ public class Syncer {
       }
     }
 
-    private void doCreate(Metadata metadata) {
+    private void doCreate(Metadata metadata, Optional<ReplicationItem> item) {
       addTagsAndLineage(metadata);
       boolean created;
 
@@ -230,11 +230,11 @@ public class Syncer {
       }
 
       if (created) {
-        ReplicationItem replicationItem = createReplicationItem(metadata);
+        ReplicationItem replicationItem = createReplicationItem(metadata, Optional.empty());
         replicationItemManager.saveItem(replicationItem);
         replicationStatus.incrementCount();
       } else {
-        ReplicationItem replicationItem = createReplicationItem(metadata);
+        ReplicationItem replicationItem = createReplicationItem(metadata, item);
         replicationItem.incrementFailureCount();
         replicationItemManager.saveItem(replicationItem);
         replicationStatus.incrementFailure();
@@ -294,7 +294,7 @@ public class Syncer {
       }
 
       if (updated) {
-        ReplicationItem updateReplicationItem = createReplicationItem(metadata);
+        ReplicationItem updateReplicationItem = createReplicationItem(metadata, Optional.empty());
         replicationItemManager.saveItem(updateReplicationItem);
         replicationStatus.incrementCount();
       } else {
@@ -346,14 +346,17 @@ public class Syncer {
       metadata.addTag(Replication.REPLICATED_TAG);
     }
 
-    private ReplicationItem createReplicationItem(Metadata metadata) {
+    private ReplicationItem createReplicationItem(
+        Metadata metadata, Optional<ReplicationItem> existingItem) {
+      int failureCount = existingItem.isPresent() ? existingItem.get().getFailureCount() : 0;
       return new ReplicationItemImpl(
           metadata.getId(),
           metadata.getResourceModified(),
           metadata.getMetadataModified(),
           sourceName,
           destinationName,
-          replicatorConfig.getId());
+          replicatorConfig.getId(),
+          failureCount);
     }
 
     @Nullable
