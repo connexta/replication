@@ -10,7 +10,7 @@ spring:
     solr:
       host: http://replication-solr:8983/solr
 replication:
-  period: 60
+  period: 300
   connectionTimeout: 30
   receiveTimeout: 60
 
