@@ -28,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
@@ -61,8 +62,16 @@ public class ReplicatorImpl implements Replicator {
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
 
-  private final Set<Consumer<ReplicationItem>> callbacks = new HashSet<>();
+  private final Set<Consumer<ReplicationItem>> callbacks =
+      Collections.synchronizedSet(new HashSet<>());
 
+  /**
+   * Creates a new {@code ReplicatorImpl}.
+   *
+   * @param nodeAdapters bean for creating {@link NodeAdapter}s
+   * @param siteManager manager for accessing {@link ReplicationSite}s
+   * @param syncer bean for transferring metadata and/or resources
+   */
   public ReplicatorImpl(NodeAdapters nodeAdapters, SiteManager siteManager, Syncer syncer) {
     this(nodeAdapters, siteManager, Executors.newSingleThreadScheduledExecutor(), syncer);
   }
@@ -73,7 +82,7 @@ public class ReplicatorImpl implements Replicator {
     this.nodeAdapters = notNull(nodeAdapters);
     this.executor = notNull(executor);
     this.siteManager = notNull(siteManager);
-    this.syncer = syncer;
+    this.syncer = notNull(syncer);
   }
 
   public void init() {
@@ -145,7 +154,7 @@ public class ReplicatorImpl implements Replicator {
   }
 
   private void sync(NodeAdapter source, NodeAdapter destination, ReplicatorConfig config) {
-    Syncer.Job job = syncer.create(source, destination, config, callbacks);
+    Syncer.Job job = syncer.create(source, destination, config, Set.copyOf(callbacks));
     job.sync();
   }
 
@@ -207,7 +216,7 @@ public class ReplicatorImpl implements Replicator {
 
   @Override
   public Set<SyncRequest> getActiveSyncRequests() {
-    return Set.copyOf(new HashSet<>(activeSyncRequests));
+    return Set.copyOf(activeSyncRequests);
   }
 
   @Override

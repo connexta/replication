@@ -45,8 +45,7 @@ public interface Replicator {
   /**
    * Registers a callback which will be called when the {@link SyncRequest} completes.
    *
-   * @param replicators A set of replicator IDs to listen to, or empty list for all replicators
-   * @param callback the callback which will be executed, cannot be {@code null}
+   * @param callback the callback which will be executed
    */
   void registerCompletionCallback(Consumer<ReplicationItem> callback);
 }

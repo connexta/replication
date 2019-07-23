@@ -35,7 +35,7 @@ public interface ReplicationItem {
   /** @return the size in bytes of this item's resource */
   long getResourceSize();
 
-  /** @return the size in bytes of this item's metadata */
+  /** @return the size in bytes of this item's metadata, or -1 if unknown */
   long getMetadataSize();
 
   /**

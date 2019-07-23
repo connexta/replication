@@ -54,6 +54,12 @@ public class Syncer {
 
   private final ReplicatorConfigManager configs;
 
+  /**
+   * Creates a new {@code Syncer}.
+   *
+   * @param replicationItemManager bean for operating on {@link ReplicationItem}s
+   * @param configs bean for operating on {@link ReplicatorConfig}s
+   */
   public Syncer(ReplicationItemManager replicationItemManager, ReplicatorConfigManager configs) {
     this.replicationItemManager = replicationItemManager;
     this.configs = configs;
@@ -76,6 +82,10 @@ public class Syncer {
     return new Job(source, destination, replicatorConfig, callbacks);
   }
 
+  /**
+   * Class which will handle transferring resources and metadata between a source and destination
+   * {@link NodeAdapter}.
+   */
   class Job {
 
     private final NodeAdapter source;
@@ -196,6 +206,7 @@ public class Syncer {
       return created ? Status.SUCCESS : Status.FAILURE;
     }
 
+    @Nullable
     private Status doUpdate(Metadata metadata, ReplicationItem replicationItem) {
       addTagsAndLineage(metadata);
 
@@ -241,6 +252,7 @@ public class Syncer {
       return updated ? Status.SUCCESS : Status.FAILURE;
     }
 
+    @Nullable
     private Status doDelete(Metadata metadata, ReplicationItem replicationItem) {
       LOGGER.trace(
           "Sending delete from {} to {} for metadata {}",

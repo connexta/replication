@@ -13,6 +13,8 @@
  */
 package com.connexta.ion.replication.api.impl.data;
 
+import static org.apache.commons.lang3.Validate.notEmpty;
+
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Status;
 import java.util.Date;
@@ -115,10 +117,10 @@ public class ReplicationItemImpl implements ReplicationItem {
 
   @Override
   public double getTransferRate() {
-    if (duration != -1 && resourceSize != -1) {
+    if (duration > 0 && resourceSize != -1.0D) {
       return (double) resourceSize / TimeUnit.MILLISECONDS.toSeconds(duration);
     }
-    return -1;
+    return -1.0D;
   }
 
   @Override
@@ -153,6 +155,12 @@ public class ReplicationItemImpl implements ReplicationItem {
         status);
   }
 
+  /**
+   * Copies fields from a {@link ReplicationItem} to a new item.
+   *
+   * @param item item to copy
+   * @return a builder for the new copied item
+   */
   public static Builder from(ReplicationItem item) {
     return new Builder(item.getId(), item.getConfigId(), item.getSource(), item.getDestination())
         .resourceModified(item.getResourceModified())
@@ -178,6 +186,7 @@ public class ReplicationItemImpl implements ReplicationItem {
     this.startTime = builder.startTime;
   }
 
+  /** Builder class for creating {@link ReplicationItemImpl}s. */
   public static class Builder {
 
     private final String id;
@@ -202,11 +211,17 @@ public class ReplicationItemImpl implements ReplicationItem {
 
     private Status status;
 
+    /**
+     * @param id id of the {@link ReplicationItem}
+     * @param configId replicator id the replication item is associated with
+     * @param source the source the item comes from
+     * @param destination the destination the item was sent to
+     */
     public Builder(String id, String configId, String source, String destination) {
-      this.id = id;
-      this.configId = configId;
-      this.source = source;
-      this.destination = destination;
+      this.id = notEmpty(id);
+      this.configId = notEmpty(configId);
+      this.source = notEmpty(source);
+      this.destination = notEmpty(destination);
     }
 
     public Builder resourceModified(Date date) {

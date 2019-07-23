@@ -108,22 +108,6 @@ public interface ReplicatorConfig extends Persistable {
   void setDescription(@Nullable String description);
 
   /**
-   * Returns the amount of times a {@link com.connexta.ion.replication.api.ReplicationItem} will
-   * attempt to be retried if it previously failed to replicate.
-   *
-   * @return failure retry count
-   */
-  int getFailureRetryCount();
-
-  /**
-   * Sets how many attempts will be made to replicate a {@link
-   * com.connexta.ion.replication.api.ReplicationItem} that fails to replicate.
-   *
-   * @param retries the number of any item that fails to replicate should be retried.
-   */
-  void setFailureRetryCount(int retries);
-
-  /**
    * Gets the suspended state of this config. Suspended configs will not be run.
    *
    * @return boolean indicating if this config is suspended.
@@ -143,9 +127,9 @@ public interface ReplicatorConfig extends Persistable {
   @Nullable
   Date getLastRun();
 
+  // todo implement this
   /** @param lastRun the date at which the configuration was last run */
   void setLastRun(@Nullable Date lastRun);
-
   /**
    * @return the last time the configuration was successfully run, or {@code null} if there has been
    *     no successful run

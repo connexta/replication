@@ -3,89 +3,65 @@ package com.connexta.ion.replication.application.metrics;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.Status;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import io.micrometer.core.lang.NonNull;
 import java.util.List;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * Registers metrics and a callback to the {@link Replicator#registerCompletionCallback(Consumer)}
+ * to increment metrics based on the resulting {@link ReplicationItem}s.
+ */
 public class ReplicationMetrics implements MeterBinder {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationMetrics.class);
-
-  private final Iterable<Tag> tags;
-
-  private Counter itemsTransferred;
-
-  private Counter itemsFailed;
-
-  private Counter resourceBytes;
-
-  private Counter metadataBytes;
-
-  private Gauge transferRate;
-
-  private Timer throughput;
-
+  /**
+   * Creates a new {@code ReplicationMetrics}.
+   *
+   * @param replicator the {@link Replicator} to receive completed {@link ReplicationItem}s from.
+   */
   public ReplicationMetrics(Replicator replicator) {
-    this(replicator, List.of());
+    replicator.registerCompletionCallback(this::handleItem);
   }
 
-  public ReplicationMetrics(Replicator replicator, Iterable<Tag> tags) {
-    this.tags = tags;
-    replicator.registerCompletionCallback(createCompletionCallback());
-  }
-
+  // todo: enable registration here when tags are figured out.
   @Override
   public void bindTo(@NonNull MeterRegistry meterRegistry) {
-    LOGGER.info("Binding replication meters");
-    Counter.builder("replication.transfer.success")
-        .description("Number of metadata/resources successfully transferred between sites")
-        .baseUnit("items")
-        .tags(tags)
-        .register(meterRegistry);
-
-    Counter.builder("replication.transfer.fail")
-        .description("Number of metadata/resources failed to be transferred between sites")
-        .baseUnit("items")
-        .tags(tags)
-        .register(meterRegistry);
+    //    LOGGER.info("Binding replication meters");
+    //    Counter.builder("replication.transfer.success.items")
+    //        .description("Number of metadata/resources successfully transferred between sites")
+    //        .register(meterRegistry);
+    //
+    //    Counter.builder("replication.transfer.fail.items")
+    //        .description("Number of metadata/resources failed to be transferred between sites")
+    //        .register(meterRegistry);
+    //
+    //    Counter.builder("replication.transfer.resource.bytes")
+    //        .description("Number of resource bytes transferred between sites")
+    //        .register(meterRegistry);
+    //
+    //    Counter.builder("replication.transfer.metadata.bytes")
+    //        .description("Number of metadata bytes transferred between sites")
+    //        .register(meterRegistry);
   }
 
-  private Consumer<ReplicationItem> createCompletionCallback() {
-    return item -> {
-      Iterable<Tag> itemTags = getTagsFor(item);
-      Status status = item.getStatus();
-      if (Status.SUCCESS.equals(status)) {
-        itemsTransferred = Metrics.counter("replication.transfer.success", itemTags);
-        itemsTransferred.increment();
-
-        // these counters are not working like the other two for some reason
-        Counter.builder("replication.transfer.resource")
-            .description("Number of resource bytes transferred between sites")
-            .baseUnit("bytes")
-            .tags(itemTags)
-            .register(Metrics.globalRegistry)
-            .increment(item.getResourceSize());
-
-        Counter.builder("replication.transfer.metadata")
-            .description("Number of metadata bytes transferred between sites")
-            .baseUnit("bytes")
-            .tags(itemTags)
-            .register(Metrics.globalRegistry)
-            .increment(item.getMetadataSize());
-      } else {
-        itemsFailed = Metrics.counter("replication.transfer.fail", itemTags);
-        itemsFailed.increment();
-      }
-    };
+  /**
+   * Increments certain meters based on the incoming {@link ReplicationItem}.
+   */
+  private void handleItem(ReplicationItem item) {
+    Iterable<Tag> itemTags = getTagsFor(item);
+    Status status = item.getStatus();
+    if (Status.SUCCESS.equals(status)) {
+      Metrics.counter("replication.transfer.success.items", itemTags).increment();
+      Metrics.counter("replication.transfer.resource.bytes", itemTags)
+          .increment(item.getResourceSize());
+      Metrics.counter("replication.transfer.metadata.bytes", itemTags)
+          .increment(item.getMetadataSize());
+    } else {
+      Metrics.counter("replication.transfer.fail.items", itemTags).increment();
+    }
   }
 
   private Iterable<Tag> getTagsFor(ReplicationItem item) {

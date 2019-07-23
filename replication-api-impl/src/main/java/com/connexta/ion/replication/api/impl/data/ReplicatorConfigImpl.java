@@ -49,9 +49,6 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Indexed(name = "filter_txt")
   private String filter;
 
-  @Indexed(name = "retry_count_int")
-  private int failureRetryCount;
-
   @Indexed(name = "description_txt")
   private String description;
 
@@ -132,16 +129,6 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  @Override
-  public int getFailureRetryCount() {
-    return failureRetryCount;
-  }
-
-  @Override
-  public void setFailureRetryCount(int count) {
-    failureRetryCount = count;
   }
 
   @Override

@@ -17,6 +17,7 @@ import com.connexta.ion.replication.api.SyncRequest;
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+/** Simple SyncRequest implementation. */
 public class SyncRequestImpl implements SyncRequest {
 
   private ReplicatorConfig config;
@@ -32,10 +33,14 @@ public class SyncRequestImpl implements SyncRequest {
 
   @Override
   public boolean equals(Object o) {
+    if(o == this) {
+      return true;
+    }
+
     if (o instanceof SyncRequest) {
       return ((SyncRequest) o).getConfig().getName().equals(config.getName());
     }
-    return super.equals(o);
+    return false;
   }
 
   @Override
