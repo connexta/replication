@@ -70,6 +70,13 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
+
+    <!-- Test Dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -141,7 +148,7 @@
                     <limit implementation="org.codice.jacoco.LenientLimit">
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.48</minimum>
+                      <minimum>0.57</minimum>
                     </limit>
                     <limit implementation="org.codice.jacoco.LenientLimit">
                       <counter>BRANCH</counter>
@@ -151,7 +158,7 @@
                     <limit implementation="org.codice.jacoco.LenientLimit">
                       <counter>COMPLEXITY</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.43</minimum>
+                      <minimum>0.62</minimum>
                     </limit>
                   </limits>
                 </rule>
