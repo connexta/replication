@@ -1,5 +1,6 @@
 package com.connexta.ion.replication.api.impl.spring;
 
+import com.connexta.ion.replication.api.Status;
 import com.connexta.ion.replication.api.impl.data.ReplicationItemImpl;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,6 @@ public interface ItemRepository extends PagingAndSortingRepository<ReplicationIt
 
   void deleteByConfigId(String configId);
 
-  //  Page<ReplicationItemImpl> findByConfigIdAndStatus(
-  //      String configId, Status status, Pageable pageable);
+  Page<ReplicationItemImpl> findByConfigIdAndStatus(
+      String configId, Status status, Pageable pageable);
 }

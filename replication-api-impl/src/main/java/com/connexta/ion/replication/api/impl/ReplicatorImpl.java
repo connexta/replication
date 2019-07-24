@@ -267,11 +267,6 @@ public class ReplicatorImpl implements Replicator {
     }
   }
 
-  @VisibleForTesting
-  void setPendingSyncRequestsQueue(BlockingQueue blockingQueue) {
-    this.pendingSyncRequests = blockingQueue;
-  }
-
   private void closeQuietly(Closeable c) {
     try {
       if (c != null) {

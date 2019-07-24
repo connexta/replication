@@ -82,8 +82,9 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   @Override
   public List<String> getFailureList(String configId) {
-    return itemRepository.findByConfigId(configId, PageRequest.of(DEFAULT_START_INDEX, 50)).stream()
-        .filter(item -> item.getStatus().equals(Status.FAILURE))
+    return itemRepository
+        .findByConfigIdAndStatus(configId, Status.FAILURE, PageRequest.of(DEFAULT_START_INDEX, 50))
+        .stream()
         .map(ReplicationItemImpl::getId)
         .collect(Collectors.toList());
   }

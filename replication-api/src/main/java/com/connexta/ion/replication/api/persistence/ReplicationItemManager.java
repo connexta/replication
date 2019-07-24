@@ -72,11 +72,8 @@ public interface ReplicationItemManager {
    * Get the list of IDs for {@link ReplicationItem}s that failed to be transferred between the
    * source and destination {@link NodeAdapter}s.
    *
-   * @param maximumFailureCount the failure count that {@link ReplicationItem#getFailureCount()}
-   *     should not exceed.
-   * @param source the source {@link NodeAdapter} name
-   * @param destination the destination {@link NodeAdapter} name
-   * @return list of string ids of items that have failed to previously transfer
+   * @param configId the {@link ReplicatorConfig} id to get failures for
+   * @return list of ids for items that failed to be transferred
    */
   List<String> getFailureList(String configId);
 

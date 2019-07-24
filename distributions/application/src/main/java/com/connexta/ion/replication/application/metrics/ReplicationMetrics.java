@@ -3,6 +3,7 @@ package com.connexta.ion.replication.application.metrics;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.Status;
+import com.google.common.annotations.VisibleForTesting;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
@@ -47,10 +48,9 @@ public class ReplicationMetrics implements MeterBinder {
     //        .register(meterRegistry);
   }
 
-  /**
-   * Increments certain meters based on the incoming {@link ReplicationItem}.
-   */
-  private void handleItem(ReplicationItem item) {
+  /** Increments certain meters based on the incoming {@link ReplicationItem}. */
+  @VisibleForTesting
+  void handleItem(ReplicationItem item) {
     Iterable<Tag> itemTags = getTagsFor(item);
     Status status = item.getStatus();
     if (Status.SUCCESS.equals(status)) {

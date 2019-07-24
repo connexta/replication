@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Enabled auto configuration for Replication related metrics. */
+/** Enable auto configuration for Replication related metrics. */
 @Configuration
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnClass(MeterRegistry.class)

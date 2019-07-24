@@ -18,7 +18,6 @@ import static org.apache.commons.lang3.Validate.notEmpty;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Status;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.Indexed;
 import org.springframework.data.solr.core.mapping.SolrDocument;
@@ -57,12 +56,12 @@ public class ReplicationItemImpl implements ReplicationItem {
   private Date startTime;
 
   @Indexed(name = "duration" + LONG)
-  private long duration = -1;
+  private long duration;
 
   @Indexed(name = "status_txt", type = "string")
   private Status status;
 
-  /** This default ctor is needed for spring-solr to instantiate an item when querying the solr */
+  /** This default ctor is needed for spring-solr to instantiate an item when querying solr */
   public ReplicationItemImpl() {}
 
   @Override
@@ -116,11 +115,12 @@ public class ReplicationItemImpl implements ReplicationItem {
   }
 
   @Override
-  public double getTransferRate() {
-    if (duration > 0 && resourceSize != -1.0D) {
-      return (double) resourceSize / TimeUnit.MILLISECONDS.toSeconds(duration);
+  public double getResourceTransferRate() {
+    if (duration > 0 && resourceSize != 0) {
+      double bytesPerMs = (double) resourceSize / duration;
+      return toBytesPerSec(bytesPerMs);
     }
-    return -1.0D;
+    return 0.0D;
   }
 
   @Override
@@ -141,7 +141,7 @@ public class ReplicationItemImpl implements ReplicationItem {
   @Override
   public String toString() {
     return String.format(
-        "ReplicationItemImpl{id=%s, resourceModified=%s, metadataModified=%s, sourceName=%s, destinationName=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, durationMs=%d, status=%s}",
+        "ReplicationItemImpl{id=%s, resourceModified=%s, metadataModified=%s, source=%s, destination=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, durationMs=%d, status=%s}",
         id,
         resourceModified,
         metadataModified,
@@ -186,6 +186,10 @@ public class ReplicationItemImpl implements ReplicationItem {
     this.startTime = builder.startTime;
   }
 
+  private double toBytesPerSec(double bytesPerMs) {
+    return bytesPerMs / 1000;
+  }
+
   /** Builder class for creating {@link ReplicationItemImpl}s. */
   public static class Builder {
 
@@ -201,13 +205,13 @@ public class ReplicationItemImpl implements ReplicationItem {
 
     private Date metadataModified = null;
 
-    private long metadataSize = -1;
+    private long metadataSize = 0;
 
-    private long resourceSize = -1;
+    private long resourceSize = 0;
 
-    private Date startTime;
+    private Date startTime = null;
 
-    private long duration = -1;
+    private long duration = 0;
 
     private Status status;
 

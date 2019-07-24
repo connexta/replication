@@ -33,7 +33,7 @@ public class SyncRequestImpl implements SyncRequest {
 
   @Override
   public boolean equals(Object o) {
-    if(o == this) {
+    if (o == this) {
       return true;
     }
 

@@ -32,10 +32,10 @@ public interface ReplicationItem {
   /** @return the last time the {@link Metadata} associated with this item was modified */
   Date getMetadataModified();
 
-  /** @return the size in bytes of this item's resource */
+  /** @return the size in bytes of this item's resource, cannot be negative */
   long getResourceSize();
 
-  /** @return the size in bytes of this item's metadata, or -1 if unknown */
+  /** @return the size in bytes of this item's metadata, cannot be negative */
   long getMetadataSize();
 
   /**
@@ -50,16 +50,18 @@ public interface ReplicationItem {
   /** Called when the item ends transfer, setting the {@link #getDuration()}. */
   void markDoneTime();
 
-  /**
-   * @return the time in milliseconds it took transfer this item, or -1 if it has not transferred
-   */
+  /** @return the time in milliseconds it took transfer this item, cannot be negative. */
   long getDuration();
 
-  /** @return the status of this replication item */
+  /**
+   * See {@link Status}.
+   *
+   * @return the status of this replication item
+   */
   Status getStatus();
 
-  /** @return the speed of transfer in bytes per second, or -1 if the item has not transferred */
-  double getTransferRate();
+  /** @return the resource's speed of transfer in bytes per second, cannot be negative */
+  double getResourceTransferRate();
 
   /**
    * @return the name for the source {@link NodeAdapter} the metadata/resource was being replicated
