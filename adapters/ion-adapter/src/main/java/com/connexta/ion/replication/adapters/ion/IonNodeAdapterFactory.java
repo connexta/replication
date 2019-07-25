@@ -51,7 +51,7 @@ public class IonNodeAdapterFactory implements NodeAdapterFactory {
     this.connectionTimeout = connectionTimeout;
     this.receiveTimeout = receiveTimeout;
     LOGGER.debug(
-        "Created a IonNodeAdapterFactory with a connection timeout of {} seconds and a receive timeout of {} seconds",
+        "Created a IonNodeAdapterFactory with a connection timeout of {}ms and a receive timeout of {}ms",
         connectionTimeout,
         receiveTimeout);
   }

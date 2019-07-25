@@ -1,0 +1,22 @@
+logging:
+  level:
+    root: INFO
+    securityLogger: ERROR
+    com.connexta.ion.replication.adapters.ddf.DdfNodeAdapter: TRACE
+    com.connexta.ion.replication.adapters.ddf.csw.CswRecordConverter: TRACE
+    org.apache.cxf.interceptor.LoggingOutInterceptor: WARN
+    org.apache.cxf.interceptor.LoggingInInterceptor: WARN
+
+    #turn these up to inspect issues with solr
+    org.apache.solr: INFO
+    org.springframework.data.solr: INFO
+
+    javax.xml.soap: ERROR
+spring:
+  data:
+    solr:
+      host: http://replication-solr:8983/solr
+replication:
+  period: 1
+  connectionTimeout: 30
+  receiveTimeout: 60
