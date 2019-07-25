@@ -48,8 +48,6 @@ public class ReplicatorRunner {
 
   private final long period;
 
-  private static final long STARTUP_DELAY = TimeUnit.MINUTES.toSeconds(1);
-
   private static final long DEFAULT_REPLICATION_PERIOD = TimeUnit.MINUTES.toSeconds(5);
 
   /**
@@ -94,8 +92,7 @@ public class ReplicatorRunner {
     } else {
       LOGGER.info("Replication for sites: {} scheduled for every {} seconds.", sites, period);
     }
-    scheduledExecutor.scheduleAtFixedRate(
-        this::scheduleReplication, STARTUP_DELAY, period, TimeUnit.SECONDS);
+    scheduledExecutor.scheduleAtFixedRate(this::scheduleReplication, 0, period, TimeUnit.SECONDS);
   }
 
   public void destroy() {

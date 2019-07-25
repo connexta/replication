@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterFactory;
 import com.connexta.ion.replication.api.NodeAdapterType;
+import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.SyncRequest;
 import com.connexta.ion.replication.api.data.ReplicationSite;
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
@@ -190,6 +191,41 @@ public class ReplicatorImplTest {
     // then
     verify(sourceNode, times(1)).close();
     verify(destinationNode, never()).close();
+  }
+
+  @Test
+  public void testNodeNotFound() throws Exception {
+    // setup
+    ReplicatorConfig replicatorConfig = mockConfig();
+
+    SyncRequest syncRequest = mock(SyncRequest.class);
+    when(syncRequest.getConfig()).thenReturn(replicatorConfig);
+
+    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+
+    when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
+    when(siteManager.get(DESTINATION_ID)).thenThrow(new NotFoundException());
+
+    NodeAdapter sourceNode = mock(NodeAdapter.class);
+    when(sourceNode.isAvailable()).thenReturn(true);
+
+    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
+
+    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+
+    // when
+    replicator.executeSyncRequest(syncRequest);
+
+    // then
+    verify(sourceNode, times(1)).close();
+    verify(syncer, never())
+        .create(
+            any(NodeAdapter.class),
+            any(NodeAdapter.class),
+            any(ReplicatorConfig.class),
+            any(Set.class));
   }
 
   @Test

@@ -1,0 +1,12 @@
+ [
+    {
+      "name":"star",
+      "bidirectional":false,
+      "source":"source-id",
+      "destination":"destination-id",
+      "filter":"title like '@testId@'",
+      "suspended":false,
+      "id":"@testId@",
+      "version":1
+    }
+  ]

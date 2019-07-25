@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterType;
+import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.ReplicationException;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
@@ -130,7 +131,7 @@ public class ReplicatorImpl implements Replicator {
     try {
       node1 = getStoreForId(config.getSource());
       node2 = getStoreForId(config.getDestination());
-    } catch (ReplicationException e) {
+    } catch (ReplicationException | NotFoundException e) {
       LOGGER.debug("Error getting node adapters for replicator config {}.", config.getName(), e);
       completeActiveSyncRequest(syncRequest);
       closeQuietly(node1);

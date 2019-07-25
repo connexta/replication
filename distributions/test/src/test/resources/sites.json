@@ -1,0 +1,16 @@
+  [
+      {
+        "remote_managed":false,
+        "name":"test-source",
+        "url":"@source@",
+        "id":"source-id",
+        "version":2
+      },
+	  {
+	  	"remote_managed":false,
+        "name":"test-destination",
+        "url":"@destination@",
+        "id":"destination-id",
+        "version":2
+	  }
+   ]

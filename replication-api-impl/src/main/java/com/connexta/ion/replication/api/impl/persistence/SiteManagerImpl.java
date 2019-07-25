@@ -31,7 +31,10 @@ public class SiteManagerImpl implements SiteManager {
 
   @Override
   public ReplicationSite get(String id) {
-    return siteRepository.findById(id).orElseThrow(NotFoundException::new);
+    return siteRepository
+        .findById(id)
+        .orElseThrow(
+            () -> new NotFoundException(String.format("Cannot find site with ID: %s", id)));
   }
 
   @Override

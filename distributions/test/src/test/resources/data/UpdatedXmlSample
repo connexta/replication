@@ -1,0 +1,32 @@
+<metacard xmlns="urn:catalog:metacard" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:smil="http://www.w3.org/2001/SMIL20/" xmlns:smillang="http://www.w3.org/2001/SMIL20/Language">
+    <type>ddf.metacard</type>
+    <source>ddf.distribution</source>
+    <string name="title">
+        <value>UPDATED @testId@
+        </value>
+    </string>
+    <dateTime name="created">
+        <value>1987-10-19T20:46:11.014+00:00</value>
+    </dateTime>
+    <stringxml name="metadata">
+        <value><REUTERS CGISPLIT="TRAINING-SET" LEWISSPLIT="TEST" NEWID="21161" OLDID="20276" TOPICS="NO">
+            <DATE>19-OCT-1987 13:46:11.14</DATE>
+            <TOPICS/>
+            <PLACES/>
+            <PEOPLE/>
+            <ORGS/>
+            <EXCHANGES/>
+            <COMPANIES/>
+            <UNKNOWN>
+                V
+                f2349reute
+                f f BC-FED'S-JOHNSON-S   10-19 0013</UNKNOWN>
+            <TEXT TYPE="BRIEF">
+                ******<TITLE>FED'S JOHNSON SAYS INFLATIONARY FEARS CALMER SINCE LAST DISCOUNT RATE RISE
+            </TITLE>Blah blah blah.
+
+
+            </TEXT>
+        </REUTERS></value>
+    </stringxml>
+</metacard>
