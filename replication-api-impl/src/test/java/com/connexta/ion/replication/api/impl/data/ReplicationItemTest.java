@@ -1,7 +1,6 @@
 package com.connexta.ion.replication.api.impl.data;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 
 import com.connexta.ion.replication.api.ReplicationItem;
@@ -41,17 +40,10 @@ public class ReplicationItemTest {
     new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, "").build();
   }
 
-  @SuppressWarnings("squid:S2925" /* Thread sleep is used to simulate processing time */)
   @Test
-  public void testResourceTransferRate() throws Exception {
-    replicationItem =
-        new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
-            .resourceSize(10)
-            .build();
-    replicationItem.markStartTime();
-    Thread.sleep(50);
-    replicationItem.markDoneTime();
-    assertThat(replicationItem.getResourceTransferRate(), greaterThanOrEqualTo(0.0001D));
+  public void testResourceTransferRate() {
+    replicationItem = new TestReplicationItem();
+    assertThat(replicationItem.getResourceTransferRate(), is(.001));
   }
 
   @Test
@@ -76,5 +68,18 @@ public class ReplicationItemTest {
     ToStringVerifier.forClass(ReplicationItemImpl.class)
         .withClassName(NameStyle.SIMPLE_NAME)
         .verify();
+  }
+
+  class TestReplicationItem extends ReplicationItemImpl {
+
+    @Override
+    public long getDuration() {
+      return 5;
+    }
+
+    @Override
+    public long getResourceSize() {
+      return 5;
+    }
   }
 }

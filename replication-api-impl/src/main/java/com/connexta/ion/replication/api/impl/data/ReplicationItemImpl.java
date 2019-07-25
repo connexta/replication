@@ -116,8 +116,8 @@ public class ReplicationItemImpl implements ReplicationItem {
 
   @Override
   public double getResourceTransferRate() {
-    if (duration > 0 && resourceSize != 0) {
-      double bytesPerMs = (double) resourceSize / duration;
+    if (getDuration() > 0 && getResourceSize() != 0) {
+      double bytesPerMs = (double) getDuration() / getResourceSize();
       return toBytesPerSec(bytesPerMs);
     }
     return 0.0D;
