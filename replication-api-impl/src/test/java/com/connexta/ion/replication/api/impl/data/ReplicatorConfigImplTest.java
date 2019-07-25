@@ -32,8 +32,6 @@ public class ReplicatorConfigImplTest {
   @Test
   public void gettersAndSetters() {
     Date lastMetadataModified = new Date();
-    Date lastSuccess = new Date();
-    Date lastRun = new Date();
     config.setName("name");
     config.setBidirectional(true);
     config.setSource("source");
@@ -42,8 +40,6 @@ public class ReplicatorConfigImplTest {
     config.setDescription("description");
     config.setSuspended(true);
     config.setLastMetadataModified(lastMetadataModified);
-    config.setLastSuccess(lastSuccess);
-    config.setLastRun(lastRun);
     assertThat(config.getName(), is("name"));
     assertThat(config.isBidirectional(), is(true));
     assertThat(config.getSource(), is("source"));
@@ -52,7 +48,5 @@ public class ReplicatorConfigImplTest {
     assertThat(config.getDescription(), is("description"));
     assertThat(config.isSuspended(), is(true));
     assertThat(config.getLastMetadataModified(), is(lastMetadataModified));
-    assertThat(config.getLastSuccess(), is(lastSuccess));
-    assertThat(config.getLastRun(), is(lastRun));
   }
 }

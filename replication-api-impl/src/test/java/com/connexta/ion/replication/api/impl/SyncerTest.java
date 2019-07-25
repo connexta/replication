@@ -1312,6 +1312,135 @@ public class SyncerTest {
   }
 
   @Test
+  public void testFailedUpdatesAreRetriedWhenNotAfterModifiedDate() throws Exception {
+    // setup
+    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+
+    final String metadataId = "metadataId";
+    final Date modifiedDate = new Date(new Date().getTime() - 1000);
+    final Date resourceModified = new Date(new Date().getTime() - 1000);
+    final URI metadataUri = new URI("https://onefakestreet:1234");
+    Metadata metadata = mockMetadata(metadataId);
+    when(metadata.isDeleted()).thenReturn(false);
+    when(metadata.getResourceUri()).thenReturn(metadataUri);
+    when(metadata.getMetadataModified()).thenReturn(modifiedDate);
+    when(metadata.getResourceModified()).thenReturn(resourceModified);
+    when(metadata.getMetadataSize()).thenReturn(METADATA_SIZE);
+    when(metadata.getResourceSize()).thenReturn(RESOURCE_SIZE);
+
+    final Date lastMetadataModified = new Date();
+    when(replicatorConfig.getLastMetadataModified()).thenReturn(lastMetadataModified);
+
+    Iterable<Metadata> iterable = mock(Iterable.class);
+    Iterator<Metadata> iterator = mock(Iterator.class);
+    when(iterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(iterator.next()).thenReturn(metadata);
+    when(iterable.iterator()).thenReturn(iterator);
+
+    QueryResponse queryResponse = mock(QueryResponse.class);
+    when(queryResponse.getMetadata()).thenReturn(iterable);
+
+    when(source.query(any(QueryRequest.class))).thenReturn(queryResponse);
+
+    ReplicationItem replicationItem = mock(ReplicationItem.class);
+    when(replicationItem.getMetadataModified()).thenReturn(modifiedDate);
+    when(replicationItem.getResourceModified()).thenReturn(resourceModified);
+    when(replicationItem.getStatus()).thenReturn(Status.FAILURE);
+    when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
+        .thenReturn(Optional.of(replicationItem));
+
+    when(destination.exists(metadata)).thenReturn(true);
+
+    Resource resource = mock(Resource.class);
+    when(resource.getMetadata()).thenReturn(metadata);
+    ResourceResponse resourceResponse = mock(ResourceResponse.class);
+    when(resourceResponse.getResource()).thenReturn(resource);
+
+    when(source.readResource(any(ResourceRequest.class))).thenReturn(resourceResponse);
+    when(destination.updateResource(any(UpdateStorageRequest.class))).thenReturn(true);
+
+    // when
+    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    job.sync();
+
+    // then
+    verify(metadata, times(1)).addLineage(SOURCE_NAME);
+    verify(metadata, times(1)).addTag(Replication.REPLICATED_TAG);
+
+    ArgumentCaptor<ReplicationItem> repItem = ArgumentCaptor.forClass(ReplicationItem.class);
+    verify(replicationItemManager, times(1)).saveItem(repItem.capture());
+    ReplicationItem capturedItem = repItem.getValue();
+    assertThat(capturedItem.getId(), is(metadataId));
+    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getSource(), is(SOURCE_NAME));
+    assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
+    assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
+    assertThat(capturedItem.getResourceModified(), is(resourceModified));
+    assertThat(capturedItem.getStatus(), is(Status.SUCCESS));
+    assertThat(capturedItem.getStartTime(), is(notNullValue()));
+    assertThat(capturedItem.getDuration(), greaterThanOrEqualTo(0L));
+    assertThat(capturedItem.getResourceTransferRate(), greaterThanOrEqualTo(0.0D));
+    assertThat(capturedItem.getMetadataSize(), is(METADATA_SIZE));
+    assertThat(capturedItem.getResourceSize(), is(RESOURCE_SIZE));
+
+    verify(callback).accept(capturedItem);
+    verify(replicatorConfig, never()).setLastMetadataModified(any(Date.class));
+  }
+
+  @Test
+  public void testSkippingUpdate() {
+    // setup
+    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+
+    final String metadataId = "metadataId";
+    final Date modifiedDate = new Date(new Date().getTime() - 1000);
+    Metadata metadata = mockMetadata(metadataId);
+    when(metadata.isDeleted()).thenReturn(false);
+    when(metadata.getMetadataModified()).thenReturn(modifiedDate);
+    when(metadata.getMetadataSize()).thenReturn(METADATA_SIZE);
+    when(metadata.getResourceSize()).thenReturn(RESOURCE_SIZE);
+
+    final Date lastMetadataModified = new Date();
+    when(replicatorConfig.getLastMetadataModified()).thenReturn(lastMetadataModified);
+
+    Iterable<Metadata> iterable = mock(Iterable.class);
+    Iterator<Metadata> iterator = mock(Iterator.class);
+    when(iterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(iterator.next()).thenReturn(metadata);
+    when(iterable.iterator()).thenReturn(iterator);
+
+    QueryResponse queryResponse = mock(QueryResponse.class);
+    when(queryResponse.getMetadata()).thenReturn(iterable);
+
+    when(source.query(any(QueryRequest.class))).thenReturn(queryResponse);
+
+    ReplicationItem replicationItem = mock(ReplicationItem.class);
+    when(replicationItem.getMetadataModified()).thenReturn(modifiedDate);
+    when(replicationItem.getStatus()).thenReturn(Status.SUCCESS);
+    when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
+        .thenReturn(Optional.of(replicationItem));
+
+    when(destination.exists(metadata)).thenReturn(true);
+
+    Resource resource = mock(Resource.class);
+    when(resource.getMetadata()).thenReturn(metadata);
+    ResourceResponse resourceResponse = mock(ResourceResponse.class);
+    when(resourceResponse.getResource()).thenReturn(resource);
+
+    when(source.readResource(any(ResourceRequest.class))).thenReturn(resourceResponse);
+    when(destination.updateResource(any(UpdateStorageRequest.class))).thenReturn(true);
+
+    // when
+    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    job.sync();
+
+    // then
+    verify(replicationItemManager, never()).saveItem(any(ReplicationItem.class));
+    verify(callback, never()).accept(any(ReplicationItem.class));
+    verify(replicatorConfig, never()).setLastMetadataModified(any(Date.class));
+  }
+
+  @Test
   public void testFailedItemsAndModifiedBeforeLastModified() {
     // setup
     ReplicatorConfig config = mock(ReplicatorConfig.class);

@@ -122,22 +122,6 @@ public interface ReplicatorConfig extends Persistable {
   void setSuspended(boolean suspended);
 
   /**
-   * @return the date at which the configuration was last run, or {@code null} if it hasn't been run
-   */
-  @Nullable
-  Date getLastRun();
-
-  // todo implement this
-  /** @param lastRun the date at which the configuration was last run */
-  void setLastRun(@Nullable Date lastRun);
-  /**
-   * @return the last time the configuration was successfully run, or {@code null} if there has been
-   *     no successful run
-   */
-  @Nullable
-  Date getLastSuccess();
-
-  /**
    * See {@link #getLastMetadataModified()}.
    *
    * @param lastMetadataModified the {@link Metadata}'s modified date
@@ -153,7 +137,4 @@ public interface ReplicatorConfig extends Persistable {
    */
   @Nullable
   Date getLastMetadataModified();
-
-  /** @param lastSuccess the last time the configuration was successfully run */
-  void setLastSuccess(@Nullable Date lastSuccess);
 }

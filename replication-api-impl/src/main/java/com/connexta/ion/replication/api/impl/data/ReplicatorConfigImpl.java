@@ -142,21 +142,6 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   }
 
   @Override
-  public @Nullable Date getLastRun() {
-    return lastRun;
-  }
-
-  @Override
-  public void setLastRun(@Nullable Date lastRun) {
-    this.lastRun = lastRun;
-  }
-
-  @Override
-  public @Nullable Date getLastSuccess() {
-    return lastSuccess;
-  }
-
-  @Override
   public void setLastMetadataModified(Date lastMetadataModified) {
     this.lastMetadataModified = lastMetadataModified;
   }
@@ -165,10 +150,5 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public Date getLastMetadataModified() {
     return lastMetadataModified;
-  }
-
-  @Override
-  public void setLastSuccess(@Nullable Date lastSuccess) {
-    this.lastSuccess = lastSuccess;
   }
 }
