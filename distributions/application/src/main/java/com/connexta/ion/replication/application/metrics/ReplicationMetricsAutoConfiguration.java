@@ -32,7 +32,7 @@ public class ReplicationMetricsAutoConfiguration {
   @Bean
   @ConditionalOnProperty(value = "management.metrics.enable.replication", matchIfMissing = true)
   @ConditionalOnMissingBean
-  public ReplicationMetrics replicationMetrics(Replicator replicator) {
-    return new ReplicationMetrics(replicator);
+  public ReplicationMetrics replicationMetrics(Replicator replicator, MeterRegistry meterRegistry) {
+    return new ReplicationMetrics(replicator, meterRegistry);
   }
 }
