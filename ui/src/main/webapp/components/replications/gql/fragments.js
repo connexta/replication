@@ -12,6 +12,7 @@ export const replications = gql`
       ...ReplicationSite
     }
     biDirectional
+    metadataOnly
     filter
     suspended
     stats {

@@ -47,6 +47,8 @@ public class UpdateReplication extends BaseFunctionField<BooleanField> {
 
   private BooleanField suspended;
 
+  private BooleanField metadataOnly;
+
   private ReplicationUtils replicationUtils;
 
   public UpdateReplication(ReplicationUtils replicationUtils) {
@@ -59,7 +61,7 @@ public class UpdateReplication extends BaseFunctionField<BooleanField> {
     filter = new StringField("filter");
     biDirectional = new BooleanField("biDirectional");
     suspended = new BooleanField("suspended");
-
+    metadataOnly = new BooleanField("metadataOnly");
     id.isRequired(true);
   }
 
@@ -82,7 +84,8 @@ public class UpdateReplication extends BaseFunctionField<BooleanField> {
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(id, name, source, destination, filter, biDirectional, suspended);
+    return ImmutableList.of(
+        id, name, source, destination, filter, biDirectional, suspended, metadataOnly);
   }
 
   @Override

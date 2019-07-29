@@ -125,6 +125,7 @@ function ReplicationRow(props) {
       <TableCell>{replication.source.name}</TableCell>
       <TableCell>{replication.destination.name}</TableCell>
       <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
+      <TableCell>{replication.metadataOnly ? 'Yes' : 'No'}</TableCell>
       <TableCell>{replication.filter}</TableCell>
       <TableCell>
         {replication.stats.pullCount + replication.stats.pushCount}
@@ -180,6 +181,7 @@ function ReplicationsTable(props) {
             <TableCell>Source</TableCell>
             <TableCell>Destination</TableCell>
             <TableCell>Bidirectional</TableCell>
+            <TableCell>Metadata Only</TableCell>
             <TableCell>Filter</TableCell>
             <TableCell>Items Transferred</TableCell>
             <TableCell>MB Transferred</TableCell>

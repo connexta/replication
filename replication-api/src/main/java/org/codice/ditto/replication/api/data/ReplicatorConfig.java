@@ -169,4 +169,19 @@ public interface ReplicatorConfig extends Persistable {
    *     otherwise false
    */
   void setDeleteData(boolean deleteData);
+
+  /**
+   * Marks this {@code ReplicatorConfig} as replicating metadata only.
+   *
+   * @param metadataOnly whether or not this {@code ReplicatorConfig} should replicate metadata only
+   */
+  void setMetadataOnly(boolean metadataOnly);
+
+  /**
+   * Indicates if only the metadata matching the given filter should be replicated
+   *
+   * @return if {@code true}, only metadata (metacards) will be replicated. No products will be
+   *     transferred.
+   */
+  boolean isMetadataOnly();
 }

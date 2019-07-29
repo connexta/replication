@@ -215,7 +215,8 @@ public class ReplicationUtils {
       String destinationId,
       String filter,
       Boolean biDirectional,
-      boolean suspended) {
+      boolean suspended,
+      boolean metadataOnly) {
     ReplicatorConfig config = configManager.create();
     config.setName(name);
     config.setSource(sourceId);
@@ -224,6 +225,7 @@ public class ReplicationUtils {
     config.setBidirectional(biDirectional);
     config.setFailureRetryCount(5);
     config.setSuspended(suspended);
+    config.setMetadataOnly(metadataOnly);
     configManager.save(config);
 
     return getReplicationFieldForConfig(config);
@@ -270,6 +272,7 @@ public class ReplicationUtils {
     field.modified(config.getModified());
     field.version(config.getVersion());
     field.suspended(config.isSuspended());
+    field.metadataOnly(config.isMetadataOnly());
 
     ReplicationStats stats = new ReplicationStats();
     List<ReplicationStatus> statusList = history.getReplicationEvents(config.getName());

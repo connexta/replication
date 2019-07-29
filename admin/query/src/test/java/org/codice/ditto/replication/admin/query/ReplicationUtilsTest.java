@@ -197,7 +197,8 @@ public class ReplicationUtilsTest {
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true, true);
+    ReplicationField field =
+        utils.createReplication("test", "srcId", "destId", "cql", true, true, false);
 
     // then
     assertThat(field.name(), is("test"));
@@ -241,7 +242,8 @@ public class ReplicationUtilsTest {
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true, true);
+    ReplicationField field =
+        utils.createReplication("test", "srcId", "destId", "cql", true, true, false);
 
     // then
     assertThat(field.name(), is("test"));

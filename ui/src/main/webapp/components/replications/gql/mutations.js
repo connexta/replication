@@ -21,6 +21,7 @@ export const addReplication = gql`
     $destinationId: Pid!
     $filter: String!
     $biDirectional: Boolean
+    $metadataOnly: Boolean
   ) {
     createReplication(
       name: $name
@@ -28,6 +29,7 @@ export const addReplication = gql`
       destinationId: $destinationId
       filter: $filter
       biDirectional: $biDirectional
+      metadataOnly: $metadataOnly
     ) {
       ...ReplicationConfig
     }

@@ -78,6 +78,8 @@ public class ReplicationPersistentStoreTest {
 
   private static final String VERSION = "version";
 
+  private static final String METADATA_ONLY = "metadataOnly";
+
   private static final String MODIFIED = "modified";
 
   private static final String DELETED = "deleted";
@@ -132,6 +134,7 @@ public class ReplicationPersistentStoreTest {
     map.put(DELETE_DATA, "false");
     map.put(DESCRIPTION, DESCRIPTION + num);
     map.put(VERSION, ReplicatorConfigImpl.CURRENT_VERSION);
+    map.put(METADATA_ONLY, "false");
     return map;
   }
 

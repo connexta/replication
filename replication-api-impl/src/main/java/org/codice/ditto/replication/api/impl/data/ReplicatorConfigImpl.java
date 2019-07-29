@@ -45,6 +45,8 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   private static final String DELETE_DATA_KEY = "deleteData";
 
+  private static final String METADATA_ONLY_KEY = "metadataOnly";
+
   /**
    * Field specifying the version of the configuration. Possible versions include:
    *
@@ -56,9 +58,10 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
    *         <li>Add <b>deleted</b> field of type boolean with default of false
    *         <li>Add <b>deleteData</b> field of type boolean with default of false
    *       </ul>
+   *   <li>2 - Add <b>metadataOnly</b> field of type boolean with default of false
    * </ol>
    */
-  public static final int CURRENT_VERSION = 1;
+  public static final int CURRENT_VERSION = 2;
 
   private boolean deleted = false;
 
@@ -80,6 +83,8 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   private boolean suspended;
 
+  private boolean metadataOnly = false;
+
   public ReplicatorConfigImpl() {
     super.setVersion(CURRENT_VERSION);
   }
@@ -97,6 +102,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     result.put(SUSPENDED_KEY, Boolean.toString(isSuspended()));
     result.put(DELETED_KEY, Boolean.toString(isDeleted()));
     result.put(DELETE_DATA_KEY, Boolean.toString(shouldDeleteData()));
+    result.put(METADATA_ONLY_KEY, Boolean.toString(isMetadataOnly()));
     return result;
   }
 
@@ -113,6 +119,9 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     setSuspended(Boolean.valueOf((String) properties.get(SUSPENDED_KEY)));
     setDeleted(Boolean.valueOf((String) properties.get(DELETED_KEY)));
     setDeleteData(Boolean.valueOf((String) properties.get(DELETE_DATA_KEY)));
+    if (getVersion() >= 2) {
+      setMetadataOnly(Boolean.valueOf((String) properties.get(METADATA_ONLY_KEY)));
+    }
   }
 
   @Override
@@ -213,5 +222,15 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public void setDeleteData(boolean deleteData) {
     this.deleteData = deleteData;
+  }
+
+  @Override
+  public void setMetadataOnly(boolean metadataOnly) {
+    this.metadataOnly = metadataOnly;
+  }
+
+  @Override
+  public boolean isMetadataOnly() {
+    return metadataOnly;
   }
 }

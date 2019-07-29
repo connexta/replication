@@ -53,6 +53,8 @@ public class ReplicationField extends BaseObjectField {
 
   private IntegerField version;
 
+  private BooleanField metadataOnly;
+
   public ReplicationField() {
     super("replication", "ReplicationConfig", DESCRIPTION);
     id = new PidField("id");
@@ -65,6 +67,7 @@ public class ReplicationField extends BaseObjectField {
     modified = new Iso8601Field("modified");
     version = new IntegerField("version");
     stats = new ReplicationStats();
+    metadataOnly = new BooleanField("metadataOnly");
   }
 
   // setters
@@ -134,6 +137,11 @@ public class ReplicationField extends BaseObjectField {
     return null;
   }
 
+  public ReplicationField metadataOnly(Boolean metadataOnly) {
+    this.metadataOnly.setValue(metadataOnly);
+    return this;
+  }
+
   // getters
   public String id() {
     return id.getValue();
@@ -183,10 +191,24 @@ public class ReplicationField extends BaseObjectField {
     return version;
   }
 
+  public Boolean metadataOnly() {
+    return metadataOnly.getValue();
+  }
+
   @Override
   public List<Field> getFields() {
     return ImmutableList.of(
-        id, name, source, destination, filter, biDirectional, suspended, modified, version, stats);
+        id,
+        name,
+        source,
+        destination,
+        filter,
+        biDirectional,
+        suspended,
+        modified,
+        version,
+        stats,
+        metadataOnly);
   }
 
   public static class ListImpl extends BaseListField<ReplicationField> {

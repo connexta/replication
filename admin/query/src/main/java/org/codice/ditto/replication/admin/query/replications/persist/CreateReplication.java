@@ -50,6 +50,8 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
 
   private BooleanField suspended;
 
+  private BooleanField metadataOnly;
+
   private ReplicationUtils replicationUtils;
 
   public CreateReplication(ReplicationUtils replicationUtils) {
@@ -63,6 +65,8 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
     biDirectional.setValue(false);
     suspended = new BooleanField("suspended");
     suspended.setValue(false);
+    metadataOnly = new BooleanField("metadataOnly");
+    metadataOnly.setValue(false);
     name.isRequired(true);
     source.isRequired(true);
     destination.isRequired(true);
@@ -77,7 +81,8 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
         destination.getValue(),
         filter.getValue(),
         biDirectional.getValue(),
-        suspended.getValue());
+        suspended.getValue(),
+        metadataOnly.getValue());
   }
 
   @Override
@@ -87,7 +92,8 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(name, source, destination, filter, biDirectional, suspended);
+    return ImmutableList.of(
+        name, source, destination, filter, biDirectional, suspended, metadataOnly);
   }
 
   @Override
