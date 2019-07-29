@@ -95,6 +95,7 @@ const defaultFormState = {
   destinationId: '',
   filter: '',
   biDirectional: false,
+  metadataOnly: false,
   filterErrorText: '',
   nameErrorText: '',
   disableSave: false,
@@ -181,6 +182,7 @@ class AddReplication extends React.Component {
       destinationId,
       filter,
       biDirectional,
+      metadataOnly,
       filterErrorText,
       nameErrorText,
       disableSave = false,
@@ -210,8 +212,12 @@ class AddReplication extends React.Component {
             />
             <Query query={allSites}>
               {({ loading, error, data }) => {
-                if (loading) return <Typography>Loading...</Typography>
-                if (error) return <Typography>Error...</Typography>
+                if (loading) {
+                  return <Typography>Loading...</Typography>
+                }
+                if (error) {
+                  return <Typography>Error...</Typography>
+                }
 
                 return (
                   <div>
@@ -239,6 +245,28 @@ class AddReplication extends React.Component {
                     >
                       {this.sitesToMenuItems(data.replication.sites, sourceId)}
                     </WrappedTextField>
+
+                    <FormGroup>
+                      <div style={{ display: 'flex' }}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={this.state.metadataOnly}
+                              onChange={this.handleCheck('metadataOnly')}
+                              value='metadataOnly'
+                            />
+                          }
+                          label='Metadata Only'
+                        />
+                        <Tooltip
+                          className={classes.tooltip}
+                          title='If checked, only the metadata matching the filter will be replicated.'
+                          placement='right'
+                        >
+                          <HelpIcon fontSize='small' />
+                        </Tooltip>
+                      </div>
+                    </FormGroup>
 
                     <FormGroup>
                       <div style={{ display: 'flex' }}>
@@ -319,6 +347,7 @@ class AddReplication extends React.Component {
                           destinationId: destinationId,
                           filter: filter,
                           biDirectional: biDirectional,
+                          metadataOnly: metadataOnly,
                         },
                         update: (store, { data: { createReplication } }) => {
                           const data = store.readQuery({

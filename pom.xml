@@ -28,7 +28,7 @@
 
         <admin-query.version>1.2.8-SNAPSHOT</admin-query.version>
         <ddf.support.version>2.3.12</ddf.support.version>
-        <ddf.version>2.13.9</ddf.version>
+        <ddf.version>2.13.10</ddf.version>
         <codice-maven.version>0.2</codice-maven.version>
         <codice-test.version>0.9</codice-test.version>
 

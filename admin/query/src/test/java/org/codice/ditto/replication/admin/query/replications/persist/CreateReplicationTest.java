@@ -45,7 +45,13 @@ public class CreateReplicationTest {
   public void setUp() throws Exception {
     create = new CreateReplication(utils);
     when(utils.createReplication(
-            anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean()))
+            anyString(),
+            anyString(),
+            anyString(),
+            anyString(),
+            anyBoolean(),
+            anyBoolean(),
+            anyBoolean()))
         .thenReturn(new ReplicationField());
     input = new HashMap<>();
     input.put("id", "myid");

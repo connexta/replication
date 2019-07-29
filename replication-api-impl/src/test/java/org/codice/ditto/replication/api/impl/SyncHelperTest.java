@@ -39,6 +39,7 @@ import ddf.catalog.operation.SourceResponse;
 import ddf.catalog.operation.UpdateRequest;
 import ddf.catalog.operation.impl.ProcessingDetailsImpl;
 import ddf.security.impl.SubjectImpl;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
@@ -180,6 +181,34 @@ public class SyncHelperTest {
     helper.sync();
     assertThat(status.getPushCount(), is(1L));
     assertThat(status.getStatus(), is(Status.SUCCESS));
+  }
+
+  @Test
+  public void testSyncCreateMetadataOnly() throws Exception {
+    SubjectImpl subject = mock(SubjectImpl.class);
+    ThreadContext.bind(subject);
+    CreateResponse createResponse = mock(CreateResponse.class);
+    when(createResponse.getProcessingErrors()).thenReturn(Collections.emptySet());
+    setConfigDefaults();
+    when(destination.create(any(CreateRequest.class))).thenReturn(createResponse);
+    SourceResponse response = mock(SourceResponse.class);
+    MetacardImpl mcard = new MetacardImpl();
+    mcard.setId("id");
+    mcard.setModifiedDate(new Date());
+    mcard.setAttribute(Core.METACARD_MODIFIED, new Date());
+    mcard.setResourceURI(URI.create("https://host/resource"));
+    when(response.getResults()).thenReturn(Collections.singletonList(new ResultImpl(mcard)));
+    when(source.query(any(QueryRequest.class))).thenReturn(response);
+    when(persistentStore.getFailureList(anyInt(), anyString(), anyString()))
+        .thenReturn(Collections.emptyList());
+    when(persistentStore.getItem(anyString(), anyString(), anyString()))
+        .thenReturn(Optional.empty());
+    when(history.getReplicationEvents("test")).thenReturn(Collections.emptyList());
+    when(config.isMetadataOnly()).thenReturn(true);
+    helper.sync();
+    assertThat(status.getPushCount(), is(1L));
+    assertThat(status.getStatus(), is(Status.SUCCESS));
+    verify(destination, never()).create(any(CreateStorageRequest.class));
   }
 
   @Test

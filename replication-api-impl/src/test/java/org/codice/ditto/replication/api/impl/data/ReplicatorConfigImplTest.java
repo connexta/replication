@@ -37,6 +37,8 @@ public class ReplicatorConfigImplTest {
 
   private static final String BIDIRECTIONAL_KEY = "bidirectional";
 
+  private static final String METADATA_ONLY_KEY = "metadataOnly";
+
   private static final String VERSION_KEY = "version";
 
   private ReplicatorConfigImpl config;
@@ -65,11 +67,37 @@ public class ReplicatorConfigImplTest {
     assertThat(props.get(FILTER_KEY), is("filter"));
     assertThat(props.get(BIDIRECTIONAL_KEY), is("true"));
     assertThat(props.get(RETRY_COUNT_KEY), is(5));
-    assertThat(props.get(VERSION_KEY), is(1));
+    assertThat(props.get(VERSION_KEY), is(2));
   }
 
   @Test
   public void readFromMap() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(ID_KEY, "id");
+    props.put(NAME_KEY, "name");
+    props.put(SOURCE_KEY, "source");
+    props.put(DESTINATION_KEY, "destination");
+    props.put(FILTER_KEY, "filter");
+    props.put(BIDIRECTIONAL_KEY, "true");
+    props.put(RETRY_COUNT_KEY, 5);
+    props.put(METADATA_ONLY_KEY, "true");
+    props.put(VERSION_KEY, 2);
+
+    config.fromMap(props);
+
+    assertThat(config.getId(), is("id"));
+    assertThat(config.getName(), is("name"));
+    assertThat(config.getSource(), is("source"));
+    assertThat(config.getDestination(), is("destination"));
+    assertThat(config.getFilter(), is("filter"));
+    assertThat(config.isBidirectional(), is(true));
+    assertThat(config.getFailureRetryCount(), is(5));
+    assertThat(config.getVersion(), is(2));
+    assertThat(config.isMetadataOnly(), is(true));
+  }
+
+  @Test
+  public void readFromVersionOneMap() {
     Map<String, Object> props = new HashMap<>();
     props.put(ID_KEY, "id");
     props.put(NAME_KEY, "name");
@@ -90,5 +118,6 @@ public class ReplicatorConfigImplTest {
     assertThat(config.isBidirectional(), is(true));
     assertThat(config.getFailureRetryCount(), is(5));
     assertThat(config.getVersion(), is(1));
+    assertThat(config.isMetadataOnly(), is(false));
   }
 }

@@ -40,6 +40,7 @@ import org.codice.ddf.security.common.Security;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
+import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.Metacards;
@@ -215,6 +216,10 @@ public class LegacyDataConverter {
 
     config.setFilter(metacards.getAttributeValueOrDefault(mcard, ReplicationConfig.CQL, null));
     config.setBidirectional(direction == Direction.BOTH);
+    config.setMetadataOnly(
+        metacards.getAttributeValueOrDefault(
+                mcard, ReplicationConfig.TYPE, ReplicationType.RESOURCE)
+            == ReplicationType.METACARD);
 
     if (config.getDestination() == null
         || config.getSource() == null

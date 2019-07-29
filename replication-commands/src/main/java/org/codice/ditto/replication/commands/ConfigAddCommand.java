@@ -24,6 +24,7 @@ import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.codice.ddf.commands.catalog.SubjectCommands;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ditto.replication.api.Direction;
+import org.codice.ditto.replication.api.ReplicationType;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
@@ -158,6 +159,8 @@ public class ConfigAddCommand extends SubjectCommands {
         config.setSource(tmpDest);
       }
       config.setBidirectional(Direction.valueOf(directionString.toUpperCase()) == Direction.BOTH);
+      config.setMetadataOnly(
+          ReplicationType.valueOf(replicationType.toUpperCase()) == ReplicationType.METACARD);
       config.setFailureRetryCount(failureRetryCount);
       config.setSuspended(suspend);
 

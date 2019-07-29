@@ -355,6 +355,7 @@ class SyncHelper {
     boolean hasResource = mcard.getResourceURI() != null;
     Date resourceModified = mcard.getModifiedDate();
     return hasResource
+        && !config.isMetadataOnly()
         && (resourceModified.after(replicationItem.getResourceModified())
             || replicationItem.getFailureCount() > 0);
   }
@@ -405,7 +406,7 @@ class SyncHelper {
     boolean hasResource = mcard.getResourceURI() != null;
     prepMetacard();
 
-    if (hasResource) {
+    if (hasResource && !config.isMetadataOnly()) {
       performResourceCreate();
     } else {
       performMetacardCreate();
@@ -450,6 +451,12 @@ class SyncHelper {
     mcard.setAttribute(
         new AttributeImpl(Metacard.DERIVED_RESOURCE_DOWNLOAD_URL, (Serializable) null));
     mcard.setAttribute(new AttributeImpl(Metacard.DERIVED_RESOURCE_URI, (Serializable) null));
+
+    if (config.isMetadataOnly()) {
+      // need to do this otherwise the metacard groomer plugin will change the metacard id
+      mcard.setAttribute(new AttributeImpl(Metacard.RESOURCE_URI, (Serializable) null));
+      mcard.setAttribute(new AttributeImpl(Metacard.RESOURCE_DOWNLOAD_URL, (Serializable) null));
+    }
   }
 
   private ContentItem getResourceContentForMetacard() throws IngestException {
@@ -557,7 +564,7 @@ class SyncHelper {
 
   private ReplicationItem createReplicationItem() {
     String mcardId = mcard.getId();
-    Date resourceModified = mcard.getModifiedDate();
+    Date resourceModified = config.isMetadataOnly() ? null : mcard.getModifiedDate();
     Date metacardModified = (Date) mcard.getAttribute(Core.METACARD_MODIFIED).getValue();
 
     return new ReplicationItemImpl(
