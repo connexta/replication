@@ -47,6 +47,31 @@ replication:
   period: 300
   connectionTimeout: 30
   receiveTimeout: 60
+  
+# Exposes metrics
+management:
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: 'prometheus,metrics,health,info'
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+```
+
+###### Metrics 
+
+Replication supports reporting metrics through Micrometer. Prometheus is used as the metrics collection platform. The replication-spring-config provides example configuration for exposing metrics from within the application.
+
+To disable replication metrics, add the following property to the `application.yml` file
+```properties
+management.metrics.enable.replication=false
 ```
 
 ###### Secrets
