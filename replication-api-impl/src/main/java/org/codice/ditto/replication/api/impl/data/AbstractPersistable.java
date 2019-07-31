@@ -92,10 +92,14 @@ public abstract class AbstractPersistable implements Persistable {
    * before performing its own functionality.
    *
    * @param properties the properties to read into the persistable's variables
+   * @return int the version of the map passed in.
    */
-  public void fromMap(Map<String, Object> properties) {
+  public int fromMap(Map<String, Object> properties) {
     setId((String) properties.get(ID_KEY));
-    setVersion((int) properties.get(VERSION_KEY));
     setModified((Date) properties.get(MODIFIED_KEY));
+    if (!properties.containsKey(VERSION_KEY)) {
+      throw new IllegalStateException("Serialized properties map is expected to contain a version");
+    }
+    return (int) properties.get(VERSION_KEY);
   }
 }

@@ -85,7 +85,6 @@ public class AbstractPersistableTest {
     persistable.fromMap(map);
 
     assertThat(persistable.getId(), is("test"));
-    assertThat(persistable.getVersion(), is(1));
     assertThat(persistable.getModified(), is(modified));
   }
 
@@ -99,7 +98,6 @@ public class AbstractPersistableTest {
     persistable.fromMap(map);
 
     assertThat(persistable.getId(), is("test"));
-    assertThat(persistable.getVersion(), is(1));
     assertThat(persistable.getModified(), is(new Date(0)));
   }
 

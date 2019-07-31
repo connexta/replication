@@ -117,7 +117,7 @@ public class ReplicatorConfigImplTest {
     assertThat(config.getFilter(), is("filter"));
     assertThat(config.isBidirectional(), is(true));
     assertThat(config.getFailureRetryCount(), is(5));
-    assertThat(config.getVersion(), is(1));
+    assertThat(config.getVersion(), is(2));
     assertThat(config.isMetadataOnly(), is(false));
   }
 }

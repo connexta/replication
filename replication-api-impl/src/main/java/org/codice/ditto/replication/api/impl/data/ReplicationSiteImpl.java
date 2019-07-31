@@ -132,15 +132,15 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   }
 
   @Override
-  public void fromMap(Map<String, Object> properties) {
-    super.fromMap(properties);
-    final int version = super.getVersion();
+  public int fromMap(Map<String, Object> properties) {
+    int serializedVersion = super.fromMap(properties);
 
-    if (version == ReplicationSiteImpl.CURRENT_VERSION) {
+    if (serializedVersion == ReplicationSiteImpl.CURRENT_VERSION) {
       fromCurrentMap(properties);
     } else {
-      fromIncompatibleMap(version, properties);
+      fromIncompatibleMap(serializedVersion, properties);
     }
+    return serializedVersion;
   }
 
   private void fromCurrentMap(Map<String, Object> properties) {
@@ -151,13 +151,11 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   }
 
   private void fromIncompatibleMap(int version, Map<String, Object> properties) {
-    switch (version) {
-      case 1:
-        fromVersionOneMap(properties);
-        break;
-      default:
-        LOGGER.error("unsupported {} version: {}", ReplicationSiteImpl.PERSISTENCE_TYPE, version);
-        throw new IllegalStateException("Unsupported version: " + version);
+    if (version == 1) {
+      fromVersionOneMap(properties);
+    } else {
+      LOGGER.error("unsupported {} version: {}", ReplicationSiteImpl.PERSISTENCE_TYPE, version);
+      throw new IllegalStateException("Unsupported version: " + version);
     }
     super.setVersion(CURRENT_VERSION);
   }
@@ -165,14 +163,14 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   private void fromVersionOneMap(Map<String, Object> properties) {
     setName((String) properties.get(NAME_KEY));
 
-    String oldUrl = (String) properties.get(URL_KEY);
+    String oldUrlStr = (String) properties.get(URL_KEY);
     try {
-      URL url = new URL(oldUrl);
-      if (StringUtils.isEmpty(url.getPath())) {
-        setUrl(oldUrl + "/services");
+      URL oldUrl = new URL(oldUrlStr);
+      if (StringUtils.isEmpty(oldUrl.getPath())) {
+        setUrl(oldUrlStr + "/services");
       } else {
         // should never hit this since old urls do not have context paths
-        setUrl(oldUrl);
+        setUrl(oldUrlStr);
       }
     } catch (MalformedURLException e) {
       // saved URLs will not have invalid URLs
