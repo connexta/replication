@@ -107,8 +107,8 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   }
 
   @Override
-  public void fromMap(Map<String, Object> properties) {
-    super.fromMap(properties);
+  public int fromMap(Map<String, Object> properties) {
+    int serializedVersion = super.fromMap(properties);
     setName((String) properties.get(NAME_KEY));
     setSource((String) properties.get(SOURCE_KEY));
     setDestination((String) properties.get(DESTINATION_KEY));
@@ -119,9 +119,10 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     setSuspended(Boolean.valueOf((String) properties.get(SUSPENDED_KEY)));
     setDeleted(Boolean.valueOf((String) properties.get(DELETED_KEY)));
     setDeleteData(Boolean.valueOf((String) properties.get(DELETE_DATA_KEY)));
-    if (getVersion() >= 2) {
+    if (serializedVersion >= 2) {
       setMetadataOnly(Boolean.valueOf((String) properties.get(METADATA_ONLY_KEY)));
     }
+    return serializedVersion;
   }
 
   @Override

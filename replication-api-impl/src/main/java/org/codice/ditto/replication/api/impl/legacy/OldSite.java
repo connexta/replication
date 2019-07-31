@@ -17,7 +17,7 @@ public class OldSite extends ReplicationSiteImpl {
   private static final String URL_KEY = "url";
 
   @Override
-  public void fromMap(Map<String, Object> properties) {
+  public int fromMap(Map<String, Object> properties) {
     // super will throw a null pointer exception because these sites had no version
     // so just set the id and version here instead
     setId((String) properties.get("id"));
@@ -40,5 +40,6 @@ public class OldSite extends ReplicationSiteImpl {
 
     setVerifiedUrl(getUrl()); // do this after setUrl()
     setRemoteManaged(false);
+    return 0;
   }
 }
