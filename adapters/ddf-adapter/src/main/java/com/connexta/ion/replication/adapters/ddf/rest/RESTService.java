@@ -36,11 +36,12 @@ public interface RESTService {
    * REST Get. Retrieves the metadata entry specified by the id. Transformer argument is optional,
    * but is used to specify what format the data should be returned.
    *
-   * @param id
-   * @param transformerParam (OPTIONAL)
-   * @param uriInfo
-   * @return
-   * @throws InternalServerErrorException
+   * @param id the unique metadata id
+   * @param transformerParam (OPTIONAL) transform used to turn raw resource into desired response
+   *     format
+   * @param uriInfo the request UriInfo
+   * @param httpRequest the http request
+   * @return REST response containing resource in the requested format
    */
   @GET
   @Path("/{id}")
@@ -53,9 +54,9 @@ public interface RESTService {
   /**
    * REST Get. Retrieves information regarding sources available.
    *
-   * @param uriInfo
-   * @param httpRequest
-   * @return
+   * @param uriInfo the request UriInfo
+   * @param httpRequest the http request
+   * @return REST response
    */
   @GET
   @Path("/sources")
@@ -66,11 +67,12 @@ public interface RESTService {
    * by sourceid. Transformer argument is optional, but is used to specify what format the data
    * should be returned.
    *
-   * @param sourceid
-   * @param id
-   * @param transformerParam
-   * @param uriInfo
-   * @return
+   * @param sourceid the source to retrieve the metadata from
+   * @param id the unique metadata id
+   * @param transformerParam transform used to turn raw resource into desired response format
+   * @param uriInfo the request UriInfo
+   * @param httpRequest the http request
+   * @return REST response containing resource in the requested format
    */
   @GET
   @Path("/sources/{sourceid}/{id}")
@@ -84,9 +86,12 @@ public interface RESTService {
   /**
    * REST Put. Updates the specified metadata entry with the provided metadata.
    *
-   * @param id
-   * @param message
-   * @return
+   * @param id the unique metadata id
+   * @param headers the http headers
+   * @param httpRequest the http request
+   * @param transformerParam transform used to turn raw resource into desired response format
+   * @param message the updated metadata
+   * @return REST response indicating the success/failure of the operation
    */
   @PUT
   @Path("/{id}")
@@ -100,9 +105,13 @@ public interface RESTService {
   /**
    * REST Put. Updates the specified metadata entry with the provided metadata.
    *
-   * @param id
-   * @param message
-   * @return
+   * @param id the unique metadata id
+   * @param headers the http headers
+   * @param httpRequest the http request
+   * @param multipartBody the multipart body containing the resource
+   * @param transformerParam transform used to turn raw resource into desired response format
+   * @param message the updated metadata
+   * @return REST response indicating the success/failure of the operation
    */
   @PUT
   @Path("/{id}")
@@ -117,8 +126,12 @@ public interface RESTService {
   /**
    * REST Post. Creates a new metadata entry in the catalog.
    *
-   * @param message
-   * @return
+   * @param headers the http headers
+   * @param requestUriInfo the request UriInfo
+   * @param httpRequest the http request
+   * @param transformerParam transform used to turn raw resource into desired response format
+   * @param message the metadata to be added
+   * @return REST response indicating the success/failure of the operation
    */
   @POST
   Response addDocument(
@@ -131,8 +144,13 @@ public interface RESTService {
   /**
    * REST Post. Creates a new metadata entry in the catalog.
    *
-   * @param message
-   * @return
+   * @param headers the http headers
+   * @param requestUriInfo the request UriInfo
+   * @param httpRequest the http request
+   * @param multipartBody the multipart body containing the resource
+   * @param transformerParam transform used to turn raw resource into desired response format
+   * @param message the metadata to be added
+   * @return REST response indicating the success/failure of the operation
    */
   @POST
   Response addDocument(
@@ -146,8 +164,9 @@ public interface RESTService {
   /**
    * REST Delete. Deletes a record from the catalog.
    *
-   * @param id
-   * @return
+   * @param id the unique metadata id
+   * @param httpRequest the http request
+   * @return REST response indicating the success/failure of the operation
    */
   @DELETE
   @Path("/{id}")

@@ -34,7 +34,7 @@ public class CswRecordCollection {
   /**
    * Retrieves the list of metadata built from the CSW Records returned in a GetRecordsResponse.
    *
-   * @return
+   * @return a list of metadata objects
    */
   public List<Metadata> getCswRecords() {
     return cswRecords;
@@ -43,7 +43,7 @@ public class CswRecordCollection {
   /**
    * Sets the list of metadata built from the CSW Records returned in a GetRecordsResponse.
    *
-   * @param cswRecords
+   * @param cswRecords a list of metadata objects
    */
   public void setCswRecords(List<Metadata> cswRecords) {
     this.cswRecords = cswRecords;

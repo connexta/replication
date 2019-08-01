@@ -55,7 +55,7 @@ public interface ReplicationItemManager {
   /**
    * Deletes all {@code ReplicationItem}s.
    *
-   * @throws ReplicationPersistenceException
+   * @throws ReplicationPersistenceException RuntimeException thrown if delete was unsuccessful
    */
   void deleteAllItems();
 
@@ -76,7 +76,7 @@ public interface ReplicationItemManager {
    *     should not exceed.
    * @param source the source {@link NodeAdapter} name
    * @param destination the destination {@link NodeAdapter} name
-   * @return
+   * @return list of string ids of items that have failed to previously transfer
    */
   List<String> getFailureList(int maximumFailureCount, String source, String destination);
 

@@ -58,14 +58,14 @@ public interface QueryRequest {
   /**
    * The result index at which the query results should start from
    *
-   * @return
+   * @return the start index to run the query from
    */
   int getStartIndex();
 
   /**
    * The maximum number of results to return for any single query run
    *
-   * @return
+   * @return the max number of results to return in one query attempt
    */
   int getPageSize();
 }

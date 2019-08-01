@@ -29,8 +29,9 @@ public interface Csw {
   /**
    * GetCapabilities - HTTP POST
    *
-   * @param request
-   * @return
+   * @param request the csw getCapabilities request
+   * @return {@link CapabilitiesType}
+   * @throws Exception if the request fails for any reason
    */
   @SuppressWarnings("squid:S00112" /* Pulled from DDF to match that interface */)
   @POST
@@ -41,8 +42,9 @@ public interface Csw {
   /**
    * GetRecords - HTTP POST
    *
-   * @param request
-   * @return
+   * @param request the csw getRecords request
+   * @return {@link CswRecordCollection}
+   * @throws Exception if the request fails for any reason
    */
   @SuppressWarnings("squid:S00112" /* Pulled from DDF to match that interface */)
   @POST
