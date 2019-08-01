@@ -79,6 +79,7 @@ public class ResultIterable implements Iterable<Metadata> {
    * @param queryFunction reference to the {@link Function} to call to retrieve the results.
    * @param queryRequest request used to retrieve the results.
    * @param queryRequests subsequent requests to retrieve results after the first is completed.
+   * @return a {@link ResultIterable} for the given queryFunction
    */
   public static ResultIterable resultIterable(
       Function<QueryRequest, List<Metadata>> queryFunction,

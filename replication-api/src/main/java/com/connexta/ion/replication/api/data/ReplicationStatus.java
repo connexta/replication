@@ -229,7 +229,11 @@ public interface ReplicationStatus extends Persistable {
   /** Increments the pull/push failure count based on the current {@link Status} */
   void incrementFailure();
 
-  /** Increments the pull/push bytes based on the current {@link Status} */
+  /**
+   * Increments the pull/push bytes based on the current {@link Status}
+   *
+   * @param numBytes the number of bytes to increment by
+   */
   void incrementBytesTransferred(long numBytes);
 
   /**

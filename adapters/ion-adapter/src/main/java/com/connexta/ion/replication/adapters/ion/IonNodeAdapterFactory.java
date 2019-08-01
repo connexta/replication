@@ -26,7 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * Factory for creating {@link IonNodeAdapter}s for the {@link
- * org.codice.ditto.replication.api.Replicator}.
+ * com.connexta.ion.replication.api.Replicator}.
  */
 public class IonNodeAdapterFactory implements NodeAdapterFactory {
 

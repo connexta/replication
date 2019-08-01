@@ -66,8 +66,6 @@ public class GetRecordsResponseConverter implements Converter {
   /**
    * Parses GetRecordsResponse XML of this form:
    *
-   * <p>
-   *
    * <pre>{@code
    * <csw:GetRecordsResponse xmlns:csw="http://www.opengis.net/cat/csw">
    *     <csw:SearchStatus status="subset" timestamp="2013-05-01T02:13:36+0200"/>
