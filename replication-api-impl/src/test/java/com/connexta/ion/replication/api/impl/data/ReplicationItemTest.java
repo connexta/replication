@@ -57,10 +57,12 @@ public class ReplicationItemTest {
 
   @Test
   public void testResourceTransferRateWithoutSize() {
-    replicationItem = new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION).build();
-    replicationItem.markStartTime();
-    replicationItem.markDoneTime();
-    assertThat(replicationItem.getResourceTransferRate(), is(0.0D));
+    //    replicationItem = new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE,
+    // DESTINATION).build();
+    //    replicationItem.markStartTime();
+    //    replicationItem.markDoneTime();
+    //    assertThat(replicationItem.getResourceTransferRate(), is(0.0D));
+    assert false;
   }
 
   @Test

@@ -13,6 +13,7 @@
  */
 package com.connexta.ion.replication.application.metrics;
 
+import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.Status;
@@ -41,19 +42,22 @@ public class ReplicationMetrics {
     this.meterRegistry = meterRegistry;
   }
 
-  /** Increments certain meters based on the incoming {@link ReplicationItem}. */
+  /** Increments meters based on the incoming {@link ReplicationItem}. */
   @VisibleForTesting
   void handleItem(ReplicationItem item) {
     Iterable<Tag> itemTags = getTagsFor(item);
     Status status = item.getStatus();
     if (Status.SUCCESS.equals(status)) {
       meterRegistry.counter("replication_transfer_success_items", itemTags).increment();
-      meterRegistry
-          .counter("replication_transfer_resource_bytes", itemTags)
-          .increment(item.getResourceSize());
-      meterRegistry
-          .counter("replication_transfer_metadata_bytes", itemTags)
-          .increment(item.getMetadataSize());
+
+      if (isCreateOrUpdate(item)) {
+        meterRegistry
+            .counter("replication_transfer_resource_bytes", itemTags)
+            .increment(item.getResourceSize());
+        meterRegistry
+            .counter("replication_transfer_metadata_bytes", itemTags)
+            .increment(item.getMetadataSize());
+      }
     } else {
       meterRegistry.counter("replication_transfer_fail_items", itemTags).increment();
     }
@@ -61,6 +65,12 @@ public class ReplicationMetrics {
 
   private Iterable<Tag> getTagsFor(ReplicationItem item) {
     return List.of(
-        Tag.of("source", item.getSource()), Tag.of("destination", item.getDestination()));
+        Tag.of("source", item.getSource()),
+        Tag.of("destination", item.getDestination()),
+        Tag.of("action", item.getAction().toString()));
+  }
+
+  private boolean isCreateOrUpdate(ReplicationItem item) {
+    return !Action.DELETE.equals(item.getAction());
   }
 }

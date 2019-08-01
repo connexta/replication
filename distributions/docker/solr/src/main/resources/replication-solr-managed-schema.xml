@@ -110,7 +110,7 @@
          If you don't need it, consider removing it and the corresponding copyField directive.
     -->
 
-    <field name="id_txt" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
     <field name="_version_" type="plong" indexed="false" stored="false"/>
 
@@ -124,32 +124,31 @@
 
 
     <!-- replication_item fields -->
-    <field name="resource-modified_tdt" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="metacard-modified_tdt" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="source_txt" type="string" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="destination_txt" type="string" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="config-id_txt" type="string" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="metadata-size_lng" type="plong" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="resource-size_lng" type="plong" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="start-time_tdt" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="duration_lng" type="plong" indexed="true" stored="true" required="false" multiValued="false" />
-
+    <field name="metadata_id" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="resource_modified" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="metadata_modified" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="done_time" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="source" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="destination" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="config_id" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="metadata_size" type="plong" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="resource_size" type="plong" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="start_time" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="status" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="action" type="string" indexed="true" stored="true" required="false" multiValued="false" />
 
     <!-- replication_site fields -->
-    <field name="url_txt" type="string" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="type_txt" type="string" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="remote-managed_b" type="boolean" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="url" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="type" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="remote_managed" type="boolean" indexed="true" stored="true" required="false" multiValued="false" />
 
     <!-- replication_config fields -->
-    <field name="name_txt" type="string" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="bidirectional_b" type="boolean" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="filter_txt" type="string" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="retry_count_int" type="pint" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="suspended_b" type="boolean" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="version_int" type="pint" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="last-metadata-modified_tdt" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="last-success_tdt" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="last-run_tdt" type="pdate" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="name" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="bidirectional" type="boolean" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="filter" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="suspended" type="boolean" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="version" type="pint" indexed="true" stored="true" required="false" multiValued="false" />
+    <field name="last_metadata_modified" type="pdate" indexed="true" stored="false" required="false" multiValued="false" />
 
     <!-- This can be enabled, in case the client does not know what fields may be searched. It isn't enabled by default
          because it's very expensive to index everything twice. -->
@@ -197,7 +196,7 @@
     <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field
     -->
-    <uniqueKey>id_txt</uniqueKey>
+    <uniqueKey>id</uniqueKey>
 
     <!-- copyField commands copy one field to another at the time a document
        is added to the index.  It's used either to index the same field differently,

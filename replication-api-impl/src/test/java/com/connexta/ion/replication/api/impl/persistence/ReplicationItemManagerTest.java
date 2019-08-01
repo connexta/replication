@@ -47,7 +47,7 @@ public class ReplicationItemManagerTest {
 
   @Before
   public void setup() throws Exception {
-    itemManager = new ReplicationItemManagerImpl(itemRepository);
+    //    itemManager = new ReplicationItemManagerImpl(itemRepository);
   }
 
   @Test

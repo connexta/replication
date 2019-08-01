@@ -26,44 +26,34 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 @SolrDocument(collection = "replication_config")
 public class ReplicatorConfigImpl extends AbstractPersistable implements ReplicatorConfig {
 
-  private static final String DATE = "_tdt";
-
   /**
    * 0/No Version - initial version of configs which were saved in the catalog framework. 1 - the
    * first version of configs to be saved in the replication persistent store.
    */
   public static final int CURRENT_VERSION = 1;
 
-  @Indexed(name = "name_txt")
+  @Indexed(name = "name")
   private String name;
 
-  @Indexed(name = "bidirectional_b")
+  @Indexed(name = "bidirectional")
   private boolean bidirectional;
 
-  @Indexed(name = "source_txt")
+  @Indexed(name = "source")
   private String source;
 
-  @Indexed(name = "destination_txt")
+  @Indexed(name = "destination")
   private String destination;
 
-  @Indexed(name = "filter_txt")
+  @Indexed(name = "filter")
   private String filter;
 
-  @Indexed(name = "description_txt")
+  @Indexed(name = "description")
   private String description;
 
-  @Indexed(name = "suspended_b")
+  @Indexed(name = "suspended")
   private boolean suspended;
 
-  @Indexed(name = "last-success" + DATE)
-  @Nullable
-  private Date lastSuccess;
-
-  @Indexed(name = "last-run" + DATE)
-  @Nullable
-  private Date lastRun;
-
-  @Indexed(name = "last-metadata-modified" + DATE)
+  @Indexed(name = "last_metadata_modified")
   @Nullable
   private Date lastMetadataModified;
 

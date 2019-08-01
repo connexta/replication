@@ -13,6 +13,7 @@
  */
 package com.connexta.ion.replication.api.impl;
 
+import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.Replication;
 import com.connexta.ion.replication.api.ReplicationItem;
@@ -133,14 +134,17 @@ public class Syncer {
             replicationItemManager.getItem(metadata.getId(), sourceName, destinationName);
 
         Status status;
-        ReplicationItem resultItem = createReplicationItem(metadata);
-        resultItem.markStartTime();
+        ReplicationItemImpl.Builder builder = createReplicationItem(metadata);
+        builder.markStartTime();
         try {
           if (metadata.isDeleted() && existingItem.isPresent()) {
-            status = doDelete(metadata, existingItem.get());
+            builder.action(Action.DELETE);
+            status = doDelete(metadata);
           } else if (destination.exists(metadata) && existingItem.isPresent()) {
+            builder.action(Action.UPDATE);
             status = doUpdate(metadata, existingItem.get());
           } else {
+            builder.action(Action.CREATE);
             status = doCreate(metadata);
           }
         } catch (VirtualMachineError e) {
@@ -161,11 +165,10 @@ public class Syncer {
           }
         }
 
-        resultItem.markDoneTime();
+        builder.markDoneTime();
 
         if (status != null) {
-          resultItem = ReplicationItemImpl.from(resultItem).status(status).build();
-          ReplicationItem item = resultItem;
+          ReplicationItem item = builder.status(status).build();
           replicationItemManager.saveItem(item);
           callbacks.forEach(callback -> callback.accept(item));
         }
@@ -252,8 +255,7 @@ public class Syncer {
       return updated ? Status.SUCCESS : Status.FAILURE;
     }
 
-    @Nullable
-    private Status doDelete(Metadata metadata, ReplicationItem replicationItem) {
+    private Status doDelete(Metadata metadata) {
       LOGGER.trace(
           "Sending delete from {} to {} for metadata {}",
           sourceName,
@@ -263,8 +265,7 @@ public class Syncer {
       boolean deleted =
           destination.deleteRequest(new DeleteRequestImpl(Collections.singletonList(metadata)));
       if (deleted) {
-        replicationItemManager.deleteItem(replicationItem.getId(), sourceName, destinationName);
-        return null;
+        return Status.SUCCESS;
       } else {
         return Status.FAILURE;
       }
@@ -279,14 +280,13 @@ public class Syncer {
       metadata.addTag(Replication.REPLICATED_TAG);
     }
 
-    private ReplicationItem createReplicationItem(Metadata metadata) {
+    private ReplicationItemImpl.Builder createReplicationItem(Metadata metadata) {
       return new ReplicationItemImpl.Builder(
               metadata.getId(), replicatorConfig.getId(), sourceName, destinationName)
           .resourceModified(metadata.getResourceModified())
           .metadataModified(metadata.getMetadataModified())
           .resourceSize(metadata.getResourceSize())
-          .metadataSize(metadata.getMetadataSize())
-          .build();
+          .metadataSize(metadata.getMetadataSize());
     }
 
     @Nullable

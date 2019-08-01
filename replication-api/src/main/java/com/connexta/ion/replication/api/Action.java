@@ -13,18 +13,24 @@
  */
 package com.connexta.ion.replication.api;
 
-/** The result of a {@link ReplicationItem} after it has been processed. */
-public enum Status {
-
-  /** Indicates a {@link ReplicationItem} was successfully transferred. */
-  SUCCESS,
-
-  /** Indicates the {@link ReplicationItem} failed to be transferred. */
-  FAILURE,
+/** Describes an action taken on a {@link ReplicationItem} */
+public enum Action {
 
   /**
-   * Indicates connection to the source and/or destination {@link NodeAdapter}s was lost while
-   * transferring metadata and/or resources.
+   * Action for a replication item that was created from a source {@link NodeAdapter} to a
+   * destination {@link NodeAdapter}
    */
-  CONNECTION_LOST
+  CREATE,
+
+  /**
+   * Action for a replication item that was updated from a source {@link NodeAdapter} to a
+   * destination {@link NodeAdapter}
+   */
+  UPDATE,
+
+  /**
+   * Action for a replication item that was deleted between a source {@link NodeAdapter} to a
+   * destination {@link NodeAdapter}
+   */
+  DELETE
 }

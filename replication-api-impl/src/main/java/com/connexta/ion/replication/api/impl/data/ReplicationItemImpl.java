@@ -13,11 +13,12 @@
  */
 package com.connexta.ion.replication.api.impl.data;
 
-import static org.apache.commons.lang3.Validate.notEmpty;
-
+import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Status;
 import java.util.Date;
+import java.util.UUID;
+import org.apache.commons.lang3.Validate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.Indexed;
 import org.springframework.data.solr.core.mapping.SolrDocument;
@@ -25,41 +26,45 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 @SolrDocument(collection = "replication_item")
 public class ReplicationItemImpl implements ReplicationItem {
 
-  private static final String LONG = "_lng";
-
   @Id
-  @Indexed(name = "id_txt")
+  @Indexed(name = "id")
   private String id;
 
-  @Indexed(name = "resource-modified_tdt")
+  @Indexed(name = "metadata_id")
+  private String metadataId;
+
+  @Indexed(name = "resource_modified")
   private Date resourceModified;
 
-  @Indexed(name = "metacard-modified_tdt")
+  @Indexed(name = "metadata_modified")
   private Date metadataModified;
 
-  @Indexed(name = "source_txt")
+  @Indexed(name = "done_time")
+  private Date doneTime;
+
+  @Indexed(name = "source")
   private String source;
 
-  @Indexed(name = "destination_txt")
+  @Indexed(name = "destination")
   private String destination;
 
-  @Indexed(name = "config-id_txt")
+  @Indexed(name = "config_id")
   private String configId;
 
-  @Indexed(name = "metadata-size" + LONG)
+  @Indexed(name = "metadata_size")
   private long metadataSize;
 
-  @Indexed(name = "resource-size" + LONG)
+  @Indexed(name = "resource_size")
   private long resourceSize;
 
-  @Indexed(name = "start-time_tdt")
+  @Indexed(name = "start_time")
   private Date startTime;
 
-  @Indexed(name = "duration" + LONG)
-  private long duration;
-
-  @Indexed(name = "status_txt", type = "string")
+  @Indexed(name = "status", type = "string")
   private Status status;
+
+  @Indexed(name = "action", type = "string")
+  private Action action;
 
   /** This default ctor is needed for spring-solr to instantiate an item when querying solr */
   public ReplicationItemImpl() {}
@@ -67,6 +72,11 @@ public class ReplicationItemImpl implements ReplicationItem {
   @Override
   public String getId() {
     return id;
+  }
+
+  @Override
+  public String getMetadataId() {
+    return metadataId;
   }
 
   @Override
@@ -95,23 +105,23 @@ public class ReplicationItemImpl implements ReplicationItem {
   }
 
   @Override
-  public void markStartTime() {
-    startTime = new Date();
-  }
-
-  @Override
-  public void markDoneTime() {
-    duration = new Date().getTime() - startTime.getTime();
+  public Date getDoneTime() {
+    return doneTime;
   }
 
   @Override
   public long getDuration() {
-    return duration;
+    return doneTime.getTime() - startTime.getTime();
   }
 
   @Override
   public Status getStatus() {
     return status;
+  }
+
+  @Override
+  public Action getAction() {
+    return action;
   }
 
   @Override
@@ -141,39 +151,25 @@ public class ReplicationItemImpl implements ReplicationItem {
   @Override
   public String toString() {
     return String.format(
-        "ReplicationItemImpl{id=%s, resourceModified=%s, metadataModified=%s, source=%s, destination=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, durationMs=%d, status=%s}",
+        "ReplicationItemImpl{id=%s, metadataId=%s, resourceModified=%s, metadataModified=%s, doneTime=%s, source=%s, destination=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, status=%s, action=%s}",
         id,
+        metadataId,
         resourceModified,
         metadataModified,
+        doneTime,
         source,
         destination,
         configId,
         metadataSize,
         resourceSize,
         startTime,
-        duration,
-        status);
-  }
-
-  /**
-   * Copies fields from a {@link ReplicationItem} to a new item.
-   *
-   * @param item item to copy
-   * @return a builder for the new copied item
-   */
-  public static Builder from(ReplicationItem item) {
-    return new Builder(item.getId(), item.getConfigId(), item.getSource(), item.getDestination())
-        .resourceModified(item.getResourceModified())
-        .metadataModified(item.getMetadataModified())
-        .metadataSize(item.getMetadataSize())
-        .resourceSize(item.getResourceSize())
-        .status(item.getStatus())
-        .duration(item.getDuration())
-        .startTime(item.getStartTime());
+        status,
+        action);
   }
 
   private ReplicationItemImpl(Builder builder) {
     this.id = builder.id;
+    this.metadataId = builder.metadataId;
     this.resourceModified = builder.resourceModified;
     this.metadataModified = builder.metadataModified;
     this.source = builder.source;
@@ -182,8 +178,9 @@ public class ReplicationItemImpl implements ReplicationItem {
     this.metadataSize = builder.metadataSize;
     this.resourceSize = builder.resourceSize;
     this.status = builder.status;
-    this.duration = builder.duration;
     this.startTime = builder.startTime;
+    this.doneTime = builder.doneTime;
+    this.action = builder.action;
   }
 
   private double toBytesPerSec(double bytesPerMs) {
@@ -201,6 +198,8 @@ public class ReplicationItemImpl implements ReplicationItem {
 
     private final String destination;
 
+    private final String metadataId;
+
     private Date resourceModified = null;
 
     private Date metadataModified = null;
@@ -211,21 +210,24 @@ public class ReplicationItemImpl implements ReplicationItem {
 
     private Date startTime = null;
 
-    private long duration = 0;
+    private Date doneTime = null;
 
     private Status status;
 
+    private Action action;
+
     /**
-     * @param id id of the {@link ReplicationItem}
+     * @param metadataId id of the {@link ReplicationItem}
      * @param configId replicator id the replication item is associated with
      * @param source the source the item comes from
      * @param destination the destination the item was sent to
      */
-    public Builder(String id, String configId, String source, String destination) {
-      this.id = notEmpty(id);
-      this.configId = notEmpty(configId);
-      this.source = notEmpty(source);
-      this.destination = notEmpty(destination);
+    public Builder(String metadataId, String configId, String source, String destination) {
+      this.id = UUID.randomUUID().toString();
+      this.metadataId = Validate.notEmpty(metadataId);
+      this.configId = Validate.notEmpty(configId);
+      this.source = Validate.notEmpty(source);
+      this.destination = Validate.notEmpty(destination);
     }
 
     public Builder resourceModified(Date date) {
@@ -253,18 +255,37 @@ public class ReplicationItemImpl implements ReplicationItem {
       return this;
     }
 
+    public Builder markStartTime() {
+      this.startTime = new Date();
+      return this;
+    }
+
+    public Builder markDoneTime() {
+      this.doneTime = new Date();
+      return this;
+    }
+
+    public Builder action(Action action) {
+      this.action = action;
+      return this;
+    }
+
     public ReplicationItem build() {
+      Validate.notNull(metadataModified, "metadataModified cannot be null");
+      Validate.notNull(startTime, "startTime cannot be null");
+      Validate.notNull(doneTime, "doneTime cannot be null");
+      Validate.notNull(action, "action cannot be null");
+      Validate.notNull(status, "status cannot be null");
+
+      if (resourceModified != null && resourceSize == 0) {
+        throw new IllegalStateException(
+            "metadataModified was provided, but the resourceSize was not updated");
+      }
+      if (resourceSize > 0 && resourceModified == null) {
+        throw new IllegalStateException(
+            "resourceSize was provided, but metadataModified was not updated");
+      }
       return new ReplicationItemImpl(this);
-    }
-
-    Builder startTime(Date startTime) {
-      this.startTime = startTime;
-      return this;
-    }
-
-    Builder duration(long duration) {
-      this.duration = duration;
-      return this;
     }
   }
 }

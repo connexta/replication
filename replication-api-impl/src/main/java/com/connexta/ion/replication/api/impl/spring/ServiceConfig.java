@@ -29,14 +29,16 @@ import com.connexta.ion.replication.spring.ReplicationProperties;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.solr.core.SolrTemplate;
 
 /** A class for instantiating beans in this module */
 @Configuration("replication-api-impl")
 public class ServiceConfig {
 
   @Bean
-  public ReplicationItemManager replicationItemManager(ItemRepository itemRepository) {
-    return new ReplicationItemManagerImpl(itemRepository);
+  public ReplicationItemManager replicationItemManager(
+      ItemRepository itemRepository, SolrTemplate solrTemplate) {
+    return new ReplicationItemManagerImpl(itemRepository, solrTemplate);
   }
 
   @Bean

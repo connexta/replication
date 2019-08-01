@@ -23,34 +23,37 @@ public interface ReplicationItem {
   /** @return id for which {@link Metadata} this item represents */
   String getId();
 
+  /** @return id of the metadata retrieved from a remote system */
+  String getMetadataId();
+
   /** @return the id of the {@link ReplicatorConfig} this item belongs to */
   String getConfigId();
 
-  /** @return this last time the resource associated with this item modified */
+  /**
+   * @return this last time the resource associated with this item modified, or {@code null} if
+   *     there is no resource associated with this metadata
+   */
   Date getResourceModified();
 
   /** @return the last time the {@link Metadata} associated with this item was modified */
   Date getMetadataModified();
 
-  /** @return the size in bytes of this item's resource, cannot be negative */
+  /**
+   * @return the size in bytes of this item's resource, or 0 if there is no resource associated
+   *     with this metadata
+   */
   long getResourceSize();
 
   /** @return the size in bytes of this item's metadata, cannot be negative */
   long getMetadataSize();
 
-  /**
-   * @return the time at which this item began transferring, or {@code null} if it has not begun
-   *     transferring
-   */
+  /** @return the time at which this item began processing */
   Date getStartTime();
 
-  /** Called when the item begins transfer, setting the {@link #getStartTime()} to now. */
-  void markStartTime();
+  /** @return the time at which this item finished processing */
+  Date getDoneTime();
 
-  /** Called when the item ends transfer, setting the {@link #getDuration()}. */
-  void markDoneTime();
-
-  /** @return the time in milliseconds it took transfer this item, cannot be negative. */
+  /** @return the time in milliseconds it took process this item, cannot be negative. */
   long getDuration();
 
   /**
@@ -59,6 +62,13 @@ public interface ReplicationItem {
    * @return the status of this replication item
    */
   Status getStatus();
+
+  /**
+   * See {@link Action}.
+   *
+   * @return the action performed on the metadata/resource
+   */
+  Action getAction();
 
   /** @return the resource's speed of transfer in bytes per second, cannot be negative */
   double getResourceTransferRate();

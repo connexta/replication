@@ -37,16 +37,16 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
    */
   public static final int CURRENT_VERSION = 2;
 
-  @Indexed(name = "remote-managed_b")
+  @Indexed(name = "remote_managed")
   private boolean isRemoteManaged = false;
 
-  @Indexed(name = "name_txt")
+  @Indexed(name = "name")
   private String name;
 
-  @Indexed(name = "url_txt")
+  @Indexed(name = "url")
   private String url;
 
-  @Indexed(name = "type_txt")
+  @Indexed(name = "type")
   private String type;
 
   public ReplicationSiteImpl() {
