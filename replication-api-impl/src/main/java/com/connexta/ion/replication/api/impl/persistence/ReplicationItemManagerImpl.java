@@ -54,18 +54,14 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public Optional<ReplicationItem> getItem(String metadataId, String source, String destination) {
-    Optional<ReplicationItemImpl> result =
-        itemRepository.findByIdAndSourceAndDestination(metadataId, source, destination);
-
-    if (result.isEmpty()) {
-      LOGGER.debug(
-          "couldn't find persisted item with id: {}, source: {}, and destination: {}. This is expected during initial replication.",
-          metadataId,
-          source,
-          destination);
+  public Optional<ReplicationItem> getLatestItem(String configId, String metadataId) {
+    Page<ReplicationItemImpl> page =
+        itemRepository.findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
+            configId, metadataId, PageRequest.of(0, 1));
+    if (!page.getContent().isEmpty()) {
+      return Optional.of(page.getContent().get(0));
     }
-    return result.map(ReplicationItem.class::cast);
+    return Optional.empty();
   }
 
   @Override
@@ -111,7 +107,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
       for (GroupEntry<ReplicationItemImpl> entry : page.getContent()) {
         entry
             .getResult()
-            .get()
+            .stream()
             .findFirst()
             .ifPresent(
                 item -> {
@@ -122,7 +118,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
       }
 
       pageRequest = PageRequest.of(++pageNum, PAGE_SIZE);
-    } while (pageTotal > 0);
+    } while (pageTotal == PAGE_SIZE);
     return failureList;
   }
 

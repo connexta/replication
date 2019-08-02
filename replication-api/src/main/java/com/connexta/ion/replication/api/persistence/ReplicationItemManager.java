@@ -24,15 +24,15 @@ import java.util.Optional;
 public interface ReplicationItemManager {
 
   /**
-   * If present, returns a {@link ReplicationItem} for the given {@link Metadata} identified by its.
+   * If present, returns the latest {@link ReplicationItem} (based on {@link
+   * ReplicationItem#getDoneTime()}) for the given {@link Metadata}.
    *
+   * @param configId id for the {@link ReplicatorConfig} which the item belongs to
    * @param metadataId a unique metadata id
-   * @param source the source {@link NodeAdapter}'s name
-   * @param destination the destination {@link NodeAdapter}'s name
    * @return an optional containing the item, or an empty optional if there was an error fetching
    *     the item or it was not found.
    */
-  Optional<ReplicationItem> getItem(String metadataId, String source, String destination);
+  Optional<ReplicationItem> getLatestItem(String configId, String metadataId);
 
   /**
    * Returns a list of {@code ReplicationItem}s associated with a {@link ReplicatorConfig}.

@@ -131,7 +131,7 @@ public class Syncer {
 
       for (Metadata metadata : changeSet) {
         Optional<ReplicationItem> existingItem =
-            replicationItemManager.getItem(metadata.getId(), sourceName, destinationName);
+            replicationItemManager.getLatestItem(replicatorConfig.getId(), metadata.getId());
 
         Status status;
         ReplicationItemImpl.Builder builder = createReplicationItem(metadata);

@@ -14,10 +14,12 @@
 package com.connexta.ion.replication.api.impl.persistence;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,37 +27,49 @@ import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Status;
 import com.connexta.ion.replication.api.impl.data.ReplicationItemImpl;
 import com.connexta.ion.replication.api.impl.spring.ItemRepository;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.solr.core.SolrTemplate;
+import org.springframework.data.solr.core.query.result.GroupEntry;
+import org.springframework.data.solr.core.query.result.GroupPage;
+import org.springframework.data.solr.core.query.result.GroupResult;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ReplicationItemManagerTest {
 
   @Mock private ItemRepository itemRepository;
 
+  @Mock private SolrTemplate solrTemplate;
+
   private ReplicationItemManagerImpl itemManager;
 
   @Before
   public void setup() throws Exception {
-    //    itemManager = new ReplicationItemManagerImpl(itemRepository);
+    itemManager = new ReplicationItemManagerImpl(itemRepository, solrTemplate);
   }
 
   @Test
   public void getItem() {
-    Optional<ReplicationItem> item = Optional.of(new ReplicationItemImpl());
-    when(itemRepository.findByIdAndSourceAndDestination(anyString(), anyString(), anyString()))
-        .thenReturn(item.map(ReplicationItemImpl.class::cast));
-    assertThat(itemManager.getItem("id", "source", "destination"), is(item));
+    ReplicationItem item = mock(ReplicationItem.class);
+    List<ReplicationItem> items = List.of(item);
+    Page page = mock(Page.class);
+    when(page.getContent()).thenReturn(items);
+    when(itemRepository.findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
+            anyString(), anyString(), any(Pageable.class)))
+        .thenReturn(page);
+    assertThat(itemManager.getLatestItem("configId", "id").get(), is(item));
   }
 
   @Test
@@ -89,23 +103,56 @@ public class ReplicationItemManagerTest {
   }
 
   @Test
-  public void getFailureList() {
-    ReplicationItem item =
-        new ReplicationItemImpl.Builder("id", "configId", "source", "destination").build();
-    List<ReplicationItem> items = Collections.singletonList(item);
-    when(itemRepository.findByConfigIdAndStatus(
-            anyString(), any(Status.class), any(Pageable.class)))
-        .thenReturn(
-            new PageImpl(
-                items.stream().map(ReplicationItemImpl.class::cast).collect(Collectors.toList())));
-    assertThat(
-        itemManager.getFailureList("configId"),
-        is(items.stream().map(ReplicationItem::getId).collect(Collectors.toList())));
+  public void getFailureListWithPaging() {
+    final String failureId1 = "failureId1";
+    final String failureId2 = "failureId2";
+    GroupPage page1 = mockGroupPage(50, 1, failureId1);
+    GroupPage page2 = mockGroupPage(1, 0, failureId2);
+    when(solrTemplate.queryForGroupPage(anyString(), any(), any()))
+        .thenReturn(page1)
+        .thenReturn(page2);
+
+    List<String> failureIds = itemManager.getFailureList("id");
+    assertThat(failureIds.size(), is(2));
+    assertThat(failureIds, contains(failureId1, failureId2));
   }
 
   @Test
   public void deleteItemsForConfig() {
     itemManager.deleteItemsForConfig("configId");
     verify(itemRepository).deleteByConfigId("configId");
+  }
+
+  private GroupPage mockGroupPage(int num, int failItemIndex, String failMetadataId) {
+    List<GroupEntry> entries = new ArrayList<>();
+    for (int i = 0; i < num; i++) {
+      ReplicationItemImpl item = mock(ReplicationItemImpl.class);
+
+      if (i == failItemIndex) {
+        when(item.getMetadataId()).thenReturn(failMetadataId);
+        when(item.getStatus()).thenReturn(Status.FAILURE);
+      } else {
+        when(item.getStatus()).thenReturn(Status.SUCCESS);
+      }
+
+      Page page = mock(Page.class);
+      Stream stream = Stream.of(item);
+      when(page.stream()).thenReturn(stream);
+
+      GroupEntry entry = mock(GroupEntry.class);
+      when(entry.getResult()).thenReturn(page);
+      entries.add(entry);
+    }
+
+    Page pageFromGroup = mock(Page.class);
+    when(pageFromGroup.getContent()).thenReturn(entries);
+    when(pageFromGroup.getTotalElements()).thenReturn((long) num);
+
+    GroupResult groupResult = mock(GroupResult.class);
+    when(groupResult.getGroupEntries()).thenReturn(pageFromGroup);
+
+    GroupPage groupPage = mock(GroupPage.class);
+    when(groupPage.getGroupResult("metadata_id")).thenReturn(groupResult);
+    return groupPage;
   }
 }

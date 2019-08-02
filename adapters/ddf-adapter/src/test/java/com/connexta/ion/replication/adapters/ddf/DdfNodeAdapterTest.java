@@ -16,7 +16,7 @@ package com.connexta.ion.replication.adapters.ddf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -261,7 +261,7 @@ public class DdfNodeAdapterTest {
         adapter.createDdfQueryRequest(request).getCql(),
         is(
             String.format(
-                "[ [ [ title like '*' ] AND [ [ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ \"metacard.modified\" after %s ] ] OR [ [ \"metacard.version.versioned-on\" after %s ] AND [ \"metacard-tags\" = 'revision' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ] OR [ [ [ \"metacard.version.id\" = '123456789' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ]",
+                "[ [ title like '*' ] AND [ [ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ \"metacard.modified\" after %s ] ] OR [ [ \"metacard.version.versioned-on\" after %s ] AND [ \"metacard-tags\" = 'revision' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ]",
                 modifiedString, modifiedString)));
   }
 

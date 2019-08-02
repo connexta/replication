@@ -14,10 +14,13 @@
 package com.connexta.ion.replication.application.metrics;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.Status;
@@ -58,9 +61,18 @@ public class ReplicationMetricsTest {
 
   private ReplicationMetrics replicationMetrics;
 
+  private Counter transferSuccess;
+
+  private Counter resourceBytes;
+
+  private Counter metadataBytes;
+
   @Before
   public void setup() {
     replicationMetrics = new ReplicationMetrics(replicator, meterRegistry);
+    transferSuccess = mock(Counter.class);
+    resourceBytes = mock(Counter.class);
+    metadataBytes = mock(Counter.class);
   }
 
   @Test
@@ -69,13 +81,10 @@ public class ReplicationMetricsTest {
   }
 
   @Test
-  public void testReplicationItemSuccess() {
+  public void testReplicationItemSuccessCreate() {
     // setup
-    ReplicationItem item = mockItem(Status.SUCCESS);
-    Iterable<Tag> tags = mockTags();
-    Counter transferSuccess = mock(Counter.class);
-    Counter resourceBytes = mock(Counter.class);
-    Counter metadataBytes = mock(Counter.class);
+    ReplicationItem item = mockItem(Status.SUCCESS, Action.CREATE);
+    Iterable<Tag> tags = mockTags(Action.CREATE);
     when(meterRegistry.counter(TRANSFER_SUCCESS_METER, tags)).thenReturn(transferSuccess);
     when(meterRegistry.counter(TRANSFER_RESOURCE_BYTES_METER, tags)).thenReturn(resourceBytes);
     when(meterRegistry.counter(TRANSFER_METADATA_BYTES_METER, tags)).thenReturn(metadataBytes);
@@ -90,10 +99,46 @@ public class ReplicationMetricsTest {
   }
 
   @Test
+  public void testReplicationItemSuccessUpdate() {
+    // setup
+    ReplicationItem item = mockItem(Status.SUCCESS, Action.UPDATE);
+    Iterable<Tag> tags = mockTags(Action.UPDATE);
+    when(meterRegistry.counter(TRANSFER_SUCCESS_METER, tags)).thenReturn(transferSuccess);
+    when(meterRegistry.counter(TRANSFER_RESOURCE_BYTES_METER, tags)).thenReturn(resourceBytes);
+    when(meterRegistry.counter(TRANSFER_METADATA_BYTES_METER, tags)).thenReturn(metadataBytes);
+
+    // when
+    replicationMetrics.handleItem(item);
+
+    // then
+    verify(transferSuccess).increment();
+    verify(resourceBytes).increment(RESOURCE_SIZE);
+    verify(metadataBytes).increment(METADATA_SIZE);
+  }
+
+  @Test
+  public void testReplicationItemSuccessDelete() {
+    // setup
+    ReplicationItem item = mockItem(Status.SUCCESS, Action.DELETE);
+    Iterable<Tag> tags = mockTags(Action.DELETE);
+    when(meterRegistry.counter(TRANSFER_SUCCESS_METER, tags)).thenReturn(transferSuccess);
+    when(meterRegistry.counter(TRANSFER_RESOURCE_BYTES_METER, tags)).thenReturn(resourceBytes);
+    when(meterRegistry.counter(TRANSFER_METADATA_BYTES_METER, tags)).thenReturn(metadataBytes);
+
+    // when
+    replicationMetrics.handleItem(item);
+
+    // then
+    verify(transferSuccess).increment();
+    verify(resourceBytes, never()).increment(anyLong());
+    verify(metadataBytes, never()).increment(anyLong());
+  }
+
+  @Test
   public void testReplicationItemFailure() {
     // setup
-    ReplicationItem item = mockItem(Status.FAILURE);
-    Iterable<Tag> tags = mockTags();
+    ReplicationItem item = mockItem(Status.FAILURE, Action.CREATE);
+    Iterable<Tag> tags = mockTags(Action.CREATE);
     Counter transferFail = mock(Counter.class);
     when(meterRegistry.counter(TRANSFER_FAIL_METER, tags)).thenReturn(transferFail);
 
@@ -104,9 +149,10 @@ public class ReplicationMetricsTest {
     verify(transferFail).increment();
   }
 
-  private ReplicationItem mockItem(Status status) {
+  private ReplicationItem mockItem(Status status, Action action) {
     ReplicationItem item = mock(ReplicationItem.class);
     when(item.getStatus()).thenReturn(status);
+    when(item.getAction()).thenReturn(action);
     when(item.getMetadataSize()).thenReturn(METADATA_SIZE);
     when(item.getResourceSize()).thenReturn(RESOURCE_SIZE);
     when(item.getSource()).thenReturn(SOURCE);
@@ -114,10 +160,11 @@ public class ReplicationMetricsTest {
     return item;
   }
 
-  private Iterable<Tag> mockTags() {
+  private Iterable<Tag> mockTags(Action action) {
     List<Tag> tags = new ArrayList<>();
     tags.add(Tag.of("source", SOURCE));
     tags.add(Tag.of("destination", DESTINATION));
+    tags.add(Tag.of("action", action.toString()));
     return tags;
   }
 }

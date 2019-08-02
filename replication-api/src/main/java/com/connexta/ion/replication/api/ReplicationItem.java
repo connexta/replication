@@ -39,8 +39,8 @@ public interface ReplicationItem {
   Date getMetadataModified();
 
   /**
-   * @return the size in bytes of this item's resource, or 0 if there is no resource associated
-   *     with this metadata
+   * @return the size in bytes of this item's resource, or 0 if there is no resource associated with
+   *     this metadata
    */
   long getResourceSize();
 

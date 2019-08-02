@@ -30,7 +30,7 @@ public class ReplicationItemImpl implements ReplicationItem {
   @Indexed(name = "id")
   private String id;
 
-  @Indexed(name = "metadata_id")
+  @Indexed(name = "metadata_id", type = "string")
   private String metadataId;
 
   @Indexed(name = "resource_modified")
@@ -261,6 +261,11 @@ public class ReplicationItemImpl implements ReplicationItem {
     }
 
     public Builder markDoneTime() {
+      if (startTime == null) {
+        throw new IllegalStateException(
+            "Argument startTime must be set before doneTime can be set");
+      }
+
       this.doneTime = new Date();
       return this;
     }
@@ -279,11 +284,11 @@ public class ReplicationItemImpl implements ReplicationItem {
 
       if (resourceModified != null && resourceSize == 0) {
         throw new IllegalStateException(
-            "metadataModified was provided, but the resourceSize was not updated");
+            "resourceModified was provided, but the resourceSize was not updated");
       }
       if (resourceSize > 0 && resourceModified == null) {
         throw new IllegalStateException(
-            "resourceSize was provided, but metadataModified was not updated");
+            "resourceSize was provided, but resourceModified was not updated");
       }
       return new ReplicationItemImpl(this);
     }
