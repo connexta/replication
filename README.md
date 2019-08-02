@@ -47,6 +47,9 @@ replication:
   period: 300
   connectionTimeout: 30
   receiveTimeout: 60
+  sites:
+  - site1
+  - site2
   
 # Exposes metrics
 management:

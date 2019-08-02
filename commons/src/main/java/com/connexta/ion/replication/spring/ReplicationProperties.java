@@ -1,6 +1,9 @@
 package com.connexta.ion.replication.spring;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +24,9 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "replication")
 public class ReplicationProperties {
+
+  /** Sets of destination sites to be handled by this replicator or none to handle all. */
+  private final Set<String> sites = new HashSet<>();
 
   /** The interval, in seconds, on which to execute replication jobs */
   private long period;
@@ -63,5 +69,25 @@ public class ReplicationProperties {
 
   public void setReceiveTimeout(int receiveTimeout) {
     this.receiveTimeout = receiveTimeout;
+  }
+
+  /**
+   * Gets the internal set of all destination site identifiers handled by this replicator or empty
+   * to have all sites handled.
+   *
+   * @return the internal set of all destination sites or empty to have all sites handled
+   */
+  public Set<String> getSites() {
+    return sites;
+  }
+
+  /**
+   * Gets the destination site identifiers handled by this replicator or empty to have all sites
+   * handled.
+   *
+   * @return the destination sites or empty to have all sites handled
+   */
+  public Stream<String> sites() {
+    return sites.stream();
   }
 }

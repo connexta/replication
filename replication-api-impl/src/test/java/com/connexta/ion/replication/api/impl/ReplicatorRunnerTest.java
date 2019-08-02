@@ -29,7 +29,10 @@ import com.connexta.ion.replication.api.persistence.ReplicatorConfigManager;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import org.codice.junit.ClearInterruptions;
+import org.codice.junit.rules.MethodRuleAnnotationProcessor;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +41,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ReplicatorRunnerTest {
+
+  private static final String SITE_ID = "site";
+
+  @Rule public final MethodRuleAnnotationProcessor processor = new MethodRuleAnnotationProcessor();
 
   private ReplicatorRunner runner;
 
@@ -53,7 +60,13 @@ public class ReplicatorRunnerTest {
 
   @Before
   public void setUp() throws Exception {
-    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, 0);
+    runner =
+        new ReplicatorRunner(
+            scheduledExecutor,
+            replicator,
+            configManager,
+            Stream.of(ReplicatorRunnerTest.SITE_ID),
+            0);
     configStream = Stream.of(config);
   }
 
@@ -68,7 +81,7 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void initNonDefaultPeriod() {
-    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, 1);
+    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, Stream.empty(), 1);
     ArgumentCaptor<Long> period = ArgumentCaptor.forClass(Long.class);
     runner.init();
     verify(scheduledExecutor)
@@ -86,6 +99,7 @@ public class ReplicatorRunnerTest {
   public void scheduleReplication() throws Exception {
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
     when(config.getName()).thenReturn("test");
+    when(config.getDestination()).thenReturn(ReplicatorRunnerTest.SITE_ID);
     when(configManager.objects()).thenReturn(configStream);
     runner.scheduleReplication();
     verify(replicator).submitSyncRequest(request.capture());
@@ -93,19 +107,41 @@ public class ReplicatorRunnerTest {
   }
 
   @Test
-  public void scheduleReplicationWithSuspend() throws Exception {
+  public void scheduleReplicationWhenReplicatingAllSites() throws Exception {
+    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, Stream.empty(), 1);
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
     when(config.getName()).thenReturn("test");
-    when(config.isSuspended()).thenReturn(true);
     when(configManager.objects()).thenReturn(configStream);
     runner.scheduleReplication();
-    verify(replicator, never()).submitSyncRequest(request.capture());
+    verify(replicator).submitSyncRequest(request.capture());
+    assertThat(request.getValue().getConfig().getName(), is("test"));
   }
 
   @Test
+  public void scheduleReplicationWhenDestinationNotMatched() throws Exception {
+    when(config.getName()).thenReturn("test");
+    when(config.getDestination()).thenReturn("some_other_site");
+    when(configManager.objects()).thenReturn(configStream);
+    runner.scheduleReplication();
+    verify(replicator, never()).submitSyncRequest(any());
+  }
+
+  @Test
+  public void scheduleReplicationWithSuspend() throws Exception {
+    when(config.getName()).thenReturn("test");
+    when(config.getDestination()).thenReturn(ReplicatorRunnerTest.SITE_ID);
+    when(config.isSuspended()).thenReturn(true);
+    when(configManager.objects()).thenReturn(configStream);
+    runner.scheduleReplication();
+    verify(replicator, never()).submitSyncRequest(any());
+  }
+
+  @Test
+  @ClearInterruptions
   public void scheduleReplicationInterruptException() throws Exception {
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
     when(config.getName()).thenReturn("test");
+    when(config.getDestination()).thenReturn(ReplicatorRunnerTest.SITE_ID);
     when(configManager.objects()).thenReturn(configStream);
     doThrow(new InterruptedException()).when(replicator).submitSyncRequest(any(SyncRequest.class));
     runner.scheduleReplication();
