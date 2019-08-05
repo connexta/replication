@@ -130,7 +130,7 @@
         <reactive-streams.version>1.0.2</reactive-streams.version>
         <fabric8.docker.plugin.version>0.30.0</fabric8.docker.plugin.version>
         <project.report.output.directory>project-info</project.report.output.directory>
-        <owasp.version>5.2.0</owasp.version>
+        <owasp.version>5.2.1</owasp.version>
         <slf4j.version>1.7.26</slf4j.version>
         <gpg-plugin.version>1.6</gpg-plugin.version>
 
