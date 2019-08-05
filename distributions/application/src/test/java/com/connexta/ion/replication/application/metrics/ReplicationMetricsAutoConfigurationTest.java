@@ -23,7 +23,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 
@@ -41,13 +40,6 @@ public class ReplicationMetricsAutoConfigurationTest {
   public void autoConfiguresReplicationMetrics() {
     registerAndRefresh();
     assertThat(context.getBean(ReplicationMetrics.class), is(notNullValue()));
-  }
-
-  @Test
-  public void allowsReplicationMetricsToBeDisabled() {
-    TestPropertyValues.of("management.metrics.enable.replication=false").applyTo(context);
-    registerAndRefresh();
-    assertThat(context.getBeansOfType(ReplicationMetrics.class).isEmpty(), is(true));
   }
 
   private void registerAndRefresh() {

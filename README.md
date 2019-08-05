@@ -69,11 +69,6 @@ management:
 
 Replication supports reporting metrics through Micrometer. Prometheus is used as the metrics collection platform. The replication-spring-config provides example configuration for exposing metrics from within the application.
 
-To disable replication metrics, add the following property to the `application.yml` file
-```properties
-management.metrics.enable.replication=false
-```
-
 ###### Secrets
 Replication requires certs and ssl configurations in order to talk with remote DDF based systems. This information is stored in docker secrets.
 
