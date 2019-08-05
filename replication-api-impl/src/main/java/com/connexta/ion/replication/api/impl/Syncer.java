@@ -36,7 +36,6 @@ import com.connexta.ion.replication.data.QueryRequestImpl;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -130,19 +129,21 @@ public class Syncer {
       Iterable<Metadata> changeSet = source.query(queryRequest).getMetadata();
 
       for (Metadata metadata : changeSet) {
-        Optional<ReplicationItem> existingItem =
-            replicationItemManager.getLatestItem(replicatorConfig.getId(), metadata.getId());
+        ReplicationItem existingItem =
+            replicationItemManager
+                .getLatestItem(replicatorConfig.getId(), metadata.getId())
+                .orElse(null);
 
         Status status;
         ReplicationItemImpl.Builder builder = createReplicationItem(metadata);
         builder.markStartTime();
         try {
-          if (metadata.isDeleted() && existingItem.isPresent()) {
+          if (metadata.isDeleted() && existingItem != null) {
             builder.action(Action.DELETE);
             status = doDelete(metadata);
-          } else if (destination.exists(metadata) && existingItem.isPresent()) {
+          } else if (destination.exists(metadata) && existingItem != null) {
             builder.action(Action.UPDATE);
-            status = doUpdate(metadata, existingItem.get());
+            status = doUpdate(metadata, existingItem);
           } else {
             builder.action(Action.CREATE);
             status = doCreate(metadata);
@@ -264,11 +265,7 @@ public class Syncer {
 
       boolean deleted =
           destination.deleteRequest(new DeleteRequestImpl(Collections.singletonList(metadata)));
-      if (deleted) {
-        return Status.SUCCESS;
-      } else {
-        return Status.FAILURE;
-      }
+      return deleted ? Status.SUCCESS : Status.FAILURE;
     }
 
     private boolean hasResource(Metadata metadata) {

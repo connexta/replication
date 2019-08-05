@@ -15,6 +15,7 @@ package com.connexta.ion.replication.application.metrics;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -24,6 +25,7 @@ import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.Status;
+import com.google.common.cache.Cache;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -147,6 +149,28 @@ public class ReplicationMetricsTest {
 
     // then
     verify(transferFail).increment();
+  }
+
+  @Test
+  public void testTagsAreCached() {
+    // setup
+    Cache cache = mock(Cache.class);
+    ReplicationMetrics replicationMetrics =
+        new ReplicationMetrics(replicator, meterRegistry, cache);
+    ReplicationItem item = mockItem(Status.SUCCESS, Action.CREATE);
+    Iterable<Tag> tags = mockTags(Action.CREATE);
+    when(meterRegistry.counter(TRANSFER_SUCCESS_METER, tags)).thenReturn(transferSuccess);
+    when(meterRegistry.counter(TRANSFER_RESOURCE_BYTES_METER, tags)).thenReturn(resourceBytes);
+    when(meterRegistry.counter(TRANSFER_METADATA_BYTES_METER, tags)).thenReturn(metadataBytes);
+    final String key = SOURCE + DESTINATION + Action.CREATE.name();
+    when(cache.getIfPresent(key)).thenReturn(null).thenReturn(tags);
+
+    // when called twice it should only put once in the cache
+    replicationMetrics.handleItem(item);
+    replicationMetrics.handleItem(item);
+
+    // then
+    verify(cache).put(anyString(), any(Iterable.class));
   }
 
   private ReplicationItem mockItem(Status status, Action action) {

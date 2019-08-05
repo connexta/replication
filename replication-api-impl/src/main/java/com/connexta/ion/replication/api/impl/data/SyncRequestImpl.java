@@ -22,6 +22,11 @@ public class SyncRequestImpl implements SyncRequest {
 
   private ReplicatorConfig config;
 
+  /**
+   * Creates a new SyncRequest.
+   *
+   * @param config the {@link ReplicatorConfig} which will be used for replicating
+   */
   public SyncRequestImpl(ReplicatorConfig config) {
     this.config = config;
   }

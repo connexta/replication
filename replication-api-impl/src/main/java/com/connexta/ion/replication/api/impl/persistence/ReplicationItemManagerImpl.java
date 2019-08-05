@@ -22,8 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,9 +36,8 @@ import org.springframework.data.solr.core.query.result.GroupEntry;
 import org.springframework.data.solr.core.query.result.GroupPage;
 import org.springframework.data.solr.core.query.result.GroupResult;
 
+/** Provides operations for managing {@link ReplicationItem}s. */
 public class ReplicationItemManagerImpl implements ReplicationItemManager {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationItemManagerImpl.class);
 
   private static final int PAGE_SIZE = 50;
 
@@ -48,6 +45,12 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   @Resource private final SolrTemplate solrTemplate;
 
+  /**
+   * Creates a new ReplicationItemManager.
+   *
+   * @param itemRepository solr repository for {@link ReplicationItem}s
+   * @param solrTemplate solr operations implementation for querying solr
+   */
   public ReplicationItemManagerImpl(ItemRepository itemRepository, SolrTemplate solrTemplate) {
     this.itemRepository = itemRepository;
     this.solrTemplate = solrTemplate;
@@ -55,13 +58,11 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   @Override
   public Optional<ReplicationItem> getLatestItem(String configId, String metadataId) {
-    Page<ReplicationItemImpl> page =
-        itemRepository.findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
-            configId, metadataId, PageRequest.of(0, 1));
-    if (!page.getContent().isEmpty()) {
-      return Optional.of(page.getContent().get(0));
-    }
-    return Optional.empty();
+    return itemRepository
+        .findByConfigIdAndMetadataIdOrderByDoneTimeDesc(configId, metadataId, PageRequest.of(0, 1))
+        .stream()
+        .map(ReplicationItem.class::cast)
+        .findFirst();
   }
 
   @Override
@@ -111,7 +112,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
             .findFirst()
             .ifPresent(
                 item -> {
-                  if (!item.getStatus().equals(Status.SUCCESS)) {
+                  if (item.getStatus() != Status.SUCCESS) {
                     failureList.add(item.getMetadataId());
                   }
                 });

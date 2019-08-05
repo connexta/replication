@@ -142,10 +142,8 @@ public class ReplicatorImpl implements Replicator {
         NodeAdapter store2 = node2) {
       if (config.isBidirectional()) {
         sync(store2, store1, config);
-        sync(store1, store2, config);
-      } else {
-        sync(store1, store2, config);
       }
+      sync(store1, store2, config);
     } catch (Exception e) {
       LOGGER.warn("Unexpected error when running config {}", config.getName(), e);
     } finally {

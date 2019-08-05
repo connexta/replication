@@ -61,11 +61,11 @@ public class ReplicationItemManagerTest {
   }
 
   @Test
-  public void getItem() {
-    ReplicationItem item = mock(ReplicationItem.class);
+  public void getItemLatestItem() {
+    ReplicationItemImpl item = mock(ReplicationItemImpl.class);
     List<ReplicationItem> items = List.of(item);
     Page page = mock(Page.class);
-    when(page.getContent()).thenReturn(items);
+    when(page.stream()).thenReturn(items.stream());
     when(itemRepository.findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
             anyString(), anyString(), any(Pageable.class)))
         .thenReturn(page);
