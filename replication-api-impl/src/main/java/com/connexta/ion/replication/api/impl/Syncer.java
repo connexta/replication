@@ -216,12 +216,12 @@ public class Syncer {
 
       boolean shouldUpdateMetadata =
           metadata.getMetadataModified().after(replicationItem.getMetadataModified())
-              || !replicationItem.getStatus().equals(Status.SUCCESS);
+              || replicationItem.getStatus() != Status.SUCCESS;
 
       boolean shouldUpdateResource =
           hasResource(metadata)
               && (metadata.getResourceModified().after(replicationItem.getResourceModified())
-                  || !replicationItem.getStatus().equals(Status.SUCCESS));
+                  || replicationItem.getStatus() != Status.SUCCESS);
 
       final String metadataId = metadata.getId();
       boolean updated;
