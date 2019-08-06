@@ -107,18 +107,18 @@ Example sites.json
 ```json
   [
       {
-        "remote-managed_b":false,
-        "name_txt":"RepSync-Node1",
-        "url_txt":"https://host1:8993/services/",
-        "id_txt":"some-unique-id-1234",
-        "version_int":2
+        "remote_managed":false,
+        "name":"RepSync-Node1",
+        "url":"https://host1:8993/services/",
+        "id":"some-unique-id-1234",
+        "version":2
        },
       {
-        "remote-managed_b":false,
-        "name_txt":"RepSync-Node2",
-        "url_txt":"https://host2:8993/services",
-        "id_txt":"another-unique-id-5678",
-        "version_int":2
+        "remote_managed":false,
+        "name":"RepSync-Node2",
+        "url":"https://host2:8993/services",
+        "id":"another-unique-id-5678",
+        "version":2
       }
    ]
 ```
@@ -132,15 +132,14 @@ Example jobs.json
 ```json
   [
     {
-      "name_txt":"pdf-harvest",
-      "bidirectional_b":false,
-      "source_txt":"some-unique-id-1234",
-      "destination_txt":"another-unique-id-5678",
-      "filter_txt":"\"media.type\" like 'application/pdf'",
-      "retry_count_int":5,
-      "suspended_b":false,
-      "id_txt":"unique-job-id-98765",
-      "version_int":1
+      "name":"pdf-harvest",
+      "bidirectional":false,
+      "source":"some-unique-id-1234",
+      "destination":"another-unique-id-5678",
+      "filter":"\"media.type\" like 'application/pdf'",
+      "suspended":false,
+      "id":"unique-job-id-98765",
+      "version":1
     }
   ]
 ```
