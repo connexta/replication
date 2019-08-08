@@ -120,7 +120,7 @@
         <maven-checkstyle-plugin.version>3.1.0</maven-checkstyle-plugin.version>
         <maven-jacoco-plugin.version>0.8.4</maven-jacoco-plugin.version>
         <failsafe.version>1.1.0</failsafe.version>
-        <spring-data-solr.version>4.0.9.RELEASE</spring-data-solr.version>
+        <spring-data-solr.version>4.0.10.RELEASE</spring-data-solr.version>
         <opengis.version>19.1</opengis.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
         <jackson.version>2.10.0.pr1</jackson.version>
