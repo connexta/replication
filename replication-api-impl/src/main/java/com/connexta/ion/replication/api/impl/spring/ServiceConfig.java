@@ -21,34 +21,29 @@ import com.connexta.ion.replication.api.impl.ReplicatorRunner;
 import com.connexta.ion.replication.api.impl.Syncer;
 import com.connexta.ion.replication.api.impl.persistence.ReplicationItemManagerImpl;
 import com.connexta.ion.replication.api.impl.persistence.ReplicatorConfigManagerImpl;
-import com.connexta.ion.replication.api.impl.persistence.ReplicatorHistoryManagerImpl;
 import com.connexta.ion.replication.api.impl.persistence.SiteManagerImpl;
 import com.connexta.ion.replication.api.persistence.ReplicationItemManager;
 import com.connexta.ion.replication.api.persistence.ReplicatorConfigManager;
-import com.connexta.ion.replication.api.persistence.ReplicatorHistoryManager;
 import com.connexta.ion.replication.api.persistence.SiteManager;
 import com.connexta.ion.replication.spring.ReplicationProperties;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.solr.core.SolrTemplate;
 
 /** A class for instantiating beans in this module */
 @Configuration("replication-api-impl")
 public class ServiceConfig {
 
   @Bean
-  public ReplicationItemManager replicationItemManager(ItemRepository itemRepository) {
-    return new ReplicationItemManagerImpl(itemRepository);
+  public ReplicationItemManager replicationItemManager(
+      ItemRepository itemRepository, SolrTemplate solrTemplate) {
+    return new ReplicationItemManagerImpl(itemRepository, solrTemplate);
   }
 
   @Bean
   public ReplicatorConfigManager replicatorConfigManager(ConfigRepository configRepository) {
     return new ReplicatorConfigManagerImpl(configRepository);
-  }
-
-  @Bean
-  public ReplicatorHistoryManager replicatorHistoryManager(HistoryRepository historyRepository) {
-    return new ReplicatorHistoryManagerImpl(historyRepository);
   }
 
   @Bean
@@ -59,8 +54,8 @@ public class ServiceConfig {
   @Bean
   public Syncer syncer(
       ReplicationItemManager replicationItemManager,
-      ReplicatorHistoryManager replicatorHistoryManager) {
-    return new Syncer(replicationItemManager, replicatorHistoryManager);
+      ReplicatorConfigManager replicatorConfigManager) {
+    return new Syncer(replicationItemManager, replicatorConfigManager);
   }
 
   @Bean
@@ -71,12 +66,8 @@ public class ServiceConfig {
   }
 
   @Bean(destroyMethod = "cleanUp")
-  public Replicator replicator(
-      NodeAdapters nodeAdapters,
-      ReplicatorHistoryManager history,
-      SiteManager siteManager,
-      Syncer syncer) {
-    ReplicatorImpl replicator = new ReplicatorImpl(nodeAdapters, history, siteManager, syncer);
+  public Replicator replicator(NodeAdapters nodeAdapters, SiteManager siteManager, Syncer syncer) {
+    ReplicatorImpl replicator = new ReplicatorImpl(nodeAdapters, siteManager, syncer);
     replicator.init();
     return replicator;
   }

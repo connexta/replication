@@ -17,7 +17,6 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
-import com.connexta.ion.replication.api.impl.data.ReplicationStatusImpl;
 import com.connexta.ion.replication.api.impl.data.SyncRequestImpl;
 import com.connexta.ion.replication.api.persistence.ReplicatorConfigManager;
 import com.google.common.annotations.VisibleForTesting;
@@ -86,9 +85,7 @@ public class ReplicatorRunner {
             .collect(Collectors.toList());
     try {
       for (ReplicatorConfig config : configsToSchedule) {
-        ReplicationStatusImpl status = new ReplicationStatusImpl();
-        status.setReplicatorId(config.getId());
-        replicator.submitSyncRequest(new SyncRequestImpl(config, status));
+        replicator.submitSyncRequest(new SyncRequestImpl(config));
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

@@ -1,7 +1,6 @@
 package com.connexta.ion.replication.api.impl.persistence;
 
 import com.connexta.ion.replication.api.NotFoundException;
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
 import com.connexta.ion.replication.api.impl.data.ReplicatorConfigImpl;
 import com.connexta.ion.replication.api.impl.spring.ConfigRepository;
@@ -51,11 +50,6 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
 
   @Override
   public boolean configExists(String configId) {
-    try {
-      configRepository.findById(configId);
-    } catch (NotFoundException | ReplicationPersistenceException e) {
-      return false;
-    }
-    return true;
+    return configRepository.findById(configId).isPresent();
   }
 }

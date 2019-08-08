@@ -23,11 +23,55 @@ public interface ReplicationItem {
   /** @return id for which {@link Metadata} this item represents */
   String getId();
 
-  /** @return this last time the resource associated with this item modified */
+  /** @return id of the metadata retrieved from a remote system */
+  String getMetadataId();
+
+  /** @return the id of the {@link ReplicatorConfig} this item belongs to */
+  String getConfigId();
+
+  /**
+   * @return this last time the resource associated with this item modified, or {@code null} if
+   *     there is no resource associated with this metadata
+   */
   Date getResourceModified();
 
   /** @return the last time the {@link Metadata} associated with this item was modified */
   Date getMetadataModified();
+
+  /**
+   * @return the size in bytes of this item's resource, or 0 if there is no resource associated with
+   *     this metadata
+   */
+  long getResourceSize();
+
+  /** @return the size in bytes of this item's metadata, cannot be negative */
+  long getMetadataSize();
+
+  /** @return the time at which this item began processing */
+  Date getStartTime();
+
+  /** @return the time at which this item finished processing */
+  Date getDoneTime();
+
+  /** @return the time in milliseconds it took process this item, cannot be negative. */
+  long getDuration();
+
+  /**
+   * See {@link Status}.
+   *
+   * @return the status of this replication item
+   */
+  Status getStatus();
+
+  /**
+   * See {@link Action}.
+   *
+   * @return the action performed on the metadata/resource
+   */
+  Action getAction();
+
+  /** @return the resource's speed of transfer in bytes per second, cannot be negative */
+  double getResourceTransferRate();
 
   /**
    * @return the name for the source {@link NodeAdapter} the metadata/resource was being replicated
@@ -40,18 +84,4 @@ public interface ReplicationItem {
    *     replicated to.
    */
   String getDestination();
-
-  /** @return the id of the {@link ReplicatorConfig} this item belongs to */
-  String getConfigId();
-
-  /**
-   * Represents the amount of times an operation between the source and destination {@link
-   * NodeAdapter}s failed.
-   *
-   * @return the failure count
-   */
-  int getFailureCount();
-
-  /** Increments the failure count by 1. See {@link #getFailureCount()}. */
-  void incrementFailureCount();
 }

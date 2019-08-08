@@ -337,15 +337,6 @@ public class DdfNodeAdapter implements NodeAdapter {
     }
     filters.add(CqlBuilder.equalTo(Constants.METACARD_TAGS, Constants.DEFAULT_TAG));
 
-    final List<String> deletedFailedItemFilters = new ArrayList<>();
-    for (String itemId : queryRequest.getFailedItemIds()) {
-      // filter for items that failed to replicate and were deleted since the last attempt
-      deletedFailedItemFilters.add(
-          CqlBuilder.allOf(
-              CqlBuilder.equalTo(Constants.VERSION_OF_ID, itemId),
-              CqlBuilder.like(Constants.ACTION, "Deleted*")));
-    }
-
     String finalFilter;
 
     Date modifiedAfter = queryRequest.getModifiedAfter();
@@ -367,11 +358,6 @@ public class DdfNodeAdapter implements NodeAdapter {
       finalFilter = CqlBuilder.allOf(filters);
     }
 
-    if (!deletedFailedItemFilters.isEmpty()) {
-      String deletedFailedItemsFilter = CqlBuilder.anyOf(deletedFailedItemFilters);
-      LOGGER.debug("Deleted failed items filter: {}", CqlBuilder.anyOf(deletedFailedItemFilters));
-      finalFilter = CqlBuilder.anyOf(finalFilter, deletedFailedItemsFilter);
-    }
     LOGGER.debug("Final cql query filter: {}", finalFilter);
     return new QueryRequestImpl(
         finalFilter, queryRequest.getStartIndex(), queryRequest.getPageSize());

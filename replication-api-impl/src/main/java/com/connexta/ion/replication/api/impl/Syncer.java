@@ -13,14 +13,13 @@
  */
 package com.connexta.ion.replication.api.impl;
 
+import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.NodeAdapter;
-import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.Replication;
 import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Status;
 import com.connexta.ion.replication.api.data.Metadata;
 import com.connexta.ion.replication.api.data.QueryRequest;
-import com.connexta.ion.replication.api.data.ReplicationStatus;
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
 import com.connexta.ion.replication.api.data.Resource;
 import com.connexta.ion.replication.api.data.ResourceResponse;
@@ -32,12 +31,13 @@ import com.connexta.ion.replication.api.impl.data.ResourceRequestImpl;
 import com.connexta.ion.replication.api.impl.data.UpdateRequestImpl;
 import com.connexta.ion.replication.api.impl.data.UpdateStorageRequestImpl;
 import com.connexta.ion.replication.api.persistence.ReplicationItemManager;
-import com.connexta.ion.replication.api.persistence.ReplicatorHistoryManager;
+import com.connexta.ion.replication.api.persistence.ReplicatorConfigManager;
 import com.connexta.ion.replication.data.QueryRequestImpl;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,12 +52,17 @@ public class Syncer {
 
   private final ReplicationItemManager replicationItemManager;
 
-  private final ReplicatorHistoryManager historyManager;
+  private final ReplicatorConfigManager configs;
 
-  public Syncer(
-      ReplicationItemManager replicationItemManager, ReplicatorHistoryManager historyManager) {
+  /**
+   * Creates a new {@code Syncer}.
+   *
+   * @param replicationItemManager bean for operating on {@link ReplicationItem}s
+   * @param configs bean for operating on {@link ReplicatorConfig}s
+   */
+  public Syncer(ReplicationItemManager replicationItemManager, ReplicatorConfigManager configs) {
     this.replicationItemManager = replicationItemManager;
-    this.historyManager = historyManager;
+    this.configs = configs;
   }
 
   /**
@@ -67,20 +72,21 @@ public class Syncer {
    * @param source the source {@link NodeAdapter}
    * @param destination the destination {@link NodeAdapter}
    * @param replicatorConfig a {@link ReplicatorConfig} defining the context of the sync
-   * @param replicationStatus a new {@link ReplicationStatus}
    * @return a job ready for syncing
    */
-  public Job create(
+  Job create(
       NodeAdapter source,
       NodeAdapter destination,
       ReplicatorConfig replicatorConfig,
-      ReplicationStatus replicationStatus) {
-    return new Job(source, destination, replicatorConfig, replicationStatus);
+      Set<Consumer<ReplicationItem>> callbacks) {
+    return new Job(source, destination, replicatorConfig, callbacks);
   }
 
+  /**
+   * Class which will handle transferring resources and metadata between a source and destination
+   * {@link NodeAdapter}.
+   */
   class Job {
-
-    private final Object lock = new Object();
 
     private final NodeAdapter source;
 
@@ -92,36 +98,26 @@ public class Syncer {
 
     private final ReplicatorConfig replicatorConfig;
 
-    private final ReplicationStatus replicationStatus;
-
-    private boolean canceled = false;
-
-    private long bytesTransferred = 0;
+    private final Set<Consumer<ReplicationItem>> callbacks;
 
     Job(
         NodeAdapter source,
         NodeAdapter destination,
         ReplicatorConfig replicatorConfig,
-        ReplicationStatus replicationStatus) {
+        Set<Consumer<ReplicationItem>> callbacks) {
       this.source = source;
       this.destination = destination;
       this.replicatorConfig = replicatorConfig;
-      this.replicationStatus = replicationStatus;
+      this.callbacks = callbacks;
 
       this.sourceName = source.getSystemName();
       this.destinationName = destination.getSystemName();
     }
 
-    /**
-     * Blocking call that begins syncing between a source and destination {@link NodeAdapter}s.
-     *
-     * @return the result {@link Status} of the sync
-     */
-    SyncResponse sync() {
+    /** Blocking call that begins syncing between a source and destination {@link NodeAdapter}s. */
+    void sync() {
       Date modifiedAfter = getModifiedAfter();
-      List<String> failedItemIds =
-          replicationItemManager.getFailureList(
-              replicatorConfig.getFailureRetryCount(), sourceName, destinationName);
+      List<String> failedItemIds = replicationItemManager.getFailureList(replicatorConfig.getId());
 
       QueryRequest queryRequest =
           new QueryRequestImpl(
@@ -133,22 +129,24 @@ public class Syncer {
       Iterable<Metadata> changeSet = source.query(queryRequest).getMetadata();
 
       for (Metadata metadata : changeSet) {
-        synchronized (lock) {
-          if (canceled) {
-            break;
-          }
-        }
+        ReplicationItem existingItem =
+            replicationItemManager
+                .getLatestItem(replicatorConfig.getId(), metadata.getId())
+                .orElse(null);
 
-        Optional<ReplicationItem> replicationItem =
-            replicationItemManager.getItem(metadata.getId(), sourceName, destinationName);
-
+        Status status;
+        ReplicationItemImpl.Builder builder = createReplicationItem(metadata);
+        builder.markStartTime();
         try {
-          if (metadata.isDeleted() && replicationItem.isPresent()) {
-            doDelete(metadata, replicationItem.get());
-          } else if (destination.exists(metadata) && replicationItem.isPresent()) {
-            doUpdate(metadata, replicationItem.get());
+          if (metadata.isDeleted() && existingItem != null) {
+            builder.action(Action.DELETE);
+            status = doDelete(metadata);
+          } else if (destination.exists(metadata) && existingItem != null) {
+            builder.action(Action.UPDATE);
+            status = doUpdate(metadata, existingItem);
           } else {
-            doCreate(metadata, replicationItem);
+            builder.action(Action.CREATE);
+            status = doCreate(metadata);
           }
         } catch (VirtualMachineError e) {
           throw e;
@@ -157,50 +155,34 @@ public class Syncer {
           final boolean destinationAvailable = destination.isAvailable();
           if (!sourceAvailable || !destinationAvailable) {
             LOGGER.debug(
-                "Lost connection to either source {} (available={}) or destination {} (available={}). Setting status to {}",
+                "Lost connection to either source {} (available={}) or destination {} (available={}).",
                 sourceName,
                 sourceAvailable,
                 destinationName,
-                destinationAvailable,
-                Status.CONNECTION_LOST);
-            replicationStatus.setStatus(Status.CONNECTION_LOST);
-            return new SyncResponse(replicationStatus.getStatus());
-          } else if (replicationItem.isPresent()) {
-            ReplicationItem item = replicationItem.get();
-            item.incrementFailureCount();
-            replicationItemManager.saveItem(item);
-            replicationStatus.incrementFailure();
+                destinationAvailable);
+            status = Status.CONNECTION_LOST;
           } else {
-            ReplicationItem item = createReplicationItem(metadata, replicationItem);
-            item.incrementFailureCount();
-            replicationItemManager.saveItem(item);
-            replicationStatus.incrementFailure();
+            status = Status.FAILURE;
           }
         }
 
-        if (replicationStatus.getLastMetadataModified() == null
-            || metadata.getMetadataModified().after(replicationStatus.getLastMetadataModified())) {
-          replicationStatus.setLastMetadataModified(metadata.getMetadataModified());
+        builder.markDoneTime();
+
+        if (status != null) {
+          ReplicationItem item = builder.status(status).build();
+          replicationItemManager.saveItem(item);
+          callbacks.forEach(callback -> callback.accept(item));
+        }
+
+        if (replicatorConfig.getLastMetadataModified() == null
+            || metadata.getMetadataModified().after(replicatorConfig.getLastMetadataModified())) {
+          replicatorConfig.setLastMetadataModified(metadata.getMetadataModified());
+          configs.save(replicatorConfig);
         }
       }
-
-      synchronized (lock) {
-        replicationStatus.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
-      }
-      return new SyncResponse(replicationStatus.getStatus());
     }
 
-    /**
-     * Cancel this sync job. Any metadata/resource currently being replicated will first be finished
-     * and recorded.
-     */
-    void cancel() {
-      synchronized (lock) {
-        this.canceled = true;
-      }
-    }
-
-    private void doCreate(Metadata metadata, Optional<ReplicationItem> item) {
+    private Status doCreate(Metadata metadata) {
       addTagsAndLineage(metadata);
       boolean created;
 
@@ -215,10 +197,6 @@ public class Syncer {
             destinationName,
             metadataId);
         created = destination.createResource(new CreateStorageRequestImpl(resources));
-        if (created) {
-          bytesTransferred += metadata.getResourceSize();
-          replicationStatus.incrementBytesTransferred(bytesTransferred);
-        }
       } else {
         LOGGER.trace(
             "Sending create from {} to {} for metadata {}",
@@ -229,35 +207,21 @@ public class Syncer {
             destination.createRequest(new CreateRequestImpl(Collections.singletonList(metadata)));
       }
 
-      if (created) {
-        ReplicationItem replicationItem = createReplicationItem(metadata, Optional.empty());
-        replicationItemManager.saveItem(replicationItem);
-        replicationStatus.incrementCount();
-      } else {
-        ReplicationItem replicationItem = createReplicationItem(metadata, item);
-        replicationItem.incrementFailureCount();
-        replicationItemManager.saveItem(replicationItem);
-        replicationStatus.incrementFailure();
-
-        LOGGER.debug(
-            "Failed to create metadata {} from source {} to destination {}",
-            metadata.getId(),
-            sourceName,
-            destinationName);
-      }
+      return created ? Status.SUCCESS : Status.FAILURE;
     }
 
-    private void doUpdate(Metadata metadata, ReplicationItem replicationItem) {
+    @Nullable
+    private Status doUpdate(Metadata metadata, ReplicationItem replicationItem) {
       addTagsAndLineage(metadata);
 
       boolean shouldUpdateMetadata =
           metadata.getMetadataModified().after(replicationItem.getMetadataModified())
-              || replicationItem.getFailureCount() > 0;
+              || replicationItem.getStatus() != Status.SUCCESS;
 
       boolean shouldUpdateResource =
           hasResource(metadata)
               && (metadata.getResourceModified().after(replicationItem.getResourceModified())
-                  || replicationItem.getFailureCount() > 0);
+                  || replicationItem.getStatus() != Status.SUCCESS);
 
       final String metadataId = metadata.getId();
       boolean updated;
@@ -271,10 +235,6 @@ public class Syncer {
             destinationName,
             metadataId);
         updated = destination.updateResource(new UpdateStorageRequestImpl(resources));
-        if (updated) {
-          bytesTransferred += metadata.getResourceSize();
-          replicationStatus.incrementBytesTransferred(bytesTransferred);
-        }
       } else if (shouldUpdateMetadata) {
         LOGGER.trace(
             "Sending update from {} to {} for metadata {}",
@@ -290,27 +250,13 @@ public class Syncer {
             metadata.getId(),
             sourceName,
             destinationName);
-        return;
+        return null;
       }
 
-      if (updated) {
-        ReplicationItem updateReplicationItem = createReplicationItem(metadata, Optional.empty());
-        replicationItemManager.saveItem(updateReplicationItem);
-        replicationStatus.incrementCount();
-      } else {
-        replicationItem.incrementFailureCount();
-        replicationItemManager.saveItem(replicationItem);
-        replicationStatus.incrementFailure();
-
-        LOGGER.debug(
-            "Failed to update metadata {} from source {} to destination {}",
-            metadata.getId(),
-            sourceName,
-            destinationName);
-      }
+      return updated ? Status.SUCCESS : Status.FAILURE;
     }
 
-    private void doDelete(Metadata metadata, ReplicationItem replicationItem) {
+    private Status doDelete(Metadata metadata) {
       LOGGER.trace(
           "Sending delete from {} to {} for metadata {}",
           sourceName,
@@ -319,22 +265,7 @@ public class Syncer {
 
       boolean deleted =
           destination.deleteRequest(new DeleteRequestImpl(Collections.singletonList(metadata)));
-      String id = metadata.getId();
-
-      if (deleted) {
-        replicationItemManager.deleteItem(id, sourceName, destinationName);
-        replicationStatus.incrementCount();
-      } else {
-        replicationItem.incrementFailureCount();
-        replicationItemManager.saveItem(replicationItem);
-        replicationStatus.incrementFailure();
-
-        LOGGER.debug(
-            "Failed to delete metadata {} from source {} to destination {}",
-            id,
-            sourceName,
-            destinationName);
-      }
+      return deleted ? Status.SUCCESS : Status.FAILURE;
     }
 
     private boolean hasResource(Metadata metadata) {
@@ -346,35 +277,21 @@ public class Syncer {
       metadata.addTag(Replication.REPLICATED_TAG);
     }
 
-    private ReplicationItem createReplicationItem(
-        Metadata metadata, Optional<ReplicationItem> existingItem) {
-      int failureCount = existingItem.isPresent() ? existingItem.get().getFailureCount() : 0;
-      return new ReplicationItemImpl(
-          metadata.getId(),
-          metadata.getResourceModified(),
-          metadata.getMetadataModified(),
-          sourceName,
-          destinationName,
-          replicatorConfig.getId(),
-          failureCount);
+    private ReplicationItemImpl.Builder createReplicationItem(Metadata metadata) {
+      return new ReplicationItemImpl.Builder(
+              metadata.getId(), replicatorConfig.getId(), sourceName, destinationName)
+          .resourceModified(metadata.getResourceModified())
+          .metadataModified(metadata.getMetadataModified())
+          .resourceSize(metadata.getResourceSize())
+          .metadataSize(metadata.getMetadataSize());
     }
 
     @Nullable
     private Date getModifiedAfter() {
-      ReplicationStatus status;
-      try {
-        status = historyManager.getByReplicatorId(replicatorConfig.getId());
-      } catch (NotFoundException e) {
-        LOGGER.trace(
-            "no history for replication config {} found. This config may not have completed a run yet.",
-            replicatorConfig.getId());
-        return null;
-      }
-
-      if (status.getLastMetadataModified() != null) {
-        return status.getLastMetadataModified();
+      if (replicatorConfig.getLastMetadataModified() != null) {
+        return replicatorConfig.getLastMetadataModified();
       } else {
-        LOGGER.trace("no previous successful run for config {} found.", replicatorConfig.getId());
+        LOGGER.trace("no previous successful run for config {} found.", replicatorConfig.getName());
         return null;
       }
     }

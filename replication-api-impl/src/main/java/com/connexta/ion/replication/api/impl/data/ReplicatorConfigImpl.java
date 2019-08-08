@@ -14,6 +14,8 @@
 package com.connexta.ion.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.data.ReplicatorConfig;
+import java.util.Date;
+import javax.annotation.Nullable;
 import org.springframework.data.solr.core.mapping.Indexed;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
@@ -30,29 +32,30 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
    */
   public static final int CURRENT_VERSION = 1;
 
-  @Indexed(name = "name_txt")
+  @Indexed(name = "name")
   private String name;
 
-  @Indexed(name = "bidirectional_b")
+  @Indexed(name = "bidirectional")
   private boolean bidirectional;
 
-  @Indexed(name = "source_txt")
+  @Indexed(name = "source")
   private String source;
 
-  @Indexed(name = "destination_txt")
+  @Indexed(name = "destination")
   private String destination;
 
-  @Indexed(name = "filter_txt")
+  @Indexed(name = "filter")
   private String filter;
 
-  @Indexed(name = "retry_count_int")
-  private int failureRetryCount;
-
-  @Indexed(name = "description_txt")
+  @Indexed(name = "description")
   private String description;
 
-  @Indexed(name = "suspended_b")
+  @Indexed(name = "suspended")
   private boolean suspended;
+
+  @Indexed(name = "last_metadata_modified")
+  @Nullable
+  private Date lastMetadataModified;
 
   public ReplicatorConfigImpl() {
     super.setVersion(CURRENT_VERSION);
@@ -119,16 +122,6 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   }
 
   @Override
-  public int getFailureRetryCount() {
-    return failureRetryCount;
-  }
-
-  @Override
-  public void setFailureRetryCount(int count) {
-    failureRetryCount = count;
-  }
-
-  @Override
   public boolean isSuspended() {
     return suspended;
   }
@@ -136,5 +129,16 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public void setSuspended(boolean suspended) {
     this.suspended = suspended;
+  }
+
+  @Override
+  public void setLastMetadataModified(Date lastMetadataModified) {
+    this.lastMetadataModified = lastMetadataModified;
+  }
+
+  @Nullable
+  @Override
+  public Date getLastMetadataModified() {
+    return lastMetadataModified;
   }
 }

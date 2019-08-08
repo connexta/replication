@@ -33,7 +33,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class SiteManagerImplTest {
 
-  SiteManagerImpl store;
+  private SiteManagerImpl store;
 
   @Mock SiteRepository siteRepository;
 

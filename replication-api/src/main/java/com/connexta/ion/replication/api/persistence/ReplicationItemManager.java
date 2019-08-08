@@ -24,15 +24,15 @@ import java.util.Optional;
 public interface ReplicationItemManager {
 
   /**
-   * If present, returns a {@link ReplicationItem} for the given {@link Metadata} identified by its.
+   * If present, returns the latest {@link ReplicationItem} (based on {@link
+   * ReplicationItem#getDoneTime()}) for the given {@link Metadata}.
    *
+   * @param configId id for the {@link ReplicatorConfig} which the item belongs to
    * @param metadataId a unique metadata id
-   * @param source the source {@link NodeAdapter}'s name
-   * @param destination the destination {@link NodeAdapter}'s name
    * @return an optional containing the item, or an empty optional if there was an error fetching
    *     the item or it was not found.
    */
-  Optional<ReplicationItem> getItem(String metadataId, String source, String destination);
+  Optional<ReplicationItem> getLatestItem(String configId, String metadataId);
 
   /**
    * Returns a list of {@code ReplicationItem}s associated with a {@link ReplicatorConfig}.
@@ -72,13 +72,10 @@ public interface ReplicationItemManager {
    * Get the list of IDs for {@link ReplicationItem}s that failed to be transferred between the
    * source and destination {@link NodeAdapter}s.
    *
-   * @param maximumFailureCount the failure count that {@link ReplicationItem#getFailureCount()}
-   *     should not exceed.
-   * @param source the source {@link NodeAdapter} name
-   * @param destination the destination {@link NodeAdapter} name
-   * @return list of string ids of items that have failed to previously transfer
+   * @param configId the {@link ReplicatorConfig} id to get failures for
+   * @return list of ids for items that failed to be transferred
    */
-  List<String> getFailureList(int maximumFailureCount, String source, String destination);
+  List<String> getFailureList(String configId);
 
   /**
    * Deletes all the items for a {@link ReplicatorConfig}.

@@ -47,7 +47,27 @@ replication:
   period: 300
   connectionTimeout: 30
   receiveTimeout: 60
+  
+# Exposes metrics
+management:
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: 'prometheus,metrics,health,info'
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 ```
+
+###### Metrics 
+
+Replication supports reporting metrics through Micrometer. Prometheus is used as the metrics collection platform. The replication-spring-config provides example configuration for exposing metrics from within the application.
 
 ###### Secrets
 Replication requires certs and ssl configurations in order to talk with remote DDF based systems. This information is stored in docker secrets.
@@ -87,18 +107,18 @@ Example sites.json
 ```json
   [
       {
-        "remote-managed_b":false,
-        "name_txt":"RepSync-Node1",
-        "url_txt":"https://host1:8993/services/",
-        "id_txt":"some-unique-id-1234",
-        "version_int":2
+        "remote_managed":false,
+        "name":"RepSync-Node1",
+        "url":"https://host1:8993/services/",
+        "id":"some-unique-id-1234",
+        "version":2
        },
       {
-        "remote-managed_b":false,
-        "name_txt":"RepSync-Node2",
-        "url_txt":"https://host2:8993/services",
-        "id_txt":"another-unique-id-5678",
-        "version_int":2
+        "remote_managed":false,
+        "name":"RepSync-Node2",
+        "url":"https://host2:8993/services",
+        "id":"another-unique-id-5678",
+        "version":2
       }
    ]
 ```
@@ -112,15 +132,14 @@ Example jobs.json
 ```json
   [
     {
-      "name_txt":"pdf-harvest",
-      "bidirectional_b":false,
-      "source_txt":"some-unique-id-1234",
-      "destination_txt":"another-unique-id-5678",
-      "filter_txt":"\"media.type\" like 'application/pdf'",
-      "retry_count_int":5,
-      "suspended_b":false,
-      "id_txt":"unique-job-id-98765",
-      "version_int":1
+      "name":"pdf-harvest",
+      "bidirectional":false,
+      "source":"some-unique-id-1234",
+      "destination":"another-unique-id-5678",
+      "filter":"\"media.type\" like 'application/pdf'",
+      "suspended":false,
+      "id":"unique-job-id-98765",
+      "version":1
     }
   ]
 ```

@@ -11,10 +11,26 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api.impl.spring;
+package com.connexta.ion.replication.api;
 
-import com.connexta.ion.replication.api.impl.data.ReplicationSiteImpl;
-import org.springframework.data.repository.CrudRepository;
+/** Describes an action taken on a {@link ReplicationItem} */
+public enum Action {
 
-// This will be AUTO IMPLEMENTED by Spring into a Bean called siteRepository
-public interface SiteRepository extends CrudRepository<ReplicationSiteImpl, String> {}
+  /**
+   * Action for a replication item that was created from a source {@link NodeAdapter} to a
+   * destination {@link NodeAdapter}
+   */
+  CREATE,
+
+  /**
+   * Action for a replication item that was updated from a source {@link NodeAdapter} to a
+   * destination {@link NodeAdapter}
+   */
+  UPDATE,
+
+  /**
+   * Action for a replication item that was deleted between a source {@link NodeAdapter} to a
+   * destination {@link NodeAdapter}
+   */
+  DELETE
+}

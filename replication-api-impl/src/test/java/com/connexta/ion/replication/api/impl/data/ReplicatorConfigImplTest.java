@@ -16,6 +16,7 @@ package com.connexta.ion.replication.api.impl.data;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,21 +31,22 @@ public class ReplicatorConfigImplTest {
 
   @Test
   public void gettersAndSetters() {
+    Date lastMetadataModified = new Date();
     config.setName("name");
     config.setBidirectional(true);
     config.setSource("source");
     config.setDestination("destination");
     config.setFilter("filter");
-    config.setFailureRetryCount(5);
     config.setDescription("description");
     config.setSuspended(true);
+    config.setLastMetadataModified(lastMetadataModified);
     assertThat(config.getName(), is("name"));
     assertThat(config.isBidirectional(), is(true));
     assertThat(config.getSource(), is("source"));
     assertThat(config.getDestination(), is("destination"));
     assertThat(config.getFilter(), is("filter"));
-    assertThat(config.getFailureRetryCount(), is(5));
     assertThat(config.getDescription(), is("description"));
     assertThat(config.isSuspended(), is(true));
+    assertThat(config.getLastMetadataModified(), is(lastMetadataModified));
   }
 }

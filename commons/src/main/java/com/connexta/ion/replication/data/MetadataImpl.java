@@ -42,6 +42,8 @@ public class MetadataImpl implements Metadata {
 
   private long resourceSize = 0;
 
+  private long metadataSize = 0;
+
   private URI resourceUri;
 
   private Date resourceModified;
@@ -98,6 +100,16 @@ public class MetadataImpl implements Metadata {
   @Override
   public void setResourceSize(long resourceSize) {
     this.resourceSize = resourceSize;
+  }
+
+  @Override
+  public long getMetadataSize() {
+    return metadataSize;
+  }
+
+  @Override
+  public void setMetadataSize(long metadataSize) {
+    this.metadataSize = metadataSize;
   }
 
   @Override

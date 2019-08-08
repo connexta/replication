@@ -192,9 +192,10 @@ public class CswRecordConverter implements Converter {
     HierarchicalStreamReader reader = copyXml(hreader, metadataWriter, namespaceMap);
 
     Map<String, MetacardAttribute> metadataMap = new HashMap<>();
+    String metadataStr = metadataWriter.toString();
     metadataMap.put(
         Constants.RAW_METADATA_KEY,
-        new MetacardAttribute(Constants.RAW_METADATA_KEY, null, metadataWriter.toString()));
+        new MetacardAttribute(Constants.RAW_METADATA_KEY, null, metadataStr));
     String id = reader.getAttribute("gml:id");
     metadataMap.put(Constants.METACARD_ID, new MetacardAttribute(Constants.METACARD_ID, null, id));
     // If we want to grab the type we will have to do so below. As you move through the child nodes
@@ -216,6 +217,7 @@ public class CswRecordConverter implements Converter {
     }
 
     MetadataImpl metadata = new MetadataImpl(metadataMap, Map.class, id, metacardModified);
+    metadata.setMetadataSize(metadataStr.length());
     if (metadataMap.get(Constants.RESOURCE_SIZE) != null) {
       metadata.setResourceSize(Long.parseLong(metadataMap.get(Constants.RESOURCE_SIZE).getValue()));
       metadata.setResourceModified(convertToDate(metadataMap.get(Constants.MODIFIED)));

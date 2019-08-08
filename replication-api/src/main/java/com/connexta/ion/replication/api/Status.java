@@ -13,44 +13,18 @@
  */
 package com.connexta.ion.replication.api;
 
-import com.connexta.ion.replication.api.data.ReplicatorConfig;
-
-/** The states that a {@link SyncRequest} can be in. */
+/** The result of a {@link ReplicationItem} after it has been processed. */
 public enum Status {
 
-  /** The {@link ReplicatorConfig} is waiting to be processed. */
-  PENDING,
-
-  /**
-   * Indicates metadata and/or resources are being pushed from the source to destination {@link
-   * NodeAdapter}s
-   */
-  PUSH_IN_PROGRESS,
-
-  /**
-   * Indicates metadata and/or resources are being pushed from the destination to source {@link
-   * NodeAdapter}s
-   */
-  PULL_IN_PROGRESS,
-
-  /** Indicates a {@link SyncRequest} was successfully executed. */
+  /** Indicates a {@link ReplicationItem} was successfully transferred. */
   SUCCESS,
 
-  /** Indicates an unknown error occurred. */
+  /** Indicates the {@link ReplicationItem} failed to be transferred. */
   FAILURE,
-
-  /** Indicates the {@link SyncRequest} was canceled while in the middle of processing. */
-  CANCELED,
 
   /**
    * Indicates connection to the source and/or destination {@link NodeAdapter}s was lost while
    * transferring metadata and/or resources.
    */
-  CONNECTION_LOST,
-
-  /**
-   * Indicates connection could not be established to the source or destination {@link NodeAdapter}s
-   * before trying to transfer metadata and/or resources.
-   */
-  CONNECTION_UNAVAILABLE
+  CONNECTION_LOST
 }

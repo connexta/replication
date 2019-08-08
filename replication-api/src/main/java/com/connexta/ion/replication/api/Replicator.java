@@ -15,6 +15,7 @@ package com.connexta.ion.replication.api;
 
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public interface Replicator {
 
@@ -25,20 +26,6 @@ public interface Replicator {
    * @throws InterruptedException on thread interrupt when inserting request into the queue
    */
   void submitSyncRequest(final SyncRequest syncRequest) throws InterruptedException;
-
-  /**
-   * Cancel all pending or active {@link SyncRequest}
-   *
-   * @param syncRequest The syncRequest to cancel
-   */
-  void cancelSyncRequest(final SyncRequest syncRequest);
-
-  /**
-   * Cancel all pending or active {@link SyncRequest} based on the request configuration id
-   *
-   * @param configId The id of the configuration in the request
-   */
-  void cancelSyncRequest(final String configId);
 
   /**
    * Gets the {@link Queue} that have been submitted but have not yet been executed. Does not
@@ -54,4 +41,11 @@ public interface Replicator {
    * @return A unmodifiable {@link Set} or an empty {@link Set} if there are none
    */
   Set<SyncRequest> getActiveSyncRequests();
+
+  /**
+   * Registers a callback which will be called when the {@link SyncRequest} completes.
+   *
+   * @param callback the callback which will be executed
+   */
+  void registerCompletionCallback(Consumer<ReplicationItem> callback);
 }

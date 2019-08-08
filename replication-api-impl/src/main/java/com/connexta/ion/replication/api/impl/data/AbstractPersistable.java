@@ -25,10 +25,10 @@ import org.springframework.data.solr.core.mapping.Indexed;
 public abstract class AbstractPersistable implements Persistable {
 
   @Id
-  @Indexed(name = "id_txt")
+  @Indexed(name = "id")
   private String id;
 
-  @Indexed(name = "version_int")
+  @Indexed(name = "version")
   private int version;
 
   protected AbstractPersistable() {
