@@ -21,6 +21,7 @@ import ddf.catalog.CatalogFramework;
 import ddf.catalog.filter.FilterAdapter;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.catalog.resource.ResourceReader;
+import ddf.catalog.transform.QueryFilterTransformerProvider;
 import ddf.security.encryption.EncryptionService;
 import ddf.security.service.SecurityManager;
 import java.net.URL;
@@ -89,6 +90,8 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   private CatalogFramework framework;
 
+  private QueryFilterTransformerProvider cswQueryFilterTransformerProvider;
+
   public ReplicationStore createReplicatorStore(URL url) {
     if (url.toString().startsWith(SystemBaseUrl.INTERNAL.getBaseUrl())
         || url.toString().startsWith(SystemBaseUrl.EXTERNAL.getBaseUrl())) {
@@ -140,7 +143,8 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
     hybridStore.setSecurityManager(securityManager);
     hybridStore.setSchemaTransformerManager(metacardTransformerManager);
     hybridStore.setCswTransactionWriter(cswTransactionWriter);
-
+    hybridStore.setCswQueryFilterTransformerProvider(cswQueryFilterTransformerProvider);
+    hybridStore.setCswTransformConverter(provider);
     return hybridStore;
   }
 
@@ -207,5 +211,10 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   public void setClientFactoryFactory(ClientFactoryFactory clientFactoryFactory) {
     this.clientFactoryFactory = clientFactoryFactory;
+  }
+
+  public void setCswQueryFilterTransformerProvider(
+      QueryFilterTransformerProvider cswQueryFilterTransformerProvider) {
+    this.cswQueryFilterTransformerProvider = cswQueryFilterTransformerProvider;
   }
 }

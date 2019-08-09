@@ -43,6 +43,7 @@ import org.codice.pax.exam.junit.ConfigurationAdmin;
 import org.codice.pax.exam.junit.ServiceAdmin;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;

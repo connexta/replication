@@ -28,8 +28,9 @@
 
     <modules>
         <module>osgi</module>
-        <module>replication-dominion</module>
-        <module>replication-dominion-pax-exam</module>
-        <module>test</module>
+<!-- Commenting out all modules for now that depend on dominion since it is not currently compatible with DDF 2.16.x -->
+<!--        <module>replication-dominion</module>-->
+<!--        <module>replication-dominion-pax-exam</module>-->
+<!--        <module>test</module>-->
     </modules>
 </project>
