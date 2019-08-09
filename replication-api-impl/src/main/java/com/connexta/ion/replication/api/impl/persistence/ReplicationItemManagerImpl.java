@@ -125,7 +125,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   private GroupPage<ReplicationItemImpl> doSolrQuery(String configId, Pageable pageable) {
     Criteria queryCriteria = Crotch.where("config_id").is(configId);
-    Sort doneTimeDescSort = new Sort(Direction.DESC, "done_time");
+    Sort doneTimeDescSort = Sort.by(Direction.DESC, "done_time");
     SimpleQuery groupQuery =
         new SimpleQuery(queryCriteria).addSort(doneTimeDescSort).setPageRequest(pageable);
     GroupOptions options =
