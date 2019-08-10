@@ -103,7 +103,7 @@
         <xstream.version>1.4.11.1</xstream.version>
         <xerces.version>2.12.0</xerces.version>
         <jsr305.version>3.0.2_1</jsr305.version>
-        <jetty.version>9.4.11.v20180605</jetty.version>
+        <jetty.version>9.4.19.v20190610</jetty.version>
         <common.codec.version>1.11</common.codec.version>
         <rest-assured.version>3.3.0</rest-assured.version>
         <hamcrest-all.version>1.3</hamcrest-all.version>
@@ -120,7 +120,7 @@
         <opengis.version>19.1</opengis.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
         <jackson.version>2.10.0.pr1</jackson.version>
-        <spring.version>5.1.9.RELEASE</spring.version>
+        <spring.version>5.2.0.RC1</spring.version>
         <spring-boot-starter.version>2.1.7.RELEASE</spring-boot-starter.version>
         <annotation.version>1.3.1</annotation.version>
         <reactive-streams.version>1.0.2</reactive-streams.version>
@@ -129,9 +129,8 @@
         <owasp.version>5.2.1</owasp.version>
         <slf4j.version>1.7.26</slf4j.version>
         <gpg-plugin.version>1.6</gpg-plugin.version>
-        <org.eclipse-jetty.version>9.4.19.v20190610</org.eclipse-jetty.version>
         <micrometer.version>1.1.5</micrometer.version>
-        <jackson-databind.version>2.9.9.3</jackson-databind.version>
+        <javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
 
         <!-- documentation replacements -->
         <platform>DDF Base</platform>
@@ -172,6 +171,7 @@
                 <version>${micrometer.version}</version>
             </dependency>
 
+            <!-- START spring-data-solr vulnerability workaround -->
             <dependency>
                 <groupId>org.springframework.data</groupId>
                 <artifactId>spring-data-solr</artifactId>
@@ -257,8 +257,65 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>${jackson-databind.version}</version>
+                <version>${jackson.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-alpn-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-alpn-java-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-http</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-io</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-util</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.http2</groupId>
+                <artifactId>http2-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.http2</groupId>
+                <artifactId>http2-common</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.http2</groupId>
+                <artifactId>http2-hpack</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.http2</groupId>
+                <artifactId>http2-http-client-transport</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <!-- Hibernate 5.x compatible version. Hibernate 5.x brought in by spring version 5.2.0.RC1 -->
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+                <version>${javax-validation-api.version}</version>
+            </dependency>
+            <!-- END spring-data-solr vulnerability workaround -->
         </dependencies>
     </dependencyManagement>
 
