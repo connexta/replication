@@ -24,7 +24,6 @@
     <bean id="QueryService" class="org.codice.ditto.replication.api.impl.QueryServiceImpl">
         <argument ref="catalog"/>
         <argument ref="filterBuilder"/>
-        <argument ref="xmlTransformer"/>
     </bean>
 
     <service ref="QueryService" interface="org.codice.ditto.replication.api.QueryService"/>

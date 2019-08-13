@@ -93,6 +93,53 @@
     </suppress>
     <suppress>
         <notes>
+            Nearly all of these are not an issue because either we are not using those features
+            entirely or (and in addition to the fact) that solr is now running as an external
+            process and completely locked down, so no one could access solr to take advantage of
+            these vulnerabilities. All communication is controlled by DDF.
+        </notes>
+        <cve>CVE-2016-3081</cve>
+        <cve>CVE-2016-7415</cve>
+        <cve>CVE-2017-17484</cve>
+        <cve>CVE-2017-5637</cve>
+        <cve>CVE-2017-14868</cve>
+        <cve>CVE-2013-4316</cve>
+        <cve>CVE-2016-4436</cve>
+        <cve>CVE-2017-3162</cve>
+        <cve>CVE-2013-2115</cve>
+        <cve>CVE-2014-1868</cve>
+        <cve>CVE-2012-0391</cve>
+        <cve>CVE-2017-14952</cve>
+        <cve>CVE-2017-14949</cve>
+        <cve>CVE-2016-3082</cve>
+        <cve>CVE-2013-2135</cve>
+        <cve>CVE-2014-0112</cve>
+        <cve>CVE-2016-5001</cve>
+        <cve>CVE-2017-3161</cve>
+        <cve>CVE-2012-0392</cve>
+        <cve>CVE-2014-3577</cve>
+        <cve>CVE-2014-3627</cve>
+        <cve>CVE-2012-0838</cve>
+        <cve>CVE-2013-1965</cve>
+        <cve>CVE-2013-1966</cve>
+        <cve>CVE-2015-5262</cve>
+        <cve>CVE-2014-0113</cve>
+        <cve>CVE-2014-0229</cve>
+        <cve>CVE-2017-15713</cve>
+        <cve>CVE-2016-6293</cve>
+        <cve>CVE-2013-2134</cve>
+        <cve>CVE-2018-8012</cve>
+        <cve>CVE-2013-2251</cve>
+        <cve>CVE-2016-0785</cve>
+        <cve>CVE-2016-6811</cve>
+        <cve>CVE-2016-4461</cve>
+        <cve>CVE-2018-11766</cve>
+        <cve>CVE-2019-0193</cve>
+        <cve>CVE-2013-4271</cve>
+        <cve>CVE-2013-4221</cve>
+    </suppress>
+    <suppress>
+        <notes>
             CVE-2016-1000031: Applies to commons-fileupload-1.2.1, suppressing because the
             vulnerable class DiskFileItem is not used in the project
         </notes>
@@ -103,6 +150,8 @@
             A CVE against slf4j for the class "EventData", which is not used in DDF or pax-logging.
         </notes>
         <cve>CVE-2018-8088</cve>
+        <cve>CVE-2014-0050</cve>
+        <cve>CVE-2016-3092</cve>
     </suppress>
     <suppress>
         <notes>
@@ -192,6 +241,23 @@
             We don't use iBatis and we don't use Jackson default typing.
         </notes>
         <cve>CVE-2018-11307</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This CVE affects jackson-databind up to version 2.9.9.1. This is pulled in primarily by
+            ehcache, which cannot be upgraded until DDF's other dependencies (such as CXF) upgrade.
+            This CVE will be addressed by upgrading from ehcache2 to latest ehcache3, once the other
+            dependencies have upgraded.
+        </notes>
+        <cve>CVE-2019-14379</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            CVE-2008-0660 is a stack based buffer overflow vulnerability related to ActiveX and
+            several image uploaders. This is unrelated to presto-parser, so marking as a false
+            positive.
+        </notes>
+        <cve>CVE-2008-0660</cve>
     </suppress>
     <!-- ************************************************************************************* -->
     <!-- END DDF related suppression -->
