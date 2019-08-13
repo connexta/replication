@@ -13,9 +13,7 @@
  */
 package com.connexta.replication.queue;
 
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 
 /**
  * A queue broker defines the point of entry for retrieving references to queues and for monitoring
@@ -28,78 +26,34 @@ public interface QueueBroker {
    * <p>A new queue should be deployed if no queue currently exist for the specified site.
    *
    * @param site the site for which to get a queue
-   * @return the queue to use for the specified site
+   * @return the site queue to use for the specified site
    * @throws QueueException if an error occurred while performing the operation
    */
-  public Queue getQueue(String site) throws QueueException;
+  public SiteQueue getQueue(String site) throws QueueException;
 
   /**
-   * Retrieves the next available highest priority task from any of the specified queues, waiting if
-   * necessary until a task becomes available. The returned task is considered locked by the current
-   * thread/worker.
+   * Gets a compounded queue for the specified set of sites. Polling from the returned queue will
+   * attempt to find the first available task based on priority level. There is no priority
+   * established between sites.
    *
-   * @param queues the set of queues to monitor in order to retrieve the next available high
-   *     priority task
-   * @return the next available task with the highest priority from one of the specified queue
-   * @throws IllegalArgumentException if no queues are specified
-   * @throws InterruptedException if the current thread was interrupted while waiting for a task to
-   *     be returned
+   * <p>New queues should be deployed if none currently exist for a given site.
+   *
+   * @param sites the sites for which to compound all their corresponding queues
+   * @return a queue object which compounds all specified site queues together
    * @throws QueueException if an error occurred while performing the operation
    */
-  public Task take(Queue... queues) throws QueueException, InterruptedException;
+  public CompoundQueue getQueues(String... sites) throws QueueException;
 
   /**
-   * Retrieves the next available highest priority task from any of the specified queues, waiting if
-   * necessary until a task becomes available. The returned task is considered locked by the current
-   * thread/worker.
+   * Gets a compounded queue for the specified set of sites. Polling from the returned queue will
+   * attempt to find the first available task based on priority level. There is no priority
+   * established between sites.
    *
-   * @param queues the set of queues to monitor in order to retrieve the next available high
-   *     priority task
-   * @return the next available task with the highest priority from one of the specified queue
-   * @throws IllegalArgumentException if no queues are specified
-   * @throws InterruptedException if the current thread was interrupted while waiting for a task to
-   *     be returned
+   * <p>New queues should be deployed if none currently exist for a given site.
+   *
+   * @param sites the sites for which to compound all their corresponding queues
+   * @return a queue object which compounds all specified site queues together
    * @throws QueueException if an error occurred while performing the operation
    */
-  public Task take(Stream<Queue> queues) throws QueueException, InterruptedException;
-
-  /**
-   * Retrieves and removes the next available highest priority task from any of the specified
-   * queues, waiting up to the specified wait time if necessary for a task to become available. The
-   * returned task is considered locked by the current thread/worker.
-   *
-   * @param timeout how long to wait before giving up, in units of <code>unit</code>
-   * @param unit a {@code TimeUnit} determining how to interpret the <code>timeout</code> parameter
-   * @param queues the set of queues to monitor in order to retrieve the next available high
-   *     priority task
-   * @return the next available task with the highest priority from this queue or <code>null</code>
-   *     if the specified amount time elapsed before a task is available
-   * @throws IllegalArgumentException if no queues are specified
-   * @throws InterruptedException if the current thread was interrupted while waiting for a task to
-   *     be returned
-   * @throws QueueException if an error occurred while performing the operation
-   */
-  @Nullable
-  public Task poll(long timeout, TimeUnit unit, Queue... queues)
-      throws QueueException, InterruptedException;
-
-  /**
-   * Retrieves and removes the next available highest priority task from any of the specified
-   * queues, waiting up to the specified wait time if necessary for a task to become available. The
-   * returned task is considered locked by the current thread/worker.
-   *
-   * @param timeout how long to wait before giving up, in units of <code>unit</code>
-   * @param unit a {@code TimeUnit} determining how to interpret the <code>timeout</code> parameter
-   * @param queues the set of queues to monitor in order to retrieve the next available high
-   *     priority task
-   * @return the next available task with the highest priority from this queue or <code>null</code>
-   *     if the specified amount time elapsed before a task is available
-   * @throws IllegalArgumentException if no queues are specified
-   * @throws InterruptedException if the current thread was interrupted while waiting for a task to
-   *     be returned
-   * @throws QueueException if an error occurred while performing the operation
-   */
-  @Nullable
-  public Task poll(long timeout, TimeUnit unit, Stream<Queue> queues)
-      throws QueueException, InterruptedException;
+  public CompoundQueue getQueues(Stream<String> sites) throws QueueException;
 }

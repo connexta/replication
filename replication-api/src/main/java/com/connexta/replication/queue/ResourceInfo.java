@@ -16,9 +16,10 @@ package com.connexta.replication.queue;
 import java.net.URI;
 import java.util.Optional;
 
+/** Identifies the need for the resource associated with an intel to be transferred. */
 public interface ResourceInfo extends DataInfo {
   /**
-   * Gets the URI for the resource or empty if there is none ir if it is not known.
+   * Gets the URI for the resource or empty if there is none or if it is not known.
    *
    * @return the optional URI for the resource
    */
