@@ -72,6 +72,10 @@ management:
 
 Replication supports reporting metrics through Micrometer. Prometheus is used as the metrics collection platform. The replication-spring-config provides example configuration for exposing metrics from within the application.
 
+###### Grafana
+
+A Grafana dashboard `grafana-dashboard.json` is provided, which can be imported into Grafana.
+
 ###### Secrets
 Replication requires certs and ssl configurations in order to talk with remote DDF based systems. This information is stored in docker secrets.
 
