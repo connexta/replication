@@ -78,7 +78,8 @@ public class ServiceConfig {
       ReplicatorConfigManager replicatorConfigManager,
       ReplicationProperties properties) {
     ReplicatorRunner replicatorRunner =
-        new ReplicatorRunner(replicator, replicatorConfigManager, properties.getPeriod());
+        new ReplicatorRunner(
+            replicator, replicatorConfigManager, properties.sites(), properties.getPeriod());
     replicatorRunner.init();
     return replicatorRunner;
   }
