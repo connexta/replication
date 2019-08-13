@@ -98,7 +98,7 @@
         <ogc.tools.version>1.0.3</ogc.tools.version>
         <jts.version>1.14.0</jts.version>
         <jaxb.version>2.3.0</jaxb.version>
-        <cxf.frontend.version>3.3.2</cxf.frontend.version>
+        <cxf.frontend.version>3.3.3</cxf.frontend.version>
         <validation.api.version>2.0.1.Final</validation.api.version>
         <xstream.version>1.4.11.1</xstream.version>
         <xerces.version>2.12.0</xerces.version>
