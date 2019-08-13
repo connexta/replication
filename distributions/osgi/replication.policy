@@ -5,7 +5,7 @@ grant codeBase "file:/org.apache.felix.fileinstall/admin-core-jolokia/javax.serv
     permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions", "read";
 }
 
-grant codeBase "file:/org.apache.karaf.features.command" {
+grant codeBase "file:/org.apache.karaf.features.command/sync-installer-impl" {
     permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions", "read,write";
     permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions${/}-", "read,write";
 }
