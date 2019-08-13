@@ -16,7 +16,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>replication</groupId>
     <artifactId>replication</artifactId>
-    <version>0.2.4-SNAPSHOT</version>
+    <version>0.2.4</version>
     <packaging>pom</packaging>
     <name>Replication</name>
     <organization>
@@ -89,7 +89,7 @@
         <connection>scm:git:http://github.com/connexta/replication.git</connection>
         <developerConnection>scm:git:http://github.com/connexta/replication.git
         </developerConnection>
-        <tag>HEAD</tag>
+        <tag>replication-0.2.4</tag>
     </scm>
     <distributionManagement>
         <snapshotRepository>
