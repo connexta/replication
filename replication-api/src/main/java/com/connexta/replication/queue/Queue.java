@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
  * retrieved from, or replicated to. For example:
  *
  * <ul>
- *   <li>a Tactical Ion or DIB site we replicate from/to
+ *   <li>a Tactical Ion or DDF-based site we replicate from/to
  *   <li>a DDF-based site we are harvesting from or replicating to
  *   <li>a Regional Ion site to which we are replicating our local intel to
  *   <li>the local Ion site (typically will be used for delete operations only)
