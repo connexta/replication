@@ -17,10 +17,12 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * A compound queue is an artifact created around multiple {@link SiteQueue}s allowing a worker to
+ * A composite queue is an artifact created around multiple {@link SiteQueue}s allowing a worker to
  * retrieve tasks from any of the queues based on task priorities.
  */
-public interface CompoundQueue extends Queue {
+// TODO: This interface will move out of the API into the implementation once we start working on
+// this ticket
+public interface CompositeQueue extends Queue {
   /**
    * Gets all site queues that are compounded together.
    *

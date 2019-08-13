@@ -21,12 +21,11 @@ import java.util.concurrent.TimeUnit;
  * <p>When a task is first queued, its total attempts counter will report <code>0</code> and its
  * queued time and original queued time will be set to the same time (i.e. the current time when the
  * task is queued via one of {@link SiteQueue#offer(TaskInfo)}), {@link SiteQueue#offer(TaskInfo,
- * long, TimeUnit)}, or {@link SiteQueue#put(TaskInfo)}. If the task fails and a decision is made to
- * put it back into the queue via one of {@link #offerForRetry(PriorityLevel)}, {@link
- * #offerForRetry(PriorityLevel, long, TimeUnit)}, or {@link #putForRetry(PriorityLevel)}, a new
- * task will be created with its total attempts counter increased by <code>1</code>. The original
- * queued time will be copied from this task and its queued time will be set to the current time
- * when the new created task will be queued.
+ * long, TimeUnit)}, or {@link SiteQueue#put(TaskInfo)}. If the task fails and a decision is made by
+ * the queue broker to put it back into the queue, a new task will be created with its total
+ * attempts counter increased by <code>1</code>. The original queued time will be copied from this
+ * task and its queued time will be set to the current time when the new created task will be
+ * queued.
  */
 public interface Task extends TaskInfo {
   /**
@@ -64,9 +63,8 @@ public interface Task extends TaskInfo {
 
   /**
    * Checks if this task is still locked by the current thread/worker. A task will automatically be
-   * unlocked once one of {@link #unlock()}, {@link #complete()}, {@link #fail()}, {@link
-   * #offerForRetry(PriorityLevel)}, {@link #offerForRetry(PriorityLevel, long, TimeUnit)}, or
-   * {@link #putForRetry(PriorityLevel)} has been called on it.
+   * unlocked once one of {@link #unlock()}, {@link #complete()}, {@link #fail(ErrorCode)}, or
+   * {@link #fail(ErrorCode, String)} has been called on it.
    *
    * @return <code>true</code> if the current thread/worker owns the lock to this task; <code>false
    *     </code> otherwise

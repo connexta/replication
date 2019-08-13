@@ -32,28 +32,30 @@ public interface QueueBroker {
   public SiteQueue getQueue(String site) throws QueueException;
 
   /**
-   * Gets a compounded queue for the specified set of sites. Polling from the returned queue will
-   * attempt to find the first available task based on priority level. There is no priority
-   * established between sites.
+   * Gets a queue for the specified set of sites. Polling from the returned queue will attempt to
+   * find the first available task based on priority level from any of the specified site's queue.
+   * There is no priority established between sites.
    *
    * <p>New queues should be deployed if none currently exist for a given site.
    *
    * @param sites the sites for which to compound all their corresponding queues
-   * @return a queue object which compounds all specified site queues together
+   * @return a queue representing all specified site queues (this might or might not be a {@link
+   *     SiteQueue} if only one site was specified)
    * @throws QueueException if an error occurred while performing the operation
    */
-  public CompoundQueue getQueues(String... sites) throws QueueException;
+  public Queue getQueue(String... sites) throws QueueException;
 
   /**
-   * Gets a compounded queue for the specified set of sites. Polling from the returned queue will
-   * attempt to find the first available task based on priority level. There is no priority
-   * established between sites.
+   * Gets a queue for the specified set of sites. Polling from the returned queue will attempt to
+   * find the first available task based on priority level from any of the specified site's queue.
+   * There is no priority established between sites.
    *
    * <p>New queues should be deployed if none currently exist for a given site.
    *
    * @param sites the sites for which to compound all their corresponding queues
-   * @return a queue object which compounds all specified site queues together
+   * @return a queue representing all specified site queues (this might or might not be a {@link
+   *     SiteQueue} if only one site was specified)
    * @throws QueueException if an error occurred while performing the operation
    */
-  public CompoundQueue getQueues(Stream<String> sites) throws QueueException;
+  public Queue getQueue(Stream<String> sites) throws QueueException;
 }

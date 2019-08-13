@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /**
- * Base interface for all type of queues ({@link SiteQueue} and {@link CompoundQueue}) on which
+ * Base interface for all type of queues ({@link SiteQueue} and {@link CompositeQueue}) on which
  * tasks can be retrieved
  */
 public interface Queue {
