@@ -129,7 +129,7 @@
         <owasp.version>5.2.1</owasp.version>
         <slf4j.version>1.7.26</slf4j.version>
         <gpg-plugin.version>1.6</gpg-plugin.version>
-        <micrometer.version>1.1.5</micrometer.version>
+        <micrometer.version>1.2.0</micrometer.version>
         <javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
 
         <!-- documentation replacements -->
