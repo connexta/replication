@@ -16,14 +16,14 @@
           xmlns="http://karaf.apache.org/xmlns/features/v1.4.0"
           xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.4.0 http://karaf.apache.org/xmlns/features/v1.4.0">
 
-    <repository>mvn:org.codice.ddf.admin.query/admin-query-app/${admin-query.version}/xml/features</repository>
+    <repository>mvn:ddf.features/admin-query/${admin-query.version}/xml/features</repository>
 
     <feature name="replication" version="${project.version}"
              description="Provides capabilities and console commands for replicating metadata and resources between DDF catalogs">
         <configfile finalname="${ddf.etc}/definitions/replication-attributes-injector.json">
             mvn:replication/replication-api-impl/${project.version}/json/injection
         </configfile>
-        <feature>admin-query-graphql</feature>
+        <feature>admin-query-all</feature>
         <bundle>mvn:replication/replication-api/${project.version}</bundle>
         <bundle>mvn:replication/replication-api-impl/${project.version}</bundle>
         <bundle>mvn:replication/replication-commands/${project.version}</bundle>

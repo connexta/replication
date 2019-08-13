@@ -29,12 +29,11 @@
     <reference id="encryptionService" interface="ddf.security.encryption.EncryptionService"/>
     <reference id="persistentStore" interface="org.codice.ddf.persistence.PersistentStore"/>
     <reference id="clientFactoryFactory" interface="org.codice.ddf.cxf.client.ClientFactoryFactory"/>
-    <reference id="xmlTransformer" interface="ddf.catalog.transform.InputTransformer" filter="(id=xml)" />
+    <reference id="queryFilterTransformerProvider" interface="ddf.catalog.transform.QueryFilterTransformerProvider"/>
 
     <bean id="QueryService" class="org.codice.ditto.replication.api.impl.QueryServiceImpl">
         <argument ref="catalog"/>
         <argument ref="filterBuilder"/>
-        <argument ref="xmlTransformer"/>
     </bean>
 
     <service ref="QueryService" interface="org.codice.ditto.replication.api.QueryService"/>
@@ -117,6 +116,7 @@
         <property name="schemaTransformerManager" ref="metacardTransformerManager"/>
         <property name="cswTransactionWriter" ref="cswTransactionWriter"/>
         <property name="clientFactoryFactory" ref="clientFactoryFactory"/>
+        <property name="cswQueryFilterTransformerProvider" ref="queryFilterTransformerProvider"/>
     </bean>
 
     <service ref="catalogResourceStoreFactory" interface="org.codice.ditto.replication.api.ReplicatorStoreFactory"/>
