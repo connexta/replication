@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.queue;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -45,7 +46,7 @@ public interface TaskInfo {
    *
    * @return the last modified timestamp for the intel document
    */
-  public long getLastModified();
+  public Instant getLastModified();
 
   /**
    * Gets the information for the resource that should be transferred or empty if the resource

@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.queue;
 
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,18 +39,18 @@ public interface Task extends TaskInfo {
   /**
    * Gets the time when the first attempted task was queued.
    *
-   * @return the time when the first attempted task was queued in milliseconds from the epoch
+   * @return the time when the first attempted task was queued from the epoch
    */
-  public long getOriginalQueuedTime();
+  public Instant getOriginalQueuedTime();
 
   /**
    * Gets the time when the task was queued. This will be the same time as reported by {@link
    * #getOriginalQueuedTime()} if the task has not yet been attempted ({@link #getTotalAttempts()}
    * returns <code>0</code>).
    *
-   * @return the time when this task was queued in milliseconds from the epoch
+   * @return the time when this task was queued from the epoch
    */
-  public long getQueuedTime();
+  public Instant getQueuedTime();
 
   /**
    * Gets the total number of times this particular task has been attempted. When a task fails for a
@@ -72,8 +73,8 @@ public interface Task extends TaskInfo {
   public boolean isLocked();
 
   /**
-   * Attempts to unlock this task. An unlock task will be picked up by the next worker attempting to
-   * poll for a task from the associated queue.
+   * Attempts to unlock this task. An unlocked task will be picked up by the next worker attempting
+   * to poll for a task from the associated queue.
    *
    * @throws IllegalStateException if the current thread/worker doesn't own the lock to the task or
    *     if the task is not currently locked

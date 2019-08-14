@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.queue;
 
+import java.time.Instant;
 import java.util.OptionalLong;
 
 /** Identifies a particular piece of data (e.g. metadata, resource) to be transferred. */
@@ -23,7 +24,7 @@ public interface DataInfo {
    *
    * @return last modified timestamp for the piece data
    */
-  public long getLastModified();
+  public Instant getLastModified();
 
   /**
    * Gets the size of the piece of data to be transferred if known.
