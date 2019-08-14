@@ -1,10 +1,13 @@
 package com.connexta.ion.replication.adapters.ion;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 import com.connexta.ion.replication.api.data.CreateStorageRequest;
 import com.connexta.ion.replication.api.data.Metadata;
@@ -73,10 +76,26 @@ public class IonNodeAdapterTest {
     mockServer
         .expect(requestTo("http://localhost:1234/ingest"))
         .andExpect(method(HttpMethod.POST))
-        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.ACCEPTED));
+        .andExpect(content().string(containsString(resourceFormData())))
+        .andExpect(content().string(containsString(correlationIdFormData())))
+        .andRespond(withStatus(HttpStatus.ACCEPTED));
 
     assertThat(adapter.createResource(getCreateStorageRequest()), is(true));
     mockServer.verify();
+  }
+
+  private String resourceFormData() {
+    return "Content-Disposition: form-data; name=\"file\"; filename=\"test\"\r\n"
+        + "Content-Type: application/octet-stream\r\n"
+        + "Content-Length: 14\r\n\r\n"
+        + "This is a test";
+  }
+
+  private String correlationIdFormData() {
+    return "Content-Disposition: form-data; name=\"correlationId\"\r\n"
+        + "Content-Type: text/plain;charset=UTF-8\r\n"
+        + "Content-Length: 4\r\n\r\n"
+        + "1234";
   }
 
   @Test
@@ -84,7 +103,7 @@ public class IonNodeAdapterTest {
     mockServer
         .expect(requestTo("http://localhost:1234/ingest"))
         .andExpect(method(HttpMethod.POST))
-        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.OK));
+        .andRespond(withStatus(HttpStatus.OK));
 
     assertThat(adapter.createResource(getCreateStorageRequest()), is(true));
     mockServer.verify();
@@ -95,7 +114,7 @@ public class IonNodeAdapterTest {
     mockServer
         .expect(requestTo("http://localhost:1234/ingest"))
         .andExpect(method(HttpMethod.POST))
-        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.MULTIPLE_CHOICES));
+        .andRespond(withStatus(HttpStatus.MULTIPLE_CHOICES));
 
     assertThat(adapter.createResource(getCreateStorageRequest()), is(false));
     mockServer.verify();
@@ -106,7 +125,7 @@ public class IonNodeAdapterTest {
     mockServer
         .expect(requestTo("http://localhost:1234/ingest"))
         .andExpect(method(HttpMethod.POST))
-        .andRespond(MockRestResponseCreators.withStatus(HttpStatus.UNAUTHORIZED));
+        .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
 
     assertThat(adapter.createResource(getCreateStorageRequest()), is(false));
     mockServer.verify();

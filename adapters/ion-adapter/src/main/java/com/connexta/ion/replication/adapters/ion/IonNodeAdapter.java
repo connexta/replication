@@ -106,26 +106,22 @@ public class IonNodeAdapter implements NodeAdapter {
   @Override
   public boolean createResource(CreateStorageRequest createStorageRequest) {
     boolean success = true;
+
     for (Resource resource : createStorageRequest.getResources()) {
-
       MultipartBodyBuilder builder = new MultipartBodyBuilder();
-
-      builder.part("fileSize", resource.getSize());
-
-      builder.part("fileName", resource.getName());
-
-      builder.part("mimeType", resource.getMimeType());
-
       builder.part("file", new MultipartInputStreamResource(resource));
-
+      builder.part("correlationId", resource.getId());
       MultiValueMap<String, HttpEntity<?>> multipartBody = builder.build();
 
       HttpHeaders headers = new HttpHeaders();
       headers.set("Accept-Version", "0.1.0");
       headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
       HttpEntity<MultiValueMap<String, Object>> requestEntity =
           new HttpEntity(multipartBody, headers);
+
       LOGGER.debug("Sending create request to ION at {}", ionUrl);
+      LOGGER.debug("Request body: {}", requestEntity);
       try {
         ResponseEntity<String> response =
             restOps.exchange(
