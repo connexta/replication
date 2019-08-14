@@ -31,8 +31,7 @@ public class NodeAdapters {
    * @return the {@link NodeAdapter}s factory.
    */
   public NodeAdapterFactory factoryFor(NodeAdapterType type) {
-    return nodeAdapterFactories
-        .stream()
+    return nodeAdapterFactories.stream()
         .filter(factory -> factory.getType().equals(type))
         .findFirst()
         .orElseThrow(

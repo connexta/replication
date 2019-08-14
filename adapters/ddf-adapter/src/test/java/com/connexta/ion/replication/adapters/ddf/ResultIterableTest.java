@@ -115,9 +115,7 @@ public class ResultIterableTest {
     ArgumentCaptor<QueryRequest> requestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     verify(queryFunction, times(2)).apply(requestCaptor.capture());
     List<String> queryFilters =
-        requestCaptor
-            .getAllValues()
-            .stream()
+        requestCaptor.getAllValues().stream()
             .map(QueryRequest::getCql)
             .collect(Collectors.toList());
     assertTrue(queryFilters.contains(filter1));
