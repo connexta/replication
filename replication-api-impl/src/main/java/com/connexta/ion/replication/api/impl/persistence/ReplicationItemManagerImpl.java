@@ -106,9 +106,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
       Page<GroupEntry<ReplicationItemImpl>> page = groupResult.getGroupEntries();
       pageTotal = page.getTotalElements();
       for (GroupEntry<ReplicationItemImpl> entry : page.getContent()) {
-        entry
-            .getResult()
-            .stream()
+        entry.getResult().stream()
             .findFirst()
             .ifPresent(
                 item -> {
