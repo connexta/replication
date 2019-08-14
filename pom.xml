@@ -109,7 +109,6 @@
         <codice-maven.version>0.2</codice-maven.version>
         <maven-checkstyle-plugin.version>3.1.0</maven-checkstyle-plugin.version>
         <maven-jacoco-plugin.version>0.8.4</maven-jacoco-plugin.version>
-        <failsafe.version>1.1.0</failsafe.version>
         <spring-data-solr.version>4.1.0.RC2</spring-data-solr.version>
         <solr.version>8.2.0</solr.version>
         <opengis.version>19.1</opengis.version>
@@ -126,6 +125,7 @@
         <gpg-plugin.version>1.6</gpg-plugin.version>
         <micrometer.version>1.1.5</micrometer.version>
         <javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
+        <failsafe.version>2.3.0</failsafe.version>
     </properties>
 
     <dependencyManagement>
@@ -164,6 +164,11 @@
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>${micrometer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.jodah</groupId>
+                <artifactId>failsafe</artifactId>
+                <version>${failsafe.version}</version>
             </dependency>
 
             <!-- START spring-data-solr vulnerability workaround -->

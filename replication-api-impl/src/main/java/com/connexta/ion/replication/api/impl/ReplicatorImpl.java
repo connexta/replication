@@ -28,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Queue;
@@ -36,7 +37,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -165,22 +165,22 @@ public class ReplicatorImpl implements Replicator {
 
   public void cleanUp() {
     final RetryPolicy retryPolicy =
-        new RetryPolicy()
-            .retryWhen(false)
-            .withDelay(1, TimeUnit.SECONDS)
-            .withMaxDuration(30, TimeUnit.SECONDS);
+        new RetryPolicy<Boolean>()
+            .onRetry(
+                isEmpty ->
+                    LOGGER.debug(
+                        "There are currently {} pending and {} active sync requests. Waiting another second for all sync requests to be completed.",
+                        pendingSyncRequests.size(),
+                        activeSyncRequests.size()))
+            .abortWhen(true)
+            .withDelay(Duration.ofSeconds(1))
+            .withMaxDuration(Duration.ofSeconds(30));
 
     Failsafe.with(retryPolicy)
         .onSuccess(
             isEmpty ->
                 LOGGER.info(
                     "Successfully waited for all pending or active sync requests to be completed"))
-        .onRetry(
-            isEmpty ->
-                LOGGER.debug(
-                    "There are currently {} pending and {} active sync requests. Waiting another second for all sync requests to be completed.",
-                    pendingSyncRequests.size(),
-                    activeSyncRequests.size()))
         .onFailure(
             isEmpty ->
                 LOGGER.debug(
