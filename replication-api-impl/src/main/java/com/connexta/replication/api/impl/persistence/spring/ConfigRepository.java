@@ -11,16 +11,10 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.impl.persistence.spring;
 
-import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.impl.persistence.pojo.ReplicatorConfigPojo;
+import org.springframework.data.repository.CrudRepository;
 
-public interface SyncRequest {
-
-  /**
-   * Get the configuration for this request
-   *
-   * @return The configuration of this request
-   */
-  ReplicatorConfig getConfig();
-}
+// This will be AUTO IMPLEMENTED by Spring into a Bean called configRepository
+public interface ConfigRepository extends CrudRepository<ReplicatorConfigPojo, String> {}

@@ -28,10 +28,10 @@ import com.connexta.ion.replication.api.NodeAdapterFactory;
 import com.connexta.ion.replication.api.NodeAdapterType;
 import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.SyncRequest;
-import com.connexta.ion.replication.api.data.ReplicationSite;
-import com.connexta.ion.replication.api.data.ReplicatorConfig;
-import com.connexta.ion.replication.api.impl.data.ReplicationSiteImpl;
-import com.connexta.ion.replication.api.persistence.SiteManager;
+import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.data.Site;
+import com.connexta.replication.api.impl.data.SiteImpl;
+import com.connexta.replication.api.impl.persistence.SiteManager;
 import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -79,10 +79,10 @@ public class ReplicatorImplTest {
     SyncRequest syncRequest = mock(SyncRequest.class);
     when(syncRequest.getConfig()).thenReturn(replicatorConfig);
 
-    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    Site sourceSite = mock(Site.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
     when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
-    ReplicationSite destinationSite = mock(ReplicationSite.class);
+    Site destinationSite = mock(Site.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
     when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
@@ -121,10 +121,10 @@ public class ReplicatorImplTest {
     SyncRequest syncRequest = mock(SyncRequest.class);
     when(syncRequest.getConfig()).thenReturn(replicatorConfig);
 
-    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    Site sourceSite = mock(Site.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
     when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
-    ReplicationSite destinationSite = mock(ReplicationSite.class);
+    Site destinationSite = mock(Site.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
     when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
@@ -161,10 +161,10 @@ public class ReplicatorImplTest {
     SyncRequest syncRequest = mock(SyncRequest.class);
     when(syncRequest.getConfig()).thenReturn(replicatorConfig);
 
-    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    Site sourceSite = mock(Site.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
     when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
-    ReplicationSite destinationSite = mock(ReplicationSite.class);
+    Site destinationSite = mock(Site.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
     when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
@@ -201,7 +201,7 @@ public class ReplicatorImplTest {
     SyncRequest syncRequest = mock(SyncRequest.class);
     when(syncRequest.getConfig()).thenReturn(replicatorConfig);
 
-    ReplicationSite sourceSite = mock(ReplicationSite.class);
+    Site sourceSite = mock(Site.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
     when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
@@ -230,7 +230,7 @@ public class ReplicatorImplTest {
 
   @Test
   public void testGetStoreForIdNoType() throws Exception {
-    ReplicationSite destinationSite = new ReplicationSiteImpl();
+    Site destinationSite = new SiteImpl();
     destinationSite.setUrl(DESTINATION_URL);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
 

@@ -11,16 +11,19 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.impl.persistence;
 
-import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.data.Site;
 
-public interface SyncRequest {
+/** A SiteManager performs CRUD operations for replication sites. */
+public interface SiteManager extends DataManager<Site> {
 
   /**
-   * Get the configuration for this request
+   * Creates a new {@link Site} implementation with the given name and url
    *
-   * @return The configuration of this request
+   * @param name the name to give the {@link Site}
+   * @param url the for the {@link Site}
+   * @return a new {@link Site} implementation
    */
-  ReplicatorConfig getConfig();
+  Site create(String name, String url);
 }

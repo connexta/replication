@@ -11,16 +11,35 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.impl.data;
 
-import com.connexta.replication.api.data.ReplicatorConfig;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
-public interface SyncRequest {
+import org.junit.Before;
+import org.junit.Test;
 
-  /**
-   * Get the configuration for this request
-   *
-   * @return The configuration of this request
-   */
-  ReplicatorConfig getConfig();
+public class SiteImplTest {
+  private static final String TEST_NAME = "testName";
+
+  private static final String TEST_URL = "https://host:44";
+
+  private SiteImpl site;
+
+  @Before
+  public void setup() {
+    site = new SiteImpl();
+  }
+
+  @Test
+  public void testSetGetName() {
+    site.setName(TEST_NAME);
+    assertThat(site.getName(), equalTo(TEST_NAME));
+  }
+
+  @Test
+  public void testSetGetUrl() {
+    site.setUrl(TEST_URL);
+    assertThat(site.getUrl(), equalTo(TEST_URL));
+  }
 }

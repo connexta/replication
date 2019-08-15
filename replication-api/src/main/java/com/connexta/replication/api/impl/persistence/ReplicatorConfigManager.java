@@ -11,16 +11,16 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.impl.persistence;
 
 import com.connexta.replication.api.data.ReplicatorConfig;
 
-public interface SyncRequest {
+/** Performs CRUD operations for {@link ReplicatorConfig}. */
+public interface ReplicatorConfigManager extends DataManager<ReplicatorConfig> {
 
   /**
-   * Get the configuration for this request
-   *
-   * @return The configuration of this request
+   * @param configId unique id of {@link ReplicatorConfig}
+   * @return {@code true} if the config exists, otherwise {@code false}.
    */
-  ReplicatorConfig getConfig();
+  boolean configExists(String configId);
 }

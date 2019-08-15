@@ -11,16 +11,15 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.data;
 
-import com.connexta.replication.api.data.ReplicatorConfig;
-
-public interface SyncRequest {
+/** A Persistable is an object that can be saved in persistence. */
+public interface Persistable {
 
   /**
-   * Get the configuration for this request
+   * Returns the ID of the persistable object
    *
-   * @return The configuration of this request
+   * @return The ID of the object
    */
-  ReplicatorConfig getConfig();
+  String getId();
 }

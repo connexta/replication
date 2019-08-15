@@ -13,13 +13,18 @@
  */
 package com.connexta.ion.replication.api;
 
+import com.connexta.replication.api.data.ReplicationItem;
+
 /** The result of a {@link ReplicationItem} after it has been processed. */
 public enum Status {
 
   /** Indicates a {@link ReplicationItem} was successfully transferred. */
   SUCCESS,
 
-  /** Indicates the {@link ReplicationItem} failed to be transferred. */
+  /**
+   * Indicates the {@link ReplicationItem} failed to be transferred. When reloading statuses from
+   * the database, any unknown values will be mapped to this one.
+   */
   FAILURE,
 
   /**
