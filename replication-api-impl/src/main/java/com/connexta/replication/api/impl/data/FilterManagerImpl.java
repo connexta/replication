@@ -13,7 +13,10 @@
  */
 package com.connexta.replication.api.impl.data;
 
+import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
 import com.connexta.ion.replication.api.NotFoundException;
+import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
+import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
 import com.connexta.replication.api.impl.persistence.spring.FilterRepository;
@@ -21,6 +24,9 @@ import com.connexta.replication.api.persistence.FilterManager;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.springframework.dao.NonTransientDataAccessException;
+import org.springframework.dao.RecoverableDataAccessException;
+import org.springframework.dao.TransientDataAccessException;
 
 /** Performs CRUD operations for {@link Filter}s. */
 public class FilterManagerImpl implements FilterManager {
@@ -33,36 +39,75 @@ public class FilterManagerImpl implements FilterManager {
 
   @Override
   public Filter get(String id) {
-    return filterRepository
-        .findById(id)
-        .map(FilterImpl::new)
-        .orElseThrow(
-            () -> new NotFoundException(String.format("Cannot find filter with ID: %s", id)));
+    try {
+      return filterRepository
+          .findById(id)
+          .map(FilterImpl::new)
+          .orElseThrow(
+              () -> new NotFoundException(String.format("Cannot find filter with ID: %s", id)));
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public Stream<Filter> objects() {
-    return filterStreamOf(filterRepository.findAll().spliterator());
+    try {
+      return filterStreamOf(filterRepository.findAll().spliterator());
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public void save(Filter filter) {
-    if (filter instanceof FilterImpl) {
-      filterRepository.save(((FilterImpl) filter).writeTo(new FilterPojo()));
-    } else {
+    if (!(filter instanceof FilterImpl)) {
       throw new IllegalArgumentException(
           "Expected a FilterImpl but got a " + filter.getClass().getSimpleName());
+    }
+    try {
+      filterRepository.save(((FilterImpl) filter).writeTo(new FilterPojo()));
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
     }
   }
 
   @Override
   public void remove(String id) {
-    filterRepository.deleteById(id);
+    try {
+      filterRepository.deleteById(id);
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public Stream<Filter> filtersForSite(String siteId) {
-    return filterStreamOf(filterRepository.findBySiteId(siteId).spliterator());
+    try {
+      return filterStreamOf(filterRepository.findBySiteId(siteId).spliterator());
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   // coverts the pojos to Filters and returns them as a stream

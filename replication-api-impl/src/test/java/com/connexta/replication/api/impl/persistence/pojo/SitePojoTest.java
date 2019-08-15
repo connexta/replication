@@ -13,7 +13,8 @@
  */
 package com.connexta.replication.api.impl.persistence.pojo;
 
-import com.connexta.ion.replication.api.NodeAdapterType;
+import com.connexta.replication.api.data.SiteKind;
+import com.connexta.replication.api.data.SiteType;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -21,19 +22,25 @@ import org.junit.Test;
 public class SitePojoTest {
   private static final int VERSION = 1;
   private static final String ID = "1234";
-  private static final boolean REMOTE_MANAGED = true;
   private static final String NAME = "site.name";
+  private static final String DESCRIPTION = "description";
   private static final String URL = "http://localhost/service";
-  private static final String TYPE = NodeAdapterType.DDF.name();
+  private static final String TYPE = SiteType.DDF.name();
+  private static final String KIND = SiteKind.TACTICAL.name();
+  private static final long POLLING_TIMEOUT = 60L;
+  private static final int PARALLELISM_FACTOR = 3;
 
   private static final SitePojo POJO =
       new SitePojo()
           .setVersion(SitePojoTest.VERSION)
           .setId(SitePojoTest.ID)
-          .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
           .setName(SitePojoTest.NAME)
+          .setDescription(SitePojoTest.DESCRIPTION)
           .setUrl(SitePojoTest.URL)
-          .setType(SitePojoTest.TYPE);
+          .setType(SitePojoTest.TYPE)
+          .setKind(SitePojoTest.KIND)
+          .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+          .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
   @Test
   public void testSetAndGetId() throws Exception {
@@ -57,17 +64,17 @@ public class SitePojoTest {
   }
 
   @Test
+  public void testSetAndGetDescription() throws Exception {
+    final SitePojo pojo = new SitePojo().setDescription(SitePojoTest.DESCRIPTION);
+
+    Assert.assertThat(pojo.getDescription(), Matchers.equalTo(SitePojoTest.DESCRIPTION));
+  }
+
+  @Test
   public void testSetAndGetUrl() throws Exception {
     final SitePojo pojo = new SitePojo().setUrl(SitePojoTest.URL);
 
     Assert.assertThat(pojo.getUrl(), Matchers.equalTo(SitePojoTest.URL));
-  }
-
-  @Test
-  public void testSetAndGetRemoteManaged() throws Exception {
-    final SitePojo pojo = new SitePojo().setRemoteManaged(SitePojoTest.REMOTE_MANAGED);
-
-    Assert.assertThat(pojo.isRemoteManaged(), Matchers.equalTo(SitePojoTest.REMOTE_MANAGED));
   }
 
   @Test
@@ -78,15 +85,40 @@ public class SitePojoTest {
   }
 
   @Test
+  public void testSetAndGetKind() throws Exception {
+    final SitePojo pojo = new SitePojo().setKind(SitePojoTest.KIND);
+
+    Assert.assertThat(pojo.getKind(), Matchers.equalTo(SitePojoTest.KIND));
+  }
+
+  @Test
+  public void testSetAndGetPollingTimeout() throws Exception {
+    final SitePojo pojo = new SitePojo().setPollingTimeout(SitePojoTest.POLLING_TIMEOUT);
+
+    Assert.assertThat(pojo.getPollingTimeout(), Matchers.equalTo(SitePojoTest.POLLING_TIMEOUT));
+  }
+
+  @Test
+  public void testSetAndGetParallelismFactor() throws Exception {
+    final SitePojo pojo = new SitePojo().setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
+
+    Assert.assertThat(
+        pojo.getParallelismFactor(), Matchers.equalTo(SitePojoTest.PARALLELISM_FACTOR));
+  }
+
+  @Test
   public void testHashCodeWhenEquals() throws Exception {
     final SitePojo pojo2 =
         new SitePojo()
             .setVersion(SitePojoTest.VERSION)
             .setId(SitePojoTest.ID)
-            .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
             .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
             .setUrl(SitePojoTest.URL)
-            .setType(SitePojoTest.TYPE);
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.hashCode(), Matchers.equalTo(pojo2.hashCode()));
   }
@@ -97,10 +129,13 @@ public class SitePojoTest {
         new SitePojo()
             .setVersion(SitePojoTest.VERSION)
             .setId(SitePojoTest.ID + "2")
-            .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
             .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
             .setUrl(SitePojoTest.URL)
-            .setType(SitePojoTest.TYPE);
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(
         SitePojoTest.POJO.hashCode(), Matchers.not(Matchers.equalTo(pojo2.hashCode())));
@@ -112,10 +147,13 @@ public class SitePojoTest {
         new SitePojo()
             .setVersion(SitePojoTest.VERSION)
             .setId(SitePojoTest.ID)
-            .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
             .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
             .setUrl(SitePojoTest.URL)
-            .setType(SitePojoTest.TYPE);
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.equalTo(true));
   }
@@ -144,10 +182,13 @@ public class SitePojoTest {
         new SitePojo()
             .setVersion(SitePojoTest.VERSION)
             .setId(SitePojoTest.ID + "2")
-            .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
             .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
             .setUrl(SitePojoTest.URL)
-            .setType(SitePojoTest.TYPE);
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
   }
@@ -158,24 +199,13 @@ public class SitePojoTest {
         new SitePojo()
             .setVersion(SitePojoTest.VERSION + 2)
             .setId(SitePojoTest.ID)
-            .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
             .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
             .setUrl(SitePojoTest.URL)
-            .setType(SitePojoTest.TYPE);
-
-    Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
-  }
-
-  @Test
-  public void testEqualsWhenRemoteManagedIsDifferent() throws Exception {
-    final SitePojo pojo2 =
-        new SitePojo()
-            .setVersion(SitePojoTest.VERSION)
-            .setId(SitePojoTest.ID)
-            .setRemoteManaged(!SitePojoTest.REMOTE_MANAGED)
-            .setName(SitePojoTest.NAME)
-            .setUrl(SitePojoTest.URL)
-            .setType(SitePojoTest.TYPE);
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
   }
@@ -186,10 +216,30 @@ public class SitePojoTest {
         new SitePojo()
             .setVersion(SitePojoTest.VERSION)
             .setId(SitePojoTest.ID)
-            .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
             .setName(SitePojoTest.NAME + "2")
+            .setDescription(SitePojoTest.DESCRIPTION)
             .setUrl(SitePojoTest.URL)
-            .setType(SitePojoTest.TYPE);
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
+
+    Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
+  }
+
+  @Test
+  public void testEqualsWhenDescriptionIsDifferent() throws Exception {
+    final SitePojo pojo2 =
+        new SitePojo()
+            .setVersion(SitePojoTest.VERSION)
+            .setId(SitePojoTest.ID)
+            .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION + "2")
+            .setUrl(SitePojoTest.URL)
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
   }
@@ -200,10 +250,13 @@ public class SitePojoTest {
         new SitePojo()
             .setVersion(SitePojoTest.VERSION)
             .setId(SitePojoTest.ID)
-            .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
             .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
             .setUrl(SitePojoTest.URL + "2")
-            .setType(SitePojoTest.TYPE);
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
   }
@@ -214,10 +267,64 @@ public class SitePojoTest {
         new SitePojo()
             .setVersion(SitePojoTest.VERSION)
             .setId(SitePojoTest.ID)
-            .setRemoteManaged(SitePojoTest.REMOTE_MANAGED)
             .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
             .setUrl(SitePojoTest.URL)
-            .setType(SitePojoTest.TYPE + "2");
+            .setType(SitePojoTest.TYPE + "2")
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
+
+    Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
+  }
+
+  @Test
+  public void testEqualsWhenKindIsDifferent() throws Exception {
+    final SitePojo pojo2 =
+        new SitePojo()
+            .setVersion(SitePojoTest.VERSION)
+            .setId(SitePojoTest.ID)
+            .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
+            .setUrl(SitePojoTest.URL)
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND + "2")
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
+
+    Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
+  }
+
+  @Test
+  public void testEqualsWhenPollingTimeoutIsDifferent() throws Exception {
+    final SitePojo pojo2 =
+        new SitePojo()
+            .setVersion(SitePojoTest.VERSION)
+            .setId(SitePojoTest.ID)
+            .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
+            .setUrl(SitePojoTest.URL)
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(0L)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
+
+    Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
+  }
+
+  @Test
+  public void testEqualsWhenParallelismFactorIsDifferent() throws Exception {
+    final SitePojo pojo2 =
+        new SitePojo()
+            .setVersion(SitePojoTest.VERSION)
+            .setId(SitePojoTest.ID)
+            .setName(SitePojoTest.NAME)
+            .setDescription(SitePojoTest.DESCRIPTION)
+            .setUrl(SitePojoTest.URL)
+            .setType(SitePojoTest.TYPE)
+            .setKind(SitePojoTest.KIND)
+            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR + 2);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
   }

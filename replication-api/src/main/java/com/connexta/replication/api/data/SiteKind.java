@@ -11,9 +11,22 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.data;
 
-public enum NodeAdapterType {
-  DDF,
-  ION
+/** The different kind of sites that are currently supported. */
+public enum SiteKind {
+  /**
+   * A tactical site typically smaller in size (e.g. portable laptop, deployment on a ship, ...).
+   */
+  TACTICAL,
+
+  /** A regional site (e.g. east coast, west coast, ...). */
+  REGIONAL,
+
+  /**
+   * The unknown value is used for forward compatibility where the current code might not be able to
+   * understand a new kind of site and would mapped this new site to <code>UNKNOWN</code> and most
+   * likely ignore it.
+   */
+  UNKNOWN
 }

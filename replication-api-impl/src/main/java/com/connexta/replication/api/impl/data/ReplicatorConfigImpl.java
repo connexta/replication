@@ -13,11 +13,12 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -26,7 +27,7 @@ import javax.annotation.Nullable;
  */
 public class ReplicatorConfigImpl extends AbstractPersistable<ConfigPojo>
     implements ReplicatorConfig {
-  private static final String TYPE = "replicator config";
+  private static final String PERSISTABLE_TYPE = "replicator config";
 
   private String name;
 
@@ -45,11 +46,11 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ConfigPojo>
   @Nullable private Instant lastMetadataModified;
 
   public ReplicatorConfigImpl() {
-    super(ReplicatorConfigImpl.TYPE);
+    super(ReplicatorConfigImpl.PERSISTABLE_TYPE);
   }
 
   protected ReplicatorConfigImpl(ConfigPojo pojo) {
-    super(ReplicatorConfigImpl.TYPE, null);
+    super(ReplicatorConfigImpl.PERSISTABLE_TYPE, null);
     readFrom(pojo);
   }
 
@@ -117,23 +118,16 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ConfigPojo>
   @Override
   protected void readFrom(ConfigPojo pojo) {
     super.readFrom(pojo);
-    if (pojo.getVersion() < ConfigPojo.CURRENT_VERSION) {
-      throw new ReplicationPersistenceException(
+    if (pojo.getVersion() < ConfigPojo.MINIMUM_VERSION) {
+      throw new UnsupportedVersionException(
           "unsupported "
-              + ReplicatorConfigImpl.TYPE
+              + ReplicatorConfigImpl.PERSISTABLE_TYPE
               + " version: "
               + pojo.getVersion()
               + " for object: "
               + getId());
     } // do support pojo.getVersion() > CURRENT_VERSION for forward compatibility
-    setOrFailIfNullOrEmpty("name", pojo::getName, this::setName);
-    setOrFailIfNullOrEmpty("source", pojo::getSource, this::setSource);
-    setOrFailIfNullOrEmpty("destination", pojo::getDestination, this::setDestination);
-    setOrFailIfNullOrEmpty("filter", pojo::getFilter, this::setFilter);
-    this.description = pojo.getDescription();
-    this.suspended = pojo.isSuspended();
-    this.bidirectional = pojo.isBidirectional();
-    this.lastMetadataModified = pojo.getLastMetadataModified();
+    readFromCurrentAndFutureVersion(pojo);
   }
 
   @VisibleForTesting
@@ -169,5 +163,62 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ConfigPojo>
   @VisibleForTesting
   void setSuspended(boolean suspended) {
     this.suspended = suspended;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        super.hashCode(),
+        name,
+        source,
+        destination,
+        filter,
+        bidirectional,
+        description,
+        suspended,
+        lastMetadataModified);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (super.equals(obj) && (obj instanceof ReplicatorConfigImpl)) {
+      final ReplicatorConfigImpl persistable = (ReplicatorConfigImpl) obj;
+
+      return (bidirectional == persistable.bidirectional)
+          && (suspended == persistable.suspended)
+          && Objects.equals(name, persistable.name)
+          && Objects.equals(source, persistable.source)
+          && Objects.equals(destination, persistable.destination)
+          && Objects.equals(filter, persistable.filter)
+          && Objects.equals(description, persistable.description)
+          && Objects.equals(lastMetadataModified, persistable.lastMetadataModified);
+    }
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "ReplicatorConfigImpl[id=%s, name=%s, source=%s, destination=%s, filter=%s, bidirectional=%s, description=%s, suspended=%s, lastMetadataModified=%s]",
+        getId(),
+        name,
+        source,
+        destination,
+        filter,
+        bidirectional,
+        description,
+        suspended,
+        lastMetadataModified);
+  }
+
+  private void readFromCurrentAndFutureVersion(ConfigPojo pojo) {
+    setOrFailIfNullOrEmpty("name", pojo::getName, this::setName);
+    setOrFailIfNullOrEmpty("source", pojo::getSource, this::setSource);
+    setOrFailIfNullOrEmpty("destination", pojo::getDestination, this::setDestination);
+    setOrFailIfNullOrEmpty("filter", pojo::getFilter, this::setFilter);
+    this.description = pojo.getDescription();
+    this.suspended = pojo.isSuspended();
+    this.bidirectional = pojo.isBidirectional();
+    this.lastMetadataModified = pojo.getLastMetadataModified();
   }
 }

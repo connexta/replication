@@ -16,7 +16,7 @@ package com.connexta.ion.replication.adapters.ion;
 import com.connexta.ion.replication.api.AdapterException;
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterFactory;
-import com.connexta.ion.replication.api.NodeAdapterType;
+import com.connexta.replication.api.data.SiteType;
 import java.net.MalformedURLException;
 import java.net.URL;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ public class IonNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
-    // TODO change this when ingest enpoint supports https
+    // TODO change this when ingest endpoint supports https
     String baseUrl = "http://" + url.getHost() + ":" + url.getPort();
     try {
       RestTemplate template = new RestTemplate();
@@ -73,7 +73,7 @@ public class IonNodeAdapterFactory implements NodeAdapterFactory {
   }
 
   @Override
-  public NodeAdapterType getType() {
-    return NodeAdapterType.ION;
+  public SiteType getType() {
+    return SiteType.ION;
   }
 }

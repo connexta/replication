@@ -13,6 +13,7 @@
  */
 package com.connexta.ion.replication.api;
 
+import com.connexta.replication.api.data.SiteType;
 import java.net.URL;
 
 /**
@@ -31,5 +32,5 @@ public interface NodeAdapterFactory {
   NodeAdapter create(URL url);
 
   /** @return the type of the node that will be created */
-  NodeAdapterType getType();
+  SiteType getType();
 }

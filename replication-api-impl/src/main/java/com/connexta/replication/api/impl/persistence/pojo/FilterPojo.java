@@ -23,7 +23,9 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 public class FilterPojo extends Pojo<FilterPojo> {
 
   /**
-   * List of possible versions:
+   * Current version format.
+   *
+   * <p>Version history:
    *
    * <ul>
    *   <li>1 - initial version.

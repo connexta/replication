@@ -1,16 +1,24 @@
 [
     {
-        "remote_managed": false,
-        "name": "test-source",
-        "url": "@source@",
+        "version": 1,
         "id": "source-id",
-        "version": 1
+        "name": "test-source",
+        "description": "test source",
+        "url": "@source@",
+        "type": "DDF",
+        "kind": "TACTICAL",
+        "polling_timeout": 600000,
+        "parallelism_factor": 1
     },
     {
-        "remote_managed": false,
-        "name": "test-destination",
-        "url": "@destination@",
+        "version": 1,
         "id": "destination-id",
-        "version": 1
+        "name": "test-destination",
+        "description": "test destination",
+        "url": "@destination@",
+        "type": "DDF",
+        "kind": "TACTICAL",
+        "polling_timeout": 600000,
+        "parallelism_factor": 1
     }
 ]

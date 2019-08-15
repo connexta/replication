@@ -13,8 +13,6 @@
  */
 package com.connexta.ion.replication.api.impl;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -25,13 +23,13 @@ import static org.mockito.Mockito.when;
 
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterFactory;
-import com.connexta.ion.replication.api.NodeAdapterType;
 import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.SyncRequest;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.data.Site;
-import com.connexta.replication.api.impl.data.SiteImpl;
+import com.connexta.replication.api.data.SiteType;
 import com.connexta.replication.api.persistence.SiteManager;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -39,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -48,11 +47,20 @@ public class ReplicatorImplTest {
 
   private static final String DESTINATION_ID = "destinationId";
 
-  private static final String SOURCE_URL = "https://source:1234";
+  private static final URL SOURCE_URL;
 
-  private static final String DESTINATION_URL = "https://destination:1234";
+  private static final URL DESTINATION_URL;
 
   private static final String REPLICATOR_CONFIG_ID = "replicatorConfigId";
+
+  static {
+    try {
+      SOURCE_URL = new URL("https://source:1234");
+      DESTINATION_URL = new URL("https://destination:1234");
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 
   private ReplicatorImpl replicator;
 
@@ -81,10 +89,10 @@ public class ReplicatorImplTest {
 
     Site sourceSite = mock(Site.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
-    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+    when(sourceSite.getType()).thenReturn(SiteType.DDF);
     Site destinationSite = mock(Site.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
-    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+    when(destinationSite.getType()).thenReturn(SiteType.DDF);
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -94,10 +102,10 @@ public class ReplicatorImplTest {
     NodeAdapter destinationNode = mock(NodeAdapter.class);
     when(destinationNode.isAvailable()).thenReturn(true);
 
-    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
-    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+    when(nodeAdapterFactory.create(SOURCE_URL)).thenReturn(sourceNode);
+    when(nodeAdapterFactory.create(DESTINATION_URL)).thenReturn(destinationNode);
 
-    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+    when(nodeAdapters.factoryFor(SiteType.DDF)).thenReturn(nodeAdapterFactory);
 
     Syncer.Job job = mock(Syncer.Job.class);
     when(syncer.create(sourceNode, destinationNode, replicatorConfig, Set.of())).thenReturn(job);
@@ -123,10 +131,10 @@ public class ReplicatorImplTest {
 
     Site sourceSite = mock(Site.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
-    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+    when(sourceSite.getType()).thenReturn(SiteType.DDF);
     Site destinationSite = mock(Site.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
-    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+    when(destinationSite.getType()).thenReturn(SiteType.DDF);
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -136,10 +144,10 @@ public class ReplicatorImplTest {
     NodeAdapter destinationNode = mock(NodeAdapter.class);
     when(destinationNode.isAvailable()).thenReturn(true);
 
-    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
-    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+    when(nodeAdapterFactory.create(SOURCE_URL)).thenReturn(sourceNode);
+    when(nodeAdapterFactory.create(DESTINATION_URL)).thenReturn(destinationNode);
 
-    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+    when(nodeAdapters.factoryFor(SiteType.DDF)).thenReturn(nodeAdapterFactory);
 
     Syncer.Job job = mock(Syncer.Job.class);
     doThrow(RuntimeException.class).when(job).sync();
@@ -163,10 +171,10 @@ public class ReplicatorImplTest {
 
     Site sourceSite = mock(Site.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
-    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+    when(sourceSite.getType()).thenReturn(SiteType.DDF);
     Site destinationSite = mock(Site.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
-    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+    when(destinationSite.getType()).thenReturn(SiteType.DDF);
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -176,10 +184,10 @@ public class ReplicatorImplTest {
     NodeAdapter destinationNode = mock(NodeAdapter.class);
     when(destinationNode.isAvailable()).thenReturn(false);
 
-    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
-    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+    when(nodeAdapterFactory.create(SOURCE_URL)).thenReturn(sourceNode);
+    when(nodeAdapterFactory.create(DESTINATION_URL)).thenReturn(destinationNode);
 
-    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+    when(nodeAdapters.factoryFor(SiteType.DDF)).thenReturn(nodeAdapterFactory);
 
     Syncer.Job job = mock(Syncer.Job.class);
 
@@ -201,7 +209,7 @@ public class ReplicatorImplTest {
 
     Site sourceSite = mock(Site.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
-    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+    when(sourceSite.getType()).thenReturn(SiteType.DDF);
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenThrow(new NotFoundException());
@@ -209,9 +217,9 @@ public class ReplicatorImplTest {
     NodeAdapter sourceNode = mock(NodeAdapter.class);
     when(sourceNode.isAvailable()).thenReturn(true);
 
-    when(nodeAdapterFactory.create(new URL(SOURCE_URL))).thenReturn(sourceNode);
+    when(nodeAdapterFactory.create(SOURCE_URL)).thenReturn(sourceNode);
 
-    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
+    when(nodeAdapters.factoryFor(SiteType.DDF)).thenReturn(nodeAdapterFactory);
 
     // when
     replicator.executeSyncRequest(syncRequest);
@@ -228,23 +236,22 @@ public class ReplicatorImplTest {
 
   @Test
   public void testGetStoreForIdNoType() throws Exception {
-    Site destinationSite = new SiteImpl();
-    destinationSite.setUrl(DESTINATION_URL);
+    Site destinationSite = Mockito.mock(Site.class);
+
+    when(destinationSite.getType()).thenReturn(SiteType.ION);
+    when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
 
     NodeAdapter destinationNode = mock(NodeAdapter.class);
     when(destinationNode.isAvailable()).thenReturn(true);
 
-    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+    when(nodeAdapterFactory.create(DESTINATION_URL)).thenReturn(destinationNode);
 
-    when(nodeAdapters.factoryFor(NodeAdapterType.ION)).thenReturn(nodeAdapterFactory);
-    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenThrow(new RuntimeException("error"));
+    when(nodeAdapters.factoryFor(SiteType.ION)).thenReturn(nodeAdapterFactory);
 
     replicator.getStoreForId(DESTINATION_ID);
 
-    assertThat(destinationSite.getType(), is(NodeAdapterType.ION.name()));
-    verify(siteManager).save(destinationSite);
-    verify(nodeAdapters, times(3)).factoryFor(any(NodeAdapterType.class));
+    verify(nodeAdapters).factoryFor(SiteType.ION);
   }
 
   private ReplicatorConfig mockConfig() {

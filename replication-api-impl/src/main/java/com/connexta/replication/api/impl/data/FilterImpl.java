@@ -13,18 +13,20 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * A filter describing what data to replicate to a site. A site can have multiple filters associated
  * with it to describe what data it would like to receive.
  */
 public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filter {
-  private static final String TYPE = "replication filter";
+  private static final String PERSISTABLE_TYPE = "replication filter";
 
   private String siteId;
 
@@ -32,15 +34,15 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
 
   private String name;
 
-  private String description;
+  @Nullable private String description;
 
   private boolean isSuspended;
 
-  private byte priority;
+  private byte priority = 1;
 
   /** Creates a default filter. */
   public FilterImpl() {
-    super(FilterImpl.TYPE);
+    super(FilterImpl.PERSISTABLE_TYPE);
   }
 
   /**
@@ -49,7 +51,7 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
    * @param pojo a pojo containing the values this filter should be instantiated with.
    */
   protected FilterImpl(FilterPojo pojo) {
-    super(FilterImpl.TYPE);
+    super(FilterImpl.PERSISTABLE_TYPE);
     readFrom(pojo);
   }
 
@@ -81,6 +83,33 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
   @Override
   public byte getPriority() {
     return priority;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), siteId, filter, name, description, isSuspended, priority);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (super.equals(obj) && (obj instanceof FilterImpl)) {
+      final FilterImpl pojo = (FilterImpl) obj;
+
+      return (isSuspended == pojo.isSuspended)
+          && (priority == pojo.priority)
+          && Objects.equals(siteId, pojo.siteId)
+          && Objects.equals(filter, pojo.filter)
+          && Objects.equals(name, pojo.name)
+          && Objects.equals(description, pojo.description);
+    }
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "FilterImpl[id=%s, siteId=%s, filter=%s, name=%s, description=%s, suspended=%b, priority=%d]",
+        getId(), siteId, filter, name, description, isSuspended, priority);
   }
 
   @VisibleForTesting
@@ -134,9 +163,9 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
   protected void readFrom(FilterPojo pojo) {
     super.readFrom(pojo);
     if (pojo.getVersion() < FilterPojo.MINIMUM_VERSION) {
-      throw new ReplicationPersistenceException(
+      throw new UnsupportedVersionException(
           "unsupported "
-              + FilterImpl.TYPE
+              + FilterImpl.PERSISTABLE_TYPE
               + " version: "
               + pojo.getVersion()
               + " for object: "

@@ -27,10 +27,10 @@ public interface DataManager<T extends Persistable> {
    *
    * @param id The object id
    * @return the T object with the given id
-   * @throws com.connexta.ion.replication.api.ReplicationPersistenceException if an error occurs
-   *     while trying to retrieve the object
    * @throws com.connexta.ion.replication.api.NotFoundException if an object with the given id
    *     cannot be found
+   * @throws com.connexta.ion.replication.api.ReplicationPersistenceException if any other error
+   *     occurs while trying to retrieve the object
    * @throws IllegalStateException if multiple objects were found with the given id
    */
   T get(String id);
@@ -50,9 +50,9 @@ public interface DataManager<T extends Persistable> {
    * method included in this interface.
    *
    * @param object The T object to save or update
+   * @throws IllegalArgumentException if the T implementation is not one that can be saved
    * @throws com.connexta.ion.replication.api.ReplicationPersistenceException if an error occurs
    *     while trying to save the object
-   * @throws IllegalArgumentException if the T implementation is not one that can be saved
    */
   void save(T object);
 
@@ -60,10 +60,10 @@ public interface DataManager<T extends Persistable> {
    * Deletes a T object with the given id
    *
    * @param id The id of the object to be removed
-   * @throws com.connexta.ion.replication.api.ReplicationPersistenceException if an error occurs
-   *     while trying to delete the object
    * @throws com.connexta.ion.replication.api.NotFoundException if an object with the given id
    *     cannot be found
+   * @throws com.connexta.ion.replication.api.ReplicationPersistenceException if any other error
+   *     occurs while trying to delete the object
    */
   void remove(String id);
 }

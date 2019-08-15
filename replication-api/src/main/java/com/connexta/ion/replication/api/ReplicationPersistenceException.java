@@ -13,19 +13,35 @@
  */
 package com.connexta.ion.replication.api;
 
+/** Thrown from persistence operations. */
 public class ReplicationPersistenceException extends RuntimeException {
-  public ReplicationPersistenceException() {
-    super();
-  }
+  /** Instantiates a new exception. */
+  public ReplicationPersistenceException() {}
 
+  /**
+   * Instantiates a new exception.
+   *
+   * @param message the message for the exception
+   */
   public ReplicationPersistenceException(String message) {
     super(message);
   }
 
+  /**
+   * Instantiates a new exception.
+   *
+   * @param message the message for the exception
+   * @param cause the cause for the exception
+   */
   public ReplicationPersistenceException(String message, Throwable cause) {
     super(message, cause);
   }
 
+  /**
+   * Instantiates a new exception.
+   *
+   * @param cause the cause for the exception
+   */
   public ReplicationPersistenceException(Throwable cause) {
     super(cause);
   }

@@ -113,7 +113,9 @@
     <!-- common fields -->
     <field name="id" type="string" indexed="true" stored="true" required="true"
            multiValued="false" />
-    <field name="version" type="pint" indexed="true" stored="true" required="false"
+    <field name="name" type="string" indexed="true" stored="true" required="false"
+           multiValued="false" />
+    <field name="version" type="pint" indexed="false" stored="true" required="false"
            multiValued="false" />
     <field name="description" type="string" indexed="false" stored="true" required="false"
            multiValued="false" />
@@ -156,12 +158,15 @@
     <field name="action" type="string" indexed="true" stored="true" required="false"
            multiValued="false" />
 
-    <!-- replication_site fields -->
+    <!-- site fields -->
     <field name="url" type="string" indexed="true" stored="true" required="false"
            multiValued="false" />
     <field name="type" type="string" indexed="true" stored="true" required="false"
            multiValued="false" />
-    <field name="remote_managed" type="boolean" indexed="true" stored="true" required="false"
+    <field name="kind" type="string" indexed="true" stored="true" required="false"
+           multiValued="false" />
+    <field name="polling_timeout" type="plong" indexed="false" stored="false" multiValued="false" />
+    <field name="parallelism_factor" type="pint" indexed="false" stored="false"
            multiValued="false" />
 
     <!-- replication_config fields -->
@@ -171,15 +176,14 @@
            multiValued="false" />
 
     <!-- replication_filter fields -->
-    <field name="name" type="string" indexed="true" stored="true" required="false"
-      multiValued="false"/>
     <field name="site_id" type="string" indexed="true" stored="true" required="false"
-      multiValued="false"/>
+           multiValued="false" />
     <field name="filter" type="string" indexed="false" stored="true" required="false"
-      multiValued="false"/>
+           multiValued="false" />
     <field name="suspended" type="boolean" indexed="false" stored="true" required="false"
-      multiValued="false"/>
-    <field name="priority" type="pint" indexed="false" stored="true" required="false" multiValued="false" />
+           multiValued="false" />
+    <field name="priority" type="pint" indexed="false" stored="true" required="false"
+           multiValued="false" />
 
     <!-- site_index fields -->
     <field name="modified_since" type="pdate" indexed="false" stored="true" required="false"

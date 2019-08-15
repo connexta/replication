@@ -13,8 +13,10 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.ion.replication.api.InvalidFieldException;
 import com.connexta.replication.api.impl.persistence.pojo.Pojo;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -37,14 +39,15 @@ public class AbstractPersistableTest {
   public void testCtorWithType() throws Exception {
     final TestPersistable persistable = new TestPersistable(AbstractPersistableTest.TYPE);
 
-    Assert.assertThat(persistable.getType(), Matchers.equalTo(AbstractPersistableTest.TYPE));
+    Assert.assertThat(
+        persistable.getPersistableType(), Matchers.equalTo(AbstractPersistableTest.TYPE));
     Assert.assertThat(persistable.getId(), Matchers.notNullValue());
   }
 
   @Test
   public void testCtorWithTypeAndId() throws Exception {
     Assert.assertThat(
-        AbstractPersistableTest.PERSISTABLE.getType(),
+        AbstractPersistableTest.PERSISTABLE.getPersistableType(),
         Matchers.equalTo(AbstractPersistableTest.TYPE));
     Assert.assertThat(
         AbstractPersistableTest.PERSISTABLE.getId(), Matchers.equalTo(AbstractPersistableTest.ID));
@@ -54,7 +57,8 @@ public class AbstractPersistableTest {
   public void testCtorWithTypeAndNullId() throws Exception {
     final TestPersistable persistable = new TestPersistable(AbstractPersistableTest.TYPE, null);
 
-    Assert.assertThat(persistable.getType(), Matchers.equalTo(AbstractPersistableTest.TYPE));
+    Assert.assertThat(
+        persistable.getPersistableType(), Matchers.equalTo(AbstractPersistableTest.TYPE));
     Assert.assertThat(persistable.getId(), Matchers.nullValue());
   }
 
@@ -76,7 +80,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testWriteToWithNullId() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(".*missing.*" + AbstractPersistableTest.TYPE + ".*id.*"));
 
@@ -88,7 +92,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testWriteToWithEmptyId() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(".*empty.*" + AbstractPersistableTest.TYPE + ".*id.*"));
 
@@ -111,7 +115,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testReadFromWithNullId() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(".*missing.*" + AbstractPersistableTest.TYPE + ".*id.*"));
 
@@ -123,7 +127,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testReadFromWithEmptyId() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(".*empty.*" + AbstractPersistableTest.TYPE + ".*id.*"));
 
@@ -135,7 +139,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testSetOrFailIfNullWhenNullAndIdNotNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(
             "missing "
@@ -152,7 +156,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testSetOrFailIfNullWhenNullAndIdIsNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern("missing " + AbstractPersistableTest.TYPE + " string$"));
 
@@ -176,7 +180,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testSetOrFailIfNullOrEmptyWhenNullAndIdNotNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(
             "missing "
@@ -193,7 +197,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testSetOrFailIfNullOrEmptyWhenNullAndIdIsNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern("missing " + AbstractPersistableTest.TYPE + " string$"));
 
@@ -205,7 +209,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testSetOrFailIfNullOrEmptyWhenEmptyAndIdNotNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(
             "empty "
@@ -222,7 +226,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testSetOrFailIfEmptyOrEmptyWhenNullAndIdIsNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern("empty " + AbstractPersistableTest.TYPE + " string$"));
 
@@ -246,7 +250,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testConvertAndSetEnumValueOrFailIfNullWhenNullAndIdNotNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(
             "missing "
@@ -267,7 +271,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testConvertAndSetEnumValueOrFailIfNullWhenNullAndIdIsNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern("missing " + AbstractPersistableTest.TYPE + " enum.*$"));
 
@@ -284,7 +288,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testConvertAndSetEnumValueOrFailIfNullWhenEmptyAndIdNotNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern(
             "empty "
@@ -305,7 +309,7 @@ public class AbstractPersistableTest {
 
   @Test
   public void testConvertAndSetEnumValueOrFailIfNullWhenEmptyAndIdIsNull() throws Exception {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(
         Matchers.matchesPattern("empty " + AbstractPersistableTest.TYPE + " enum.*$"));
 
@@ -465,9 +469,47 @@ public class AbstractPersistableTest {
         AbstractPersistableTest.PERSISTABLE.getEnum(), Matchers.equalTo(TestEnum.ENUM_UNKNOWN));
   }
 
+  @Test
+  public void testConvertAndSetOrFailIfNull() throws Exception {
+    exception.expect(InvalidFieldException.class);
+    exception.expectMessage(Matchers.matchesPattern("missing.*url.*$"));
+
+    final TestPojo pojo = new TestPojo().setUrl(null);
+
+    AbstractPersistableTest.PERSISTABLE.convertAndSetOrFailIfNull(
+        "url",
+        pojo::getUrl,
+        AbstractPersistableTest::toUrl,
+        AbstractPersistableTest.PERSISTABLE::setUrl);
+  }
+
+  @Test
+  public void testConvertAndSetOrFailIfInvalidUrl() throws Exception {
+    exception.expect(InvalidFieldException.class);
+    exception.expectMessage(Matchers.equalTo("testing invalid url"));
+    exception.expectCause(Matchers.instanceOf(MalformedURLException.class));
+
+    final TestPojo pojo = new TestPojo().setUrl("invalid-url");
+
+    AbstractPersistableTest.PERSISTABLE.convertAndSetOrFailIfNull(
+        "url",
+        pojo::getUrl,
+        AbstractPersistableTest::toUrl,
+        AbstractPersistableTest.PERSISTABLE::setUrl);
+  }
+
+  private static URL toUrl(String url) {
+    try {
+      return new URL(url);
+    } catch (MalformedURLException e) {
+      throw new InvalidFieldException("testing invalid url", e);
+    }
+  }
+
   private static class TestPersistable extends AbstractPersistable<TestPojo> {
     @Nullable private String string;
     @Nullable private TestEnum anEnum;
+    @Nullable private URL url;
 
     TestPersistable() {
       super(AbstractPersistableTest.TYPE);
@@ -498,6 +540,15 @@ public class AbstractPersistableTest {
     public void setEnum(@Nullable TestEnum anEnum) {
       this.anEnum = anEnum;
     }
+
+    @Nullable
+    public URL getUrl() {
+      return url;
+    }
+
+    public void setUrl(@Nullable URL url) {
+      this.url = url;
+    }
   }
 
   private static class TestPojo extends Pojo<TestPojo> {
@@ -505,6 +556,7 @@ public class AbstractPersistableTest {
 
     @Nullable private String string;
     @Nullable private String anEnum;
+    @Nullable private String url;
 
     public TestPojo() {
       super.setVersion(TestPojo.CURRENT_VERSION);
@@ -527,6 +579,16 @@ public class AbstractPersistableTest {
 
     public TestPojo setEnum(@Nullable String anEnum) {
       this.anEnum = anEnum;
+      return this;
+    }
+
+    @Nullable
+    public String getUrl() {
+      return url;
+    }
+
+    public TestPojo setUrl(@Nullable String url) {
+      this.url = url;
       return this;
     }
   }

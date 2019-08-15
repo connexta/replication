@@ -13,12 +13,13 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -64,6 +65,21 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), modifiedSince);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (super.equals(obj) && (obj instanceof FilterIndexImpl)) {
+      final FilterIndexImpl persistable = (FilterIndexImpl) obj;
+
+      return Objects.equals(modifiedSince, persistable.modifiedSince);
+    }
+    return false;
+  }
+
+  @Override
   public String toString() {
     return String.format("FilterIndexImpl[id=%s, modifiedSince=%s]", getId(), modifiedSince);
   }
@@ -78,7 +94,7 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   public void readFrom(FilterIndexPojo pojo) {
     super.readFrom(pojo);
     if (pojo.getVersion() < FilterIndexPojo.MINIMUM_VERSION) {
-      throw new ReplicationPersistenceException(
+      throw new UnsupportedVersionException(
           "unsupported "
               + FilterIndexImpl.TYPE
               + " version: "

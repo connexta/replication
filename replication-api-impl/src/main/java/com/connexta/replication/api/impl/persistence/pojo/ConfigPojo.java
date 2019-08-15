@@ -28,17 +28,22 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 @SolrDocument(collection = ConfigPojo.COLLECTION)
 public class ConfigPojo extends Pojo<ConfigPojo> {
   /**
-   * List of possible versions:
+   * Current version format.
+   *
+   * <p>Version history:
    *
    * <ul>
-   *   <li>1 - initial version.
+   *   <li>1 - Initial Ion version.
    * </ul>
    */
   public static final int CURRENT_VERSION = 1;
 
+  /** The oldest version supported by the current code (anything before that will fail). */
+  public static final int MINIMUM_VERSION = 1;
+
   public static final String COLLECTION = "replication_config";
 
-  @Indexed(name = "name", searchable = false)
+  @Indexed(name = "name")
   @Nullable
   private String name;
 

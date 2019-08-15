@@ -22,8 +22,8 @@ import com.connexta.ion.replication.adapters.ddf.csw.GetRecordsMessageBodyReader
 import com.connexta.ion.replication.adapters.ddf.rest.DdfRestClientFactory;
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterFactory;
-import com.connexta.ion.replication.api.NodeAdapterType;
 import com.connexta.ion.replication.api.Replicator;
+import com.connexta.replication.api.data.SiteType;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -136,7 +136,7 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
   }
 
   @Override
-  public NodeAdapterType getType() {
-    return NodeAdapterType.DDF;
+  public SiteType getType() {
+    return SiteType.DDF;
   }
 }
