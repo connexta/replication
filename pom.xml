@@ -117,7 +117,7 @@
         <jackson.version>2.10.0.pr1</jackson.version>
         <spring.version>5.2.0.RC1</spring.version>
         <spring-boot-starter.version>2.1.7.RELEASE</spring-boot-starter.version>
-        <testcontainers.version>1.11.3</testcontainers.version>
+        <testcontainers.version>1.12.0</testcontainers.version>
         <annotation.version>1.3.1</annotation.version>
         <reactive-streams.version>1.0.2</reactive-streams.version>
         <fabric8.docker.plugin.version>0.31.0</fabric8.docker.plugin.version>
