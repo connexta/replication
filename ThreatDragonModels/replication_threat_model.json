@@ -1,0 +1,759 @@
+{
+  "summary": {
+    "title": "Replication Threat Model",
+    "owner": "Ditto Team",
+    "description": "Replication copies products and metadata from one DDF/ION instance to another",
+    "id": 0
+  },
+  "detail": {
+    "contributors": [
+      {
+        "name": "Chris Lockard",
+        "$$hashKey": "object:52"
+      }
+    ],
+    "diagrams": [
+      {
+        "title": "Replication Model",
+        "thumbnail": "./public/content/images/thumbnail.jpg",
+        "id": 0,
+        "diagramJson": {
+          "cells": [
+            {
+              "type": "tm.Store",
+              "size": {
+                "width": 160,
+                "height": 80
+              },
+              "position": {
+                "x": 753,
+                "y": 75
+              },
+              "angle": 0,
+              "id": "936557f9-22e2-4bac-bb70-0089c5c2fbe1",
+              "z": 2,
+              "isALog": false,
+              "threats": [],
+              "outOfScope": false,
+              "hasOpenThreats": false,
+              "attrs": {
+                ".element-shape": {
+                  "class": "element-shape hasNoOpenThreats isInScope"
+                },
+                "text": {
+                  "text": "DDF Based System"
+                },
+                "#element-shape": {
+                  "class": ""
+                },
+                ".undefined": {
+                  "class": "undefinedhasOpenThreats isInScope"
+                },
+                ".element-text": {
+                  "class": "element-text hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Store",
+              "size": {
+                "width": 160,
+                "height": 80
+              },
+              "position": {
+                "x": 293,
+                "y": 510
+              },
+              "angle": 0,
+              "id": "bdd3e115-4b92-4020-90b7-c3351dba292b",
+              "z": 3,
+              "threats": [],
+              "storesCredentials": false,
+              "hasOpenThreats": false,
+              "outOfScope": false,
+              "attrs": {
+                ".element-shape": {
+                  "class": "element-shape hasNoOpenThreats isInScope"
+                },
+                "text": {
+                  "text": "Configuration Database"
+                },
+                ".undefined": {
+                  "class": "undefinedhasOpenThreats isInScope"
+                },
+                ".element-text": {
+                  "class": "element-text hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Store",
+              "size": {
+                "width": 160,
+                "height": 80
+              },
+              "position": {
+                "x": 53,
+                "y": 93
+              },
+              "angle": 0,
+              "id": "ec574fb4-87e7-494b-88dc-2a3c99172067",
+              "z": 4,
+              "threats": [],
+              "outOfScope": false,
+              "hasOpenThreats": false,
+              "attrs": {
+                ".element-shape": {
+                  "class": "element-shape hasNoOpenThreats isInScope"
+                },
+                "text": {
+                  "text": "ION Store"
+                },
+                "#element-shape": {
+                  "class": ""
+                },
+                ".undefined": {
+                  "class": "undefinedhasOpenThreats isInScope"
+                },
+                ".element-text": {
+                  "class": "element-text hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Process",
+              "size": {
+                "width": 100,
+                "height": 100
+              },
+              "position": {
+                "x": 410,
+                "y": 311
+              },
+              "angle": 0,
+              "id": "0d9909ea-1398-4898-be81-cf1c808324dc",
+              "z": 6,
+              "privilegeLevel": "executionContext =Limited",
+              "outOfScope": false,
+              "hasOpenThreats": false,
+              "attrs": {
+                ".element-shape": {
+                  "class": "element-shape hasNoOpenThreats isInScope"
+                },
+                "text": {
+                  "text": "Replication\nService"
+                },
+                "#element-process": {
+                  "class": "outOfScopeElement"
+                },
+                ".undefined": {
+                  "class": "undefinedhasNoOpenThreats isInScope"
+                },
+                ".element-text": {
+                  "class": "element-text hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "bdd3e115-4b92-4020-90b7-c3351dba292b"
+              },
+              "target": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "vertices": [
+                {
+                  "x": 359,
+                  "y": 416
+                }
+              ],
+              "id": "c8c746d8-2a26-464e-8524-3350be8dcae5",
+              "labels": [
+                {
+                  "position": 0.5,
+                  "attrs": {
+                    "text": {
+                      "text": "Read config",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 20,
+              "outOfScope": true,
+              "reasonOutOfScope": "This data flow represents a read from the file system",
+              "hasOpenThreats": false,
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasNoOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasNoOpenThreats isOutOfScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "target": {
+                "id": "936557f9-22e2-4bac-bb70-0089c5c2fbe1"
+              },
+              "vertices": [
+                {
+                  "x": 563,
+                  "y": 146
+                }
+              ],
+              "id": "2fd00bd2-c603-4d72-a12f-c20a3a1ba77b",
+              "labels": [
+                {
+                  "position": {
+                    "distance": 0.35067110137042334,
+                    "offset": -16.082217655610293
+                  },
+                  "attrs": {
+                    "text": {
+                      "text": "Queries (CSW)",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 22,
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "threats": [
+                {
+                  "status": "Mitigated",
+                  "severity": "Medium",
+                  "type": "Information disclosure",
+                  "mitigation": "Use HTTPS",
+                  "title": "Request intercept",
+                  "$$hashKey": "object:237"
+                }
+              ],
+              "protocol": "https",
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasNoOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "936557f9-22e2-4bac-bb70-0089c5c2fbe1"
+              },
+              "target": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "vertices": [
+                {
+                  "x": 512,
+                  "y": 95
+                }
+              ],
+              "id": "d117ddba-2508-45ce-b9ea-fb9df56a79e5",
+              "labels": [
+                {
+                  "position": {
+                    "distance": 0.585616534110972,
+                    "offset": -7.562759241089225
+                  },
+                  "attrs": {
+                    "text": {
+                      "text": "Query Results",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 23,
+              "hasOpenThreats": true,
+              "isEncrypted": true,
+              "protocol": "HTTPS",
+              "outOfScope": false,
+              "threats": [
+                {
+                  "status": "Mitigated",
+                  "severity": "High",
+                  "type": "Information disclosure",
+                  "title": "Reponse Intercept",
+                  "mitigation": "Use HTTPS",
+                  "$$hashKey": "object:222"
+                },
+                {
+                  "status": "Mitigated",
+                  "severity": "High",
+                  "type": "Tampering",
+                  "title": "Send malicious resutls",
+                  "description": "Respond back with wrong resutls could cause the system to copy unknown data into the destination host.",
+                  "mitigation": "Use HTTPS",
+                  "$$hashKey": "object:244"
+                },
+                {
+                  "status": "Open",
+                  "severity": "Medium",
+                  "title": "Large result set",
+                  "type": "Denial of service",
+                  "description": "Large result sets could take a long time to complete",
+                  "mitigation": "Move to worker nodes. One per replication job would help midigate this",
+                  "$$hashKey": "object:73"
+                }
+              ],
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "target": {
+                "id": "ec574fb4-87e7-494b-88dc-2a3c99172067"
+              },
+              "vertices": [
+                {
+                  "x": 240,
+                  "y": 266
+                }
+              ],
+              "id": "31fd3f2c-7e29-48e9-92f6-5bbb456daad8",
+              "labels": [
+                {
+                  "position": {
+                    "distance": 0.38363779675351806,
+                    "offset": -2.256607898743823
+                  },
+                  "attrs": {
+                    "text": {
+                      "text": "Ingest REST",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 24,
+              "hasOpenThreats": true,
+              "protocol": "HTTPS",
+              "isEncrypted": true,
+              "threats": [
+                {
+                  "status": "Mitigated",
+                  "severity": "High",
+                  "type": "Information disclosure",
+                  "title": "Data spill",
+                  "description": "Information replicated from one system might not be allowed to be stored on the destination system",
+                  "mitigation": "Initial target deployment is for a closed network which all machines have the classification and data access",
+                  "$$hashKey": "object:108"
+                },
+                {
+                  "status": "Open",
+                  "severity": "Medium",
+                  "title": "To much data",
+                  "type": "Denial of service",
+                  "description": "Data could be coming from many different sources at whatever speed the network suports which could overload the connection to the store",
+                  "$$hashKey": "object:277",
+                  "mitigation": "Initially this will only be transfering one dataset at a time."
+                },
+                {
+                  "status": "Mitigated",
+                  "severity": "High",
+                  "title": "Request Intercept",
+                  "type": "Information disclosure",
+                  "mitigation": "Use HTTPS",
+                  "$$hashKey": "object:123"
+                }
+              ],
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "ec574fb4-87e7-494b-88dc-2a3c99172067"
+              },
+              "target": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "vertices": [
+                {
+                  "x": 350,
+                  "y": 223
+                }
+              ],
+              "id": "93c40f4c-9ca9-4f56-8303-8e773536e3bb",
+              "labels": [
+                {
+                  "position": {
+                    "distance": 0.6518811422211506,
+                    "offset": -5.45866382564418
+                  },
+                  "attrs": {
+                    "text": {
+                      "text": "Ingest Response",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 25,
+              "hasOpenThreats": false,
+              "protocol": "HTTPS",
+              "isEncrypted": true,
+              "threats": [
+                {
+                  "status": "Mitigated",
+                  "severity": "Low",
+                  "title": "Response Intercept",
+                  "type": "Information disclosure",
+                  "mitigation": "Use HTTPS",
+                  "$$hashKey": "object:286"
+                }
+              ],
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasNoOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "target": {
+                "id": "bdd3e115-4b92-4020-90b7-c3351dba292b"
+              },
+              "vertices": [
+                {
+                  "x": 444,
+                  "y": 466
+                }
+              ],
+              "id": "4badadca-6d1a-4f7c-84f7-a1b8e2bc662d",
+              "labels": [
+                {
+                  "position": {
+                    "distance": 0.510742859028971,
+                    "offset": -20.514728480949998
+                  },
+                  "attrs": {
+                    "text": {
+                      "text": "Write config",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 27,
+              "hasOpenThreats": false,
+              "outOfScope": true,
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasNoOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasNoOpenThreats isOutOfScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "target": {
+                "id": "936557f9-22e2-4bac-bb70-0089c5c2fbe1"
+              },
+              "vertices": [
+                {
+                  "x": 637,
+                  "y": 245
+                }
+              ],
+              "id": "718ffc46-5e61-4ea8-a3a0-9f2ed3cbc04f",
+              "labels": [
+                {
+                  "position": {
+                    "distance": 0.48486567513809903,
+                    "offset": -1.0624430608004332
+                  },
+                  "attrs": {
+                    "text": {
+                      "text": "Resource Request\n(catalog REST)",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 31,
+              "hasOpenThreats": false,
+              "threats": [
+                {
+                  "status": "Mitigated",
+                  "severity": "Medium",
+                  "title": "Request Intercetp",
+                  "type": "Information disclosure",
+                  "mitigation": "Use HTTPS",
+                  "$$hashKey": "object:250"
+                }
+              ],
+              "isEncrypted": true,
+              "protocol": "https",
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasNoOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "936557f9-22e2-4bac-bb70-0089c5c2fbe1"
+              },
+              "target": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "vertices": [
+                {
+                  "x": 680,
+                  "y": 298
+                }
+              ],
+              "id": "c9587442-2a51-47c9-b9ab-fb6b0e10f8de",
+              "labels": [
+                {
+                  "position": {
+                    "distance": 0.5289439662937813,
+                    "offset": -4.168923459015787
+                  },
+                  "attrs": {
+                    "text": {
+                      "text": "Resource Response",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 32,
+              "hasOpenThreats": true,
+              "threats": [
+                {
+                  "status": "Mitigated",
+                  "severity": "High",
+                  "title": "Response intercept",
+                  "type": "Information disclosure",
+                  "mitigation": "Use HTTPS",
+                  "$$hashKey": "object:256"
+                },
+                {
+                  "status": "Open",
+                  "severity": "Medium",
+                  "type": "Denial of service",
+                  "title": "Too much data",
+                  "description": "Network could become saturated if too much data is being transfered resulting in degraded network performance.",
+                  "$$hashKey": "object:262"
+                }
+              ],
+              "isEncrypted": true,
+              "protocol": "https",
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Boundary",
+              "smooth": true,
+              "source": {
+                "x": 208,
+                "y": 565
+              },
+              "target": {
+                "x": 646,
+                "y": 555
+              },
+              "vertices": [
+                {
+                  "x": 450,
+                  "y": 255
+                }
+              ],
+              "id": "3fc846e7-bd07-4598-aac5-5fc346c09a6c",
+              "z": 33,
+              "attrs": {}
+            },
+            {
+              "type": "tm.Store",
+              "size": {
+                "width": 160,
+                "height": 80
+              },
+              "position": {
+                "x": 813,
+                "y": 428
+              },
+              "angle": 0,
+              "id": "43327dc9-543a-4294-aa3a-26643b13328f",
+              "z": 34,
+              "hasOpenThreats": false,
+              "attrs": {
+                ".element-shape": {
+                  "class": "element-shape hasNoOpenThreats isInScope"
+                },
+                "text": {
+                  "text": "Secrets Store"
+                },
+                ".element-text": {
+                  "class": "element-text hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "target": {
+                "id": "43327dc9-543a-4294-aa3a-26643b13328f"
+              },
+              "vertices": [
+                {
+                  "x": 671,
+                  "y": 381
+                }
+              ],
+              "id": "4744b305-bb32-4c93-8fe5-db73ca8fb664",
+              "labels": [
+                {
+                  "position": {
+                    "distance": 0.4915799113016899,
+                    "offset": -5.871606394648552
+                  },
+                  "attrs": {
+                    "text": {
+                      "text": "Request Secrets",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 35,
+              "hasOpenThreats": false,
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasNoOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasNoOpenThreats isInScope"
+                }
+              }
+            },
+            {
+              "type": "tm.Flow",
+              "smooth": true,
+              "source": {
+                "id": "43327dc9-543a-4294-aa3a-26643b13328f"
+              },
+              "target": {
+                "id": "0d9909ea-1398-4898-be81-cf1c808324dc"
+              },
+              "vertices": [
+                {
+                  "x": 643,
+                  "y": 484
+                }
+              ],
+              "id": "b60d3a8a-04d7-47ca-86be-08a588208019",
+              "labels": [
+                {
+                  "position": 0.5,
+                  "attrs": {
+                    "text": {
+                      "text": "Secret Response",
+                      "font-weight": "400",
+                      "font-size": "small"
+                    }
+                  }
+                }
+              ],
+              "z": 36,
+              "hasOpenThreats": true,
+              "threats": [
+                {
+                  "status": "Open",
+                  "severity": "Medium",
+                  "type": "Tampering",
+                  "title": "Return invalid secrets",
+                  "$$hashKey": "object:79"
+                }
+              ],
+              "attrs": {
+                ".marker-target": {
+                  "class": "marker-target hasOpenThreats isInScope"
+                },
+                ".connection": {
+                  "class": "connection hasOpenThreats isInScope"
+                }
+              }
+            }
+          ]
+        },
+        "size": {
+          "height": 2202.10205078125,
+          "width": 973
+        },
+        "$$hashKey": "object:56"
+      }
+    ],
+    "reviewer": "Security Team"
+  }
+}
