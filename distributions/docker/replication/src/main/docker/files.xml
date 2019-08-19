@@ -20,7 +20,7 @@
   <dependencySets>
     <dependencySet>
       <includes>
-        <include>*</include>
+        <include>com.connexta.ion.replication.distributions:replication-distros-spring</include>
       </includes>
       <outputDirectory>.</outputDirectory>
       <useTransitiveDependencies>false</useTransitiveDependencies>
