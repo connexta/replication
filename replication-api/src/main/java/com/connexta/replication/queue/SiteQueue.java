@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
  *   <li>a DDF-based site we are harvesting from or replicating to
  *   <li>a Regional Ion site to which we are replicating our local intel to
  *   <li>the local Ion site (typically will be used for delete operations only)
+ * </ul>
  */
 public interface SiteQueue extends Queue {
   /**
