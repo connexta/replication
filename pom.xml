@@ -128,7 +128,7 @@
         <micrometer.version>1.2.0</micrometer.version>
         <javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
         <httpclient.version>4.5.9</httpclient.version>
-        <spotless.maven.plugin.version>1.23.0</spotless.maven.plugin.version>
+        <spotless.maven.plugin.version>1.24.1</spotless.maven.plugin.version>
         <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
 
     </properties>
