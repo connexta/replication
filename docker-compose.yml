@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   replication-solr:
-    image: r.ion.phx.connexta.com/replication-solr:0.3.0-SNAPSHOT
+    image: r.ion.phx.connexta.com/replication-solr:${project.version}
     ports:
      - "8983:8983"
     volumes:
@@ -9,7 +9,7 @@ services:
     networks:
       - replication
   ion-replication:
-    image: r.ion.phx.connexta.com/replication:0.3.0-SNAPSHOT
+    image: r.ion.phx.connexta.com/replication:${project.version}
     ports:
       - "8080:8080"
     networks:

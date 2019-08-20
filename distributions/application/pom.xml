@@ -77,7 +77,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.1.0</version>
         <executions>
           <!--copies the contents of the resources folder (except the bat file) into the etc
   folder in the target directory-->
