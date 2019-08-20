@@ -17,7 +17,7 @@ import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.Status;
 import com.connexta.replication.api.data.ReplicationItem;
 import com.connexta.replication.api.impl.persistence.ReplicationItemManager;
-import com.connexta.replication.api.impl.persistence.pojo.ReplicationItemPojo;
+import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
 import com.connexta.replication.api.impl.persistence.spring.ItemRepository;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +39,7 @@ import org.springframework.data.solr.core.query.result.GroupEntry;
 import org.springframework.data.solr.core.query.result.GroupPage;
 import org.springframework.data.solr.core.query.result.GroupResult;
 
-/** Provides operations for managing {@link ReplicationItemPojo}s. */
+/** Provides operations for managing {@link ItemPojo}s. */
 public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   private static final int PAGE_SIZE = 50;
@@ -51,7 +51,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   /**
    * Creates a new ReplicationItemManager.
    *
-   * @param itemRepository solr repository for {@link ReplicationItemPojo}s
+   * @param itemRepository solr repository for {@link ItemPojo}s
    * @param solrTemplate solr operations implementation for querying solr
    */
   public ReplicationItemManagerImpl(ItemRepository itemRepository, SolrTemplate solrTemplate) {
@@ -85,7 +85,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
       throw new IllegalArgumentException(
           "Expected a ReplicationItemImpl but got a " + replicationItem.getClass().getSimpleName());
     }
-    itemRepository.save(((ReplicationItemImpl) replicationItem).writeTo(new ReplicationItemPojo()));
+    itemRepository.save(((ReplicationItemImpl) replicationItem).writeTo(new ItemPojo()));
   }
 
   @Override
@@ -104,22 +104,12 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public void removeAll() {
-    itemRepository.deleteAll();
-  }
-
-  @Override
   public List<ReplicationItem> getAllForConfig(String configId, int startIndex, int pageSize) {
     return itemRepository
         .findByConfigId(configId, PageRequest.of(startIndex, pageSize))
         .map(ReplicationItemImpl::new)
         .map(ReplicationItem.class::cast)
         .getContent();
-  }
-
-  @Override
-  public void remove(String metadataId, String source, String destination) {
-    itemRepository.deleteByIdAndSourceAndDestination(metadataId, source, destination);
   }
 
   @Override
@@ -130,11 +120,11 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
     List<String> failureList = new LinkedList<>();
     do {
-      GroupPage<ReplicationItemPojo> groupPage = doSolrQuery(configId, pageRequest);
-      GroupResult<ReplicationItemPojo> groupResult = groupPage.getGroupResult("metadata_id");
-      Page<GroupEntry<ReplicationItemPojo>> page = groupResult.getGroupEntries();
+      GroupPage<ItemPojo> groupPage = doSolrQuery(configId, pageRequest);
+      GroupResult<ItemPojo> groupResult = groupPage.getGroupResult("metadata_id");
+      Page<GroupEntry<ItemPojo>> page = groupResult.getGroupEntries();
       pageTotal = page.getTotalElements();
-      for (GroupEntry<ReplicationItemPojo> entry : page.getContent()) {
+      for (GroupEntry<ItemPojo> entry : page.getContent()) {
         entry.getResult().stream()
             .findFirst()
             .ifPresent(
@@ -150,7 +140,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
     return failureList;
   }
 
-  private GroupPage<ReplicationItemPojo> doSolrQuery(String configId, Pageable pageable) {
+  private GroupPage<ItemPojo> doSolrQuery(String configId, Pageable pageable) {
     Criteria queryCriteria = Crotch.where("config_id").is(configId);
     Sort doneTimeDescSort = Sort.by(Direction.DESC, "done_time");
     SimpleQuery groupQuery =
@@ -159,8 +149,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
         new GroupOptions().addGroupByField("metadata_id").setLimit(1).addSort(doneTimeDescSort);
     groupQuery.setGroupOptions(options);
 
-    return solrTemplate.queryForGroupPage(
-        "replication_item", groupQuery, ReplicationItemPojo.class);
+    return solrTemplate.queryForGroupPage("replication_item", groupQuery, ItemPojo.class);
   }
 
   @Override

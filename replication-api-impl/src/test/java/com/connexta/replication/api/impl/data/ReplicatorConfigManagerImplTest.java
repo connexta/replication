@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.connexta.replication.api.data.ReplicatorConfig;
-import com.connexta.replication.api.impl.persistence.pojo.ReplicatorConfigPojo;
+import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import com.connexta.replication.api.impl.persistence.spring.ConfigRepository;
 import java.util.Collections;
 import java.util.Optional;
@@ -50,11 +50,21 @@ public class ReplicatorConfigManagerImplTest {
   public void getConfig() {
     when(configRepository.findById(anyString()))
         .thenReturn(
-            Optional.of(new ReplicatorConfigPojo().setId(ReplicatorConfigManagerImplTest.ID)));
+            Optional.of(
+                new ConfigPojo()
+                    .setId(ReplicatorConfigManagerImplTest.ID)
+                    .setName("name")
+                    .setSource("source")
+                    .setDestination("destination")
+                    .setFilter("filter")));
     final ReplicatorConfig cfg = manager.get(ReplicatorConfigManagerImplTest.ID);
 
     verify(configRepository).findById(ReplicatorConfigManagerImplTest.ID);
     assertThat(cfg.getId(), equalTo(ReplicatorConfigManagerImplTest.ID));
+    assertThat(cfg.getName(), equalTo("name"));
+    assertThat(cfg.getSource(), equalTo("source"));
+    assertThat(cfg.getDestination(), equalTo("destination"));
+    assertThat(cfg.getFilter(), equalTo("filter"));
   }
 
   @Test
@@ -67,7 +77,7 @@ public class ReplicatorConfigManagerImplTest {
   @Test
   public void saveConfig() {
     manager.save(new ReplicatorConfigImpl());
-    verify(configRepository).save(any(ReplicatorConfigPojo.class));
+    verify(configRepository).save(any(ConfigPojo.class));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -84,7 +94,7 @@ public class ReplicatorConfigManagerImplTest {
 
   @Test
   public void configExists() {
-    when(configRepository.findById("id")).thenReturn(Optional.of(new ReplicatorConfigPojo()));
+    when(configRepository.findById("id")).thenReturn(Optional.of(new ConfigPojo()));
     boolean exists = manager.configExists("id");
     assertThat(exists, is(true));
   }

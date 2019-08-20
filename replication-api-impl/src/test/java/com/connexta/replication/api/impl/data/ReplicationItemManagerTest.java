@@ -18,22 +18,25 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.Status;
 import com.connexta.replication.api.data.ReplicationItem;
+import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
 import com.connexta.replication.api.impl.persistence.spring.ItemRepository;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.Page;
@@ -61,45 +64,101 @@ public class ReplicationItemManagerTest {
 
   @Test
   public void getItemLatestItem() {
-    ReplicationItemImpl item = mock(ReplicationItemImpl.class);
-    List<ReplicationItem> items = List.of(item);
+    final ItemPojo pojo =
+        new ItemPojo()
+            .setId("12345")
+            .setMetadataId("m123")
+            .setConfigId("c123")
+            .setSource("sourceA")
+            .setDestination("destinationB")
+            .setStartTime(new Date())
+            .setDoneTime(new Date())
+            .setAction(Action.DELETE.name())
+            .setStatus(Status.CONNECTION_LOST.name());
+    List<ItemPojo> items = List.of(pojo);
     Page page = mock(Page.class);
+
     when(page.stream()).thenReturn(items.stream());
     when(itemRepository.findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
             anyString(), anyString(), any(Pageable.class)))
         .thenReturn(page);
-    assertThat(itemManager.getLatest("configId", "id").get(), is(item));
-  }
 
-  @Test
-  public void deleteAllItems() {
-    itemManager.removeAll();
-    verify(itemRepository).deleteAll();
+    final ReplicationItem item = itemManager.getLatest("configId", "id").get();
+
+    assertThat(item.getId(), is(pojo.getId()));
+    assertThat(item.getMetadataId(), is(pojo.getMetadataId()));
+    assertThat(item.getConfigId(), is(pojo.getConfigId()));
+    assertThat(item.getSource(), is(pojo.getSource()));
+    assertThat(item.getDestination(), is(pojo.getDestination()));
+    assertThat(item.getStartTime(), is(pojo.getStartTime()));
+    assertThat(item.getDoneTime(), is(pojo.getDoneTime()));
+    assertThat(item.getAction().name(), is(pojo.getAction()));
+    assertThat(item.getStatus().name(), is(pojo.getStatus()));
   }
 
   @Test
   public void getItemsForConfig() {
-    List<ReplicationItem> items = Collections.singletonList(new ReplicationItemImpl());
+    final ItemPojo pojo =
+        new ItemPojo()
+            .setId("12345")
+            .setMetadataId("m123")
+            .setConfigId("c123")
+            .setSource("sourceA")
+            .setDestination("destinationB")
+            .setStartTime(new Date())
+            .setDoneTime(new Date())
+            .setAction(Action.DELETE.name())
+            .setStatus(Status.CONNECTION_LOST.name());
+    final List<ItemPojo> pojos = Collections.singletonList(pojo);
+
     when(itemRepository.findByConfigId(anyString(), any(PageRequest.class)))
         .thenReturn(
-            new PageImpl(
-                items.stream().map(ReplicationItemImpl.class::cast).collect(Collectors.toList())));
-    assertThat(itemManager.getAllForConfig("configId", 0, 1), is(items));
+            new PageImpl(pojos.stream().map(ItemPojo.class::cast).collect(Collectors.toList())));
+    final List<ReplicationItem> items = itemManager.getAllForConfig("configId", 0, 1);
+
+    assertThat(items.size(), is(1));
+    final ReplicationItem item = items.get(0);
+
+    assertThat(item.getId(), is(pojo.getId()));
+    assertThat(item.getMetadataId(), is(pojo.getMetadataId()));
+    assertThat(item.getConfigId(), is(pojo.getConfigId()));
+    assertThat(item.getSource(), is(pojo.getSource()));
+    assertThat(item.getDestination(), is(pojo.getDestination()));
+    assertThat(item.getStartTime(), is(pojo.getStartTime()));
+    assertThat(item.getDoneTime(), is(pojo.getDoneTime()));
+    assertThat(item.getAction().name(), is(pojo.getAction()));
+    assertThat(item.getStatus().name(), is(pojo.getStatus()));
   }
 
-  // BOB: redefine this one
-  //  @Test
-  //  public void saveItem() {
-  //    ReplicationItemImpl item = new ReplicationItemImpl();
-  //    itemManager.save(item);
-  //    verify(itemRepository).save(eq(item));
-  //  }
-  //
   @Test
-  public void deleteItem() {
-    itemManager.remove("id", "source", "destination");
-    verify(itemRepository)
-        .deleteByIdAndSourceAndDestination(eq("id"), eq("source"), eq("destination"));
+  public void saveItem() {
+    final ReplicationItemImpl item = new ReplicationItemImpl();
+
+    item.setId("12345");
+    item.setMetadataId("m123");
+    item.setConfigId("c123");
+    item.setSource("sourceA");
+    item.setDestination("destinationB");
+    item.setStartTime(new Date());
+    item.setDoneTime(new Date());
+    item.setAction(Action.CREATE);
+    item.setStatus(Status.FAILURE);
+
+    itemManager.save(item);
+
+    final ArgumentCaptor<ItemPojo> pojo = ArgumentCaptor.forClass(ItemPojo.class);
+
+    verify(itemRepository).save(pojo.capture());
+
+    assertThat(pojo.getValue().getId(), is(item.getId()));
+    assertThat(pojo.getValue().getMetadataId(), is(item.getMetadataId()));
+    assertThat(pojo.getValue().getConfigId(), is(item.getConfigId()));
+    assertThat(pojo.getValue().getSource(), is(item.getSource()));
+    assertThat(pojo.getValue().getDestination(), is(item.getDestination()));
+    assertThat(pojo.getValue().getStartTime(), is(item.getStartTime()));
+    assertThat(pojo.getValue().getDoneTime(), is(item.getDoneTime()));
+    assertThat(pojo.getValue().getAction(), is(item.getAction().name()));
+    assertThat(pojo.getValue().getStatus(), is(item.getStatus().name()));
   }
 
   @Test
@@ -126,13 +185,13 @@ public class ReplicationItemManagerTest {
   private GroupPage mockGroupPage(int num, int failItemIndex, String failMetadataId) {
     List<GroupEntry> entries = new ArrayList<>();
     for (int i = 0; i < num; i++) {
-      ReplicationItemImpl item = mock(ReplicationItemImpl.class);
+      final ItemPojo item = mock(ItemPojo.class);
 
       if (i == failItemIndex) {
         when(item.getMetadataId()).thenReturn(failMetadataId);
-        when(item.getStatus()).thenReturn(Status.FAILURE);
+        when(item.getStatus()).thenReturn(Status.FAILURE.name());
       } else {
-        when(item.getStatus()).thenReturn(Status.SUCCESS);
+        when(item.getStatus()).thenReturn(Status.SUCCESS.name());
       }
 
       Page page = mock(Page.class);

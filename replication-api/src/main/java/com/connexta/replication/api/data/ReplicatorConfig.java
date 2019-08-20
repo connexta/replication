@@ -15,7 +15,7 @@ package com.connexta.replication.api.data;
 
 import com.connexta.ion.replication.api.data.Metadata;
 import com.connexta.ion.replication.api.data.QueryRequest;
-import java.util.Date;
+import java.time.Instant;
 import javax.annotation.Nullable;
 
 /**
@@ -75,20 +75,20 @@ public interface ReplicatorConfig extends Persistable {
   boolean isSuspended();
 
   /**
-   * A {@link Date} which represents the modified date of the last {@link Metadata} that was
+   * A {@link Instant} which represents the modified instant of the last {@link Metadata} that was
    * attempted to be replicated. If available, this should be used by the {@link
    * QueryRequest#getModifiedAfter()}.
    *
-   * @return the {@link Date}, or {@code null} if no metadata has attempted to be replicated
+   * @return the {@link Instant}, or {@code null} if no metadata has attempted to be replicated
    */
   @Nullable
-  Date getLastMetadataModified();
+  Instant getLastMetadataModified();
 
   /**
    * See {@link #getLastMetadataModified()}.
    *
-   * @param lastMetadataModified the {@link Metadata}'s modified date
+   * @param lastMetadataModified the {@link Metadata}'s modified instant
    */
   // still internally used by the syncer
-  void setLastMetadataModified(@Nullable Date lastMetadataModified);
+  void setLastMetadataModified(@Nullable Instant lastMetadataModified);
 }

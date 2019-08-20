@@ -34,11 +34,28 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
 
   private String id;
 
+  /**
+   * Instantiates a new persistable corresponding to a new object that do not yet exist in the
+   * database.
+   *
+   * @param type a string representing the type of this object (used when generating exception or
+   *     logs)
+   */
   protected AbstractPersistable(String type) {
-    this.type = type;
-    this.id = UUID.randomUUID().toString();
+    this(type, UUID.randomUUID().toString());
   }
 
+  /**
+   * Instantiates a new persistable corresponding to an object being reloaded from the database in
+   * which case the identifier can either be provided or <code>null</code> can be provided with the
+   * expectation that the identifier will be restored as soon as the subclass calls {@link
+   * #readFrom(Pojo)}.
+   *
+   * @param type a string representing the type of this object (used when generating exception or
+   *     logs)
+   * @param id the previously generated identifier for this object or <code>null</code> if it is
+   *     expected to be restored later when {@link #readFrom(Pojo)} is called by the subclass
+   */
   protected AbstractPersistable(String type, @Nullable String id) {
     this.type = type;
     this.id = id;
@@ -75,7 +92,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    *     object
    */
   protected void readFrom(P pojo) {
-    setOrFailIfNull("identifier", pojo::getId, this::setId);
+    setOrFailIfNullOrEmpty("id", pojo::getId, this::setId);
   }
 
   /**
@@ -95,16 +112,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    */
   protected <F> void setOrFailIfNull(
       String field, Supplier<? extends F> supplier, Consumer<? super F> consumer) {
-    final F value = supplier.get();
-
-    if (value == null) {
-      if (id != null) {
-        throw new ReplicationPersistenceException(
-            "missing " + type + " " + field + " for object: " + id);
-      }
-      throw new ReplicationPersistenceException("missing " + type + " " + field);
-    }
-    consumer.accept(value);
+    consumer.accept(validateNotNull(field, supplier.get()));
   }
 
   /**
@@ -123,22 +131,36 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    */
   protected <F> void setOrFailIfNullOrEmpty(
       String field, Supplier<String> supplier, Consumer<String> consumer) {
-    final String value = supplier.get();
+    consumer.accept(validateNotNullAndNotEmpty(field, supplier.get()));
+  }
 
-    if (value == null) {
-      if (id != null) {
-        throw new ReplicationPersistenceException(
-            "missing " + type + " " + field + " for object: " + id);
-      }
-      throw new ReplicationPersistenceException("missing " + type + " " + field);
-    } else if (value.isEmpty()) {
-      if (id != null) {
-        throw new ReplicationPersistenceException(
-            "empty " + type + " " + field + " for object: " + id);
-      }
-      throw new ReplicationPersistenceException("empty " + type + " " + field);
+  /**
+   * Useful method that can be used to validate that the value of an enum field is defined as a
+   * valid string representation of an enumeration value before setting it in this object. If it is
+   * not a valid value than <code>unknown</code>> is used as the value to set in this object.
+   * Otherwise, the corresponding enum value is set accordingly. The pojo field's value is retrieved
+   * using a consumer (e.g. <code>pojo::getType</code>) and set in this object using a supplier
+   * (e.g. <code>this::setType</code>).
+   *
+   * @param field the name of the field being check for presence (used in the exception message)
+   * @param clazz the field's enumeration class to convert to
+   * @param unknown the enumeration value to be used when the corresponding pojo field's string
+   *     value doesn't match any of the defined values
+   * @param supplier a supplier capable of retrieving the pojo's current value for the field
+   * @param consumer a consumer capable of updating this object with the field's value if it is
+   *     defined
+   * @param <E> the field's enum type
+   * @throws ReplicationPersistenceException if the field's value as supplied by <code>supplier
+   *     </code> is <code>null</code> or empty
+   */
+  protected <E extends Enum<E>> void convertAndSetEnumValueOrFailIfNullOrEmpty(
+      String field, Class<E> clazz, E unknown, Supplier<String> supplier, Consumer<E> consumer) {
+    try {
+      consumer.accept(Enum.valueOf(clazz, validateNotNullAndNotEmpty(field, supplier.get())));
+      return;
+    } catch (IllegalArgumentException e) {
     }
-    consumer.accept(value);
+    consumer.accept(unknown);
   }
 
   /**
@@ -150,8 +172,8 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    * (e.g. <code>this::setType</code>).
    *
    * @param clazz the field's enumeration class to convert to
-   * @param unknown the enumeration value to be used when the corresponding pojo filed's string
-   *     value doesn't match any of the defined values
+   * @param unknown the enumeration value to be used when the corresponding pojo field's string
+   *     value doesn't match any of the defined values or is <code>null</code>
    * @param supplier a supplier capable of retrieving the pojo's current value for the field
    * @param consumer a consumer capable of updating this object with the field's value if it is
    *     defined
@@ -159,6 +181,34 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    */
   protected <E extends Enum<E>> void convertAndSetEnumValue(
       Class<E> clazz, E unknown, Supplier<String> supplier, Consumer<E> consumer) {
+    convertAndSetEnumValue(clazz, unknown, unknown, supplier, consumer);
+  }
+
+  /**
+   * Useful method that can be used to validate that the value of an enum field is defined as a
+   * valid string representation of an enumeration value before setting it in this object. If it is
+   * not a valid value than <code>unknown</code>> is used as the value to set in this object.
+   * Otherwise, the corresponding enum value is set accordingly. The pojo field's value is retrieved
+   * using a consumer (e.g. <code>pojo::getType</code>) and set in this object using a supplier
+   * (e.g. <code>this::setType</code>).
+   *
+   * @param clazz the field's enumeration class to convert to
+   * @param ifNull the enumeration value to be used when the corresponding pojo field's string value
+   *     is <code>null</code> (<code>null</code> can be passed which means <code>null</code> will be
+   *     set in the field's value)
+   * @param unknown the enumeration value to be used when the corresponding pojo field's string
+   *     value doesn't match any of the defined values (or is empty)
+   * @param supplier a supplier capable of retrieving the pojo's current value for the field
+   * @param consumer a consumer capable of updating this object with the field's value if it is
+   *     defined
+   * @param <E> the field's enum type
+   */
+  protected <E extends Enum<E>> void convertAndSetEnumValue(
+      Class<E> clazz,
+      @Nullable E ifNull,
+      E unknown,
+      Supplier<String> supplier,
+      Consumer<E> consumer) {
     final String value = supplier.get();
 
     if (value != null) {
@@ -167,12 +217,42 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
         return;
       } catch (IllegalArgumentException e) {
       }
+      consumer.accept(unknown);
+    } else {
+      consumer.accept(ifNull);
     }
-    consumer.accept(unknown);
+  }
+
+  @VisibleForTesting
+  String getType() {
+    return type;
   }
 
   @VisibleForTesting
   void setId(String id) {
     this.id = id;
+  }
+
+  private <T> T validateNotNull(String field, @Nullable T value) {
+    if (value == null) {
+      if (id != null) {
+        throw new ReplicationPersistenceException(
+            "missing " + type + " " + field + " for object: " + id);
+      }
+      throw new ReplicationPersistenceException("missing " + type + " " + field);
+    }
+    return value;
+  }
+
+  private String validateNotNullAndNotEmpty(String field, @Nullable String value) {
+    validateNotNull(field, value);
+    if (value.isEmpty()) {
+      if (id != null) {
+        throw new ReplicationPersistenceException(
+            "empty " + type + " " + field + " for object: " + id);
+      }
+      throw new ReplicationPersistenceException("empty " + type + " " + field);
+    }
+    return value;
   }
 }

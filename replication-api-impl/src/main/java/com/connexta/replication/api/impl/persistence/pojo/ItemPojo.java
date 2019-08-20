@@ -26,8 +26,8 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
  * supported fields for all supported versions from the database. It also provides the capability of
  * persisting back the fields based on the latest version format.
  */
-@SolrDocument(collection = "replication_item")
-public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
+@SolrDocument(collection = ItemPojo.COLLECTION)
+public class ItemPojo extends Pojo<ItemPojo> {
   /**
    * List of possible versions:
    *
@@ -36,6 +36,8 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    * </ul>
    */
   public static final int CURRENT_VERSION = 1;
+
+  public static final String COLLECTION = "replication_item";
 
   @Indexed(name = "metadata_id", type = "string")
   private String metadataId;
@@ -67,15 +69,15 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
   @Indexed(name = "start_time", searchable = false)
   private Date startTime;
 
-  @Indexed(name = "status", type = "string", searchable = false)
+  @Indexed(name = "status", type = "string")
   private String status;
 
   @Indexed(name = "action", type = "string", searchable = false)
   private String action;
 
   /** This default ctor is needed for spring-solr to instantiate an item when querying solr */
-  public ReplicationItemPojo() {
-    super.setVersion(ReplicationItemPojo.CURRENT_VERSION);
+  public ItemPojo() {
+    super.setVersion(ItemPojo.CURRENT_VERSION);
   }
 
   /**
@@ -94,7 +96,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    * @param metadataId the metadata id
    * @return this for chaining
    */
-  public ReplicationItemPojo setMetadataId(@Nullable String metadataId) {
+  public ItemPojo setMetadataId(@Nullable String metadataId) {
     this.metadataId = metadataId;
     return this;
   }
@@ -117,7 +119,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    *     {@code null} if there is no resource associated with this metadata
    * @return this for chaining
    */
-  public ReplicationItemPojo setResourceModified(@Nullable Date resourceModified) {
+  public ItemPojo setResourceModified(@Nullable Date resourceModified) {
     this.resourceModified = resourceModified;
     return this;
   }
@@ -138,7 +140,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    * @param metadataModified the last time the metadata associated with this item was modified
    * @return this for chaining
    */
-  public ReplicationItemPojo setMetadataModified(@Nullable Date metadataModified) {
+  public ItemPojo setMetadataModified(@Nullable Date metadataModified) {
     this.metadataModified = metadataModified;
     return this;
   }
@@ -162,7 +164,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    *     resource associated with the metadata
    * @return this for chaining
    */
-  public ReplicationItemPojo setResourceSize(long resourceSize) {
+  public ItemPojo setResourceSize(long resourceSize) {
     this.resourceSize = resourceSize;
     return this;
   }
@@ -182,7 +184,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    * @param metadataSize the size in bytes of this item's metadata, cannot be negative
    * @return this for chaining
    */
-  public ReplicationItemPojo setMetadataSize(long metadataSize) {
+  public ItemPojo setMetadataSize(long metadataSize) {
     this.metadataSize = metadataSize;
     return this;
   }
@@ -203,7 +205,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    * @param startTime the time at which this item began processing
    * @return this for chaining
    */
-  public ReplicationItemPojo setStartTime(@Nullable Date startTime) {
+  public ItemPojo setStartTime(@Nullable Date startTime) {
     this.startTime = startTime;
     return this;
   }
@@ -224,7 +226,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    * @param doneTime the time at which this item finished processing
    * @return this for chaining
    */
-  public ReplicationItemPojo setDoneTime(@Nullable Date doneTime) {
+  public ItemPojo setDoneTime(@Nullable Date doneTime) {
     this.doneTime = doneTime;
     return this;
   }
@@ -245,7 +247,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    * @param status the status of this replication item
    * @return this for chaining
    */
-  public ReplicationItemPojo setStatus(@Nullable String status) {
+  public ItemPojo setStatus(@Nullable String status) {
     this.status = status;
     return this;
   }
@@ -266,7 +268,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    * @param action the action performed on the metadata/resource
    * @return this for chaining
    */
-  public ReplicationItemPojo setAction(@Nullable String action) {
+  public ItemPojo setAction(@Nullable String action) {
     this.action = action;
     return this;
   }
@@ -292,7 +294,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    *     from
    * @return this for chaining
    */
-  public ReplicationItemPojo setSource(@Nullable String source) {
+  public ItemPojo setSource(@Nullable String source) {
     this.source = source;
     return this;
   }
@@ -317,15 +319,15 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
    *     being replicated to
    * @return this for chaining
    */
-  public ReplicationItemPojo setDestination(@Nullable String destination) {
+  public ItemPojo setDestination(@Nullable String destination) {
     this.destination = destination;
     return this;
   }
 
   /**
-   * Gets the identifier of the {@link ReplicatorConfigPojo} this item belongs to.
+   * Gets the identifier of the {@link ConfigPojo} this item belongs to.
    *
-   * @return the id of the {@link ReplicatorConfigPojo} this item belongs to
+   * @return the id of the {@link ConfigPojo} this item belongs to
    */
   @Nullable
   public String getConfigId() {
@@ -333,12 +335,12 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
   }
 
   /**
-   * Sets the identifier of the {@link ReplicatorConfigPojo} this item belongs to.
+   * Sets the identifier of the {@link ConfigPojo} this item belongs to.
    *
-   * @param configId the id of the {@link ReplicatorConfigPojo} this item belongs to
+   * @param configId the id of the {@link ConfigPojo} this item belongs to
    * @return this for chaining
    */
-  public ReplicationItemPojo setConfigId(@Nullable String configId) {
+  public ItemPojo setConfigId(@Nullable String configId) {
     this.configId = configId;
     return this;
   }
@@ -363,8 +365,8 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
 
   @Override
   public boolean equals(Object obj) {
-    if (super.equals(obj) && (obj instanceof ReplicationItemPojo)) {
-      final ReplicationItemPojo pojo = (ReplicationItemPojo) obj;
+    if (super.equals(obj) && (obj instanceof ItemPojo)) {
+      final ItemPojo pojo = (ItemPojo) obj;
 
       return (metadataSize == pojo.metadataSize)
           && (resourceSize == pojo.resourceSize)
@@ -385,7 +387,7 @@ public class ReplicationItemPojo extends Pojo<ReplicationItemPojo> {
   @Override
   public String toString() {
     return String.format(
-        "ReplicationItemImpl[id=%s, version=%d, metadataId=%s, resourceModified=%s, metadataModified=%s, doneTime=%s, source=%s, destination=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, status=%s, action=%s]",
+        "ItemPojo[id=%s, version=%d, metadataId=%s, resourceModified=%s, metadataModified=%s, doneTime=%s, source=%s, destination=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, status=%s, action=%s]",
         getId(),
         getVersion(),
         metadataId,

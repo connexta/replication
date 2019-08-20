@@ -23,7 +23,7 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
  * supported fields for all supported versions from the database. It also provides the capability of
  * persisting back the fields based on the latest version format.
  */
-@SolrDocument(collection = "replication_site")
+@SolrDocument(collection = SitePojo.COLLECTION)
 public class SitePojo extends Pojo<SitePojo> {
   /**
    * List of possible versions:
@@ -32,16 +32,18 @@ public class SitePojo extends Pojo<SitePojo> {
    *   <li>1 - initial version.
    * </ul>
    */
-  public static final int CURRENT_VERSION = 2;
+  public static final int CURRENT_VERSION = 1;
+
+  public static final String COLLECTION = "replication_site";
 
   @Indexed(name = "remote_managed")
   private boolean isRemoteManaged = false;
 
-  @Indexed(name = "name")
+  @Indexed(name = "name", searchable = false)
   @Nullable
   private String name;
 
-  @Indexed(name = "url")
+  @Indexed(name = "url", searchable = false)
   @Nullable
   private String url;
 

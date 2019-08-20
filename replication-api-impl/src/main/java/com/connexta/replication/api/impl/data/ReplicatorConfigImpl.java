@@ -14,16 +14,16 @@
 package com.connexta.replication.api.impl.data;
 
 import com.connexta.replication.api.data.ReplicatorConfig;
-import com.connexta.replication.api.impl.persistence.pojo.ReplicatorConfigPojo;
+import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.Date;
+import java.time.Instant;
 import javax.annotation.Nullable;
 
 /**
  * ReplicatorConfigImpl represents a replication config and has methods that allow it to easily be
  * converted to, or from, a map.
  */
-public class ReplicatorConfigImpl extends AbstractPersistable<ReplicatorConfigPojo>
+public class ReplicatorConfigImpl extends AbstractPersistable<ConfigPojo>
     implements ReplicatorConfig {
   private static final String TYPE = "replicator config";
 
@@ -37,18 +37,18 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ReplicatorConfigPo
 
   private String filter;
 
-  private String description;
+  @Nullable private String description;
 
   private boolean suspended;
 
-  @Nullable private Date lastMetadataModified;
+  @Nullable private Instant lastMetadataModified;
 
   public ReplicatorConfigImpl() {
     super(ReplicatorConfigImpl.TYPE);
   }
 
-  protected ReplicatorConfigImpl(ReplicatorConfigPojo pojo) {
-    super(ReplicatorConfigImpl.TYPE);
+  protected ReplicatorConfigImpl(ConfigPojo pojo) {
+    super(ReplicatorConfigImpl.TYPE, null);
     readFrom(pojo);
   }
 
@@ -77,6 +77,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ReplicatorConfigPo
     return bidirectional;
   }
 
+  @Nullable
   @Override
   public String getDescription() {
     return description;
@@ -88,20 +89,21 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ReplicatorConfigPo
   }
 
   @Override
-  public void setLastMetadataModified(Date lastMetadataModified) {
+  public void setLastMetadataModified(Instant lastMetadataModified) {
     this.lastMetadataModified = lastMetadataModified;
   }
 
   @Nullable
   @Override
-  public Date getLastMetadataModified() {
+  public Instant getLastMetadataModified() {
     return lastMetadataModified;
   }
 
   @Override
-  protected ReplicatorConfigPojo writeTo(ReplicatorConfigPojo pojo) {
+  protected ConfigPojo writeTo(ConfigPojo pojo) {
     super.writeTo(pojo);
-    return pojo.setName(name)
+    return pojo.setVersion(ConfigPojo.CURRENT_VERSION)
+        .setName(name)
         .setSource(source)
         .setDestination(destination)
         .setFilter(filter)
@@ -112,11 +114,11 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ReplicatorConfigPo
   }
 
   @Override
-  protected void readFrom(ReplicatorConfigPojo pojo) {
+  protected void readFrom(ConfigPojo pojo) {
     super.readFrom(pojo);
     setOrFailIfNullOrEmpty("name", pojo::getName, this::setName);
     setOrFailIfNullOrEmpty("source", pojo::getSource, this::setSource);
-    setOrFailIfNullOrEmpty("destination", pojo::getName, this::setDestination);
+    setOrFailIfNullOrEmpty("destination", pojo::getDestination, this::setDestination);
     setOrFailIfNullOrEmpty("filter", pojo::getFilter, this::setFilter);
     this.description = pojo.getDescription();
     this.suspended = pojo.isSuspended();

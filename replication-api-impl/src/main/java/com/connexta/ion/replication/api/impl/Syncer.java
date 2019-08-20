@@ -33,6 +33,7 @@ import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.impl.data.ReplicationItemImpl;
 import com.connexta.replication.api.impl.persistence.ReplicationItemManager;
 import com.connexta.replication.api.impl.persistence.ReplicatorConfigManager;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -173,10 +174,10 @@ public class Syncer {
           replicationItemManager.save(item);
           callbacks.forEach(callback -> callback.accept(item));
         }
+        final Instant lastModified = replicatorConfig.getLastMetadataModified();
 
-        if (replicatorConfig.getLastMetadataModified() == null
-            || metadata.getMetadataModified().after(replicatorConfig.getLastMetadataModified())) {
-          replicatorConfig.setLastMetadataModified(metadata.getMetadataModified());
+        if (lastModified == null || metadata.getMetadataModified().after(Date.from(lastModified))) {
+          replicatorConfig.setLastMetadataModified(metadata.getMetadataModified().toInstant());
           configs.save(replicatorConfig);
         }
       }
@@ -288,8 +289,10 @@ public class Syncer {
 
     @Nullable
     private Date getModifiedAfter() {
-      if (replicatorConfig.getLastMetadataModified() != null) {
-        return replicatorConfig.getLastMetadataModified();
+      final Instant lastModified = replicatorConfig.getLastMetadataModified();
+
+      if (lastModified != null) {
+        return Date.from(lastModified);
       } else {
         LOGGER.trace("no previous successful run for config {} found.", replicatorConfig.getName());
         return null;

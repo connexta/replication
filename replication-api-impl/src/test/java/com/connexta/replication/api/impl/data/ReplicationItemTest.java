@@ -165,6 +165,7 @@ public class ReplicationItemTest {
   public void testToString() {
     ToStringVerifier.forClass(ReplicationItemImpl.class)
         .withClassName(NameStyle.SIMPLE_NAME)
+        .withIgnoredFields("type")
         .verify();
   }
 

@@ -142,7 +142,7 @@ public class ReplicatorImplTest {
     when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
 
     Syncer.Job job = mock(Syncer.Job.class);
-    doThrow(Exception.class).when(job).sync();
+    doThrow(RuntimeException.class).when(job).sync();
     when(syncer.create(destinationNode, sourceNode, replicatorConfig, Set.of())).thenReturn(job);
 
     // when
@@ -182,8 +182,6 @@ public class ReplicatorImplTest {
     when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenReturn(nodeAdapterFactory);
 
     Syncer.Job job = mock(Syncer.Job.class);
-    when(syncer.create(sourceNode, destinationNode, replicatorConfig, Set.of())).thenReturn(job);
-    when(syncer.create(destinationNode, sourceNode, replicatorConfig, Set.of())).thenReturn(job);
 
     // when
     replicator.executeSyncRequest(syncRequest);
@@ -254,7 +252,6 @@ public class ReplicatorImplTest {
     when(replicatorConfig.getSource()).thenReturn(SOURCE_ID);
     when(replicatorConfig.getDestination()).thenReturn(DESTINATION_ID);
     when(replicatorConfig.isBidirectional()).thenReturn(true);
-    when(replicatorConfig.getId()).thenReturn(REPLICATOR_CONFIG_ID);
     return replicatorConfig;
   }
 }

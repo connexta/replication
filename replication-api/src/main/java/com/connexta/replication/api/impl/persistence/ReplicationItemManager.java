@@ -46,22 +46,6 @@ public interface ReplicationItemManager extends DataManager<ReplicationItem> {
   List<ReplicationItem> getAllForConfig(String configId, int startIndex, int pageSize);
 
   /**
-   * Deletes all {@code ReplicationItem}s.
-   *
-   * @throws ReplicationPersistenceException RuntimeException thrown if delete was unsuccessful
-   */
-  void removeAll();
-
-  /**
-   * Delete an item associated with the given {@link Metadata} id.
-   *
-   * @param metadataId the metadata's id
-   * @param source the source {@link NodeAdapter} name
-   * @param destination the destination {@link NodeAdapter} name
-   */
-  void remove(String metadataId, String source, String destination);
-
-  /**
    * Get the list of IDs for {@link ReplicationItem}s that failed to be transferred between the
    * source and destination {@link NodeAdapter}s.
    *

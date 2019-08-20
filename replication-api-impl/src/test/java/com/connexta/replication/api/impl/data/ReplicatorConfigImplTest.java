@@ -16,7 +16,7 @@ package com.connexta.replication.api.impl.data;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.util.Date;
+import java.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,7 +31,7 @@ public class ReplicatorConfigImplTest {
 
   @Test
   public void gettersAndSetters() {
-    Date lastMetadataModified = new Date();
+    Instant lastMetadataModified = Instant.now();
     config.setName("name");
     config.setBidirectional(true);
     config.setSource("source");

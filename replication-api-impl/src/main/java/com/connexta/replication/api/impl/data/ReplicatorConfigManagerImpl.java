@@ -13,11 +13,10 @@
  */
 package com.connexta.replication.api.impl.data;
 
-
 import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.impl.persistence.ReplicatorConfigManager;
-import com.connexta.replication.api.impl.persistence.pojo.ReplicatorConfigPojo;
+import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import com.connexta.replication.api.impl.persistence.spring.ConfigRepository;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -53,8 +52,7 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
   @Override
   public void save(ReplicatorConfig replicatorConfig) {
     if (replicatorConfig instanceof ReplicatorConfigImpl) {
-      configRepository.save(
-          ((ReplicatorConfigImpl) replicatorConfig).writeTo(new ReplicatorConfigPojo()));
+      configRepository.save(((ReplicatorConfigImpl) replicatorConfig).writeTo(new ConfigPojo()));
     } else {
       throw new IllegalArgumentException(
           "Expected a ReplicatorConfigImpl but got a "

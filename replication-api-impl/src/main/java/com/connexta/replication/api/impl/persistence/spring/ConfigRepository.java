@@ -13,8 +13,8 @@
  */
 package com.connexta.replication.api.impl.persistence.spring;
 
-import com.connexta.replication.api.impl.persistence.pojo.ReplicatorConfigPojo;
+import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import org.springframework.data.repository.CrudRepository;
 
 // This will be AUTO IMPLEMENTED by Spring into a Bean called configRepository
-public interface ConfigRepository extends CrudRepository<ReplicatorConfigPojo, String> {}
+public interface ConfigRepository extends CrudRepository<ConfigPojo, String> {}

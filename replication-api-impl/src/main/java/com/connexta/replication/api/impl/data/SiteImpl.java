@@ -37,7 +37,7 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   }
 
   protected SiteImpl(SitePojo pojo) {
-    super(SiteImpl.TYPE);
+    super(SiteImpl.TYPE, null);
     readFrom(pojo);
   }
 
@@ -74,7 +74,11 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   @Override
   public SitePojo writeTo(SitePojo pojo) {
     super.writeTo(pojo);
-    return pojo.setName(name).setUrl(url).setRemoteManaged(isRemoteManaged).setType(type);
+    return pojo.setVersion(SitePojo.CURRENT_VERSION)
+        .setName(name)
+        .setUrl(url)
+        .setRemoteManaged(isRemoteManaged)
+        .setType(type);
   }
 
   @Override

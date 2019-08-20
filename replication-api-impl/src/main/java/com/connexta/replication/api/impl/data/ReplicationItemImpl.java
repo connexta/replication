@@ -16,13 +16,13 @@ package com.connexta.replication.api.impl.data;
 import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.Status;
 import com.connexta.replication.api.data.ReplicationItem;
-import com.connexta.replication.api.impl.persistence.pojo.ReplicationItemPojo;
+import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Date;
 import java.util.UUID;
 import org.apache.commons.lang3.Validate;
 
-public class ReplicationItemImpl extends AbstractPersistable<ReplicationItemPojo>
-    implements ReplicationItem {
+public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implements ReplicationItem {
   private static final String TYPE = "replication item";
 
   private String metadataId;
@@ -54,8 +54,8 @@ public class ReplicationItemImpl extends AbstractPersistable<ReplicationItemPojo
     super(ReplicationItemImpl.TYPE);
   }
 
-  protected ReplicationItemImpl(ReplicationItemPojo pojo) {
-    super(ReplicationItemImpl.TYPE);
+  protected ReplicationItemImpl(ItemPojo pojo) {
+    super(ReplicationItemImpl.TYPE, null);
     readFrom(pojo);
   }
 
@@ -169,9 +169,10 @@ public class ReplicationItemImpl extends AbstractPersistable<ReplicationItemPojo
   }
 
   @Override
-  protected ReplicationItemPojo writeTo(ReplicationItemPojo pojo) {
+  protected ItemPojo writeTo(ItemPojo pojo) {
     super.writeTo(pojo);
-    return pojo.setMetadataId(metadataId)
+    return pojo.setVersion(ItemPojo.CURRENT_VERSION)
+        .setMetadataId(metadataId)
         .setConfigId(configId)
         .setSource(source)
         .setDestination(destination)
@@ -186,7 +187,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ReplicationItemPojo
   }
 
   @Override
-  protected void readFrom(ReplicationItemPojo pojo) {
+  protected void readFrom(ItemPojo pojo) {
     super.readFrom(pojo);
     setOrFailIfNullOrEmpty("metadataId", pojo::getMetadataId, this::setMetadataId);
     setOrFailIfNullOrEmpty("configId", pojo::getConfigId, this::setConfigId);
@@ -198,43 +199,54 @@ public class ReplicationItemImpl extends AbstractPersistable<ReplicationItemPojo
     this.resourceSize = pojo.getResourceSize();
     this.metadataModified = pojo.getMetadataModified();
     this.metadataSize = pojo.getMetadataSize();
-    convertAndSetEnumValue(Action.class, Action.UNKNOWN, pojo::getAction, this::setAction);
-    convertAndSetEnumValue(Status.class, Status.FAILURE, pojo::getStatus, this::setStatus);
+    convertAndSetEnumValueOrFailIfNullOrEmpty(
+        "action", Action.class, Action.UNKNOWN, pojo::getAction, this::setAction);
+    convertAndSetEnumValueOrFailIfNullOrEmpty(
+        "status", Status.class, Status.FAILURE, pojo::getStatus, this::setStatus);
   }
 
-  private void setMetadataId(String metadataId) {
+  @VisibleForTesting
+  void setMetadataId(String metadataId) {
     this.metadataId = metadataId;
   }
 
-  private void setConfigId(String configId) {
+  @VisibleForTesting
+  void setConfigId(String configId) {
     this.configId = configId;
   }
 
-  private void setSource(String source) {
+  @VisibleForTesting
+  void setSource(String source) {
     this.source = source;
   }
 
-  private void setDestination(String destination) {
+  @VisibleForTesting
+  void setDestination(String destination) {
     this.destination = destination;
   }
 
-  private void setStartTime(Date startTime) {
+  @VisibleForTesting
+  void setStartTime(Date startTime) {
     this.startTime = startTime;
   }
 
-  private void setDoneTime(Date doneTime) {
+  @VisibleForTesting
+  void setDoneTime(Date doneTime) {
     this.doneTime = doneTime;
   }
 
-  private void setAction(Action action) {
+  @VisibleForTesting
+  void setAction(Action action) {
     this.action = action;
   }
 
-  private void setStatus(Status status) {
+  @VisibleForTesting
+  void setStatus(Status status) {
     this.status = status;
   }
 
-  private double toBytesPerSec(double bytesPerMs) {
+  @VisibleForTesting
+  double toBytesPerSec(double bytesPerMs) {
     return bytesPerMs / 1000;
   }
 

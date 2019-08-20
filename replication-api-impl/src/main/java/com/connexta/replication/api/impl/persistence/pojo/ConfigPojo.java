@@ -14,7 +14,7 @@
 package com.connexta.replication.api.impl.persistence.pojo;
 
 import com.connexta.ion.replication.api.data.QueryRequest;
-import java.util.Date;
+import java.time.Instant;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.data.solr.core.mapping.Indexed;
@@ -25,8 +25,8 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
  * supported fields for all supported versions from the database. It also provides the capability of
  * persisting back the fields based on the latest version format.
  */
-@SolrDocument(collection = "replication_config")
-public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
+@SolrDocument(collection = ConfigPojo.COLLECTION)
+public class ConfigPojo extends Pojo<ConfigPojo> {
   /**
    * List of possible versions:
    *
@@ -36,39 +36,41 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    */
   public static final int CURRENT_VERSION = 1;
 
-  @Indexed(name = "name")
+  public static final String COLLECTION = "replication_config";
+
+  @Indexed(name = "name", searchable = false)
   @Nullable
   private String name;
 
-  @Indexed(name = "bidirectional")
+  @Indexed(name = "bidirectional", searchable = false)
   private boolean bidirectional;
 
-  @Indexed(name = "source")
+  @Indexed(name = "source", searchable = false)
   @Nullable
   private String source;
 
-  @Indexed(name = "destination")
+  @Indexed(name = "destination", searchable = false)
   @Nullable
   private String destination;
 
-  @Indexed(name = "filter")
+  @Indexed(name = "filter", searchable = false)
   @Nullable
   private String filter;
 
-  @Indexed(name = "description")
+  @Indexed(name = "description", searchable = false)
   @Nullable
   private String description;
 
-  @Indexed(name = "suspended")
+  @Indexed(name = "suspended", searchable = false)
   private boolean suspended;
 
-  @Indexed(name = "last_metadata_modified")
+  @Indexed(name = "last_metadata_modified", searchable = false)
   @Nullable
-  private Date lastMetadataModified;
+  private Instant lastMetadataModified;
 
   /** Instantiates a default replicator config pojo set with the current version. */
-  public ReplicatorConfigPojo() {
-    super.setVersion(CURRENT_VERSION);
+  public ConfigPojo() {
+    super.setVersion(ConfigPojo.CURRENT_VERSION);
   }
 
   /**
@@ -87,7 +89,7 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    * @param name the new configuration name
    * @return this for chaining
    */
-  public ReplicatorConfigPojo setName(@Nullable String name) {
+  public ConfigPojo setName(@Nullable String name) {
     this.name = name;
     return this;
   }
@@ -108,7 +110,7 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    * @param source the id for the source site
    * @return this for chaining
    */
-  public ReplicatorConfigPojo setSource(@Nullable String source) {
+  public ConfigPojo setSource(@Nullable String source) {
     this.source = source;
     return this;
   }
@@ -129,7 +131,7 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    * @param destination the id for the destination site
    * @return this for chaining
    */
-  public ReplicatorConfigPojo setDestination(@Nullable String destination) {
+  public ConfigPojo setDestination(@Nullable String destination) {
     this.destination = destination;
     return this;
   }
@@ -150,7 +152,7 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    * @param filter the new filter to use
    * @return this for chaining
    */
-  public ReplicatorConfigPojo setFilter(@Nullable String filter) {
+  public ConfigPojo setFilter(@Nullable String filter) {
     this.filter = filter;
     return this;
   }
@@ -170,7 +172,7 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    * @param bidirectional flag indicating whether this configuration is bidirectional or not
    * @return this for chaining
    */
-  public ReplicatorConfigPojo setBidirectional(boolean bidirectional) {
+  public ConfigPojo setBidirectional(boolean bidirectional) {
     this.bidirectional = bidirectional;
     return this;
   }
@@ -191,7 +193,7 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    * @param description the new description
    * @return this for chaining
    */
-  public ReplicatorConfigPojo setDescription(@Nullable String description) {
+  public ConfigPojo setDescription(@Nullable String description) {
     this.description = description;
     return this;
   }
@@ -211,20 +213,20 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    * @param suspended the suspended state to give this config
    * @return this for chaining
    */
-  public ReplicatorConfigPojo setSuspended(boolean suspended) {
+  public ConfigPojo setSuspended(boolean suspended) {
     this.suspended = suspended;
     return this;
   }
 
   /**
-   * Gets a {@link Date} which represents the modified date of the last metadata that was attempted
-   * to be replicated. If available, this should be used by the {@link
+   * Gets a {@link Instant} which represents the modified instant of the last metadata that was
+   * attempted to be replicated. If available, this should be used by the {@link
    * QueryRequest#getModifiedAfter()}.
    *
-   * @return the {@link Date}, or {@code null} if no metadata has attempted to be replicated
+   * @return the {@link Instant}, or {@code null} if no metadata has attempted to be replicated
    */
   @Nullable
-  public Date getLastMetadataModified() {
+  public Instant getLastMetadataModified() {
     return lastMetadataModified;
   }
 
@@ -234,7 +236,7 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
    * @param lastMetadataModified the metadata's modified date
    * @return this for chaining
    */
-  public ReplicatorConfigPojo setLastMetadataModified(@Nullable Date lastMetadataModified) {
+  public ConfigPojo setLastMetadataModified(@Nullable Instant lastMetadataModified) {
     this.lastMetadataModified = lastMetadataModified;
     return this;
   }
@@ -255,8 +257,8 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
 
   @Override
   public boolean equals(Object obj) {
-    if (super.equals(obj) && (obj instanceof ReplicatorConfigPojo)) {
-      final ReplicatorConfigPojo pojo = (ReplicatorConfigPojo) obj;
+    if (super.equals(obj) && (obj instanceof ConfigPojo)) {
+      final ConfigPojo pojo = (ConfigPojo) obj;
 
       return (bidirectional == pojo.bidirectional)
           && (suspended == pojo.suspended)
@@ -273,7 +275,7 @@ public class ReplicatorConfigPojo extends Pojo<ReplicatorConfigPojo> {
   @Override
   public String toString() {
     return String.format(
-        "ReplicatorConfigPojo[id=%s, version=%d, name=%s, source=%s, destination=%s, filter=%s, bidirectional=%s, description=%s, suspended=%s, lastMetadataModified=%s]",
+        "ConfigPojo[id=%s, version=%d, name=%s, source=%s, destination=%s, filter=%s, bidirectional=%s, description=%s, suspended=%s, lastMetadataModified=%s]",
         getId(),
         getVersion(),
         name,

@@ -119,7 +119,6 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void scheduleReplicationWhenDestinationNotMatched() throws Exception {
-    when(config.getName()).thenReturn("test");
     when(config.getDestination()).thenReturn("some_other_site");
     when(configManager.objects()).thenReturn(configStream);
     runner.scheduleReplication();
@@ -128,8 +127,6 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void scheduleReplicationWithSuspend() throws Exception {
-    when(config.getName()).thenReturn("test");
-    when(config.getDestination()).thenReturn(ReplicatorRunnerTest.SITE_ID);
     when(config.isSuspended()).thenReturn(true);
     when(configManager.objects()).thenReturn(configStream);
     runner.scheduleReplication();

@@ -13,24 +13,18 @@
  */
 package com.connexta.replication.api.impl.persistence.spring;
 
-import com.connexta.ion.replication.api.Status;
-import com.connexta.replication.api.impl.persistence.pojo.ReplicationItemPojo;
+import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 // This will be AUTO IMPLEMENTED by Spring into a Bean called itemRepository
-public interface ItemRepository extends PagingAndSortingRepository<ReplicationItemPojo, String> {
+public interface ItemRepository extends PagingAndSortingRepository<ItemPojo, String> {
 
-  Page<ReplicationItemPojo> findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
+  Page<ItemPojo> findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
       String configId, String metadataId, Pageable pageable);
 
-  Page<ReplicationItemPojo> findByConfigId(String configId, Pageable pageable);
-
-  void deleteByIdAndSourceAndDestination(String id, String source, String destination);
+  Page<ItemPojo> findByConfigId(String configId, Pageable pageable);
 
   void deleteByConfigId(String configId);
-
-  Page<ReplicationItemPojo> findByConfigIdAndStatus(
-      String configId, Status status, Pageable pageable);
 }

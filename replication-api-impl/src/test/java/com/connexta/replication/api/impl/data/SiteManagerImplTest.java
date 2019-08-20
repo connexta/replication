@@ -18,9 +18,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.connexta.replication.api.data.Site;
+import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
 import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,14 +43,30 @@ public class SiteManagerImplTest {
     store = new SiteManagerImpl(siteRepository);
   }
 
-  // BOB: fix
-  //  @Test
-  //  public void getSites() {
-  //    SiteImpl site = new SiteImpl();
-  //    when(siteRepository.findAll()).thenReturn(Collections.singletonList(site));
-  //
-  //    assertThat(store.objects().anyMatch(site::equals), is(true));
-  //  }
+  @Test
+  public void getSites() {
+    final SitePojo site =
+        new SitePojo()
+            .setId("id")
+            .setRemoteManaged(true)
+            .setName("name")
+            .setUrl("url")
+            .setType("type");
+
+    when(siteRepository.findAll()).thenReturn(Collections.singletonList(site));
+
+    assertThat(
+        store
+            .objects()
+            .anyMatch(
+                s ->
+                    s.getId().equals(site.getId())
+                        && (s.isRemoteManaged() == site.isRemoteManaged())
+                        && s.getName().equals(site.getName())
+                        && s.getUrl().equals(site.getUrl())
+                        && s.getType().equals(site.getType())),
+        is(true));
+  }
 
   @Test
   public void createSite() {
