@@ -20,12 +20,15 @@ import com.connexta.ion.replication.api.impl.ReplicatorImpl;
 import com.connexta.ion.replication.api.impl.ReplicatorRunner;
 import com.connexta.ion.replication.api.impl.Syncer;
 import com.connexta.ion.replication.spring.ReplicationProperties;
+import com.connexta.replication.api.impl.data.FilterManagerImpl;
 import com.connexta.replication.api.impl.data.ReplicationItemManagerImpl;
 import com.connexta.replication.api.impl.data.ReplicatorConfigManagerImpl;
 import com.connexta.replication.api.impl.data.SiteManagerImpl;
 import com.connexta.replication.api.impl.persistence.spring.ConfigRepository;
+import com.connexta.replication.api.impl.persistence.spring.FilterRepository;
 import com.connexta.replication.api.impl.persistence.spring.ItemRepository;
 import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
+import com.connexta.replication.api.persistence.FilterManager;
 import com.connexta.replication.api.persistence.ReplicationItemManager;
 import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import com.connexta.replication.api.persistence.SiteManager;
@@ -52,6 +55,19 @@ public class ServiceConfig {
   @Bean
   public SiteManager siteManager(SiteRepository siteRepository) {
     return new SiteManagerImpl(siteRepository);
+  }
+
+  /**
+   * Used to create a {@link FilterManager} bean which provides an abstraction layer for CRUD
+   * operations involving {@link com.connexta.replication.api.data.Filter}s.
+   *
+   * @param filterRepository a {@link org.springframework.data.repository.CrudRepository} for basic
+   *     CRUD operations
+   * @return the {@link FilterManager}
+   */
+  @Bean
+  public FilterManager filterManager(FilterRepository filterRepository) {
+    return new FilterManagerImpl(filterRepository);
   }
 
   @Bean
