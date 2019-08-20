@@ -40,6 +40,36 @@ public class SiteImplTest {
   }
 
   @Test
+  public void testDefaultCtor() throws Exception {
+    final SiteImpl persistable = new SiteImpl();
+
+    Assert.assertThat(persistable.getId(), Matchers.not(Matchers.emptyOrNullString()));
+    Assert.assertThat(persistable.getName(), Matchers.nullValue());
+    Assert.assertThat(persistable.getUrl(), Matchers.nullValue());
+    Assert.assertThat(persistable.getType(), Matchers.nullValue());
+    Assert.assertThat(persistable.isRemoteManaged(), Matchers.equalTo(false));
+  }
+
+  @Test
+  public void testCtorWithPojo() throws Exception {
+    final SitePojo pojo =
+        new SitePojo()
+            .setId(SiteImplTest.ID)
+            .setRemoteManaged(SiteImplTest.REMOTE_MANAGED)
+            .setName(SiteImplTest.NAME)
+            .setUrl(SiteImplTest.URL)
+            .setType(SiteImplTest.TYPE);
+
+    final SiteImpl persistable = new SiteImpl(pojo);
+
+    Assert.assertThat(persistable.getId(), Matchers.equalTo(pojo.getId()));
+    Assert.assertThat(persistable.getName(), Matchers.equalTo(pojo.getName()));
+    Assert.assertThat(persistable.getUrl(), Matchers.equalTo(pojo.getUrl()));
+    Assert.assertThat(persistable.isRemoteManaged(), Matchers.equalTo(pojo.isRemoteManaged()));
+    Assert.assertThat(persistable.getType(), Matchers.equalTo(pojo.getType()));
+  }
+
+  @Test
   public void testGetName() throws Exception {
     Assert.assertThat(persistable.getName(), Matchers.equalTo(SiteImplTest.NAME));
   }
@@ -180,6 +210,103 @@ public class SiteImplTest {
             .setName(SiteImplTest.NAME)
             .setUrl(SiteImplTest.URL)
             .setType(SiteImplTest.TYPE)
+            .setRemoteManaged(SiteImplTest.REMOTE_MANAGED);
+    final SiteImpl persistable = new SiteImpl();
+
+    persistable.readFrom(pojo);
+
+    Assert.assertThat(persistable.getId(), Matchers.equalTo(pojo.getId()));
+    Assert.assertThat(persistable.getName(), Matchers.equalTo(pojo.getName()));
+    Assert.assertThat(persistable.getUrl(), Matchers.equalTo(pojo.getUrl()));
+    Assert.assertThat(persistable.isRemoteManaged(), Matchers.equalTo(pojo.isRemoteManaged()));
+    Assert.assertThat(persistable.getType(), Matchers.equalTo(pojo.getType()));
+  }
+
+  @Test
+  public void testReadFromUnsupportedVersion() throws Exception {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage(Matchers.matchesPattern(".*unsupported.*version.*"));
+
+    final SitePojo pojo = new SitePojo().setVersion(-1).setId(SiteImplTest.ID);
+    final SiteImpl persistable = new SiteImpl();
+
+    persistable.readFrom(pojo);
+  }
+
+  @Test
+  public void testReadFromWithNullName() throws Exception {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage(Matchers.matchesPattern(".*missing.*name.*"));
+
+    final SitePojo pojo =
+        new SitePojo()
+            .setId(SiteImplTest.ID)
+            .setUrl(SiteImplTest.URL)
+            .setType(SiteImplTest.TYPE)
+            .setRemoteManaged(SiteImplTest.REMOTE_MANAGED);
+    final SiteImpl persistable = new SiteImpl();
+
+    persistable.readFrom(pojo);
+  }
+
+  @Test
+  public void testReadFromWithEmptyName() throws Exception {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage(Matchers.matchesPattern(".*empty.*name.*"));
+
+    final SitePojo pojo =
+        new SitePojo()
+            .setId(SiteImplTest.ID)
+            .setName("")
+            .setUrl(SiteImplTest.URL)
+            .setType(SiteImplTest.TYPE)
+            .setRemoteManaged(SiteImplTest.REMOTE_MANAGED);
+    final SiteImpl persistable = new SiteImpl();
+
+    persistable.readFrom(pojo);
+  }
+
+  @Test
+  public void testReadFromWithNullUrl() throws Exception {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage(Matchers.matchesPattern(".*missing.*url.*"));
+
+    final SitePojo pojo =
+        new SitePojo()
+            .setId(SiteImplTest.ID)
+            .setName(SiteImplTest.NAME)
+            .setType(SiteImplTest.TYPE)
+            .setRemoteManaged(SiteImplTest.REMOTE_MANAGED);
+    final SiteImpl persistable = new SiteImpl();
+
+    persistable.readFrom(pojo);
+  }
+
+  @Test
+  public void testReadFromWithEmptylUrl() throws Exception {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage(Matchers.matchesPattern(".*empty.*url.*"));
+
+    final SitePojo pojo =
+        new SitePojo()
+            .setId(SiteImplTest.ID)
+            .setName(SiteImplTest.NAME)
+            .setUrl("")
+            .setType(SiteImplTest.TYPE)
+            .setRemoteManaged(SiteImplTest.REMOTE_MANAGED);
+    final SiteImpl persistable = new SiteImpl();
+
+    persistable.readFrom(pojo);
+  }
+
+  @Test
+  public void testReadFromWithNullType() throws Exception {
+    final SitePojo pojo =
+        new SitePojo()
+            .setId(SiteImplTest.ID)
+            .setName(SiteImplTest.NAME)
+            .setUrl(SiteImplTest.URL)
+            .setType(null)
             .setRemoteManaged(SiteImplTest.REMOTE_MANAGED);
     final SiteImpl persistable = new SiteImpl();
 
