@@ -24,7 +24,7 @@ import com.connexta.ion.replication.api.SyncRequest;
 import com.connexta.replication.api.data.ReplicationItem;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.data.Site;
-import com.connexta.replication.api.impl.persistence.SiteManager;
+import com.connexta.replication.api.persistence.SiteManager;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.IOException;

@@ -31,7 +31,7 @@ import com.connexta.ion.replication.api.SyncRequest;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.impl.data.SiteImpl;
-import com.connexta.replication.api.impl.persistence.SiteManager;
+import com.connexta.replication.api.persistence.SiteManager;
 import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;

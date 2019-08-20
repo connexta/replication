@@ -15,9 +15,9 @@ package com.connexta.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.replication.api.data.ReplicatorConfig;
-import com.connexta.replication.api.impl.persistence.ReplicatorConfigManager;
 import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import com.connexta.replication.api.impl.persistence.spring.ConfigRepository;
+import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 

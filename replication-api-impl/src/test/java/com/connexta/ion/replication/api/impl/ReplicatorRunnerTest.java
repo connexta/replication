@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.SyncRequest;
 import com.connexta.replication.api.data.ReplicatorConfig;
-import com.connexta.replication.api.impl.persistence.ReplicatorConfigManager;
+import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;

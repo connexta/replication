@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.api.impl.data;
 
+import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import com.google.common.annotations.VisibleForTesting;
@@ -116,6 +117,15 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ConfigPojo>
   @Override
   protected void readFrom(ConfigPojo pojo) {
     super.readFrom(pojo);
+    if (pojo.getVersion() < ConfigPojo.CURRENT_VERSION) {
+      throw new ReplicationPersistenceException(
+          "unsupported "
+              + ReplicatorConfigImpl.TYPE
+              + " version: "
+              + pojo.getVersion()
+              + " for object: "
+              + getId());
+    } // do support pojo.getVersion() > CURRENT_VERSION for forward compatibility
     setOrFailIfNullOrEmpty("name", pojo::getName, this::setName);
     setOrFailIfNullOrEmpty("source", pojo::getSource, this::setSource);
     setOrFailIfNullOrEmpty("destination", pojo::getDestination, this::setDestination);

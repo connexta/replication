@@ -18,7 +18,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.impl.data.SyncRequestImpl;
 import com.connexta.replication.api.data.ReplicatorConfig;
-import com.connexta.replication.api.impl.persistence.ReplicatorConfigManager;
+import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Set;

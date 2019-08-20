@@ -14,6 +14,7 @@
 package com.connexta.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.Action;
+import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.ion.replication.api.Status;
 import com.connexta.replication.api.data.ReplicationItem;
 import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
@@ -189,6 +190,15 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   @Override
   protected void readFrom(ItemPojo pojo) {
     super.readFrom(pojo);
+    if (pojo.getVersion() < ItemPojo.CURRENT_VERSION) {
+      throw new ReplicationPersistenceException(
+          "unsupported "
+              + ReplicationItemImpl.TYPE
+              + " version: "
+              + pojo.getVersion()
+              + " for object: "
+              + getId());
+    } // do support pojo.getVersion() > CURRENT_VERSION for forward compatibility
     setOrFailIfNullOrEmpty("metadataId", pojo::getMetadataId, this::setMetadataId);
     setOrFailIfNullOrEmpty("configId", pojo::getConfigId, this::setConfigId);
     setOrFailIfNullOrEmpty("source", pojo::getSource, this::setSource);

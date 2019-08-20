@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.api.impl.data;
 
+import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
 import com.google.common.annotations.VisibleForTesting;
@@ -84,6 +85,15 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   @Override
   public void readFrom(SitePojo pojo) {
     super.readFrom(pojo);
+    if (pojo.getVersion() < SitePojo.CURRENT_VERSION) {
+      throw new ReplicationPersistenceException(
+          "unsupported "
+              + SiteImpl.TYPE
+              + " version: "
+              + pojo.getVersion()
+              + " for object: "
+              + getId());
+    } // do support pojo.getVersion() > CURRENT_VERSION for forward compatibility
     setOrFailIfNullOrEmpty("name", pojo::getName, this::setName);
     setOrFailIfNullOrEmpty("url", pojo::getUrl, this::setUrl);
     this.type = pojo.getType();

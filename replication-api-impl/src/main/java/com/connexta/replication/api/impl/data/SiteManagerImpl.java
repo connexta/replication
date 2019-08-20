@@ -15,9 +15,9 @@ package com.connexta.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.replication.api.data.Site;
-import com.connexta.replication.api.impl.persistence.SiteManager;
 import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
 import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
+import com.connexta.replication.api.persistence.SiteManager;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 

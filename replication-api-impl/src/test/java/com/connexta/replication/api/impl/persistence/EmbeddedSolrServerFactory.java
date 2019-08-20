@@ -26,7 +26,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ResourceUtils;
 
 /**
- * This class provides an implementation for creating an embedded Solr server factory. If will
+ * This class provides an implementation for creating an embedded Solr server factory. It will
  * automatically shutdown if it is registered as a bean with spring.
  */
 public class EmbeddedSolrServerFactory implements SolrClientFactory, DisposableBean {

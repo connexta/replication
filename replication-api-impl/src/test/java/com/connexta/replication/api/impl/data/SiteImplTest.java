@@ -23,6 +23,7 @@ import org.junit.rules.ExpectedException;
 
 public class SiteImplTest {
   private static final boolean REMOTE_MANAGED = true;
+  private static final String ID = "id";
   private static final String NAME = "testName";
   private static final String URL = "https://host:44";
   private static final String TYPE = "some-type";
@@ -169,5 +170,25 @@ public class SiteImplTest {
     Assert.assertThat(pojo.getUrl(), Matchers.equalTo(persistable.getUrl()));
     Assert.assertThat(pojo.isRemoteManaged(), Matchers.equalTo(persistable.isRemoteManaged()));
     Assert.assertThat(pojo.getType(), Matchers.nullValue());
+  }
+
+  @Test
+  public void testReadFromCurrentVersion() throws Exception {
+    final SitePojo pojo =
+        new SitePojo()
+            .setId(SiteImplTest.ID)
+            .setName(SiteImplTest.NAME)
+            .setUrl(SiteImplTest.URL)
+            .setType(SiteImplTest.TYPE)
+            .setRemoteManaged(SiteImplTest.REMOTE_MANAGED);
+    final SiteImpl persistable = new SiteImpl();
+
+    persistable.readFrom(pojo);
+
+    Assert.assertThat(persistable.getId(), Matchers.equalTo(pojo.getId()));
+    Assert.assertThat(persistable.getName(), Matchers.equalTo(pojo.getName()));
+    Assert.assertThat(persistable.getUrl(), Matchers.equalTo(pojo.getUrl()));
+    Assert.assertThat(persistable.isRemoteManaged(), Matchers.equalTo(pojo.isRemoteManaged()));
+    Assert.assertThat(persistable.getType(), Matchers.equalTo(pojo.getType()));
   }
 }
