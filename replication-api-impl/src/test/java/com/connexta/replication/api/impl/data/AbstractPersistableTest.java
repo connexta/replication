@@ -75,6 +75,30 @@ public class AbstractPersistableTest {
   }
 
   @Test
+  public void testWriteToWithNullId() throws Exception {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage(
+        Matchers.matchesPattern(".*missing.*" + AbstractPersistableTest.TYPE + ".*id.*"));
+
+    final TestPojo pojo = new TestPojo();
+    final TestPersistable persistable = new TestPersistable("type", null);
+
+    persistable.writeTo(pojo);
+  }
+
+  @Test
+  public void testWriteToWithEmptyId() throws Exception {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage(
+        Matchers.matchesPattern(".*empty.*" + AbstractPersistableTest.TYPE + ".*id.*"));
+
+    final TestPojo pojo = new TestPojo();
+    final TestPersistable persistable = new TestPersistable("type", "");
+
+    persistable.writeTo(pojo);
+  }
+
+  @Test
   public void testReadFrom() throws Exception {
     final TestPojo pojo =
         new TestPojo().setId(AbstractPersistableTest.ID).setVersion(TestPojo.CURRENT_VERSION);
@@ -453,7 +477,7 @@ public class AbstractPersistableTest {
       super(type);
     }
 
-    TestPersistable(String type, String id) {
+    TestPersistable(String type, @Nullable String id) {
       super(type, id);
     }
 

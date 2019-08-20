@@ -102,11 +102,11 @@ public class ReplicatorConfigImpl extends AbstractPersistable<ConfigPojo>
   @Override
   protected ConfigPojo writeTo(ConfigPojo pojo) {
     super.writeTo(pojo);
+    setOrFailIfNullOrEmpty("name", this::getName, pojo::setName);
+    setOrFailIfNullOrEmpty("source", this::getSource, pojo::setSource);
+    setOrFailIfNullOrEmpty("destination", this::getDestination, pojo::setDestination);
+    setOrFailIfNullOrEmpty("filter", this::getFilter, pojo::setFilter);
     return pojo.setVersion(ConfigPojo.CURRENT_VERSION)
-        .setName(name)
-        .setSource(source)
-        .setDestination(destination)
-        .setFilter(filter)
         .setDescription(description)
         .setSuspended(suspended)
         .setBidirectional(bidirectional)

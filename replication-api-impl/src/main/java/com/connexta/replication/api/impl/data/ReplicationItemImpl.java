@@ -171,13 +171,13 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   @Override
   protected ItemPojo writeTo(ItemPojo pojo) {
     super.writeTo(pojo);
+    setOrFailIfNullOrEmpty("metadataId", this::getMetadataId, pojo::setMetadataId);
+    setOrFailIfNullOrEmpty("configId", this::getConfigId, pojo::setConfigId);
+    setOrFailIfNullOrEmpty("source", this::getSource, pojo::setSource);
+    setOrFailIfNullOrEmpty("destination", this::getDestination, pojo::setDestination);
+    setOrFailIfNull("startTime", this::getStartTime, pojo::setStartTime);
+    setOrFailIfNull("doneTime", this::getDoneTime, pojo::setDoneTime);
     return pojo.setVersion(ItemPojo.CURRENT_VERSION)
-        .setMetadataId(metadataId)
-        .setConfigId(configId)
-        .setSource(source)
-        .setDestination(destination)
-        .setStartTime(startTime)
-        .setDoneTime(doneTime)
         .setResourceModified(resourceModified)
         .setResourceSize(resourceSize)
         .setMetadataModified(metadataModified)

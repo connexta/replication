@@ -77,7 +77,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    *     object
    */
   protected P writeTo(P pojo) {
-    pojo.setId(id);
+    setOrFailIfNullOrEmpty("id", this::getId, pojo::setId);
     return pojo;
   }
 
@@ -233,7 +233,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
     this.id = id;
   }
 
-  private <T> T validateNotNull(String field, @Nullable T value) {
+  protected <F> F validateNotNull(String field, @Nullable F value) {
     if (value == null) {
       if (id != null) {
         throw new ReplicationPersistenceException(
@@ -244,7 +244,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
     return value;
   }
 
-  private String validateNotNullAndNotEmpty(String field, @Nullable String value) {
+  protected String validateNotNullAndNotEmpty(String field, @Nullable String value) {
     validateNotNull(field, value);
     if (value.isEmpty()) {
       if (id != null) {

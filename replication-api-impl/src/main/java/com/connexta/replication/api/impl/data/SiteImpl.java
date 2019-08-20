@@ -74,9 +74,9 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   @Override
   public SitePojo writeTo(SitePojo pojo) {
     super.writeTo(pojo);
+    setOrFailIfNullOrEmpty("name", this::getName, pojo::setName);
+    setOrFailIfNullOrEmpty("url", this::getUrl, pojo::setUrl);
     return pojo.setVersion(SitePojo.CURRENT_VERSION)
-        .setName(name)
-        .setUrl(url)
         .setRemoteManaged(isRemoteManaged)
         .setType(type);
   }

@@ -76,7 +76,14 @@ public class ReplicatorConfigManagerImplTest {
 
   @Test
   public void saveConfig() {
-    manager.save(new ReplicatorConfigImpl());
+    final ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+
+    config.setId("id");
+    config.setName("name");
+    config.setSource("source");
+    config.setDestination("destination");
+    config.setFilter("filter");
+    manager.save(config);
     verify(configRepository).save(any(ConfigPojo.class));
   }
 
