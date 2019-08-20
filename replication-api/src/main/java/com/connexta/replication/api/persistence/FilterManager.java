@@ -11,32 +11,21 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.persistence;
 
-/** Defines the various priority levels supported for queued tasks. */
-public enum PriorityLevel {
-  HIGH((byte) 9),
-  MEDIUM((byte) 5),
-  LOW((byte) 0),
+import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.replication.api.data.Filter;
+import java.util.stream.Stream;
 
-  /**
-   * The unknown value is used for forward compatibility where a worker might not be able to
-   * understand this new priority and would mapped it automatically to priority level 1.
-   */
-  UNKNOWN((byte) 1);
-
-  private final byte level;
-
-  private PriorityLevel(byte level) {
-    this.level = level;
-  }
+/** Performs CRUD operations for {@link Filter}s. */
+public interface FilterManager extends DataManager<Filter> {
 
   /**
-   * Gets the level for this priority ranging from 9 being the highest level to 0 being the lowest.
+   * Gets all the filters associated with the given site ID.
    *
-   * @return the level for this priority
+   * @param siteId the site ID to retrieve filters by
+   * @return a {@link Stream} containing all of the filters for the site
+   * @throws ReplicationPersistenceException if there is an error fetching the filters
    */
-  public byte getLevel() {
-    return level;
-  }
+  Stream<Filter> filtersForSite(String siteId);
 }

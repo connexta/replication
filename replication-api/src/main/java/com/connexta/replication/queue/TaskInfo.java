@@ -20,11 +20,11 @@ import java.util.stream.Stream;
 /** Represents a task that can be queued for later processing by a worker. */
 public interface TaskInfo {
   /**
-   * Gets the priority for this task.
+   * Gets the priority for this task, represented as a number between 1 and 10.
    *
    * @return the priority for the task
    */
-  public PriorityLevel getPriority();
+  public byte getPriority();
 
   /**
    * Gets the identifier of the intel document this task is for.
