@@ -24,8 +24,8 @@ import static org.mockito.Mockito.when;
 
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.SyncRequest;
-import com.connexta.ion.replication.api.data.ReplicatorConfig;
-import com.connexta.ion.replication.api.persistence.ReplicatorConfigManager;
+import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -119,7 +119,6 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void scheduleReplicationWhenDestinationNotMatched() throws Exception {
-    when(config.getName()).thenReturn("test");
     when(config.getDestination()).thenReturn("some_other_site");
     when(configManager.objects()).thenReturn(configStream);
     runner.scheduleReplication();
@@ -128,8 +127,6 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void scheduleReplicationWithSuspend() throws Exception {
-    when(config.getName()).thenReturn("test");
-    when(config.getDestination()).thenReturn(ReplicatorRunnerTest.SITE_ID);
     when(config.isSuspended()).thenReturn(true);
     when(configManager.objects()).thenReturn(configStream);
     runner.scheduleReplication();

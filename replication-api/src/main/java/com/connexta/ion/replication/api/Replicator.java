@@ -13,6 +13,7 @@
  */
 package com.connexta.ion.replication.api;
 
+import com.connexta.replication.api.data.ReplicationItem;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;

@@ -13,7 +13,7 @@
  */
 package com.connexta.ion.replication.api;
 
-import com.connexta.ion.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.data.ReplicatorConfig;
 
 public interface SyncRequest {
 

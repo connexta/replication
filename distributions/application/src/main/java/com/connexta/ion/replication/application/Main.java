@@ -25,8 +25,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.solr.repository.config.EnableSolrRepositories;
 
-@SpringBootApplication(scanBasePackages = {"com.connexta.ion.replication"})
-@EnableSolrRepositories(basePackages = "com.connexta.ion.replication")
+@SpringBootApplication(
+    scanBasePackages = {"com.connexta.replication", "com.connexta.ion.replication"})
+@EnableSolrRepositories(basePackages = "com.connexta.replication")
 @EnableConfigurationProperties
 public class Main {
 

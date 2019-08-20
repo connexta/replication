@@ -14,7 +14,7 @@
 package com.connexta.ion.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.SyncRequest;
-import com.connexta.ion.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.data.ReplicatorConfig;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /** Simple SyncRequest implementation. */

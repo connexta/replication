@@ -16,23 +16,24 @@ package com.connexta.ion.replication.api.impl;
 import com.connexta.ion.replication.api.Action;
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.Replication;
-import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Status;
 import com.connexta.ion.replication.api.data.Metadata;
 import com.connexta.ion.replication.api.data.QueryRequest;
-import com.connexta.ion.replication.api.data.ReplicatorConfig;
 import com.connexta.ion.replication.api.data.Resource;
 import com.connexta.ion.replication.api.data.ResourceResponse;
 import com.connexta.ion.replication.api.impl.data.CreateRequestImpl;
 import com.connexta.ion.replication.api.impl.data.CreateStorageRequestImpl;
 import com.connexta.ion.replication.api.impl.data.DeleteRequestImpl;
-import com.connexta.ion.replication.api.impl.data.ReplicationItemImpl;
 import com.connexta.ion.replication.api.impl.data.ResourceRequestImpl;
 import com.connexta.ion.replication.api.impl.data.UpdateRequestImpl;
 import com.connexta.ion.replication.api.impl.data.UpdateStorageRequestImpl;
-import com.connexta.ion.replication.api.persistence.ReplicationItemManager;
-import com.connexta.ion.replication.api.persistence.ReplicatorConfigManager;
 import com.connexta.ion.replication.data.QueryRequestImpl;
+import com.connexta.replication.api.data.ReplicationItem;
+import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.impl.data.ReplicationItemImpl;
+import com.connexta.replication.api.persistence.ReplicationItemManager;
+import com.connexta.replication.api.persistence.ReplicatorConfigManager;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -131,7 +132,7 @@ public class Syncer {
       for (Metadata metadata : changeSet) {
         ReplicationItem existingItem =
             replicationItemManager
-                .getLatestItem(replicatorConfig.getId(), metadata.getId())
+                .getLatest(replicatorConfig.getId(), metadata.getId())
                 .orElse(null);
 
         Status status;
@@ -170,13 +171,13 @@ public class Syncer {
 
         if (status != null) {
           ReplicationItem item = builder.status(status).build();
-          replicationItemManager.saveItem(item);
+          replicationItemManager.save(item);
           callbacks.forEach(callback -> callback.accept(item));
         }
+        final Instant lastModified = replicatorConfig.getLastMetadataModified();
 
-        if (replicatorConfig.getLastMetadataModified() == null
-            || metadata.getMetadataModified().after(replicatorConfig.getLastMetadataModified())) {
-          replicatorConfig.setLastMetadataModified(metadata.getMetadataModified());
+        if (lastModified == null || metadata.getMetadataModified().after(Date.from(lastModified))) {
+          replicatorConfig.setLastMetadataModified(metadata.getMetadataModified().toInstant());
           configs.save(replicatorConfig);
         }
       }
@@ -288,8 +289,10 @@ public class Syncer {
 
     @Nullable
     private Date getModifiedAfter() {
-      if (replicatorConfig.getLastMetadataModified() != null) {
-        return replicatorConfig.getLastMetadataModified();
+      final Instant lastModified = replicatorConfig.getLastMetadataModified();
+
+      if (lastModified != null) {
+        return Date.from(lastModified);
       } else {
         LOGGER.trace("no previous successful run for config {} found.", replicatorConfig.getName());
         return null;

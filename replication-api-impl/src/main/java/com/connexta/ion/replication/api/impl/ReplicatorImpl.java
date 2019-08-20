@@ -19,12 +19,12 @@ import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterType;
 import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.ReplicationException;
-import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.SyncRequest;
-import com.connexta.ion.replication.api.data.ReplicationSite;
-import com.connexta.ion.replication.api.data.ReplicatorConfig;
-import com.connexta.ion.replication.api.persistence.SiteManager;
+import com.connexta.replication.api.data.ReplicationItem;
+import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.data.Site;
+import com.connexta.replication.api.persistence.SiteManager;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public class ReplicatorImpl implements Replicator {
    * Creates a new {@code ReplicatorImpl}.
    *
    * @param nodeAdapters bean for creating {@link NodeAdapter}s
-   * @param siteManager manager for accessing {@link ReplicationSite}s
+   * @param siteManager manager for accessing {@link Site}s
    * @param syncer bean for transferring metadata and/or resources
    */
   public ReplicatorImpl(NodeAdapters nodeAdapters, SiteManager siteManager, Syncer syncer) {
@@ -226,7 +226,7 @@ public class ReplicatorImpl implements Replicator {
   @VisibleForTesting
   NodeAdapter getStoreForId(String siteId) {
     NodeAdapter store;
-    ReplicationSite site = siteManager.get(siteId);
+    Site site = siteManager.get(siteId);
     if (site.getType() == null) {
       determineType(site);
     }
@@ -249,7 +249,7 @@ public class ReplicatorImpl implements Replicator {
 
   @SuppressWarnings(
       "squid:S2629" /*type.name() is inexpensive so don't need to add the conditional*/)
-  private void determineType(ReplicationSite site) {
+  private void determineType(Site site) {
     for (NodeAdapterType type : NodeAdapterType.values()) {
       LOGGER.debug("Checking if site {} is of type {}", site.getName(), type.name());
       try (NodeAdapter adapter = nodeAdapters.factoryFor(type).create(new URL(site.getUrl()))) {

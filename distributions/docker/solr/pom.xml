@@ -13,8 +13,39 @@
   <name>Replication :: Distros :: Docker :: Solr</name>
   <packaging>pom</packaging>
 
+  <dependencies>
+    <dependency>
+      <groupId>com.connexta.ion.replication</groupId>
+      <artifactId>replication-solr-schema</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.connexta.ion.replication</groupId>
+                  <artifactId>replication-solr-schema</artifactId>
+                  <outputDirectory>
+                    ${project.build.directory}/solr-schema
+                  </outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>

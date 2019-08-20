@@ -13,6 +13,8 @@
  */
 package com.connexta.ion.replication.api;
 
+import com.connexta.replication.api.data.ReplicationItem;
+
 /** Describes an action taken on a {@link ReplicationItem} */
 public enum Action {
 
@@ -32,5 +34,11 @@ public enum Action {
    * Action for a replication item that was deleted between a source {@link NodeAdapter} to a
    * destination {@link NodeAdapter}
    */
-  DELETE
+  DELETE,
+
+  /**
+   * The unknown value is used for forward compatibility where the current code might not be able to
+   * understand a new type of action and would mapped this new action to <code>UNKNOWN</code>.
+   */
+  UNKNOWN
 }

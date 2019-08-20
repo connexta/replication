@@ -14,9 +14,9 @@
 package com.connexta.ion.replication.application.metrics;
 
 import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.ReplicationItem;
 import com.connexta.ion.replication.api.Replicator;
 import com.connexta.ion.replication.api.Status;
+import com.connexta.replication.api.data.ReplicationItem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
