@@ -86,7 +86,9 @@ public class FilterIndexImplTest {
   @Test
   public void testReadFromPreviousVersion() {
     exception.expect(ReplicationPersistenceException.class);
-    FilterIndexPojo pojo = new FilterIndexPojo().setVersion(FilterIndexPojo.CURRENT_VERSION - 1);
+    exception.expectMessage("unsupported");
+    FilterIndexPojo pojo =
+        new FilterIndexPojo().setId(ID).setVersion(FilterIndexPojo.CURRENT_VERSION - 1);
     new FilterIndexImpl(pojo);
   }
 }
