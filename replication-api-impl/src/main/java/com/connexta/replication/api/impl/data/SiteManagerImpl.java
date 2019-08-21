@@ -30,11 +30,6 @@ public class SiteManagerImpl implements SiteManager {
   }
 
   @Override
-  public Site create() {
-    return new SiteImpl();
-  }
-
-  @Override
   public Site create(String name, String url) {
     SiteImpl site = new SiteImpl();
     site.setName(name);

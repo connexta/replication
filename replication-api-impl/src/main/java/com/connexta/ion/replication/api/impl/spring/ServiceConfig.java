@@ -21,14 +21,17 @@ import com.connexta.ion.replication.api.impl.ReplicatorRunner;
 import com.connexta.ion.replication.api.impl.Syncer;
 import com.connexta.ion.replication.spring.ReplicationProperties;
 import com.connexta.replication.api.impl.data.FilterManagerImpl;
+import com.connexta.replication.api.impl.data.FilterIndexManagerImpl;
 import com.connexta.replication.api.impl.data.ReplicationItemManagerImpl;
 import com.connexta.replication.api.impl.data.ReplicatorConfigManagerImpl;
 import com.connexta.replication.api.impl.data.SiteManagerImpl;
 import com.connexta.replication.api.impl.persistence.spring.ConfigRepository;
 import com.connexta.replication.api.impl.persistence.spring.FilterRepository;
+import com.connexta.replication.api.impl.persistence.spring.FilterIndexRepository;
 import com.connexta.replication.api.impl.persistence.spring.ItemRepository;
 import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
 import com.connexta.replication.api.persistence.FilterManager;
+import com.connexta.replication.api.persistence.FilterIndexManager;
 import com.connexta.replication.api.persistence.ReplicationItemManager;
 import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import com.connexta.replication.api.persistence.SiteManager;
@@ -37,7 +40,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.solr.core.SolrTemplate;
 
-/** A class for instantiating beans in this module */
+/** Spring auto configuration class for replication implementations. */
 @Configuration("replication-api-impl")
 public class ServiceConfig {
 
@@ -68,6 +71,11 @@ public class ServiceConfig {
   @Bean
   public FilterManager filterManager(FilterRepository filterRepository) {
     return new FilterManagerImpl(filterRepository);
+  }
+
+  @Bean
+  public FilterIndexManager siteIndexManager(FilterIndexRepository filterIndexRepository) {
+    return new FilterIndexManagerImpl(filterIndexRepository);
   }
 
   @Bean

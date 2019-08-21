@@ -30,11 +30,6 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
   }
 
   @Override
-  public ReplicatorConfig create() {
-    return new ReplicatorConfigImpl();
-  }
-
-  @Override
   public ReplicatorConfig get(String id) {
     return configRepository
         .findById(id)
