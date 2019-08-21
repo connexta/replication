@@ -89,6 +89,7 @@ public class FilterIndexRepositoryIntegrationTest {
   @Test
   public void testPojoPersistenceWhenIdIsNotDefined() {
     exception.expect(UncategorizedSolrException.class);
+    exception.expectMessage("Document is missing mandatory uniqueKey field: id");
 
     final FilterIndexPojo pojo =
         new FilterIndexPojo().setModifiedSince(MODIFIED_SINCE1).setFilterId(FILTER_ID1);
@@ -270,6 +271,23 @@ public class FilterIndexRepositoryIntegrationTest {
 
     final Optional<FilterIndexPojo> loaded = repo.findByFilterId(FILTER_ID1);
     assertThat(loaded, isPresentAnd(is(POJO1)));
+  }
+
+  @Test
+  public void testModifiedTimeUpdated() {
+    final FilterIndexPojo pojo =
+        new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1).setFilterId(FILTER_ID1);
+    repo.save(pojo);
+    FilterIndexPojo loaded = repo.findById(ID1).get();
+    assertThat(loaded.getModifiedSince(), is(MODIFIED_SINCE1));
+
+    final Instant updatedModifiedSince = Instant.ofEpochSecond(678);
+    loaded.setModifiedSince(updatedModifiedSince);
+    repo.save(loaded);
+
+    FilterIndexPojo updated = repo.findById(ID1).get();
+    assertThat(updated.getModifiedSince(), is(updatedModifiedSince));
+    assertThat(repo.count(), is(1L));
   }
 
   @Test

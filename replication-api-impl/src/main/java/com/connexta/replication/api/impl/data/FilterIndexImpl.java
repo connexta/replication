@@ -18,6 +18,7 @@ import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
+import java.util.Optional;
 
 /** Simple implementation of FilterIndex. */
 public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implements FilterIndex {
@@ -51,8 +52,13 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   }
 
   @Override
-  public Instant getModifiedSince() {
-    return modifiedSince;
+  public Optional<Instant> getModifiedSince() {
+    return Optional.ofNullable(modifiedSince);
+  }
+
+  @Override
+  public void setModifiedSince(Instant modifiedSince) {
+    this.modifiedSince = modifiedSince;
   }
 
   @Override
@@ -76,7 +82,7 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   @Override
   public void readFrom(FilterIndexPojo pojo) {
     super.readFrom(pojo);
-    if (pojo.getVersion() < FilterIndexPojo.CURRENT_VERSION) {
+    if (pojo.getVersion() < FilterIndexPojo.MINIMUM_VERSION) {
       throw new ReplicationPersistenceException(
           "unsupported "
               + FilterIndexImpl.TYPE
@@ -85,12 +91,12 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
               + " for object: "
               + getId());
     } // do support pojo.getVersion() > CURRENT_VERSION for forward compatibility
-    setOrFailIfNullOrEmpty("filterId", pojo::getFilterId, this::setFilterId);
-    setModifiedSince(pojo.getModifiedSince());
+    readFromCurrentOrFutureVersion(pojo);
   }
 
-  private void setModifiedSince(Instant modifiedSince) {
-    this.modifiedSince = modifiedSince;
+  private void readFromCurrentOrFutureVersion(FilterIndexPojo pojo) {
+    setOrFailIfNullOrEmpty("filterId", pojo::getFilterId, this::setFilterId);
+    setOrFailIfNull("modifiedSince", pojo::getModifiedSince, this::setModifiedSince);
   }
 
   private void setFilterId(String filterId) {

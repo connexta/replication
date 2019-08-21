@@ -19,6 +19,7 @@ import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
 import com.connexta.replication.api.impl.persistence.spring.FilterIndexRepository;
 import com.connexta.replication.api.persistence.FilterIndexManager;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -39,13 +40,15 @@ public class FilterIndexManagerImpl implements FilterIndexManager {
     this.indexRepository = indexRepository;
   }
 
+  // TODO 8/21/2019 PeterHuffer: Fix after kiefer's PR is merged
   @Override
-  public FilterIndex getByFilter(String filterId) {
-    return indexRepository
-        .findByFilterId(filterId)
-        .map(FilterIndexImpl::new)
-        .orElseThrow(
-            () -> new NotFoundException("Unable to find filter index with filterId=" + filterId));
+  public FilterIndex getOrCreate(String filterId) {
+    return null;
+  }
+
+  @Override
+  public Optional<FilterIndex> getByFilter(String filterId) {
+    return indexRepository.findByFilterId(filterId).map(FilterIndexImpl::new);
   }
 
   @Override

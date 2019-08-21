@@ -13,20 +13,29 @@
  */
 package com.connexta.replication.api.data;
 
-import com.connexta.ion.replication.api.data.Metadata;
 import java.time.Instant;
+import java.util.Optional;
 
-/** Keeps track of what to query from a {@link com.connexta.replication.api.data.Site}. */
+/** Keeps track of where a filter is at when querying a Site. */
 public interface FilterIndex extends Persistable {
 
   /**
-   * A time which represents the modified date of the last {@link Metadata} that was put to the
-   * Queue.
+   * A time which represents the modified date of the last metadata that was put to the Queue.
    *
-   * @return the {@link Instant}, or {@code null} if no metadata has attempted to be replicated
+   * @return the {@link Instant}, or empty optional if no metadata has attempted to be replicated
    */
-  Instant getModifiedSince();
+  Optional<Instant> getModifiedSince();
 
-  /** @return the site id this index is for */
+  /**
+   * @see #getModifiedSince()
+   * @param modifiedSince the modified time of the last metadata put into the queue
+   */
+  void setModifiedSince(Instant modifiedSince);
+
+  /**
+   * The ID of the Filter that this index is tracking.
+   *
+   * @return the filter id this index is for
+   */
   String getFilterId();
 }

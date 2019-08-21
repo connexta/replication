@@ -84,6 +84,26 @@ public class FilterIndexPojoTest {
   }
 
   @Test
+  public void testEqualsWithDifferentModifiedSince() {
+    final FilterIndexPojo pojo2 =
+        new FilterIndexPojo()
+            .setId(ID)
+            .setModifiedSince(Instant.ofEpochSecond(500))
+            .setFilterId(FILTER_ID);
+    assertThat(POJO.equals(pojo2), is(false));
+  }
+
+  @Test
+  public void testEqualsWithDifferentFilterId() {
+    final FilterIndexPojo pojo2 =
+        new FilterIndexPojo()
+            .setId(ID)
+            .setModifiedSince(MODIFIED_SINCE)
+            .setFilterId("anotherFilterId");
+    assertThat(POJO.equals(pojo2), is(false));
+  }
+
+  @Test
   public void testSetAndGetId() {
     pojo.setId("anotherId");
     assertThat(pojo.getId(), is("anotherId"));

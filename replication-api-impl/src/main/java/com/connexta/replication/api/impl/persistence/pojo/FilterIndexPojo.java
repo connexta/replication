@@ -38,6 +38,9 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
    */
   public static final int CURRENT_VERSION = 1;
 
+  /** The oldest version supported by the current code (anything before that will fail). */
+  public static final int MINIMUM_VERSION = 1;
+
   public static final String COLLECTION = "filter_index";
 
   @Nullable
@@ -45,11 +48,26 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
   private Instant modifiedSince;
 
   @Nullable
-  @Indexed(name = "filter_id")
+  @Indexed(name = "filter_id", required = true)
   private String filterId;
 
   public FilterIndexPojo() {
     super.setVersion(FilterIndexPojo.CURRENT_VERSION);
+  }
+
+  /** @return the filter id for this this index belongs to */
+  @Nullable
+  public String getFilterId() {
+    return filterId;
+  }
+
+  /**
+   * @param filterId filter id for which this index belongs to
+   * @return this pojo
+   */
+  public FilterIndexPojo setFilterId(@Nullable String filterId) {
+    this.filterId = filterId;
+    return this;
   }
 
   /**
@@ -65,29 +83,14 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
    * @param modifiedSince the modified since time
    * @return this pojo
    */
-  public FilterIndexPojo setModifiedSince(Instant modifiedSince) {
+  public FilterIndexPojo setModifiedSince(@Nullable Instant modifiedSince) {
     this.modifiedSince = modifiedSince;
-    return this;
-  }
-
-  /** @return the filter id for this this index belongs to */
-  @Nullable
-  public String getFilterId() {
-    return filterId;
-  }
-
-  /**
-   * @param filterId filter id for which this index belongs to
-   * @return this pojo
-   */
-  public FilterIndexPojo setFilterId(String filterId) {
-    this.filterId = filterId;
     return this;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), modifiedSince, getFilterId());
+    return Objects.hash(super.hashCode(), modifiedSince, filterId);
   }
 
   @Override
@@ -104,7 +107,7 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
   @Override
   public String toString() {
     return String.format(
-        "FilterIndexPojo[id=%s, version=%d, modifiedSince=%s, filterId=%s]",
-        getId(), getVersion(), modifiedSince, filterId);
+        "FilterIndexPojo[id=%s, version=%d, filterId=%s, modifiedSince=%s]",
+        getId(), getVersion(), filterId, modifiedSince);
   }
 }
