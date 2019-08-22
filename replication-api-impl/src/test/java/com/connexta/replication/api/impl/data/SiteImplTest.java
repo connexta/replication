@@ -13,10 +13,10 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.InvalidFieldException;
-import com.connexta.ion.replication.api.UnsupportedVersionException;
+import com.connexta.replication.api.data.InvalidFieldException;
 import com.connexta.replication.api.data.SiteKind;
 import com.connexta.replication.api.data.SiteType;
+import com.connexta.replication.api.data.UnsupportedVersionException;
 import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
 import com.github.npathai.hamcrestopt.OptionalMatchers;
 import java.net.MalformedURLException;

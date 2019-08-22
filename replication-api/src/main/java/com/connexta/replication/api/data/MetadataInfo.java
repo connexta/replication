@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.data;
 
 /** Identifies a particular metadata to be transferred. */
 public interface MetadataInfo extends DataInfo {

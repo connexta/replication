@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.queue;
 
 import java.util.stream.Stream;
 
@@ -29,7 +29,7 @@ public interface QueueBroker {
    * @return the site queue to use for the specified site
    * @throws QueueException if an error occurred while performing the operation
    */
-  public SiteQueue getQueue(String site) throws QueueException;
+  public SiteQueue getQueue(String site);
 
   /**
    * Gets a queue for the specified set of sites. Polling from the returned queue will attempt to
@@ -43,7 +43,7 @@ public interface QueueBroker {
    *     SiteQueue} if only one site was specified)
    * @throws QueueException if an error occurred while performing the operation
    */
-  public Queue getQueue(String... sites) throws QueueException;
+  public Queue getQueue(String... sites);
 
   /**
    * Gets a queue for the specified set of sites. Polling from the returned queue will attempt to
@@ -57,5 +57,5 @@ public interface QueueBroker {
    *     SiteQueue} if only one site was specified)
    * @throws QueueException if an error occurred while performing the operation
    */
-  public Queue getQueue(Stream<String> sites) throws QueueException;
+  public Queue getQueue(Stream<String> sites);
 }

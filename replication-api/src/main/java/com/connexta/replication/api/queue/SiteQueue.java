@@ -11,8 +11,9 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.queue;
 
+import com.connexta.replication.api.data.TaskInfo;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,7 +44,7 @@ public interface SiteQueue extends Queue {
    * @return <code>true</code> if the task was added to this queue; <code>false</code> otherwise
    * @throws QueueException if an error occurred while performing the operation
    */
-  public boolean offer(TaskInfo task) throws QueueException;
+  public boolean offer(TaskInfo task);
 
   /**
    * Inserts the specified task with the given priority into this queue, waiting up to the specified
@@ -57,8 +58,7 @@ public interface SiteQueue extends Queue {
    *     task
    * @throws QueueException if an error occurred while performing the operation
    */
-  public boolean offer(TaskInfo task, long timeout, TimeUnit unit)
-      throws QueueException, InterruptedException;
+  public boolean offer(TaskInfo task, long timeout, TimeUnit unit) throws InterruptedException;
 
   /**
    * Inserts the specified task with the given priority into this queue, waiting if necessary for

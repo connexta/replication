@@ -18,11 +18,11 @@ import static org.apache.commons.lang.Validate.isTrue;
 import static org.apache.commons.lang.Validate.notEmpty;
 import static org.apache.commons.lang.Validate.notNull;
 
-import com.connexta.ion.replication.api.ReplicationException;
 import com.connexta.ion.replication.api.data.Metadata;
 import com.connexta.ion.replication.api.data.QueryRequest;
 import com.connexta.ion.replication.api.data.QueryResponse;
 import com.connexta.ion.replication.data.QueryRequestImpl;
+import com.connexta.replication.api.ReplicationException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

@@ -11,22 +11,20 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.data;
 
 /**
- * Thrown from persistence operations which are recoverable without an explicit step (e.g. timeout,
- * object not found, ...) like retrying after a few seconds.
+ * Thrown when a pojo cannot be deserialized or an object cannot be serialized because of an invalid
+ * field.
  */
-public class TransientReplicationPersistenceException extends ReplicationPersistenceException {
-  /** Instantiates a new exception. */
-  public TransientReplicationPersistenceException() {}
-
+@SuppressWarnings("squid:MaximumInheritanceDepth" /* Exception class hierarchy */)
+public class InvalidFieldException extends NonTransientReplicationPersistenceException {
   /**
    * Instantiates a new exception.
    *
    * @param message the message for the exception
    */
-  public TransientReplicationPersistenceException(String message) {
+  public InvalidFieldException(String message) {
     super(message);
   }
 
@@ -36,7 +34,7 @@ public class TransientReplicationPersistenceException extends ReplicationPersist
    * @param message the message for the exception
    * @param cause the cause for the exception
    */
-  public TransientReplicationPersistenceException(String message, Throwable cause) {
+  public InvalidFieldException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -45,7 +43,7 @@ public class TransientReplicationPersistenceException extends ReplicationPersist
    *
    * @param cause the cause for the exception
    */
-  public TransientReplicationPersistenceException(Throwable cause) {
+  public InvalidFieldException(Throwable cause) {
     super(cause);
   }
 }

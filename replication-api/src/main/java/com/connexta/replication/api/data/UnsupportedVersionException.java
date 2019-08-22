@@ -11,35 +11,36 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.data;
 
-/** Base class for all queuing related exceptions. */
-public class QueueException extends Exception {
+/** Thrown when a pojo cannot be deserialized because its version format is not supported. */
+@SuppressWarnings("squid:MaximumInheritanceDepth" /* Exception class hierarchy */)
+public class UnsupportedVersionException extends ReplicationPersistenceException {
   /**
-   * Create a new {@link QueueException}.
+   * Instantiates a new exception.
    *
-   * @param message the exception message
+   * @param message the message for the exception
    */
-  public QueueException(String message) {
+  public UnsupportedVersionException(String message) {
     super(message);
   }
 
   /**
-   * Create a new {@link QueueException}.
+   * Instantiates a new exception.
    *
-   * @param message the exception message
-   * @param cause the exception cause
+   * @param message the message for the exception
+   * @param cause the cause for the exception
    */
-  public QueueException(String message, Throwable cause) {
+  public UnsupportedVersionException(String message, Throwable cause) {
     super(message, cause);
   }
 
   /**
-   * Create a new {@link QueueException}.
+   * Instantiates a new exception.
    *
-   * @param cause the exception cause
+   * @param cause the cause for the exception
    */
-  public QueueException(Throwable cause) {
+  public UnsupportedVersionException(Throwable cause) {
     super(cause);
   }
 }

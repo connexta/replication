@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.data;
 
 /**
  * Defines the various type of operations a worker can perform with an intel document for the site

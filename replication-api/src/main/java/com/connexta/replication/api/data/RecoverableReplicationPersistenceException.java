@@ -11,19 +11,17 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.data;
 
-/** Thrown when a pojo cannot be deserialized because its version format is not supported. */
-public class UnsupportedVersionException extends ReplicationPersistenceException {
-  /** Instantiates a new exception. */
-  public UnsupportedVersionException() {}
-
+/** Thrown from persistence operations which are recoverable - after some recovery steps. */
+@SuppressWarnings("squid:MaximumInheritanceDepth" /* Exception class hierarchy */)
+public class RecoverableReplicationPersistenceException extends ReplicationPersistenceException {
   /**
    * Instantiates a new exception.
    *
    * @param message the message for the exception
    */
-  public UnsupportedVersionException(String message) {
+  public RecoverableReplicationPersistenceException(String message) {
     super(message);
   }
 
@@ -33,7 +31,7 @@ public class UnsupportedVersionException extends ReplicationPersistenceException
    * @param message the message for the exception
    * @param cause the cause for the exception
    */
-  public UnsupportedVersionException(String message, Throwable cause) {
+  public RecoverableReplicationPersistenceException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -42,7 +40,7 @@ public class UnsupportedVersionException extends ReplicationPersistenceException
    *
    * @param cause the cause for the exception
    */
-  public UnsupportedVersionException(Throwable cause) {
+  public RecoverableReplicationPersistenceException(Throwable cause) {
     super(cause);
   }
 }

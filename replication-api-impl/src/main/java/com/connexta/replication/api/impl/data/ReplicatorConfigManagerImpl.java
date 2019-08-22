@@ -13,11 +13,11 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
-import com.connexta.ion.replication.api.NotFoundException;
-import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
-import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
+import com.connexta.replication.api.data.NonTransientReplicationPersistenceException;
+import com.connexta.replication.api.data.NotFoundException;
+import com.connexta.replication.api.data.RecoverableReplicationPersistenceException;
 import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.data.TransientReplicationPersistenceException;
 import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import com.connexta.replication.api.impl.persistence.spring.ConfigRepository;
 import com.connexta.replication.api.persistence.ReplicatorConfigManager;
@@ -41,7 +41,7 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
       return configRepository
           .findById(id)
           .map(ReplicatorConfigImpl::new)
-          .orElseThrow(NotFoundException::new);
+          .orElseThrow(() -> new NotFoundException("replication config not found: " + id));
     } catch (NonTransientDataAccessException e) {
       throw new NonTransientReplicationPersistenceException(e);
     } catch (TransientDataAccessException e) {

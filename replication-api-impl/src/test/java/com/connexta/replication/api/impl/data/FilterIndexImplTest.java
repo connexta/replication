@@ -19,10 +19,10 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.connexta.ion.replication.api.InvalidFieldException;
-import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
+import com.connexta.replication.api.data.InvalidFieldException;
+import com.connexta.replication.api.data.UnsupportedVersionException;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
 import com.github.npathai.hamcrestopt.OptionalMatchers;
 import java.time.Instant;

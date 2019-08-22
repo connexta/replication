@@ -13,8 +13,8 @@
  */
 package com.connexta.replication.api.persistence;
 
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.replication.api.data.Filter;
+import com.connexta.replication.api.data.ReplicationPersistenceException;
 import java.util.stream.Stream;
 
 /** Performs CRUD operations for {@link Filter}s. */

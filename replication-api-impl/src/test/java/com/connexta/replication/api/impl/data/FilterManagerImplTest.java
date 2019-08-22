@@ -21,12 +21,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.connexta.ion.replication.api.InvalidFieldException;
-import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
-import com.connexta.ion.replication.api.NotFoundException;
-import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
-import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
 import com.connexta.replication.api.data.Filter;
+import com.connexta.replication.api.data.InvalidFieldException;
+import com.connexta.replication.api.data.NonTransientReplicationPersistenceException;
+import com.connexta.replication.api.data.NotFoundException;
+import com.connexta.replication.api.data.RecoverableReplicationPersistenceException;
+import com.connexta.replication.api.data.TransientReplicationPersistenceException;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
 import com.connexta.replication.api.impl.persistence.spring.FilterRepository;
 import java.util.Collections;

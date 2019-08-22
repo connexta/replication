@@ -13,12 +13,12 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
-import com.connexta.ion.replication.api.NotFoundException;
-import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
 import com.connexta.ion.replication.api.Status;
-import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
+import com.connexta.replication.api.data.NonTransientReplicationPersistenceException;
+import com.connexta.replication.api.data.NotFoundException;
+import com.connexta.replication.api.data.RecoverableReplicationPersistenceException;
 import com.connexta.replication.api.data.ReplicationItem;
+import com.connexta.replication.api.data.TransientReplicationPersistenceException;
 import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
 import com.connexta.replication.api.impl.persistence.spring.ItemRepository;
 import com.connexta.replication.api.persistence.ReplicationItemManager;
@@ -71,7 +71,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
       return itemRepository
           .findById(id)
           .map(ReplicationItemImpl::new)
-          .orElseThrow(NotFoundException::new);
+          .orElseThrow(() -> new NotFoundException("replication item not found: " + id));
     } catch (NonTransientDataAccessException e) {
       throw new NonTransientReplicationPersistenceException(e);
     } catch (TransientDataAccessException e) {
