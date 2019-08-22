@@ -25,7 +25,9 @@ import com.connexta.replication.api.data.ResourceRequest;
 import com.connexta.replication.api.data.ResourceResponse;
 import com.connexta.replication.api.data.UpdateRequest;
 import com.connexta.replication.api.data.UpdateStorageRequest;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import org.slf4j.Logger;
@@ -57,6 +59,7 @@ public class IonNodeAdapter implements NodeAdapter {
     try {
       return restOps.optionsForAllow(this.ionUrl.toString() + "/ingest").contains(HttpMethod.POST);
     } catch (Exception e) {
+      LOGGER.debug("Failed to get Ion availability.", e);
       return false;
     }
   }
@@ -109,7 +112,8 @@ public class IonNodeAdapter implements NodeAdapter {
 
     for (Resource resource : createStorageRequest.getResources()) {
       MultipartBodyBuilder builder = new MultipartBodyBuilder();
-      builder.part("file", new MultipartInputStreamResource(resource));
+      builder.part("file", getResourceEntity(resource));
+      builder.part("metacard", getMetadataEntity(resource.getMetadata()));
       builder.part("correlationId", resource.getId());
       MultiValueMap<String, HttpEntity<?>> multipartBody = builder.build();
 
@@ -150,6 +154,26 @@ public class IonNodeAdapter implements NodeAdapter {
     // nothing to close
   }
 
+  private HttpEntity getMetadataEntity(Metadata metadata) {
+    HttpHeaders metadataHeader = new HttpHeaders();
+    metadataHeader.setContentType(MediaType.APPLICATION_XML);
+    return new HttpEntity(
+        new MultipartInputStreamResource(
+            metadata.getId(),
+            metadata.getMetadataSize(),
+            new ByteArrayInputStream(metadata.getRawMetadata().toString().getBytes())),
+        metadataHeader);
+  }
+
+  private HttpEntity getResourceEntity(Resource resource) {
+    HttpHeaders resourceHeader = new HttpHeaders();
+    resourceHeader.setContentType(MediaType.parseMediaType(resource.getMimeType()));
+    return new HttpEntity(
+        new MultipartInputStreamResource(
+            resource.getName(), resource.getSize(), resource.getInputStream()),
+        resourceHeader);
+  }
+
   @SuppressWarnings("squid:S2160" /*Super equals/hashCode is sufficient here*/)
   private class MultipartInputStreamResource extends InputStreamResource {
 
@@ -157,10 +181,10 @@ public class IonNodeAdapter implements NodeAdapter {
 
     private final long length;
 
-    public MultipartInputStreamResource(Resource resource) {
-      super(resource.getInputStream());
-      this.filename = resource.getName();
-      this.length = resource.getSize();
+    public MultipartInputStreamResource(String fileName, long length, InputStream stream) {
+      super(stream);
+      this.filename = fileName;
+      this.length = length;
     }
 
     @Override

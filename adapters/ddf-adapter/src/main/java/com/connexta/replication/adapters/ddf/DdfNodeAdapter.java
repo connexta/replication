@@ -181,8 +181,7 @@ public class DdfNodeAdapter implements NodeAdapter {
 
     String systemName;
     if (!results.isEmpty()) {
-      systemName =
-          ((MetacardAttribute) ((Map) results.get(0).getRawMetadata()).get("title")).getValue();
+      systemName = ((DdfMetadata) results.get(0)).getAttributes().get("title").getValue();
     } else {
       throw new AdapterException(
           String.format(
@@ -272,11 +271,12 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   private void prepareMetadata(Metadata metadata) {
 
-    if (!(metadata.getRawMetadata() instanceof Map)) {
+    if (!(metadata instanceof DdfMetadata)) {
       throw new AdapterException(
-          "DDF adapter can't process raw metadata of type " + metadata.getRawMetadata().getClass());
+          "DDF adapter can't process raw metadata of type " + metadata.getClass());
     }
-    Map metadataMap = (Map) metadata.getRawMetadata();
+    DdfMetadata ddfMetadata = (DdfMetadata) metadata;
+    Map metadataMap = ddfMetadata.getAttributes();
     metadataMap.put(
         Constants.METACARD_TAGS,
         new MetacardAttribute(

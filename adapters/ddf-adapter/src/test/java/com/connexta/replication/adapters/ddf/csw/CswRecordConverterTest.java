@@ -19,11 +19,11 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
+import com.connexta.replication.adapters.ddf.DdfMetadata;
 import com.connexta.replication.adapters.ddf.MetacardAttribute;
 import com.connexta.replication.api.AdapterException;
 import com.connexta.replication.api.Replication;
 import com.connexta.replication.api.data.Metadata;
-import com.connexta.replication.data.MetadataImpl;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.xml.XppReader;
@@ -96,7 +96,8 @@ public class CswRecordConverterTest {
   @Test
   public void unmarshal() throws Exception {
     String metacardXml =
-        MetacardMarshaller.marshal(new MetadataImpl(map, Map.class, "123456789", new Date(1)));
+        MetacardMarshaller.marshal(
+            new DdfMetadata("mcard metadata", String.class, "123456789", new Date(1), map));
 
     InputStream inStream = new ByteArrayInputStream(metacardXml.getBytes());
     HierarchicalStreamReader reader =
@@ -106,7 +107,7 @@ public class CswRecordConverterTest {
     UnmarshallingContext context = mock(UnmarshallingContext.class);
     Object obj = new CswRecordConverter().unmarshal(reader, context);
     assertThat(obj, instanceOf(Metadata.class));
-    Metadata metadata = (Metadata) obj;
+    DdfMetadata metadata = (DdfMetadata) obj;
     assertThat(metadata.getId(), is("123456789"));
     assertThat(metadata.getTags().iterator().next(), is("tag"));
     assertThat(metadata.getLineage().get(0), is("otherhost"));
@@ -125,7 +126,7 @@ public class CswRecordConverterTest {
             ISODateTimeFormat.dateOptionalTimeParser()
                 .parseDateTime("1234-01-01T03:04:05.060")
                 .toDate()));
-    Map<String, MetacardAttribute> map = (Map) metadata.getRawMetadata();
+    Map<String, MetacardAttribute> map = metadata.getAttributes();
     assertThat(map.containsKey(Constants.DERIVED_RESOURCE_URI), is(false));
     assertThat(map.containsKey(Constants.DERIVED_RESOURCE_DOWNLOAD_URL), is(false));
     assertThat(map.get("location").getValue(), is("<ns2:point>123,456</ns2:point>"));
@@ -143,7 +144,8 @@ public class CswRecordConverterTest {
     map.put(Constants.ACTION, new MetacardAttribute(Constants.ACTION, "string", "Deleted"));
 
     String metacardXml =
-        MetacardMarshaller.marshal(new MetadataImpl(map, Map.class, "123456789", new Date(1)));
+        MetacardMarshaller.marshal(
+            new DdfMetadata("mcard Metadata", String.class, "123456789", new Date(1), map));
 
     InputStream inStream = new ByteArrayInputStream(metacardXml.getBytes());
     HierarchicalStreamReader reader =
@@ -178,7 +180,8 @@ public class CswRecordConverterTest {
   public void unmarshalNoModifiedDate() throws Exception {
     map.remove(Constants.METACARD_MODIFIED);
     String metacardXml =
-        MetacardMarshaller.marshal(new MetadataImpl(map, Map.class, "123456789", new Date(1)));
+        MetacardMarshaller.marshal(
+            new DdfMetadata("mcard metadata", Map.class, "123456789", new Date(1), map));
 
     InputStream inStream = new ByteArrayInputStream(metacardXml.getBytes());
     HierarchicalStreamReader reader =

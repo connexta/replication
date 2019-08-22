@@ -33,7 +33,6 @@ import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.QueryRequest;
 import com.connexta.replication.api.data.QueryResponse;
 import com.connexta.replication.api.data.Resource;
-import com.connexta.replication.data.MetadataImpl;
 import com.connexta.replication.data.QueryRequestImpl;
 import com.connexta.replication.data.ResourceImpl;
 import java.io.ByteArrayInputStream;
@@ -294,7 +293,8 @@ public class DdfNodeAdapterTest {
         Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, "string", "tag"));
     map.put("title", new MetacardAttribute("title", null, "mytitle"));
 
-    return new MetadataImpl(map, Map.class, UUID.randomUUID().toString(), new Date());
+    return new DdfMetadata(
+        "mcard metadata", String.class, UUID.randomUUID().toString(), new Date(), map);
   }
 
   private Resource getResource() {

@@ -13,12 +13,12 @@
  */
 package com.connexta.replication.adapters.ddf.csw;
 
+import com.connexta.replication.adapters.ddf.DdfMetadata;
 import com.connexta.replication.adapters.ddf.MetacardAttribute;
 import com.connexta.replication.api.AdapterException;
 import com.connexta.replication.api.data.Metadata;
 import com.google.common.collect.ImmutableMap;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,17 +89,11 @@ public class MetacardMarshaller {
   }
 
   private static Map<String, MetacardAttribute> getAttributeMap(Metadata metadata) {
-    if (!(metadata.getRawMetadata() instanceof Map)) {
+    if (!(metadata instanceof DdfMetadata)) {
       throw new AdapterException(
-          "Metadata type " + metadata.getType() + " is incompatible with the DDF adapter");
+          "Metadata type " + metadata.getClass() + " is incompatible with the DDF adapter");
     }
-    Map<String, MetacardAttribute> attributes = new HashMap<>();
-    ((Map) metadata.getRawMetadata())
-        .values().stream()
-            .filter(MetacardAttribute.class::isInstance)
-            .map(MetacardAttribute.class::cast)
-            .forEach(e -> attributes.put(((MetacardAttribute) e).getName(), (MetacardAttribute) e));
-    return attributes;
+    return ((DdfMetadata) metadata).getAttributes();
   }
 
   private static void writeAttributeToXml(EscapingPrintWriter writer, MetacardAttribute attribute) {

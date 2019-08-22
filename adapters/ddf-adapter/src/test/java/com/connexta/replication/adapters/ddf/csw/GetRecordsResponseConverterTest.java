@@ -18,8 +18,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import com.connexta.replication.adapters.ddf.DdfMetadata;
 import com.connexta.replication.api.data.Metadata;
-import com.connexta.replication.data.MetadataImpl;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
@@ -32,7 +32,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -73,7 +72,8 @@ public class GetRecordsResponseConverterTest {
     when(unmarshallingContext.convertAnother(
             any(Object.class), any(Class.class), any(Converter.class)))
         .thenReturn(
-            new MetadataImpl(new HashMap<String, String>(), Map.class, "123456789", new Date()));
+            new DdfMetadata(
+                "mcard metadata", String.class, "123456789", new Date(), new HashMap()));
     CswRecordCollection cswRecords =
         (CswRecordCollection)
             new GetRecordsResponseConverter(converter).unmarshal(reader, unmarshallingContext);

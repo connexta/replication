@@ -17,6 +17,8 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -91,24 +93,11 @@ public class IonNodeAdapterTest {
         .andExpect(method(HttpMethod.POST))
         .andExpect(content().string(containsString(resourceFormData())))
         .andExpect(content().string(containsString(correlationIdFormData())))
+        .andExpect(content().string(containsString(metadataFormData())))
         .andRespond(withStatus(HttpStatus.ACCEPTED));
 
     assertThat(adapter.createResource(getCreateStorageRequest()), is(true));
     mockServer.verify();
-  }
-
-  private String resourceFormData() {
-    return "Content-Disposition: form-data; name=\"file\"; filename=\"test\"\r\n"
-        + "Content-Type: application/octet-stream\r\n"
-        + "Content-Length: 14\r\n\r\n"
-        + "This is a test";
-  }
-
-  private String correlationIdFormData() {
-    return "Content-Disposition: form-data; name=\"correlationId\"\r\n"
-        + "Content-Type: text/plain;charset=UTF-8\r\n"
-        + "Content-Length: 4\r\n\r\n"
-        + "1234";
   }
 
   @Test
@@ -200,9 +189,57 @@ public class IonNodeAdapterTest {
 
                   @Override
                   public Metadata getMetadata() {
-                    return null;
+                    Metadata metadata = mock(Metadata.class);
+                    when(metadata.getMetadataSize()).thenReturn((long) getRawMetadata().length());
+                    when(metadata.getRawMetadata()).thenReturn(getRawMetadata());
+                    return metadata;
                   }
                 });
     return request;
+  }
+
+  private String metadataFormData() {
+    String metadata = getRawMetadata();
+    return "Content-Disposition: form-data; name=\"metacard\"\r\n"
+        + "Content-Type: application/xml\r\n"
+        + "Content-Length: "
+        + metadata.length()
+        + "\r\n\r\n"
+        + metadata;
+  }
+
+  private String resourceFormData() {
+    return "Content-Disposition: form-data; name=\"file\"; filename=\"test\"\r\n"
+        + "Content-Type: text/plain\r\n"
+        + "Content-Length: 14\r\n\r\n"
+        + "This is a test";
+  }
+
+  private String correlationIdFormData() {
+    return "Content-Disposition: form-data; name=\"correlationId\"\r\n"
+        + "Content-Type: text/plain;charset=UTF-8\r\n"
+        + "Content-Length: 4\r\n\r\n"
+        + "1234";
+  }
+
+  private String getRawMetadata() {
+    return "<metacard xmlns=\"urn:catalog:metacard\" xmlns:ns2=\"http://www.opengis.net/gml\"\n"
+        + "          xmlns:ns3=\"http://www.w3.org/1999/xlink\" xmlns:ns4=\"http://www.w3.org/2001/SMIL20/\"\n"
+        + "          xmlns:ns5=\"http://www.w3.org/2001/SMIL20/Language\">\n"
+        + "    <type>myType</type>\n"
+        + "    <source>mySource</source>\n"
+        + "    <string name=\"metadata-content-type-version\">\n"
+        + "        <value>myVersion</value>\n"
+        + "    </string>\n"
+        + "    <string name=\"title\">\n"
+        + "        <value>warning metacard</value>\n"
+        + "    </string>\n"
+        + "    <dateTime name=\"created\">\n"
+        + "        <value>2019-04-18T10:50:27.371-07:00</value>\n"
+        + "    </dateTime>\n"
+        + "    <dateTime name=\"modified\">\n"
+        + "        <value>2019-04-18T10:50:27.371-07:00</value>\n"
+        + "    </dateTime>\n"
+        + "</metacard>";
   }
 }
