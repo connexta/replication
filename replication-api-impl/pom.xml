@@ -17,7 +17,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.connexta.ion.replication</groupId>
+        <groupId>com.connexta.replication</groupId>
         <artifactId>replication-service</artifactId>
         <version>0.3.0-SNAPSHOT</version>
     </parent>
@@ -26,12 +26,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.connexta.ion.replication</groupId>
+            <groupId>com.connexta.replication</groupId>
             <artifactId>replication-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.connexta.ion.replication</groupId>
+            <groupId>com.connexta.replication</groupId>
             <artifactId>commons</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -116,7 +116,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.connexta.ion.replication</groupId>
+            <groupId>com.connexta.replication</groupId>
             <artifactId>replication-solr-schema</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -158,7 +158,7 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.connexta.ion.replication</groupId>
+                                    <groupId>com.connexta.replication</groupId>
                                     <artifactId>replication-solr-schema</artifactId>
                                     <outputDirectory>
                                         ${project.build.directory}/solr-schema

@@ -13,8 +13,9 @@
  */
 package com.connexta.replication.api.impl.persistence.pojo;
 
-import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.Status;
+import com.connexta.replication.api.Action;
+import com.connexta.replication.api.NodeAdapter;
+import com.connexta.replication.api.Status;
 import java.util.Date;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -279,11 +280,11 @@ public class ItemPojo extends Pojo<ItemPojo> {
   }
 
   /**
-   * Gets the name for the source {@link com.connexta.ion.replication.api.NodeAdapter} the
-   * metadata/resource was being replicated from.
+   * Gets the name for the source {@link NodeAdapter} the metadata/resource was being replicated
+   * from.
    *
-   * @return the name for the source {@link {@link com.connexta.ion.replication.api.NodeAdapter}}
-   *     the metadata/resource was being replicated from
+   * @return the name for the source {@link {@link NodeAdapter }} the metadata/resource was being
+   *     replicated from
    */
   @Nullable
   public String getSource() {
@@ -291,12 +292,11 @@ public class ItemPojo extends Pojo<ItemPojo> {
   }
 
   /**
-   * Sets the name for the source {@link com.connexta.ion.replication.api.NodeAdapter} the
-   * metadata/resource was being replicated from.
+   * Sets the name for the source {@link NodeAdapter} the metadata/resource was being replicated
+   * from.
    *
-   * @param source the name for the source {@link {@link
-   *     com.connexta.ion.replication.api.NodeAdapter}} the metadata/resource was being replicated
-   *     from
+   * @param source the name for the source {@link {@link NodeAdapter }} the metadata/resource was
+   *     being replicated from
    * @return this for chaining
    */
   public ItemPojo setSource(@Nullable String source) {
@@ -305,8 +305,8 @@ public class ItemPojo extends Pojo<ItemPojo> {
   }
 
   /**
-   * Gets the name for the destination {@link com.connexta.ion.replication.api.NodeAdapter} the
-   * metadata/resource was being replicated to.
+   * Gets the name for the destination {@link NodeAdapter} the metadata/resource was being
+   * replicated to.
    *
    * @return the name for the destination {@link NodeAdapter} the metadata/resource was being
    *     replicated to
@@ -317,8 +317,8 @@ public class ItemPojo extends Pojo<ItemPojo> {
   }
 
   /**
-   * Sets the name for the destination {@link com.connexta.ion.replication.api.NodeAdapter} the
-   * metadata/resource was being replicated to.
+   * Sets the name for the destination {@link NodeAdapter} the metadata/resource was being
+   * replicated to.
    *
    * @param destination the name for the destination {@link NodeAdapter} the metadata/resource was
    *     being replicated to

@@ -13,8 +13,8 @@
  */
 package com.connexta.replication.api.impl.persistence.pojo;
 
-import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.Status;
+import com.connexta.replication.api.Action;
+import com.connexta.replication.api.Status;
 import java.util.Date;
 import org.hamcrest.Matchers;
 import org.junit.Assert;

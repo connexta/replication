@@ -16,8 +16,8 @@ package com.connexta.replication.api.impl.data;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.Status;
+import com.connexta.replication.api.Action;
+import com.connexta.replication.api.Status;
 import com.connexta.replication.api.data.ReplicationItem;
 import com.jparams.verifier.tostring.NameStyle;
 import com.jparams.verifier.tostring.ToStringVerifier;

@@ -17,7 +17,7 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>distributions</artifactId>
-        <groupId>com.connexta.ion.replication.distributions</groupId>
+        <groupId>com.connexta.replication.distributions</groupId>
         <version>0.3.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>

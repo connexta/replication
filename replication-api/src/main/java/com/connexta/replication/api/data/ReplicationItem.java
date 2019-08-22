@@ -13,10 +13,9 @@
  */
 package com.connexta.replication.api.data;
 
-import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.NodeAdapter;
-import com.connexta.ion.replication.api.Status;
-import com.connexta.ion.replication.api.data.Metadata;
+import com.connexta.replication.api.Action;
+import com.connexta.replication.api.NodeAdapter;
+import com.connexta.replication.api.Status;
 import java.util.Date;
 
 /** Represents a resource that replication has replicated or attempted to replicate. */

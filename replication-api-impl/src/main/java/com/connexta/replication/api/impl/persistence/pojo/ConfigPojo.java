@@ -13,7 +13,7 @@
  */
 package com.connexta.replication.api.impl.persistence.pojo;
 
-import com.connexta.ion.replication.api.data.QueryRequest;
+import com.connexta.replication.api.data.QueryRequest;
 import java.time.Instant;
 import java.util.Objects;
 import javax.annotation.Nullable;
