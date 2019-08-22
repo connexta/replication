@@ -13,8 +13,6 @@
  */
 package com.connexta.replication.api.data;
 
-import com.connexta.ion.replication.api.data.Metadata;
-import com.connexta.ion.replication.api.data.QueryRequest;
 import java.time.Instant;
 import javax.annotation.Nullable;
 

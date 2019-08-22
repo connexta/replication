@@ -13,7 +13,7 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.Status;
+import com.connexta.replication.api.Status;
 import com.connexta.replication.api.data.NonTransientReplicationPersistenceException;
 import com.connexta.replication.api.data.NotFoundException;
 import com.connexta.replication.api.data.RecoverableReplicationPersistenceException;

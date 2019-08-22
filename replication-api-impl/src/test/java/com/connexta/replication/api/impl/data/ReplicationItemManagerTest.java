@@ -22,8 +22,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.Status;
+import com.connexta.replication.api.Action;
+import com.connexta.replication.api.Status;
 import com.connexta.replication.api.data.ReplicationItem;
 import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
 import com.connexta.replication.api.impl.persistence.spring.ItemRepository;

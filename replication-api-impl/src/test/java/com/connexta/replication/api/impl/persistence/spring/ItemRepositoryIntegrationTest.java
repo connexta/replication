@@ -13,8 +13,8 @@
  */
 package com.connexta.replication.api.impl.persistence.spring;
 
-import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.Status;
+import com.connexta.replication.api.Action;
+import com.connexta.replication.api.Status;
 import com.connexta.replication.api.impl.persistence.EmbeddedSolrServerFactory;
 import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
 import com.github.npathai.hamcrestopt.OptionalMatchers;

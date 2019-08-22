@@ -13,8 +13,8 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.Status;
+import com.connexta.replication.api.Action;
+import com.connexta.replication.api.Status;
 import com.connexta.replication.api.data.ReplicationItem;
 import com.connexta.replication.api.data.UnsupportedVersionException;
 import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
