@@ -215,7 +215,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
       try {
         consumer.accept(Enum.valueOf(clazz, value));
         return;
-      } catch (IllegalArgumentException e) {
+      } catch (IllegalArgumentException ignored) {
       }
       consumer.accept(unknown);
     } else {
@@ -244,6 +244,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
     return value;
   }
 
+  @SuppressWarnings("squid:S2259" /* null check is done in validateNotNull method */)
   protected String validateNotNullAndNotEmpty(String field, @Nullable String value) {
     validateNotNull(field, value);
     if (value.isEmpty()) {
