@@ -16,14 +16,4 @@ package com.connexta.replication.api.persistence;
 import com.connexta.replication.api.data.Site;
 
 /** A SiteManager performs CRUD operations for replication sites. */
-public interface SiteManager extends DataManager<Site> {
-
-  /**
-   * Creates a new {@link Site} implementation with the given name and url
-   *
-   * @param name the name to give the {@link Site}
-   * @param url the for the {@link Site}
-   * @return a new {@link Site} implementation
-   */
-  Site create(String name, String url);
-}
+public interface SiteManager extends DataManager<Site> {}

@@ -114,18 +114,26 @@ Example sites.json
 ```json
   [
       {
-        "remote_managed":false,
-        "name":"RepSync-Node1",
-        "url":"https://host1:8993/services/",
-        "id":"some-unique-id-1234",
-        "version":2
+        "version": 1,
+        "id": "some-unique-id-1234",
+        "name": "RepSync-Node1",
+        "description": "Replication Site 1",
+        "url": "https://host1:8993/services/",
+        "type": "DDF",
+        "kind": "TACTICAL",
+        "polling_period": 600000,
+        "parallelism_factor": 1
        },
       {
-        "remote_managed":false,
-        "name":"RepSync-Node2",
-        "url":"https://host2:8993/services",
-        "id":"another-unique-id-5678",
-        "version":2
+        "version":1,
+        "id": "another-unique-id-5678",
+        "name": "RepSync-Node2",
+        "description": "Replication Site 2",
+        "url": "https://host2:8993/services",
+        "type": "DDF",
+        "kind": "TACTICAL",
+        "polling_period": 600000,
+        "parallelism_factor": 1
       }
    ]
 ```
@@ -139,14 +147,14 @@ Example jobs.json
 ```json
   [
     {
-      "name":"pdf-harvest",
-      "bidirectional":false,
-      "source":"some-unique-id-1234",
-      "destination":"another-unique-id-5678",
-      "filter":"\"media.type\" like 'application/pdf'",
-      "suspended":false,
-      "id":"unique-job-id-98765",
-      "version":1
+      "version": 1,
+      "id": "unique-job-id-98765",
+      "name": "pdf-harvest",
+      "bidirectional": false,
+      "source":" some-unique-id-1234",
+      "destination": "another-unique-id-5678",
+      "filter": "\"media.type\" like 'application/pdf'",
+      "suspended": false,
     }
   ]
 ```

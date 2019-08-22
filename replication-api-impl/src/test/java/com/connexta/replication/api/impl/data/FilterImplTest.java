@@ -13,12 +13,18 @@
  */
 package com.connexta.replication.api.impl.data;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.ion.replication.api.InvalidFieldException;
+import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
+import com.github.npathai.hamcrestopt.OptionalMatchers;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,6 +51,41 @@ public class FilterImplTest {
   @Before
   public void setup() {
     filter = new FilterImpl();
+  }
+
+  @Test
+  public void testDefaultCtor() throws Exception {
+    final FilterImpl persistable = new FilterImpl();
+
+    Assert.assertThat(persistable.getId(), Matchers.not(Matchers.emptyOrNullString()));
+    Assert.assertThat(persistable.getName(), Matchers.nullValue());
+    Assert.assertThat(persistable.getDescription(), OptionalMatchers.isEmpty());
+    Assert.assertThat(persistable.getSiteId(), Matchers.nullValue());
+    Assert.assertThat(persistable.getFilter(), Matchers.nullValue());
+    Assert.assertThat(persistable.isSuspended(), Matchers.equalTo(false));
+    Assert.assertThat(persistable.getPriority(), Matchers.equalTo((byte) 1));
+  }
+
+  @Test
+  public void testCtorWithPojo() throws Exception {
+    FilterPojo pojo =
+        new FilterPojo()
+            .setId(ID)
+            .setVersion(FilterPojo.CURRENT_VERSION)
+            .setSiteId(SITE_ID)
+            .setFilter(FILTER)
+            .setName(NAME)
+            .setDescription(DESCRIPTION)
+            .setSuspended(true)
+            .setPriority(PRIORITY);
+    filter = new FilterImpl(pojo);
+    assertThat(filter.getId(), is(ID));
+    assertThat(filter.getSiteId(), is(SITE_ID));
+    assertThat(filter.getFilter(), is(FILTER));
+    assertThat(filter.getName(), is(NAME));
+    assertThat(filter.getDescription().get(), is(DESCRIPTION));
+    assertThat(filter.isSuspended(), is(true));
+    assertThat(filter.getPriority(), is(PRIORITY));
   }
 
   @Test
@@ -75,7 +116,29 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority(PRIORITY);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
+    assertThat(filter.getId(), is(ID));
+    assertThat(filter.getSiteId(), is(SITE_ID));
+    assertThat(filter.getFilter(), is(FILTER));
+    assertThat(filter.getName(), is(NAME));
+    assertThat(filter.getDescription().get(), is(DESCRIPTION));
+    assertThat(filter.isSuspended(), is(true));
+    assertThat(filter.getPriority(), is(PRIORITY));
+  }
+
+  @Test
+  public void readFromFutureVersion() {
+    FilterPojo pojo =
+        new FilterPojo()
+            .setId(ID)
+            .setVersion(FilterPojo.CURRENT_VERSION + 1)
+            .setSiteId(SITE_ID)
+            .setFilter(FILTER)
+            .setName(NAME)
+            .setDescription(DESCRIPTION)
+            .setSuspended(true)
+            .setPriority(PRIORITY);
+    filter.readFrom(pojo);
     assertThat(filter.getId(), is(ID));
     assertThat(filter.getSiteId(), is(SITE_ID));
     assertThat(filter.getFilter(), is(FILTER));
@@ -87,20 +150,21 @@ public class FilterImplTest {
 
   @Test
   public void readFromWithUnsupportedVersion() {
-    exception.expect(ReplicationPersistenceException.class);
-    exception.expectMessage(Matchers.matchesPattern(".*replication filter.*"));
+    exception.expect(UnsupportedVersionException.class);
+    exception.expectMessage(Matchers.matchesPattern(".*unsupported.*version.*"));
 
     FilterPojo pojo =
         new FilterPojo()
             .setId(ID)
-            .setVersion(0)
+            .setVersion(-1)
             .setSiteId(SITE_ID)
             .setFilter(FILTER)
             .setName(NAME)
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority(PRIORITY);
-    filter = new FilterImpl(pojo);
+
+    filter.readFrom(pojo);
     assertThat(filter.getSiteId(), is(SITE_ID));
     assertThat(filter.getFilter(), is(FILTER));
     assertThat(filter.getName(), is(NAME));
@@ -111,7 +175,7 @@ public class FilterImplTest {
 
   @Test
   public void readFromWithNullSiteId() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*missing.*siteId.*"));
 
     FilterPojo pojo =
@@ -123,12 +187,12 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority(PRIORITY);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
   }
 
   @Test
   public void readFromWithEmptySiteId() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*empty.*siteId.*"));
 
     FilterPojo pojo =
@@ -141,12 +205,12 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority(PRIORITY);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
   }
 
   @Test
   public void readFromWithNullFilter() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*missing.*filter.*"));
 
     FilterPojo pojo =
@@ -158,12 +222,12 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority(PRIORITY);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
   }
 
   @Test
   public void readFromWithEmptyFilter() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*empty.*filter.*"));
 
     FilterPojo pojo =
@@ -176,12 +240,12 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority(PRIORITY);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
   }
 
   @Test
   public void readFromWithNullName() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*missing.*name.*"));
 
     FilterPojo pojo =
@@ -193,12 +257,12 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority(PRIORITY);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
   }
 
   @Test
   public void readFromWithEmptyName() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*empty.*name.*"));
 
     FilterPojo pojo =
@@ -211,7 +275,7 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority(PRIORITY);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
   }
 
   @Test
@@ -226,7 +290,7 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority((byte) 0);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
     assertThat(filter.getSiteId(), is(SITE_ID));
     assertThat(filter.getFilter(), is(FILTER));
     assertThat(filter.getName(), is(NAME));
@@ -247,7 +311,7 @@ public class FilterImplTest {
             .setDescription(DESCRIPTION)
             .setSuspended(true)
             .setPriority((byte) 11);
-    filter = new FilterImpl(pojo);
+    filter.readFrom(pojo);
     assertThat(filter.getSiteId(), is(SITE_ID));
     assertThat(filter.getFilter(), is(FILTER));
     assertThat(filter.getName(), is(NAME));
@@ -279,7 +343,7 @@ public class FilterImplTest {
 
   @Test
   public void writeToWithNullSiteId() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*missing.*siteId.*"));
 
     FilterPojo pojo = new FilterPojo();
@@ -294,7 +358,7 @@ public class FilterImplTest {
 
   @Test
   public void writeToWithEmptySiteId() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*empty.*siteId.*"));
 
     FilterPojo pojo = new FilterPojo();
@@ -310,7 +374,7 @@ public class FilterImplTest {
 
   @Test
   public void writeToWithNullFilter() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*missing.*filter.*"));
 
     FilterPojo pojo = new FilterPojo();
@@ -325,7 +389,7 @@ public class FilterImplTest {
 
   @Test
   public void writeToWithEmptyFilter() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*empty.*filter.*"));
 
     FilterPojo pojo = new FilterPojo();
@@ -341,7 +405,7 @@ public class FilterImplTest {
 
   @Test
   public void writeToWithNullName() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*missing.*name.*"));
 
     FilterPojo pojo = new FilterPojo();
@@ -356,7 +420,7 @@ public class FilterImplTest {
 
   @Test
   public void writeToWithEmptyName() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage(Matchers.matchesPattern(".*empty.*name.*"));
 
     FilterPojo pojo = new FilterPojo();
@@ -368,5 +432,223 @@ public class FilterImplTest {
     filter.setSuspended(true);
     filter.setPriority(PRIORITY);
     filter.writeTo(pojo);
+  }
+
+  @Test
+  public void equals() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId(ID);
+    filter2.setSiteId(SITE_ID);
+    filter2.setFilter(FILTER);
+    filter2.setName(NAME);
+    filter2.setDescription(DESCRIPTION);
+    filter2.setSuspended(true);
+    filter2.setPriority(PRIORITY);
+
+    assertTrue(filter.equals(filter2));
+    assertTrue(filter2.equals(filter2));
+  }
+
+  @Test
+  public void equalsWithDifferentId() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId("numatwo");
+    filter2.setSiteId(SITE_ID);
+    filter2.setFilter(FILTER);
+    filter2.setName(NAME);
+    filter2.setDescription(DESCRIPTION);
+    filter2.setSuspended(true);
+    filter2.setPriority(PRIORITY);
+
+    assertFalse(filter.equals(filter2));
+    assertFalse(filter2.equals(filter));
+  }
+
+  @Test
+  public void equalsWithDifferentName() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId(ID);
+    filter2.setSiteId(SITE_ID);
+    filter2.setFilter(FILTER);
+    filter2.setName("numatwo");
+    filter2.setDescription(DESCRIPTION);
+    filter2.setSuspended(true);
+    filter2.setPriority(PRIORITY);
+
+    assertFalse(filter.equals(filter2));
+    assertFalse(filter2.equals(filter));
+  }
+
+  @Test
+  public void equalsWithDifferentSiteId() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId(ID);
+    filter2.setSiteId("numatwo");
+    filter2.setFilter(FILTER);
+    filter2.setName(NAME);
+    filter2.setDescription(DESCRIPTION);
+    filter2.setSuspended(true);
+    filter2.setPriority(PRIORITY);
+
+    assertFalse(filter.equals(filter2));
+    assertFalse(filter2.equals(filter));
+  }
+
+  @Test
+  public void equalsWithDifferentFilter() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId(ID);
+    filter2.setSiteId(SITE_ID);
+    filter2.setFilter("numatwo");
+    filter2.setName(NAME);
+    filter2.setDescription(DESCRIPTION);
+    filter2.setSuspended(true);
+    filter2.setPriority(PRIORITY);
+
+    assertFalse(filter.equals(filter2));
+    assertFalse(filter2.equals(filter));
+  }
+
+  @Test
+  public void equalsWithDifferentDescription() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId(ID);
+    filter2.setSiteId(SITE_ID);
+    filter2.setFilter(FILTER);
+    filter2.setName(NAME);
+    filter2.setDescription("numatwo");
+    filter2.setSuspended(true);
+    filter2.setPriority(PRIORITY);
+
+    assertFalse(filter.equals(filter2));
+    assertFalse(filter2.equals(filter));
+  }
+
+  @Test
+  public void equalsWithDifferentSuspendedValue() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId(ID);
+    filter2.setSiteId(SITE_ID);
+    filter2.setFilter(FILTER);
+    filter2.setName(NAME);
+    filter2.setDescription(DESCRIPTION);
+    filter2.setSuspended(false);
+    filter2.setPriority(PRIORITY);
+
+    assertFalse(filter.equals(filter2));
+    assertFalse(filter2.equals(filter));
+  }
+
+  @Test
+  public void equalsWithDifferentPriority() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId(ID);
+    filter2.setSiteId(SITE_ID);
+    filter2.setFilter(FILTER);
+    filter2.setName(NAME);
+    filter2.setDescription(DESCRIPTION);
+    filter2.setSuspended(true);
+    filter2.setPriority((byte) 5);
+
+    assertFalse(filter.equals(filter2));
+    assertFalse(filter2.equals(filter));
+  }
+
+  @Test
+  public void equalsWithDifferentObject() {
+    assertFalse(filter.equals(new Object()));
+  }
+
+  @Test
+  public void equalsWithNull() {
+    assertFalse(filter.equals(null));
+  }
+
+  @Test
+  public void hashcode() {
+    filter.setId(ID);
+    filter.setSiteId(SITE_ID);
+    filter.setFilter(FILTER);
+    filter.setName(NAME);
+    filter.setDescription(DESCRIPTION);
+    filter.setSuspended(true);
+    filter.setPriority(PRIORITY);
+    FilterImpl filter2 = new FilterImpl();
+
+    filter2.setId(ID);
+    filter2.setSiteId(SITE_ID);
+    filter2.setFilter(FILTER);
+    filter2.setName(NAME);
+    filter2.setDescription(DESCRIPTION);
+    filter2.setSuspended(true);
+    filter2.setPriority(PRIORITY);
+
+    assertThat(filter.hashCode(), is(filter2.hashCode()));
+    filter2.setName("numbatwo");
+    assertThat(filter.hashCode(), not(filter2.hashCode()));
   }
 }

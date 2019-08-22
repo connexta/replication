@@ -13,58 +13,92 @@
  */
 package com.connexta.replication.api.impl.data;
 
+import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
 import com.connexta.ion.replication.api.NotFoundException;
+import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
+import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
 import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
 import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
 import com.connexta.replication.api.persistence.SiteManager;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.springframework.dao.NonTransientDataAccessException;
+import org.springframework.dao.RecoverableDataAccessException;
+import org.springframework.dao.TransientDataAccessException;
 
+/** Provides an implementation for the site manager. */
 public class SiteManagerImpl implements SiteManager {
+  private final SiteRepository siteRepository;
 
-  private SiteRepository siteRepository;
-
+  /**
+   * Instantiates a new site manager with the given repository.
+   *
+   * @param siteRepository the repository to use for persistence
+   */
   public SiteManagerImpl(SiteRepository siteRepository) {
     this.siteRepository = siteRepository;
   }
 
   @Override
-  public Site create(String name, String url) {
-    SiteImpl site = new SiteImpl();
-    site.setName(name);
-    site.setUrl(url);
-    return site;
-  }
-
-  @Override
   public Site get(String id) {
-    return siteRepository
-        .findById(id)
-        .map(SiteImpl::new)
-        .orElseThrow(
-            () -> new NotFoundException(String.format("Cannot find site with ID: %s", id)));
+    try {
+      return siteRepository
+          .findById(id)
+          .map(SiteImpl::new)
+          .orElseThrow(
+              () -> new NotFoundException(String.format("Cannot find site with ID: %s", id)));
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public Stream<Site> objects() {
-    return StreamSupport.stream(siteRepository.findAll().spliterator(), false)
-        .map(SiteImpl::new)
-        .map(Site.class::cast);
+    try {
+      return StreamSupport.stream(siteRepository.findAll().spliterator(), false)
+          .map(SiteImpl::new)
+          .map(Site.class::cast);
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public void save(Site site) {
-    if (site instanceof SiteImpl) {
-      siteRepository.save(((SiteImpl) site).writeTo(new SitePojo()));
-    } else {
+    if (!(site instanceof SiteImpl)) {
       throw new IllegalArgumentException(
           "Expected a SiteImpl but got a " + site.getClass().getSimpleName());
+    }
+    try {
+      siteRepository.save(((SiteImpl) site).writeTo(new SitePojo()));
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
     }
   }
 
   @Override
   public void remove(String id) {
-    siteRepository.deleteById(id);
+    try {
+      siteRepository.deleteById(id);
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 }

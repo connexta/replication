@@ -20,8 +20,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.connexta.ion.replication.api.InvalidFieldException;
+import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
 import com.connexta.ion.replication.api.NotFoundException;
+import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
 import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
@@ -36,6 +40,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
+import org.springframework.dao.NonTransientDataAccessResourceException;
+import org.springframework.dao.RecoverableDataAccessException;
+import org.springframework.dao.TransientDataAccessResourceException;
 
 public class FilterIndexManagerImplTest {
 
@@ -78,7 +86,7 @@ public class FilterIndexManagerImplTest {
 
   @Test
   public void testGetExistingIndexIsInvalid() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage("missing filter_index id");
     Filter filter = mock(Filter.class);
     when(filter.getId()).thenReturn(ID);
@@ -94,6 +102,35 @@ public class FilterIndexManagerImplTest {
     FilterIndex filterIndex = indices.getOrCreate(filter);
     assertThat(filterIndex.getId(), is(ID));
     assertThat(filterIndex.getModifiedSince(), OptionalMatchers.isEmpty());
+  }
+
+  @Test(expected = NonTransientReplicationPersistenceException.class)
+  public void testGetOrCreateWithNonTransientFailure() throws Exception {
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID);
+    Mockito.when(repository.findById(ID))
+        .thenThrow(new NonTransientDataAccessResourceException("testing"));
+
+    indices.getOrCreate(filter);
+  }
+
+  @Test(expected = TransientReplicationPersistenceException.class)
+  public void testGetOrCreateWithTransientFailure() throws Exception {
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID);
+    Mockito.when(repository.findById(ID))
+        .thenThrow(new TransientDataAccessResourceException("testing"));
+
+    indices.getOrCreate(filter);
+  }
+
+  @Test(expected = RecoverableReplicationPersistenceException.class)
+  public void testGetOrCreateWithRecoverableFailure() throws Exception {
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID);
+    Mockito.when(repository.findById(ID)).thenThrow(new RecoverableDataAccessException("testing"));
+
+    indices.getOrCreate(filter);
   }
 
   @Test
@@ -112,14 +149,43 @@ public class FilterIndexManagerImplTest {
 
   @Test
   public void testGetByIdInvalidPojo() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     when(repository.findById(ID)).thenReturn(Optional.of(INVALID_POJO));
     indices.get(ID);
   }
 
+  @Test(expected = NonTransientReplicationPersistenceException.class)
+  public void testGetWithNonTransientFailure() throws Exception {
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID);
+    Mockito.when(repository.findById(ID))
+        .thenThrow(new NonTransientDataAccessResourceException("testing"));
+
+    indices.getOrCreate(filter);
+  }
+
+  @Test(expected = TransientReplicationPersistenceException.class)
+  public void testGetWithTransientFailure() throws Exception {
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID);
+    Mockito.when(repository.findById(ID))
+        .thenThrow(new TransientDataAccessResourceException("testing"));
+
+    indices.getOrCreate(filter);
+  }
+
+  @Test(expected = RecoverableReplicationPersistenceException.class)
+  public void testGetWithRecoverableFailure() throws Exception {
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID);
+    Mockito.when(repository.findById(ID)).thenThrow(new RecoverableDataAccessException("testing"));
+
+    indices.getOrCreate(filter);
+  }
+
   @Test
   public void testSaveInvalidFilterIndex() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage("missing filter_index id");
     indices.save(new FilterIndexImpl(INVALID_POJO));
   }
@@ -129,6 +195,33 @@ public class FilterIndexManagerImplTest {
     exception.expect(ReplicationPersistenceException.class);
     exception.expectMessage("Expected FilterIndexImpl");
     indices.save(mock(FilterIndex.class));
+  }
+
+  @Test(expected = NonTransientReplicationPersistenceException.class)
+  public void testSaveWithNonTransientFailure() throws Exception {
+    Mockito.doThrow(new NonTransientDataAccessResourceException("testing"))
+        .when(repository)
+        .save(Mockito.any());
+
+    indices.save(new FilterIndexImpl(new FilterImpl()));
+  }
+
+  @Test(expected = TransientReplicationPersistenceException.class)
+  public void testSaveWithTransientFailure() throws Exception {
+    Mockito.doThrow(new TransientDataAccessResourceException("testing"))
+        .when(repository)
+        .save(Mockito.any());
+
+    indices.save(new FilterIndexImpl(new FilterImpl()));
+  }
+
+  @Test(expected = RecoverableReplicationPersistenceException.class)
+  public void testSaveWithRecoverableFailure() throws Exception {
+    Mockito.doThrow(new RecoverableDataAccessException("testing"))
+        .when(repository)
+        .save(Mockito.any());
+
+    indices.save(new FilterIndexImpl(new FilterImpl()));
   }
 
   @Test
@@ -144,8 +237,31 @@ public class FilterIndexManagerImplTest {
 
   @Test
   public void testObjectsWithInvalidObject() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     when(repository.findAll()).thenReturn(List.of(POJO1, INVALID_POJO));
+    indices.objects().collect(Collectors.toList());
+  }
+
+  @Test(expected = NonTransientReplicationPersistenceException.class)
+  public void testObjectsWithNonTransientFailure() {
+    Mockito.when(repository.findAll())
+        .thenThrow(new NonTransientDataAccessResourceException("testing"));
+
+    indices.objects().count();
+  }
+
+  @Test(expected = TransientReplicationPersistenceException.class)
+  public void testObjectsWithTransientFailure() {
+    Mockito.when(repository.findAll())
+        .thenThrow(new TransientDataAccessResourceException("testing"));
+
+    indices.objects().count();
+  }
+
+  @Test(expected = RecoverableReplicationPersistenceException.class)
+  public void testObjectsWithRecoverableFailure() {
+    Mockito.when(repository.findAll()).thenThrow(new RecoverableDataAccessException("testing"));
+
     indices.objects().collect(Collectors.toList());
   }
 
@@ -153,5 +269,30 @@ public class FilterIndexManagerImplTest {
   public void testRemove() {
     indices.remove(ID);
     verify(repository).deleteById(ID);
+  }
+
+  @Test(expected = NonTransientReplicationPersistenceException.class)
+  public void testRemoveWithNonTransientFailure() throws Exception {
+    Mockito.doThrow(new NonTransientDataAccessResourceException("testing"))
+        .when(repository)
+        .deleteById(ID);
+
+    indices.remove(ID);
+  }
+
+  @Test(expected = TransientReplicationPersistenceException.class)
+  public void testRemoveWithTransientFailure() throws Exception {
+    Mockito.doThrow(new TransientDataAccessResourceException("testing"))
+        .when(repository)
+        .deleteById(ID);
+
+    indices.remove(ID);
+  }
+
+  @Test(expected = RecoverableReplicationPersistenceException.class)
+  public void testRemoveWithRecoverableFailure() throws Exception {
+    Mockito.doThrow(new RecoverableDataAccessException("testing")).when(repository).deleteById(ID);
+
+    indices.remove(ID);
   }
 }

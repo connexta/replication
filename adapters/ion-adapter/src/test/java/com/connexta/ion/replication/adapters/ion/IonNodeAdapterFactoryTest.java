@@ -18,7 +18,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.verify;
 
 import com.connexta.ion.replication.api.NodeAdapter;
-import com.connexta.ion.replication.api.NodeAdapterType;
+import com.connexta.replication.api.data.SiteType;
 import java.net.URL;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +49,6 @@ public class IonNodeAdapterFactoryTest {
 
   @Test
   public void getType() {
-    assertThat(factory.getType(), is(NodeAdapterType.ION));
+    assertThat(factory.getType(), is(SiteType.ION));
   }
 }

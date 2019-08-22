@@ -3,6 +3,8 @@
 The replication solr docker images adds 4 cores that have a custom solr schema.
 The cores created are
 - replication_site
+- replication_filter
+- replication_index
 - replication_config
 - replication_status
 - replication_item

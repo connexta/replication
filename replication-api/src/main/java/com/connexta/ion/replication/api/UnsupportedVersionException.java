@@ -13,18 +13,17 @@
  */
 package com.connexta.ion.replication.api;
 
-/** Persistence exception indicating when a data entry that should be stored couldn't be found. */
-@SuppressWarnings("squid:MaximumInheritanceDepth" /* Exception class hierarchy */)
-public class NotFoundException extends NonTransientReplicationPersistenceException {
+/** Thrown when a pojo cannot be deserialized because its version format is not supported. */
+public class UnsupportedVersionException extends ReplicationPersistenceException {
   /** Instantiates a new exception. */
-  public NotFoundException() {}
+  public UnsupportedVersionException() {}
 
   /**
    * Instantiates a new exception.
    *
    * @param message the message for the exception
    */
-  public NotFoundException(String message) {
+  public UnsupportedVersionException(String message) {
     super(message);
   }
 
@@ -34,7 +33,7 @@ public class NotFoundException extends NonTransientReplicationPersistenceExcepti
    * @param message the message for the exception
    * @param cause the cause for the exception
    */
-  public NotFoundException(String message, Throwable cause) {
+  public UnsupportedVersionException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -43,7 +42,7 @@ public class NotFoundException extends NonTransientReplicationPersistenceExcepti
    *
    * @param cause the cause for the exception
    */
-  public NotFoundException(Throwable cause) {
+  public UnsupportedVersionException(Throwable cause) {
     super(cause);
   }
 }

@@ -13,7 +13,8 @@
  */
 package com.connexta.replication.api.impl.persistence.spring;
 
-import com.connexta.ion.replication.api.NodeAdapterType;
+import com.connexta.replication.api.data.SiteKind;
+import com.connexta.replication.api.data.SiteType;
 import com.connexta.replication.api.impl.persistence.EmbeddedSolrServerFactory;
 import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
 import com.github.npathai.hamcrestopt.OptionalMatchers;
@@ -45,43 +46,61 @@ public class SiteRepositoryIntegrationTest {
   private static final String ID = "1234";
   private static final String ID2 = "1235";
   private static final String ID3 = "1236";
-  private static final boolean REMOTE_MANAGED = true;
-  private static final boolean REMOTE_MANAGED2 = false;
-  private static final boolean REMOTE_MANAGED3 = true;
   private static final String NAME = "site.name";
   private static final String NAME2 = "site.name2";
   private static final String NAME3 = "site.name3";
+  private static final String DESCRIPTION = "site.description";
+  private static final String DESCRIPTION2 = "site.description2";
+  private static final String DESCRIPTION3 = "site.description3";
   private static final String URL = "http://localhost/service";
   private static final String URL2 = "http://localhost/service2";
   private static final String URL3 = "http://localhost/service3";
-  private static final String TYPE = NodeAdapterType.DDF.name();
-  private static final String TYPE2 = NodeAdapterType.ION.name();
-  private static final String TYPE3 = NodeAdapterType.ION.name();
+  private static final String TYPE = SiteType.DDF.name();
+  private static final String TYPE2 = SiteType.ION.name();
+  private static final String TYPE3 = "new-type";
+  private static final String KIND = SiteKind.REGIONAL.name();
+  private static final String KIND2 = SiteKind.TACTICAL.name();
+  private static final String KIND3 = "new-kind";
+  private static final long POLLING_TIMEOUT = 10L;
+  private static final long POLLING_TIMEOUT2 = 0L;
+  private static final long POLLING_TIMEOUT3 = 30L;
+  private static final int PARALLELISM_FACTOR = 1;
+  private static final int PARALLELISM_FACTOR2 = 0;
+  private static final int PARALLELISM_FACTOR3 = 3;
 
   private static final SitePojo POJO =
       new SitePojo()
           .setVersion(SiteRepositoryIntegrationTest.VERSION)
           .setId(SiteRepositoryIntegrationTest.ID)
-          .setRemoteManaged(SiteRepositoryIntegrationTest.REMOTE_MANAGED)
           .setName(SiteRepositoryIntegrationTest.NAME)
+          .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
           .setUrl(SiteRepositoryIntegrationTest.URL)
-          .setType(SiteRepositoryIntegrationTest.TYPE);
+          .setType(SiteRepositoryIntegrationTest.TYPE)
+          .setKind(SiteRepositoryIntegrationTest.KIND)
+          .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+          .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
   private static final SitePojo POJO2 =
       new SitePojo()
           .setVersion(SiteRepositoryIntegrationTest.VERSION2)
           .setId(SiteRepositoryIntegrationTest.ID2)
-          .setRemoteManaged(SiteRepositoryIntegrationTest.REMOTE_MANAGED2)
           .setName(SiteRepositoryIntegrationTest.NAME2)
+          .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION2)
           .setUrl(SiteRepositoryIntegrationTest.URL2)
-          .setType(SiteRepositoryIntegrationTest.TYPE2);
+          .setType(SiteRepositoryIntegrationTest.TYPE2)
+          .setKind(SiteRepositoryIntegrationTest.KIND2)
+          .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT2)
+          .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR2);
   private static final SitePojo POJO3 =
       new SitePojo()
           .setVersion(SiteRepositoryIntegrationTest.VERSION3)
           .setId(SiteRepositoryIntegrationTest.ID3)
-          .setRemoteManaged(SiteRepositoryIntegrationTest.REMOTE_MANAGED3)
           .setName(SiteRepositoryIntegrationTest.NAME3)
+          .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION3)
           .setUrl(SiteRepositoryIntegrationTest.URL3)
-          .setType(SiteRepositoryIntegrationTest.TYPE3);
+          .setType(SiteRepositoryIntegrationTest.TYPE3)
+          .setKind(SiteRepositoryIntegrationTest.KIND3)
+          .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT3)
+          .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR3);
 
   @TestConfiguration
   @EnableSolrRepositories(basePackages = "com.connexta.replication")
@@ -114,10 +133,11 @@ public class SiteRepositoryIntegrationTest {
     final SitePojo pojo =
         new SitePojo()
             .setVersion(SiteRepositoryIntegrationTest.VERSION)
-            .setRemoteManaged(SiteRepositoryIntegrationTest.REMOTE_MANAGED)
-            .setUrl(SiteRepositoryIntegrationTest.URL)
             .setName(SiteRepositoryIntegrationTest.NAME)
-            .setType(SiteRepositoryIntegrationTest.TYPE);
+            .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
+            .setUrl(SiteRepositoryIntegrationTest.URL)
+            .setType(SiteRepositoryIntegrationTest.TYPE)
+            .setKind((SiteRepositoryIntegrationTest.KIND));
 
     repo.save(pojo);
   }
@@ -128,9 +148,12 @@ public class SiteRepositoryIntegrationTest {
         new SitePojo()
             .setVersion(SiteRepositoryIntegrationTest.VERSION)
             .setId(SiteRepositoryIntegrationTest.ID)
-            .setRemoteManaged(SiteRepositoryIntegrationTest.REMOTE_MANAGED)
+            .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
             .setUrl(SiteRepositoryIntegrationTest.URL)
-            .setType(SiteRepositoryIntegrationTest.TYPE);
+            .setType(SiteRepositoryIntegrationTest.TYPE)
+            .setKind(SiteRepositoryIntegrationTest.KIND)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
     final SitePojo saved = repo.save(pojo);
 
     Assert.assertThat(saved, Matchers.equalTo(pojo));
@@ -140,14 +163,37 @@ public class SiteRepositoryIntegrationTest {
   }
 
   @Test
+  public void testPojoPersistenceWhenDescriptionIsNotDefined() throws Exception {
+    final SitePojo pojo =
+        new SitePojo()
+            .setVersion(SiteRepositoryIntegrationTest.VERSION)
+            .setId(SiteRepositoryIntegrationTest.ID)
+            .setName(SiteRepositoryIntegrationTest.NAME)
+            .setUrl(SiteRepositoryIntegrationTest.URL)
+            .setType(SiteRepositoryIntegrationTest.TYPE)
+            .setKind(SiteRepositoryIntegrationTest.KIND)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
+    final SitePojo saved = repo.save(pojo);
+
+    Assert.assertThat(saved, Matchers.equalTo(pojo));
+    Assert.assertThat(
+        repo.findById(SiteRepositoryIntegrationTest.ID),
+        OptionalMatchers.isPresentAnd(Matchers.equalTo(pojo)));
+  }
+
+  @Test
   public void testPojoPersistenceWhenUrlIsNotDefined() throws Exception {
     final SitePojo pojo =
         new SitePojo()
             .setVersion(SiteRepositoryIntegrationTest.VERSION)
             .setId(SiteRepositoryIntegrationTest.ID)
-            .setRemoteManaged(SiteRepositoryIntegrationTest.REMOTE_MANAGED)
             .setName(SiteRepositoryIntegrationTest.NAME)
-            .setType(SiteRepositoryIntegrationTest.TYPE);
+            .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
+            .setType(SiteRepositoryIntegrationTest.TYPE)
+            .setKind(SiteRepositoryIntegrationTest.KIND)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
     final SitePojo saved = repo.save(pojo);
 
     Assert.assertThat(saved, Matchers.equalTo(pojo));
@@ -162,9 +208,53 @@ public class SiteRepositoryIntegrationTest {
         new SitePojo()
             .setVersion(SiteRepositoryIntegrationTest.VERSION)
             .setId(SiteRepositoryIntegrationTest.ID)
-            .setRemoteManaged(SiteRepositoryIntegrationTest.REMOTE_MANAGED)
             .setName(SiteRepositoryIntegrationTest.NAME)
-            .setUrl(SiteRepositoryIntegrationTest.URL);
+            .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
+            .setUrl(SiteRepositoryIntegrationTest.URL)
+            .setType(SiteRepositoryIntegrationTest.TYPE)
+            .setKind(SiteRepositoryIntegrationTest.KIND)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
+    final SitePojo saved = repo.save(pojo);
+
+    Assert.assertThat(saved, Matchers.equalTo(pojo));
+    Assert.assertThat(
+        repo.findById(SiteRepositoryIntegrationTest.ID),
+        OptionalMatchers.isPresentAnd(Matchers.equalTo(pojo)));
+  }
+
+  @Test
+  public void testPojoPersistenceWhenKindIsNotDefined() throws Exception {
+    final SitePojo pojo =
+        new SitePojo()
+            .setVersion(SiteRepositoryIntegrationTest.VERSION)
+            .setId(SiteRepositoryIntegrationTest.ID)
+            .setName(SiteRepositoryIntegrationTest.NAME)
+            .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
+            .setUrl(SiteRepositoryIntegrationTest.URL)
+            .setType(SiteRepositoryIntegrationTest.TYPE)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
+    final SitePojo saved = repo.save(pojo);
+
+    Assert.assertThat(saved, Matchers.equalTo(pojo));
+    Assert.assertThat(
+        repo.findById(SiteRepositoryIntegrationTest.ID),
+        OptionalMatchers.isPresentAnd(Matchers.equalTo(pojo)));
+  }
+
+  @Test
+  public void testPojoPersistenceWhenPollingTimeoutIsNotDefined() throws Exception {
+    final SitePojo pojo =
+        new SitePojo()
+            .setVersion(SiteRepositoryIntegrationTest.VERSION)
+            .setId(SiteRepositoryIntegrationTest.ID)
+            .setName(SiteRepositoryIntegrationTest.NAME)
+            .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
+            .setUrl(SiteRepositoryIntegrationTest.URL)
+            .setType(SiteRepositoryIntegrationTest.TYPE)
+            .setKind(SiteRepositoryIntegrationTest.KIND)
+            .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
     final SitePojo saved = repo.save(pojo);
 
     Assert.assertThat(saved, Matchers.equalTo(pojo));

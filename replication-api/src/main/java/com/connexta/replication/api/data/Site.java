@@ -13,58 +13,70 @@
  */
 package com.connexta.replication.api.data;
 
-import com.connexta.ion.replication.api.NodeAdapterType;
+import java.net.URL;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.OptionalInt;
 
 /** A Site holds information about a system to be replicated to/from */
 public interface Site extends Persistable {
-
   /**
-   * Get the human readable name of this site
+   * Gets the human readable name of this site
    *
-   * @return site name
+   * @return the site name
    */
   String getName();
 
   /**
-   * Get the URL of this site
+   * Gets an optional description for this site.
    *
-   * @return site URL
+   * @return the site description or empty if none defined
    */
-  String getUrl();
+  Optional<String> getDescription();
 
   /**
-   * Set the URL of this site
+   * Gets the URL of this site
    *
-   * @param url the URL to give this site
+   * @return the site URL
    */
-  // still internally used by the ReplicatorImpl
-  void setUrl(String url);
+  URL getUrl();
 
   /**
-   * When {@code false}, the local process is responsible for running {@link ReplicatorConfig}s
-   * associated with this site.
+   * Gets the type of this site. This type can be used to determine how to interact with the site.
    *
-   * <p>When {@code true}, the local process is no longer responsible for performing replication for
-   * any {@link ReplicatorConfig}s associated with this site. This effectively disables running
-   * replication locally.
-   *
-   * @return {@code true} if replication should not run locally, otherwise {@code false}.
+   * @return the type for this site
    */
-  boolean isRemoteManaged();
+  SiteType getType();
 
   /**
-   * Get the type of this site as defined in {@link NodeAdapterType}. This type can be used to
-   * determine how to interact with the site.
+   * Gets the kind for this site. The kind can be used to determine how to best interact with the
+   * site.
    *
-   * @return {@link NodeAdapterType}
+   * @return the kind of site this is
    */
-  String getType();
+  SiteKind getKind();
 
   /**
-   * Sets the {@link NodeAdapterType} of this site.
+   * Gets the optional amount of time to wait in between polling attempts whenever polling for intel
+   * from this site.
    *
-   * @param type the {@link NodeAdapterType}
+   * <p><i>Note:</i> The duration will always be representable in milliseconds as a long value.
+   *
+   * @return the maximum amount of time to wait in between polling attempts or empty if polling is
+   *     not required or if the local configured default value should be used
    */
-  // still internally used by the ReplicatorImpl
-  void setType(String type);
+  Optional<Duration> getPollingPeriod();
+
+  /**
+   * Gets the parallelism factor for this site. This corresponds to the maximum number of pieces of
+   * intel information that can be transferred from/to this site. For example, a tactical site might
+   * want to ensure its bandwidth is not over utilized by forcing the local Ion site to
+   * sequentialize all its communications with it by setting this factor to <code>1</code>.
+   *
+   * <p><i>Note:</i> The local Ion site cannot exceed this value if set. However it can decide to
+   * ignore it and use a smaller factor based on its own requirements.
+   *
+   * @return the parallelism factor for this site or empty if it is up to Ion to decide
+   */
+  OptionalInt getParallelismFactor();
 }

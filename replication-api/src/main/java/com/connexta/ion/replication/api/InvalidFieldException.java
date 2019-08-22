@@ -13,18 +13,21 @@
  */
 package com.connexta.ion.replication.api;
 
-/** Persistence exception indicating when a data entry that should be stored couldn't be found. */
+/**
+ * Thrown when a pojo cannot be deserialized or an object cannot be serialized because of an invalid
+ * field.
+ */
 @SuppressWarnings("squid:MaximumInheritanceDepth" /* Exception class hierarchy */)
-public class NotFoundException extends NonTransientReplicationPersistenceException {
+public class InvalidFieldException extends NonTransientReplicationPersistenceException {
   /** Instantiates a new exception. */
-  public NotFoundException() {}
+  public InvalidFieldException() {}
 
   /**
    * Instantiates a new exception.
    *
    * @param message the message for the exception
    */
-  public NotFoundException(String message) {
+  public InvalidFieldException(String message) {
     super(message);
   }
 
@@ -34,7 +37,7 @@ public class NotFoundException extends NonTransientReplicationPersistenceExcepti
    * @param message the message for the exception
    * @param cause the cause for the exception
    */
-  public NotFoundException(String message, Throwable cause) {
+  public InvalidFieldException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -43,7 +46,7 @@ public class NotFoundException extends NonTransientReplicationPersistenceExcepti
    *
    * @param cause the cause for the exception
    */
-  public NotFoundException(Throwable cause) {
+  public InvalidFieldException(Throwable cause) {
     super(cause);
   }
 }

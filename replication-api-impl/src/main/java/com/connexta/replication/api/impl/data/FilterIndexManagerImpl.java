@@ -13,8 +13,11 @@
  */
 package com.connexta.replication.api.impl.data;
 
+import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
 import com.connexta.ion.replication.api.NotFoundException;
+import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
 import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
@@ -22,6 +25,9 @@ import com.connexta.replication.api.impl.persistence.spring.FilterIndexRepositor
 import com.connexta.replication.api.persistence.FilterIndexManager;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.springframework.dao.NonTransientDataAccessException;
+import org.springframework.dao.RecoverableDataAccessException;
+import org.springframework.dao.TransientDataAccessException;
 
 /**
  * Simple implementation for FilterIndexManager which wraps the {@link FilterIndexRepository} and
@@ -42,38 +48,77 @@ public class FilterIndexManagerImpl implements FilterIndexManager {
 
   @Override
   public FilterIndex getOrCreate(Filter filter) {
-    return indexRepository
-        .findById(filter.getId())
-        .map(FilterIndexImpl::new)
-        .orElse(new FilterIndexImpl(filter));
+    try {
+      return indexRepository
+          .findById(filter.getId())
+          .map(FilterIndexImpl::new)
+          .orElse(new FilterIndexImpl(filter));
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public FilterIndex get(String id) {
-    return indexRepository
-        .findById(id)
-        .map(FilterIndexImpl::new)
-        .orElseThrow(() -> new NotFoundException("Unable to find filter index with id=" + id));
+    try {
+      return indexRepository
+          .findById(id)
+          .map(FilterIndexImpl::new)
+          .orElseThrow(() -> new NotFoundException("Unable to find filter index with id=" + id));
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public Stream<FilterIndex> objects() {
-    return StreamSupport.stream(indexRepository.findAll().spliterator(), false)
-        .map(FilterIndexImpl::new);
+    try {
+      return StreamSupport.stream(indexRepository.findAll().spliterator(), false)
+          .map(FilterIndexImpl::new);
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public void save(FilterIndex index) {
-    if (index instanceof FilterIndexImpl) {
-      indexRepository.save(((FilterIndexImpl) index).writeTo(new FilterIndexPojo()));
-    } else {
+    if (!(index instanceof FilterIndexImpl)) {
       throw new ReplicationPersistenceException(
           "Expected FilterIndexImpl but got " + index.getClass().getSimpleName());
+    }
+    try {
+      indexRepository.save(((FilterIndexImpl) index).writeTo(new FilterIndexPojo()));
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
     }
   }
 
   @Override
   public void remove(String id) {
-    indexRepository.deleteById(id);
+    try {
+      indexRepository.deleteById(id);
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 }

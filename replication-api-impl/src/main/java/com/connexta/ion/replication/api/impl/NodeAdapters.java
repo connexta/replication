@@ -15,7 +15,7 @@ package com.connexta.ion.replication.api.impl;
 
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterFactory;
-import com.connexta.ion.replication.api.NodeAdapterType;
+import com.connexta.replication.api.data.SiteType;
 import java.util.List;
 
 /** Utility class for getting {@link NodeAdapterFactory}s. */
@@ -25,20 +25,19 @@ public class NodeAdapters {
 
   /**
    * Returns a {@link NodeAdapterFactory} which is used to create a {@link NodeAdapter} for the
-   * given {@link NodeAdapterType}.
+   * given site type.
    *
-   * @param type the type of {@link NodeAdapter}
+   * @param type the type of site for which to get a {@link NodeAdapter}
    * @return the {@link NodeAdapter}s factory.
    */
-  public NodeAdapterFactory factoryFor(NodeAdapterType type) {
+  public NodeAdapterFactory factoryFor(SiteType type) {
     return nodeAdapterFactories.stream()
         .filter(factory -> factory.getType().equals(type))
         .findFirst()
         .orElseThrow(
             () ->
                 new IllegalArgumentException(
-                    String.format(
-                        "No node adapter factory with type %s registered", type.toString())));
+                    String.format("No node adapter factory with type %s registered", type)));
   }
 
   public void setNodeAdapterFactories(List<NodeAdapterFactory> nodeAdapterFactories) {

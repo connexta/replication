@@ -19,7 +19,8 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.ion.replication.api.InvalidFieldException;
+import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
@@ -73,7 +74,7 @@ public class FilterIndexImplTest {
 
   @Test
   public void testWriteToInvalidIndex() {
-    exception.expect(ReplicationPersistenceException.class);
+    exception.expect(InvalidFieldException.class);
     exception.expectMessage("missing filter_index id");
     FilterIndexImpl index = new FilterIndexImpl();
     index.writeTo(new FilterIndexPojo());
@@ -97,8 +98,8 @@ public class FilterIndexImplTest {
   }
 
   @Test
-  public void testReadFromPreviousVersion() {
-    exception.expect(ReplicationPersistenceException.class);
+  public void testReadFromUnsupportedVersion() {
+    exception.expect(UnsupportedVersionException.class);
     exception.expectMessage("unsupported");
     FilterIndexPojo pojo =
         new FilterIndexPojo().setId(ID).setVersion(FilterIndexPojo.MINIMUM_VERSION - 1);
@@ -124,5 +125,83 @@ public class FilterIndexImplTest {
     FilterIndex index = new FilterIndexImpl();
     index.setModifiedSince(modifiedSince);
     assertThat(index.getModifiedSince(), isPresentAnd(is(modifiedSince)));
+  }
+
+  @Test
+  public void testEqualsReflexive() {
+    FilterIndexImpl index = new FilterIndexImpl(filter);
+
+    assertThat(index.equals(index), is(true));
+  }
+
+  @Test
+  public void testEqualsSymmetric() {
+    FilterIndexImpl index = new FilterIndexImpl(filter);
+    FilterIndexImpl index2 = new FilterIndexImpl(filter);
+
+    index.setModifiedSince(MODIFIED_SINCE);
+    index2.setModifiedSince(MODIFIED_SINCE);
+
+    assertThat(index.equals(index2), is(true));
+    assertThat(index2.equals(index), is(true));
+  }
+
+  @Test
+  public void testEqualsTransitive() {
+    FilterIndexImpl index = new FilterIndexImpl(filter);
+    FilterIndexImpl index2 = new FilterIndexImpl(filter);
+    FilterIndexImpl index3 = new FilterIndexImpl(filter);
+
+    index.setModifiedSince(MODIFIED_SINCE);
+    index2.setModifiedSince(MODIFIED_SINCE);
+    index3.setModifiedSince(MODIFIED_SINCE);
+
+    assertThat(index.equals(index2), is(true));
+    assertThat(index2.equals(index3), is(true));
+    assertThat(index.equals(index3), is(true));
+  }
+
+  @Test
+  public void testEqualsConsistent() {
+    FilterIndexImpl index = new FilterIndexImpl(filter);
+    FilterIndexImpl index2 = new FilterIndexImpl(filter);
+
+    index.setModifiedSince(MODIFIED_SINCE);
+    index2.setModifiedSince(MODIFIED_SINCE);
+
+    assertThat(index.equals(index2), is(true));
+    assertThat(index.equals(index2), is(true));
+  }
+
+  @Test
+  public void testEqualsNull() {
+    FilterIndexImpl index = new FilterIndexImpl(filter);
+
+    assertThat(index.equals(null), is(false));
+  }
+
+  @Test
+  public void testEqualsDifferentObject() {
+    FilterIndexImpl index = new FilterIndexImpl(filter);
+
+    assertThat(index.equals(new Object()), is(false));
+  }
+
+  @Test
+  public void testHashIsConsistent() {
+    FilterIndexImpl index = new FilterIndexImpl(filter);
+
+    final int hash = index.hashCode();
+    assertThat(index.hashCode(), is(hash));
+  }
+
+  @Test
+  public void testEqualsWithDifferentModifiedSince() {
+    FilterIndexImpl index = new FilterIndexImpl(filter);
+    FilterIndexImpl index2 = new FilterIndexImpl(filter);
+
+    index.setModifiedSince(MODIFIED_SINCE);
+    index2.setModifiedSince(Instant.ofEpochSecond(500));
+    assertThat(index.equals(index2), is(false));
   }
 }

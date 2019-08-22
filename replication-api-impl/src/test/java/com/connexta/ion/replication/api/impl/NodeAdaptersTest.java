@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 
 import com.connexta.ion.replication.api.NodeAdapterFactory;
-import com.connexta.ion.replication.api.NodeAdapterType;
+import com.connexta.replication.api.data.SiteType;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
@@ -39,8 +39,8 @@ public class NodeAdaptersTest {
   @Before
   public void setup() {
     nodeAdapters = new NodeAdapters();
-    when(ddfFactory.getType()).thenReturn(NodeAdapterType.DDF);
-    when(ionFactory.getType()).thenReturn(NodeAdapterType.ION);
+    when(ddfFactory.getType()).thenReturn(SiteType.DDF);
+    when(ionFactory.getType()).thenReturn(SiteType.ION);
   }
 
   @Test
@@ -49,7 +49,7 @@ public class NodeAdaptersTest {
     factories.add(ddfFactory);
     factories.add(ionFactory);
     nodeAdapters.setNodeAdapterFactories(factories);
-    assertThat(nodeAdapters.factoryFor(NodeAdapterType.DDF), is(ddfFactory));
+    assertThat(nodeAdapters.factoryFor(SiteType.DDF), is(ddfFactory));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -57,6 +57,6 @@ public class NodeAdaptersTest {
     List<NodeAdapterFactory> factories = new ArrayList<>();
     factories.add(ionFactory);
     nodeAdapters.setNodeAdapterFactories(factories);
-    nodeAdapters.factoryFor(NodeAdapterType.DDF);
+    nodeAdapters.factoryFor(SiteType.DDF);
   }
 }

@@ -13,13 +13,19 @@
  */
 package com.connexta.replication.api.impl.data;
 
+import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
 import com.connexta.ion.replication.api.NotFoundException;
+import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
+import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.impl.persistence.pojo.ConfigPojo;
 import com.connexta.replication.api.impl.persistence.spring.ConfigRepository;
 import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.springframework.dao.NonTransientDataAccessException;
+import org.springframework.dao.RecoverableDataAccessException;
+import org.springframework.dao.TransientDataAccessException;
 
 public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
 
@@ -31,37 +37,76 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
 
   @Override
   public ReplicatorConfig get(String id) {
-    return configRepository
-        .findById(id)
-        .map(ReplicatorConfigImpl::new)
-        .orElseThrow(NotFoundException::new);
+    try {
+      return configRepository
+          .findById(id)
+          .map(ReplicatorConfigImpl::new)
+          .orElseThrow(NotFoundException::new);
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public Stream<ReplicatorConfig> objects() {
-    return StreamSupport.stream(configRepository.findAll().spliterator(), false)
-        .map(ReplicatorConfigImpl::new)
-        .map(ReplicatorConfig.class::cast);
+    try {
+      return StreamSupport.stream(configRepository.findAll().spliterator(), false)
+          .map(ReplicatorConfigImpl::new)
+          .map(ReplicatorConfig.class::cast);
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public void save(ReplicatorConfig replicatorConfig) {
-    if (replicatorConfig instanceof ReplicatorConfigImpl) {
-      configRepository.save(((ReplicatorConfigImpl) replicatorConfig).writeTo(new ConfigPojo()));
-    } else {
+    if (!(replicatorConfig instanceof ReplicatorConfigImpl)) {
       throw new IllegalArgumentException(
           "Expected a ReplicatorConfigImpl but got a "
               + replicatorConfig.getClass().getSimpleName());
+    }
+    try {
+      configRepository.save(((ReplicatorConfigImpl) replicatorConfig).writeTo(new ConfigPojo()));
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
     }
   }
 
   @Override
   public void remove(String id) {
-    configRepository.deleteById(id);
+    try {
+      configRepository.deleteById(id);
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 
   @Override
   public boolean configExists(String configId) {
-    return configRepository.findById(configId).isPresent();
+    try {
+      return configRepository.findById(configId).isPresent();
+    } catch (NonTransientDataAccessException e) {
+      throw new NonTransientReplicationPersistenceException(e);
+    } catch (TransientDataAccessException e) {
+      throw new TransientReplicationPersistenceException(e);
+    } catch (RecoverableDataAccessException e) {
+      throw new RecoverableReplicationPersistenceException(e);
+    }
   }
 }

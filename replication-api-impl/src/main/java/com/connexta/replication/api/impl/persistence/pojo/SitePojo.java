@@ -26,30 +26,46 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 @SolrDocument(collection = SitePojo.COLLECTION)
 public class SitePojo extends Pojo<SitePojo> {
   /**
-   * List of possible versions:
+   * Current version format.
+   *
+   * <p>Version history:
    *
    * <ul>
-   *   <li>1 - initial version.
+   *   <li>1 - Initial Ion version.
    * </ul>
    */
   public static final int CURRENT_VERSION = 1;
 
+  /** The oldest version supported by the current code (anything before that will fail). */
+  public static final int MINIMUM_VERSION = 1;
+
   public static final String COLLECTION = "replication_site";
 
-  @Indexed(name = "remote_managed")
-  private boolean isRemoteManaged = false;
-
-  @Indexed(name = "name", searchable = false)
+  @Indexed(name = "name")
   @Nullable
   private String name;
 
-  @Indexed(name = "url", searchable = false)
+  @Indexed(name = "description", searchable = false)
+  @Nullable
+  private String description;
+
+  @Indexed(name = "url")
   @Nullable
   private String url;
 
   @Indexed(name = "type", searchable = false)
   @Nullable
   private String type;
+
+  @Indexed(name = "kind", searchable = false)
+  @Nullable
+  private String kind;
+
+  @Indexed(name = "polling_period", searchable = false)
+  private long pollingPeriod;
+
+  @Indexed(name = "parallelism_factor", searchable = false)
+  private int parallelismFactor;
 
   /** Instantiates a default site pojo set with the current version. */
   public SitePojo() {
@@ -78,6 +94,27 @@ public class SitePojo extends Pojo<SitePojo> {
   }
 
   /**
+   * Gets an optional description for this site.
+   *
+   * @return the site description or <code>null</code> if none defined
+   */
+  @Nullable
+  public String getDescription() {
+    return description;
+  }
+
+  /**
+   * Gets an optional description for this site.
+   *
+   * @param description the site description or <code>null</code> if none defined
+   * @return this for chaining
+   */
+  public SitePojo setDescription(@Nullable String description) {
+    this.description = description;
+    return this;
+  }
+
+  /**
    * Get the URL of this site.
    *
    * @return the site URL
@@ -95,32 +132,6 @@ public class SitePojo extends Pojo<SitePojo> {
    */
   public SitePojo setUrl(@Nullable String url) {
     this.url = url;
-    return this;
-  }
-
-  /**
-   * When {@code false}, the local process is responsible for running replicator configs associated
-   * with this site.
-   *
-   * <p>When {@code true}, the local process is no longer responsible for performing replication for
-   * any replicator configs associated with this site. This effectively disables running replication
-   * locally.
-   *
-   * @return {@code true} if replication should not run locally, otherwise {@code false}.
-   */
-  public boolean isRemoteManaged() {
-    return isRemoteManaged;
-  }
-
-  /**
-   * See {@link #isRemoteManaged()}.
-   *
-   * @param remoteManaged whether or not the local process is responsible for running replications
-   *     this site is associated with.
-   * @return this for chaining
-   */
-  public SitePojo setRemoteManaged(boolean remoteManaged) {
-    this.isRemoteManaged = remoteManaged;
     return this;
   }
 
@@ -145,9 +156,91 @@ public class SitePojo extends Pojo<SitePojo> {
     return this;
   }
 
+  /**
+   * Gets the kind of this site.
+   *
+   * @return the kind for this site
+   */
+  @Nullable
+  public String getKind() {
+    return kind;
+  }
+
+  /**
+   * Sets the kind of this site.
+   *
+   * @param kind the kind for the site
+   * @return this for chaining
+   */
+  public SitePojo setKind(@Nullable String kind) {
+    this.kind = kind;
+    return this;
+  }
+
+  /**
+   * Gets the optional amount of time in milliseconds to wait in between polling attempts whenever
+   * polling for intel from this site.
+   *
+   * @return the maximum amount of time in milliseconds to wait in between polling attempts or
+   *     <code>0L</code> if polling is not required or if the local configured default value should
+   *     be used
+   */
+  @Nullable
+  public long getPollingPeriod() {
+    return pollingPeriod;
+  }
+
+  /**
+   * Sets the optional amount of time in milliseconds to wait in between polling attempts whenever
+   * polling for intel from this site.
+   *
+   * @param pollingPeriod the maximum amount of time in milliseconds to wait in between polling
+   *     attempts or <code>0L</code> if polling is not required or if the local configured default
+   *     value should be used
+   * @return this for chaining
+   */
+  public SitePojo setPollingPeriod(long pollingPeriod) {
+    this.pollingPeriod = pollingPeriod;
+    return this;
+  }
+
+  /**
+   * Gets the parallelism factor for this site. This corresponds to the maximum number of pieces of
+   * intel information that can be transferred from/to this site. For example, a tactical site might
+   * want to ensure its bandwidth is not over utilized by forcing the local Ion site to
+   * sequentialize all its communications with it by setting this factor to <code>1</code>.
+   *
+   * <p><i>Note:</i> The local Ion site cannot exceed this value if set. However it can decide to
+   * ignore it and use a smaller factor based on its own requirements.
+   *
+   * @return the parallelism factor for this site or <code>0</code> if it is up to Ion to decide
+   */
+  public int getParallelismFactor() {
+    return parallelismFactor;
+  }
+
+  /**
+   * Sets the parallelism factor for this site. This corresponds to the maximum number of pieces of
+   * intel information that can be transferred from/to this site. For example, a tactical site might
+   * want to ensure its bandwidth is not over utilized by forcing the local Ion site to
+   * sequentialize all its communications with it by setting this factor to <code>1</code>.
+   *
+   * <p><i>Note:</i> The local Ion site cannot exceed this value if set. However it can decide to
+   * ignore it and use a smaller factor based on its own requirements.
+   *
+   * @param parallelismFactor the parallelism factor for this site or <code>0</code> if it is up to
+   *     Ion to decide
+   * @return this for chaining
+   */
+  public SitePojo setParallelismFactor(int parallelismFactor) {
+    this.parallelismFactor = parallelismFactor;
+    return this;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), isRemoteManaged, name, url, type);
+    return Objects.hash(
+        super.hashCode(), name, description, url, type, kind, pollingPeriod, parallelismFactor);
   }
 
   @Override
@@ -155,10 +248,13 @@ public class SitePojo extends Pojo<SitePojo> {
     if (super.equals(obj) && (obj instanceof SitePojo)) {
       final SitePojo pojo = (SitePojo) obj;
 
-      return (isRemoteManaged == pojo.isRemoteManaged)
+      return (pollingPeriod == pojo.pollingPeriod)
+          && (parallelismFactor == pojo.parallelismFactor)
           && Objects.equals(name, pojo.name)
+          && Objects.equals(description, pojo.description)
           && Objects.equals(url, pojo.url)
-          && Objects.equals(type, pojo.type);
+          && Objects.equals(type, pojo.type)
+          && Objects.equals(kind, pojo.kind);
     }
     return false;
   }
@@ -166,7 +262,15 @@ public class SitePojo extends Pojo<SitePojo> {
   @Override
   public String toString() {
     return String.format(
-        "SitePojo[id=%s, version=%d, name=%s, url=%s, type=%s, remoteManaged=%s]",
-        getId(), getVersion(), name, url, type, isRemoteManaged);
+        "SitePojo[id=%s, version=%d, name=%s, url=%s, type=%s, kind=%s, pollingPeriod=%d, parallelismFactor=%d, description=%s]",
+        getId(),
+        getVersion(),
+        name,
+        url,
+        type,
+        kind,
+        pollingPeriod,
+        parallelismFactor,
+        description);
   }
 }

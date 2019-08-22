@@ -14,17 +14,18 @@
 package com.connexta.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.Action;
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.ion.replication.api.Status;
+import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.data.ReplicationItem;
 import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 import org.apache.commons.lang3.Validate;
 
 public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implements ReplicationItem {
-  private static final String TYPE = "replication item";
+  private static final String PERSISTABLE_TYPE = "replication item";
 
   private String metadataId;
 
@@ -52,16 +53,16 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
 
   /** Instantiates a default replication item. */
   public ReplicationItemImpl() {
-    super(ReplicationItemImpl.TYPE);
+    super(ReplicationItemImpl.PERSISTABLE_TYPE);
   }
 
   protected ReplicationItemImpl(ItemPojo pojo) {
-    super(ReplicationItemImpl.TYPE, null);
+    super(ReplicationItemImpl.PERSISTABLE_TYPE, null);
     readFrom(pojo);
   }
 
   private ReplicationItemImpl(Builder builder) {
-    super(ReplicationItemImpl.TYPE, builder.id);
+    super(ReplicationItemImpl.PERSISTABLE_TYPE, builder.id);
     this.metadataId = builder.metadataId;
     this.resourceModified = builder.resourceModified;
     this.metadataModified = builder.metadataModified;
@@ -151,6 +152,45 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(
+        super.hashCode(),
+        metadataId,
+        resourceModified,
+        metadataModified,
+        doneTime,
+        source,
+        destination,
+        configId,
+        metadataSize,
+        resourceSize,
+        startTime,
+        status,
+        action);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (super.equals(obj) && (obj instanceof ReplicationItemImpl)) {
+      final ReplicationItemImpl persistable = (ReplicationItemImpl) obj;
+
+      return (metadataSize == persistable.metadataSize)
+          && (resourceSize == persistable.resourceSize)
+          && Objects.equals(metadataId, persistable.metadataId)
+          && Objects.equals(resourceModified, persistable.resourceModified)
+          && Objects.equals(metadataModified, persistable.metadataModified)
+          && Objects.equals(doneTime, persistable.doneTime)
+          && Objects.equals(source, persistable.source)
+          && Objects.equals(destination, persistable.destination)
+          && Objects.equals(configId, persistable.configId)
+          && Objects.equals(startTime, persistable.startTime)
+          && Objects.equals(status, persistable.status)
+          && Objects.equals(action, persistable.action);
+    }
+    return false;
+  }
+
+  @Override
   public String toString() {
     return String.format(
         "ReplicationItemImpl{id=%s, metadataId=%s, resourceModified=%s, metadataModified=%s, doneTime=%s, source=%s, destination=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, status=%s, action=%s}",
@@ -190,29 +230,16 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   @Override
   protected void readFrom(ItemPojo pojo) {
     super.readFrom(pojo);
-    if (pojo.getVersion() < ItemPojo.CURRENT_VERSION) {
-      throw new ReplicationPersistenceException(
+    if (pojo.getVersion() < ItemPojo.MINIMUM_VERSION) {
+      throw new UnsupportedVersionException(
           "unsupported "
-              + ReplicationItemImpl.TYPE
+              + ReplicationItemImpl.PERSISTABLE_TYPE
               + " version: "
               + pojo.getVersion()
               + " for object: "
               + getId());
     } // do support pojo.getVersion() > CURRENT_VERSION for forward compatibility
-    setOrFailIfNullOrEmpty("metadataId", pojo::getMetadataId, this::setMetadataId);
-    setOrFailIfNullOrEmpty("configId", pojo::getConfigId, this::setConfigId);
-    setOrFailIfNullOrEmpty("source", pojo::getSource, this::setSource);
-    setOrFailIfNullOrEmpty("destination", pojo::getDestination, this::setDestination);
-    setOrFailIfNull("startTime", pojo::getStartTime, this::setStartTime);
-    setOrFailIfNull("doneTime", pojo::getDoneTime, this::setDoneTime);
-    this.resourceModified = pojo.getResourceModified();
-    this.resourceSize = pojo.getResourceSize();
-    this.metadataModified = pojo.getMetadataModified();
-    this.metadataSize = pojo.getMetadataSize();
-    convertAndSetEnumValueOrFailIfNullOrEmpty(
-        "action", Action.class, Action.UNKNOWN, pojo::getAction, this::setAction);
-    convertAndSetEnumValueOrFailIfNullOrEmpty(
-        "status", Status.class, Status.FAILURE, pojo::getStatus, this::setStatus);
+    readFromCurrentAndFutureVersion(pojo);
   }
 
   @VisibleForTesting
@@ -258,6 +285,23 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   @VisibleForTesting
   double toBytesPerSec(double bytesPerMs) {
     return bytesPerMs / 1000;
+  }
+
+  private void readFromCurrentAndFutureVersion(ItemPojo pojo) {
+    setOrFailIfNullOrEmpty("metadataId", pojo::getMetadataId, this::setMetadataId);
+    setOrFailIfNullOrEmpty("configId", pojo::getConfigId, this::setConfigId);
+    setOrFailIfNullOrEmpty("source", pojo::getSource, this::setSource);
+    setOrFailIfNullOrEmpty("destination", pojo::getDestination, this::setDestination);
+    setOrFailIfNull("startTime", pojo::getStartTime, this::setStartTime);
+    setOrFailIfNull("doneTime", pojo::getDoneTime, this::setDoneTime);
+    convertAndSetEnumValueOrFailIfNullOrEmpty(
+        "action", Action.class, Action.UNKNOWN, pojo::getAction, this::setAction);
+    convertAndSetEnumValueOrFailIfNullOrEmpty(
+        "status", Status.class, Status.FAILURE, pojo::getStatus, this::setStatus);
+    this.resourceModified = pojo.getResourceModified();
+    this.resourceSize = pojo.getResourceSize();
+    this.metadataModified = pojo.getMetadataModified();
+    this.metadataSize = pojo.getMetadataSize();
   }
 
   /** Builder class for creating {@link ReplicationItemImpl}s. */

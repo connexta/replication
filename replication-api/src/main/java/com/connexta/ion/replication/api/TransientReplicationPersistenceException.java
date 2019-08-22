@@ -13,18 +13,20 @@
  */
 package com.connexta.ion.replication.api;
 
-/** Persistence exception indicating when a data entry that should be stored couldn't be found. */
-@SuppressWarnings("squid:MaximumInheritanceDepth" /* Exception class hierarchy */)
-public class NotFoundException extends NonTransientReplicationPersistenceException {
+/**
+ * Thrown from persistence operations which are recoverable without an explicit step (e.g. timeout,
+ * object not found, ...) like retrying after a few seconds.
+ */
+public class TransientReplicationPersistenceException extends ReplicationPersistenceException {
   /** Instantiates a new exception. */
-  public NotFoundException() {}
+  public TransientReplicationPersistenceException() {}
 
   /**
    * Instantiates a new exception.
    *
    * @param message the message for the exception
    */
-  public NotFoundException(String message) {
+  public TransientReplicationPersistenceException(String message) {
     super(message);
   }
 
@@ -34,7 +36,7 @@ public class NotFoundException extends NonTransientReplicationPersistenceExcepti
    * @param message the message for the exception
    * @param cause the cause for the exception
    */
-  public NotFoundException(String message, Throwable cause) {
+  public TransientReplicationPersistenceException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -43,7 +45,7 @@ public class NotFoundException extends NonTransientReplicationPersistenceExcepti
    *
    * @param cause the cause for the exception
    */
-  public NotFoundException(Throwable cause) {
+  public TransientReplicationPersistenceException(Throwable cause) {
     super(cause);
   }
 }

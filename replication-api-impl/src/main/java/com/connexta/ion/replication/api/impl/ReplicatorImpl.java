@@ -16,7 +16,6 @@ package com.connexta.ion.replication.api.impl;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import com.connexta.ion.replication.api.NodeAdapter;
-import com.connexta.ion.replication.api.NodeAdapterType;
 import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.ReplicationException;
 import com.connexta.ion.replication.api.Replicator;
@@ -28,7 +27,6 @@ import com.connexta.replication.api.persistence.SiteManager;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Queue;
@@ -227,17 +225,8 @@ public class ReplicatorImpl implements Replicator {
   NodeAdapter getStoreForId(String siteId) {
     NodeAdapter store;
     Site site = siteManager.get(siteId);
-    if (site.getType() == null) {
-      determineType(site);
-    }
-    if (site.getType() == null) {
-      throw new ReplicationException("Could not determine site type for " + site.getUrl());
-    }
     try {
-      store =
-          nodeAdapters
-              .factoryFor(NodeAdapterType.valueOf(site.getType()))
-              .create(new URL(site.getUrl()));
+      store = nodeAdapters.factoryFor(site.getType()).create(site.getUrl());
     } catch (Exception e) {
       throw new ReplicationException("Error connecting to node at " + site.getUrl(), e);
     }
@@ -245,25 +234,6 @@ public class ReplicatorImpl implements Replicator {
       throw new ReplicationException("System at " + site.getUrl() + " is currently unavailable");
     }
     return store;
-  }
-
-  @SuppressWarnings(
-      "squid:S2629" /*type.name() is inexpensive so don't need to add the conditional*/)
-  private void determineType(Site site) {
-    for (NodeAdapterType type : NodeAdapterType.values()) {
-      LOGGER.debug("Checking if site {} is of type {}", site.getName(), type.name());
-      try (NodeAdapter adapter = nodeAdapters.factoryFor(type).create(new URL(site.getUrl()))) {
-        if (adapter.isAvailable()) {
-          LOGGER.debug("Site {} is type {}", site.getName(), type.name());
-          site.setType(type.name());
-          siteManager.save(site);
-          return;
-        }
-      } catch (Exception e) {
-        LOGGER.debug(
-            "Checking node type failed for type {}. Reason: {}", type.name(), e.getMessage());
-      }
-    }
   }
 
   private void closeQuietly(Closeable c) {
