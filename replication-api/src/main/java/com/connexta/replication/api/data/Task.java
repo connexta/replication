@@ -11,8 +11,10 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.data;
 
+import com.connexta.replication.api.queue.QueueException;
+import com.connexta.replication.api.queue.SiteQueue;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
@@ -29,13 +31,6 @@ import java.util.concurrent.TimeUnit;
  * queued.
  */
 public interface Task extends TaskInfo {
-  /**
-   * Gets the queue from which this task was retrieved.
-   *
-   * @return the queue from which this task was retrieved
-   */
-  public SiteQueue getQueue();
-
   /**
    * Gets the time when the first attempted task was queued.
    *

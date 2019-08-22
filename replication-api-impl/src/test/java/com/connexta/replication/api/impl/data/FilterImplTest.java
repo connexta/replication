@@ -19,8 +19,8 @@ import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.connexta.ion.replication.api.InvalidFieldException;
-import com.connexta.ion.replication.api.UnsupportedVersionException;
+import com.connexta.replication.api.data.InvalidFieldException;
+import com.connexta.replication.api.data.UnsupportedVersionException;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
 import com.github.npathai.hamcrestopt.OptionalMatchers;
 import org.hamcrest.Matchers;

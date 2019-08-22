@@ -13,14 +13,14 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.InvalidFieldException;
-import com.connexta.ion.replication.api.NonTransientReplicationPersistenceException;
-import com.connexta.ion.replication.api.NotFoundException;
-import com.connexta.ion.replication.api.RecoverableReplicationPersistenceException;
-import com.connexta.ion.replication.api.TransientReplicationPersistenceException;
+import com.connexta.replication.api.data.InvalidFieldException;
+import com.connexta.replication.api.data.NonTransientReplicationPersistenceException;
+import com.connexta.replication.api.data.NotFoundException;
+import com.connexta.replication.api.data.RecoverableReplicationPersistenceException;
 import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.data.SiteKind;
 import com.connexta.replication.api.data.SiteType;
+import com.connexta.replication.api.data.TransientReplicationPersistenceException;
 import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
 import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
 import java.net.MalformedURLException;

@@ -11,19 +11,16 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api;
 
-/** Thrown from persistence operations. */
-public class ReplicationPersistenceException extends RuntimeException {
-  /** Instantiates a new exception. */
-  public ReplicationPersistenceException() {}
-
+/** Base class for all replication exceptions. */
+public class ReplicationException extends RuntimeException {
   /**
    * Instantiates a new exception.
    *
    * @param message the message for the exception
    */
-  public ReplicationPersistenceException(String message) {
+  public ReplicationException(String message) {
     super(message);
   }
 
@@ -33,7 +30,7 @@ public class ReplicationPersistenceException extends RuntimeException {
    * @param message the message for the exception
    * @param cause the cause for the exception
    */
-  public ReplicationPersistenceException(String message, Throwable cause) {
+  public ReplicationException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -42,7 +39,7 @@ public class ReplicationPersistenceException extends RuntimeException {
    *
    * @param cause the cause for the exception
    */
-  public ReplicationPersistenceException(Throwable cause) {
+  public ReplicationException(Throwable cause) {
     super(cause);
   }
 }

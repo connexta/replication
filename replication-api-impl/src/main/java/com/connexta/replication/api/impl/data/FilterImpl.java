@@ -13,8 +13,8 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.data.Filter;
+import com.connexta.replication.api.data.UnsupportedVersionException;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Objects;

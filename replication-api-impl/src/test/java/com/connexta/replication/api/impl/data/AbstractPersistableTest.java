@@ -13,7 +13,7 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.InvalidFieldException;
+import com.connexta.replication.api.data.InvalidFieldException;
 import com.connexta.replication.api.impl.persistence.pojo.Pojo;
 import java.net.MalformedURLException;
 import java.net.URL;

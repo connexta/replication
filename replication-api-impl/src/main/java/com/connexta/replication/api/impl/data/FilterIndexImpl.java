@@ -13,9 +13,9 @@
  */
 package com.connexta.replication.api.impl.data;
 
-import com.connexta.ion.replication.api.UnsupportedVersionException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
+import com.connexta.replication.api.data.UnsupportedVersionException;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;

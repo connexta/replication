@@ -14,9 +14,9 @@
 package com.connexta.replication.api.persistence;
 
 import com.connexta.ion.replication.api.NodeAdapter;
-import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.ion.replication.api.data.Metadata;
 import com.connexta.replication.api.data.ReplicationItem;
+import com.connexta.replication.api.data.ReplicationPersistenceException;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import java.util.List;
 import java.util.Optional;

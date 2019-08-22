@@ -11,18 +11,37 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.queue;
 
-public class ReplicationException extends RuntimeException {
-  public ReplicationException(String message) {
+import com.connexta.replication.api.ReplicationException;
+
+/** Base class for all queuing related exceptions. */
+public class QueueException extends ReplicationException {
+  /**
+   * Create a new {@link QueueException}.
+   *
+   * @param message the exception message
+   */
+  public QueueException(String message) {
     super(message);
   }
 
-  public ReplicationException(String message, Throwable cause) {
+  /**
+   * Create a new {@link QueueException}.
+   *
+   * @param message the exception message
+   * @param cause the exception cause
+   */
+  public QueueException(String message, Throwable cause) {
     super(message, cause);
   }
 
-  public ReplicationException(Throwable cause) {
+  /**
+   * Create a new {@link QueueException}.
+   *
+   * @param cause the exception cause
+   */
+  public QueueException(Throwable cause) {
     super(cause);
   }
 }

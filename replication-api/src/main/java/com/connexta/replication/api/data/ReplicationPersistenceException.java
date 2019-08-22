@@ -11,19 +11,18 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.data;
 
-/** Thrown from persistence operations which are recoverable - after some recovery steps. */
-public class RecoverableReplicationPersistenceException extends ReplicationPersistenceException {
-  /** Instantiates a new exception. */
-  public RecoverableReplicationPersistenceException() {}
+import com.connexta.replication.api.ReplicationException;
 
+/** Thrown from persistence operations. */
+public class ReplicationPersistenceException extends ReplicationException {
   /**
    * Instantiates a new exception.
    *
    * @param message the message for the exception
    */
-  public RecoverableReplicationPersistenceException(String message) {
+  public ReplicationPersistenceException(String message) {
     super(message);
   }
 
@@ -33,7 +32,7 @@ public class RecoverableReplicationPersistenceException extends ReplicationPersi
    * @param message the message for the exception
    * @param cause the cause for the exception
    */
-  public RecoverableReplicationPersistenceException(String message, Throwable cause) {
+  public ReplicationPersistenceException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -42,7 +41,7 @@ public class RecoverableReplicationPersistenceException extends ReplicationPersi
    *
    * @param cause the cause for the exception
    */
-  public RecoverableReplicationPersistenceException(Throwable cause) {
+  public ReplicationPersistenceException(Throwable cause) {
     super(cause);
   }
 }

@@ -11,25 +11,17 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.data;
 
-import java.time.Instant;
-import java.util.OptionalLong;
+import java.net.URI;
+import java.util.Optional;
 
-/** Identifies a particular piece of data (e.g. metadata, resource) to be transferred. */
-public interface DataInfo {
+/** Identifies the need for the resource associated with an intel to be transferred. */
+public interface ResourceInfo extends DataInfo {
   /**
-   * Gets the last modified timestamp from the source site for the piece of data that should be
-   * transferred by the task.
+   * Gets the URI for the resource or empty if there is none or if it is not known.
    *
-   * @return last modified timestamp for the piece data
+   * @return the optional URI for the resource
    */
-  public Instant getLastModified();
-
-  /**
-   * Gets the size of the piece of data to be transferred if known.
-   *
-   * @return the optional size of the piece of data
-   */
-  public OptionalLong getSize();
+  public Optional<URI> getResourceUri();
 }

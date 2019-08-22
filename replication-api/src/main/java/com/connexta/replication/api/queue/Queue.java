@@ -11,15 +11,13 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.queue;
+package com.connexta.replication.api.queue;
 
+import com.connexta.replication.api.data.Task;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
-/**
- * Base interface for all type of queues ({@link SiteQueue} and {@link CompositeQueue}) on which
- * tasks can be retrieved
- */
+/** Base interface for all type of queues from which tasks can be retrieved */
 public interface Queue {
   /**
    * Gets the broker used to retrieved this queue.
@@ -37,7 +35,7 @@ public interface Queue {
    *     be returned
    * @throws QueueException if an error occurred while performing the operation
    */
-  public Task take() throws QueueException, InterruptedException;
+  public Task take() throws InterruptedException;
 
   /**
    * Retrieves and removes the next available highest priority task, waiting up to the specified
@@ -53,5 +51,5 @@ public interface Queue {
    * @throws QueueException if an error occurred while performing the operation
    */
   @Nullable
-  public Task poll(long timeout, TimeUnit unit) throws QueueException, InterruptedException;
+  public Task poll(long timeout, TimeUnit unit) throws InterruptedException;
 }

@@ -11,16 +11,14 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ion.replication.api;
+package com.connexta.replication.api.data;
 
 /**
  * Thrown from persistence operations which are not recoverable and retrying would just fail for the
  * same reason.
  */
+@SuppressWarnings("squid:MaximumInheritanceDepth" /* Exception class hierarchy */)
 public class NonTransientReplicationPersistenceException extends ReplicationPersistenceException {
-  /** Instantiates a new exception. */
-  public NonTransientReplicationPersistenceException() {}
-
   /**
    * Instantiates a new exception.
    *

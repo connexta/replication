@@ -23,8 +23,8 @@ import static org.mockito.Mockito.when;
 
 import com.connexta.ion.replication.api.NodeAdapter;
 import com.connexta.ion.replication.api.NodeAdapterFactory;
-import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.SyncRequest;
+import com.connexta.replication.api.data.NotFoundException;
 import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.data.SiteType;
@@ -212,7 +212,7 @@ public class ReplicatorImplTest {
     when(sourceSite.getType()).thenReturn(SiteType.DDF);
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
-    when(siteManager.get(DESTINATION_ID)).thenThrow(new NotFoundException());
+    when(siteManager.get(DESTINATION_ID)).thenThrow(new NotFoundException("testing"));
 
     NodeAdapter sourceNode = mock(NodeAdapter.class);
     when(sourceNode.isAvailable()).thenReturn(true);

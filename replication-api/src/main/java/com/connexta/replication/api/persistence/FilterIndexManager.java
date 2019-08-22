@@ -15,6 +15,7 @@ package com.connexta.replication.api.persistence;
 
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
+import com.connexta.replication.api.data.ReplicationPersistenceException;
 
 /** Manages Filter Indices */
 public interface FilterIndexManager extends DataManager<FilterIndex> {
@@ -25,8 +26,8 @@ public interface FilterIndexManager extends DataManager<FilterIndex> {
    *
    * @param filter this index belongs to
    * @return the existing or newly created index
-   * @throws com.connexta.ion.replication.api.ReplicationPersistenceException if there is a
-   *     deserialization error fetching the existing index
+   * @throws ReplicationPersistenceException if there is a deserialization error fetching the
+   *     existing index
    */
   FilterIndex getOrCreate(Filter filter);
 }
