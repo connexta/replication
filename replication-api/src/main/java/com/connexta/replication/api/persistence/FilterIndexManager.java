@@ -13,28 +13,18 @@
  */
 package com.connexta.replication.api.persistence;
 
+import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
-import java.util.Optional;
 
 /** Manages Filter Indices */
 public interface FilterIndexManager extends DataManager<FilterIndex> {
 
   /**
    * Gets an existing index for the given filter, or creates a new index whose id will be the given
-   * id.
+   * filter's id.
    *
-   * @param filterId for the index
+   * @param filter this index belongs to
    * @return the existing or newly created index
    */
-  FilterIndex getOrCreate(String filterId);
-
-  /**
-   * Retrieves a filter index by the given filter id.
-   *
-   * @param filterId the filter id to fetch the index for
-   * @return the index for the filter, or an empty optional if there is no matching index
-   * @throws com.connexta.ion.replication.api.ReplicationPersistenceException if there is an error
-   *     deserializing the data
-   */
-  Optional<FilterIndex> getByFilter(String filterId);
+  FilterIndex getOrCreate(Filter filter);
 }

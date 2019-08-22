@@ -47,27 +47,8 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
   @Indexed(name = "modified_since", searchable = false)
   private Instant modifiedSince;
 
-  @Nullable
-  @Indexed(name = "filter_id", required = true)
-  private String filterId;
-
   public FilterIndexPojo() {
     super.setVersion(FilterIndexPojo.CURRENT_VERSION);
-  }
-
-  /** @return the filter id for this this index belongs to */
-  @Nullable
-  public String getFilterId() {
-    return filterId;
-  }
-
-  /**
-   * @param filterId filter id for which this index belongs to
-   * @return this pojo
-   */
-  public FilterIndexPojo setFilterId(@Nullable String filterId) {
-    this.filterId = filterId;
-    return this;
   }
 
   /**
@@ -90,7 +71,7 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), modifiedSince, filterId);
+    return Objects.hash(super.hashCode(), modifiedSince);
   }
 
   @Override
@@ -98,8 +79,7 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
     if (super.equals(obj) && (obj instanceof FilterIndexPojo)) {
       final FilterIndexPojo pojo = (FilterIndexPojo) obj;
 
-      return Objects.equals(modifiedSince, pojo.modifiedSince)
-          && Objects.equals(filterId, pojo.filterId);
+      return Objects.equals(modifiedSince, pojo.modifiedSince);
     }
     return false;
   }
@@ -107,7 +87,7 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
   @Override
   public String toString() {
     return String.format(
-        "FilterIndexPojo[id=%s, version=%d, filterId=%s, modifiedSince=%s]",
-        getId(), getVersion(), filterId, modifiedSince);
+        "FilterIndexPojo[id=%s, version=%d, modifiedSince=%s]",
+        getId(), getVersion(), modifiedSince);
   }
 }

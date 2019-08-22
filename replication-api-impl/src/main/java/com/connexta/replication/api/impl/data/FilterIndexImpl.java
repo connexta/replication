@@ -14,9 +14,9 @@
 package com.connexta.replication.api.impl.data;
 
 import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
-import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -27,11 +27,13 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
 
   private Instant modifiedSince;
 
-  private String filterId;
-
-  /** Creates a new FilterIndex with the filter index type. */
-  public FilterIndexImpl() {
-    super(FilterIndexImpl.TYPE);
+  /**
+   * Creates a new index for a Filter.
+   *
+   * @param filter to create an index for
+   */
+  public FilterIndexImpl(Filter filter) {
+    super(FilterIndexImpl.TYPE, filter.getId());
   }
 
   /**
@@ -42,13 +44,6 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   protected FilterIndexImpl(FilterIndexPojo pojo) {
     super(FilterIndexImpl.TYPE, null);
     readFrom(pojo);
-  }
-
-  @VisibleForTesting
-  FilterIndexImpl(Instant modifiedSince, String filterId) {
-    super(FilterIndexImpl.TYPE);
-    this.modifiedSince = modifiedSince;
-    this.filterId = filterId;
   }
 
   @Override
@@ -62,20 +57,13 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   }
 
   @Override
-  public String getFilterId() {
-    return filterId;
-  }
-
-  @Override
   public String toString() {
-    return String.format(
-        "FilterIndexImpl[id=%s, modifiedSince=%s, filterId=%s]", getId(), modifiedSince, filterId);
+    return String.format("FilterIndexImpl[id=%s, modifiedSince=%s]", getId(), modifiedSince);
   }
 
   @Override
   public FilterIndexPojo writeTo(FilterIndexPojo pojo) {
     super.writeTo(pojo);
-    setOrFailIfNullOrEmpty("filterId", this::getFilterId, pojo::setFilterId);
     return pojo.setVersion(FilterIndexPojo.CURRENT_VERSION).setModifiedSince(modifiedSince);
   }
 
@@ -95,11 +83,6 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   }
 
   private void readFromCurrentOrFutureVersion(FilterIndexPojo pojo) {
-    setOrFailIfNullOrEmpty("filterId", pojo::getFilterId, this::setFilterId);
     setOrFailIfNull("modifiedSince", pojo::getModifiedSince, this::setModifiedSince);
-  }
-
-  private void setFilterId(String filterId) {
-    this.filterId = filterId;
   }
 }

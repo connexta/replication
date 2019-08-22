@@ -47,21 +47,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class FilterIndexRepositoryIntegrationTest {
   private static final String ID1 = "id";
   private static final Instant MODIFIED_SINCE1 = Instant.ofEpochSecond(100);
-  private static final String FILTER_ID1 = "filterId";
   private static final FilterIndexPojo POJO1 =
-      new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1).setFilterId(FILTER_ID1);
+      new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1);
 
   private static final String ID2 = "id2";
   private static final Instant MODIFIED_SINCE2 = Instant.ofEpochSecond(200);
-  private static final String FILTER_ID2 = "filterId2";
   private static final FilterIndexPojo POJO2 =
-      new FilterIndexPojo().setId(ID2).setModifiedSince(MODIFIED_SINCE2).setFilterId(FILTER_ID2);
+      new FilterIndexPojo().setId(ID2).setModifiedSince(MODIFIED_SINCE2);
 
   private static final String ID3 = "id3";
   private static final Instant MODIFIED_SINCE3 = Instant.ofEpochSecond(300);
-  private static final String FILTER_ID3 = "filterId3";
   private static final FilterIndexPojo POJO3 =
-      new FilterIndexPojo().setId(ID3).setModifiedSince(MODIFIED_SINCE3).setFilterId(FILTER_ID3);
+      new FilterIndexPojo().setId(ID3).setModifiedSince(MODIFIED_SINCE3);
 
   @TestConfiguration
   @EnableSolrRepositories(basePackages = "com.connexta.replication")
@@ -91,16 +88,14 @@ public class FilterIndexRepositoryIntegrationTest {
     exception.expect(UncategorizedSolrException.class);
     exception.expectMessage("Document is missing mandatory uniqueKey field: id");
 
-    final FilterIndexPojo pojo =
-        new FilterIndexPojo().setModifiedSince(MODIFIED_SINCE1).setFilterId(FILTER_ID1);
+    final FilterIndexPojo pojo = new FilterIndexPojo().setModifiedSince(MODIFIED_SINCE1);
 
     repo.save(pojo);
   }
 
   @Test
   public void testPojoPersistenceWhenAllFieldsDefined() {
-    final FilterIndexPojo pojo =
-        new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1).setFilterId(FILTER_ID1);
+    final FilterIndexPojo pojo = new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1);
 
     FilterIndexPojo saved = repo.save(pojo);
     assertThat(saved, is(pojo));
@@ -109,22 +104,9 @@ public class FilterIndexRepositoryIntegrationTest {
     assertThat(loaded, isPresentAnd(is(pojo)));
   }
 
-  // TODO: This should fail when this field can be set to required in the schema
   @Test
   public void testPojoPersistenceWhenModifiedSinceNotDefined() {
-    final FilterIndexPojo pojo = new FilterIndexPojo().setId(ID1).setFilterId(FILTER_ID1);
-
-    FilterIndexPojo saved = repo.save(pojo);
-    assertThat(saved, is(pojo));
-
-    final Optional<FilterIndexPojo> loaded = repo.findById(ID1);
-    assertThat(loaded, isPresentAnd(is(pojo)));
-  }
-
-  // TODO: This should fail when this field can be set to required in the schema
-  @Test
-  public void testPojoPersistenceWhenFilterIdIsNotDefined() {
-    final FilterIndexPojo pojo = new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1);
+    final FilterIndexPojo pojo = new FilterIndexPojo().setId(ID1);
 
     FilterIndexPojo saved = repo.save(pojo);
     assertThat(saved, is(pojo));
@@ -266,17 +248,8 @@ public class FilterIndexRepositoryIntegrationTest {
   }
 
   @Test
-  public void testFindByFilterId() {
-    repo.saveAll(List.of(POJO1, POJO2));
-
-    final Optional<FilterIndexPojo> loaded = repo.findByFilterId(FILTER_ID1);
-    assertThat(loaded, isPresentAnd(is(POJO1)));
-  }
-
-  @Test
   public void testModifiedTimeUpdated() {
-    final FilterIndexPojo pojo =
-        new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1).setFilterId(FILTER_ID1);
+    final FilterIndexPojo pojo = new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1);
     repo.save(pojo);
     FilterIndexPojo loaded = repo.findById(ID1).get();
     assertThat(loaded.getModifiedSince(), is(MODIFIED_SINCE1));
@@ -288,12 +261,5 @@ public class FilterIndexRepositoryIntegrationTest {
     FilterIndexPojo updated = repo.findById(ID1).get();
     assertThat(updated.getModifiedSince(), is(updatedModifiedSince));
     assertThat(repo.count(), is(1L));
-  }
-
-  @Test
-  public void testFindByFilterIdWhenNotFound() {
-    repo.save(POJO1);
-    final Optional<FilterIndexPojo> loaded = repo.findByFilterId("doesntexist");
-    assertThat(loaded, isEmpty());
   }
 }

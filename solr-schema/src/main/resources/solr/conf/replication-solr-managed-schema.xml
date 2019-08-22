@@ -184,8 +184,6 @@
     <!-- site_index fields -->
     <field name="modified_since" type="pdate" indexed="false" stored="true" required="false"
       multiValued="false"/>
-    <field name="filter_id" type="string" indexed="true" stored="true" required="false"
-      multiValued="false"/>
 
     <!-- This can be enabled, in case the client does not know what fields may be searched. It isn't enabled by default
          because it's very expensive to index everything twice. -->

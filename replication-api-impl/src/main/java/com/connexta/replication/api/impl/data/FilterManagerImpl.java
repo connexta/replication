@@ -32,11 +32,6 @@ public class FilterManagerImpl implements FilterManager {
   }
 
   @Override
-  public Filter create() {
-    return new FilterImpl();
-  }
-
-  @Override
   public Filter get(String id) {
     return filterRepository
         .findById(id)

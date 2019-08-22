@@ -31,11 +31,4 @@ public interface FilterIndex extends Persistable {
    * @param modifiedSince the modified time of the last metadata put into the queue
    */
   void setModifiedSince(Instant modifiedSince);
-
-  /**
-   * The ID of the Filter that this index is tracking.
-   *
-   * @return the filter id this index is for
-   */
-  String getFilterId();
 }

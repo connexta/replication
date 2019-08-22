@@ -28,10 +28,8 @@ public class FilterIndexPojoTest {
 
   private static final String ID = "id";
 
-  private static final String FILTER_ID = "filterId";
-
   private static final FilterIndexPojo POJO =
-      new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE).setFilterId(FILTER_ID);
+      new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE);
 
   private FilterIndexPojo pojo;
 
@@ -47,18 +45,15 @@ public class FilterIndexPojoTest {
 
   @Test
   public void testEqualsSymmetric() {
-    final FilterIndexPojo pojo2 =
-        new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE).setFilterId(FILTER_ID);
+    final FilterIndexPojo pojo2 = new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE);
     assertThat(POJO.equals(pojo2), is(true));
     assertThat(pojo2.equals(POJO), is(true));
   }
 
   @Test
   public void testEqualsTransitive() {
-    final FilterIndexPojo pojo2 =
-        new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE).setFilterId(FILTER_ID);
-    final FilterIndexPojo pojo3 =
-        new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE).setFilterId(FILTER_ID);
+    final FilterIndexPojo pojo2 = new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE);
+    final FilterIndexPojo pojo3 = new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE);
     assertThat(POJO.equals(pojo2), is(true));
     assertThat(pojo2.equals(pojo3), is(true));
     assertThat(POJO.equals(pojo3), is(true));
@@ -66,8 +61,7 @@ public class FilterIndexPojoTest {
 
   @Test
   public void testEqualsConsistent() {
-    final FilterIndexPojo pojo2 =
-        new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE).setFilterId(FILTER_ID);
+    final FilterIndexPojo pojo2 = new FilterIndexPojo().setId(ID).setModifiedSince(MODIFIED_SINCE);
     assertThat(POJO.equals(pojo2), is(true));
     assertThat(POJO.equals(pojo2), is(true));
   }
@@ -86,20 +80,7 @@ public class FilterIndexPojoTest {
   @Test
   public void testEqualsWithDifferentModifiedSince() {
     final FilterIndexPojo pojo2 =
-        new FilterIndexPojo()
-            .setId(ID)
-            .setModifiedSince(Instant.ofEpochSecond(500))
-            .setFilterId(FILTER_ID);
-    assertThat(POJO.equals(pojo2), is(false));
-  }
-
-  @Test
-  public void testEqualsWithDifferentFilterId() {
-    final FilterIndexPojo pojo2 =
-        new FilterIndexPojo()
-            .setId(ID)
-            .setModifiedSince(MODIFIED_SINCE)
-            .setFilterId("anotherFilterId");
+        new FilterIndexPojo().setId(ID).setModifiedSince(Instant.ofEpochSecond(500));
     assertThat(POJO.equals(pojo2), is(false));
   }
 
@@ -120,12 +101,6 @@ public class FilterIndexPojoTest {
     final Instant modifiedSince = Instant.ofEpochSecond(100);
     pojo.setModifiedSince(modifiedSince);
     assertThat(pojo.getModifiedSince(), is(modifiedSince));
-  }
-
-  @Test
-  public void testSetAndGetFilterId() {
-    pojo.setFilterId("filterId");
-    assertThat(pojo.getFilterId(), is("filterId"));
   }
 
   @Test

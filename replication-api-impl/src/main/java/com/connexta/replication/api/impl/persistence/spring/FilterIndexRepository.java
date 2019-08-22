@@ -14,17 +14,7 @@
 package com.connexta.replication.api.impl.persistence.spring;
 
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
-import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 
 /** Repository manager for {@link FilterIndexPojo}s. */
-public interface FilterIndexRepository extends CrudRepository<FilterIndexPojo, String> {
-
-  /**
-   * Fetches a singly entity.
-   *
-   * @param filterId the filter id for the entity
-   * @return an optional containing the entity if found, otherwise an empty optional
-   */
-  Optional<FilterIndexPojo> findByFilterId(String filterId);
-}
+public interface FilterIndexRepository extends CrudRepository<FilterIndexPojo, String> {}

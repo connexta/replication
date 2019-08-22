@@ -15,7 +15,6 @@ package com.connexta.replication.api.impl.data;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
@@ -58,11 +57,6 @@ public class FilterManagerImplTest {
   @Before
   public void setup() {
     filterManager = new FilterManagerImpl(filterRepository);
-  }
-
-  @Test
-  public void create() {
-    assertTrue(filterManager.create() instanceof FilterImpl);
   }
 
   @Test
