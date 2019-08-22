@@ -42,7 +42,10 @@ public class FilterIndexManagerImpl implements FilterIndexManager {
 
   @Override
   public FilterIndex getOrCreate(Filter filter) {
-    return new FilterIndexImpl(filter);
+    return indexRepository
+        .findById(filter.getId())
+        .map(FilterIndexImpl::new)
+        .orElse(new FilterIndexImpl(filter));
   }
 
   @Override

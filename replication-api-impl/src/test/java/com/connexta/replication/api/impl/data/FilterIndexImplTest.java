@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.replication.api.data.Filter;
+import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
 import com.github.npathai.hamcrestopt.OptionalMatchers;
 import java.time.Instant;
@@ -46,10 +47,18 @@ public class FilterIndexImplTest {
   }
 
   @Test
-  public void testDefaultCtor() {
+  public void testFromFilterCtor() {
     FilterIndexImpl index = new FilterIndexImpl(filter);
     assertThat(index.getModifiedSince(), OptionalMatchers.isEmpty());
     assertThat(index.getId(), is(ID));
+  }
+
+  @Test
+  public void testFromPojoCtor() {
+    FilterIndexPojo pojo = new FilterIndexPojo().setModifiedSince(MODIFIED_SINCE).setId(ID);
+    FilterIndexImpl index = new FilterIndexImpl(pojo);
+    assertThat(index.getId(), is(ID));
+    assertThat(index.getModifiedSince(), isPresentAnd(is(MODIFIED_SINCE)));
   }
 
   @Test
@@ -63,19 +72,28 @@ public class FilterIndexImplTest {
   }
 
   @Test
+  public void testWriteToInvalidIndex() {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage("missing filter_index id");
+    FilterIndexImpl index = new FilterIndexImpl();
+    index.writeTo(new FilterIndexPojo());
+  }
+
+  @Test
   public void testReadFrom() {
     FilterIndexPojo pojo = new FilterIndexPojo().setModifiedSince(MODIFIED_SINCE).setId(ID);
-    FilterIndexImpl index = new FilterIndexImpl(pojo);
+    FilterIndexImpl index = new FilterIndexImpl();
+    index.readFrom(pojo);
     assertThat(index.getId(), is(ID));
     assertThat(index.getModifiedSince(), isPresentAnd(is(MODIFIED_SINCE)));
   }
 
   @Test
   public void testReadFromModifiedSinceNull() {
-    exception.expect(ReplicationPersistenceException.class);
-    exception.expectMessage("modifiedSince");
     FilterIndexPojo pojo = new FilterIndexPojo().setModifiedSince(null).setId(ID);
-    new FilterIndexImpl(pojo);
+    FilterIndexImpl index = new FilterIndexImpl();
+    index.readFrom(pojo);
+    assertThat(index.getModifiedSince(), OptionalMatchers.isEmpty());
   }
 
   @Test
@@ -84,7 +102,8 @@ public class FilterIndexImplTest {
     exception.expectMessage("unsupported");
     FilterIndexPojo pojo =
         new FilterIndexPojo().setId(ID).setVersion(FilterIndexPojo.MINIMUM_VERSION - 1);
-    new FilterIndexImpl(pojo);
+    FilterIndexImpl index = new FilterIndexImpl();
+    index.readFrom(pojo);
   }
 
   @Test
@@ -97,5 +116,13 @@ public class FilterIndexImplTest {
     FilterIndexImpl index = new FilterIndexImpl(pojo);
     assertThat(index.getId(), is(ID));
     assertThat(index.getModifiedSince(), isPresentAnd(is(MODIFIED_SINCE)));
+  }
+
+  @Test
+  public void testSetAndGetModifiedSince() {
+    final Instant modifiedSince = Instant.now();
+    FilterIndex index = new FilterIndexImpl();
+    index.setModifiedSince(modifiedSince);
+    assertThat(index.getModifiedSince(), isPresentAnd(is(modifiedSince)));
   }
 }

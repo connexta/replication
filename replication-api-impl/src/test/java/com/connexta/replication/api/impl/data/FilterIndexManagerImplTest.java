@@ -22,10 +22,12 @@ import static org.mockito.Mockito.when;
 
 import com.connexta.ion.replication.api.NotFoundException;
 import com.connexta.ion.replication.api.ReplicationPersistenceException;
+import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
 import com.connexta.replication.api.impl.persistence.spring.FilterIndexRepository;
 import com.connexta.replication.api.persistence.FilterIndexManager;
+import com.github.npathai.hamcrestopt.OptionalMatchers;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +64,36 @@ public class FilterIndexManagerImplTest {
   public void setup() {
     repository = mock(FilterIndexRepository.class);
     indices = new FilterIndexManagerImpl(repository);
+  }
+
+  @Test
+  public void testGetExistingIndex() {
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID1);
+    when(repository.findById(ID1)).thenReturn(Optional.of(POJO1));
+    FilterIndex filterIndex = indices.getOrCreate(filter);
+    assertThat(filterIndex.getId(), is(ID1));
+    assertThat(filterIndex.getModifiedSince(), isPresentAnd(is(MODIFIED_SINCE1)));
+  }
+
+  @Test
+  public void testGetExistingIndexIsInvalid() {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage("missing filter_index id");
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID);
+    when(repository.findById(ID)).thenReturn(Optional.of(INVALID_POJO));
+    indices.getOrCreate(filter);
+  }
+
+  @Test
+  public void testCreateNewIndex() {
+    Filter filter = mock(Filter.class);
+    when(filter.getId()).thenReturn(ID);
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+    FilterIndex filterIndex = indices.getOrCreate(filter);
+    assertThat(filterIndex.getId(), is(ID));
+    assertThat(filterIndex.getModifiedSince(), OptionalMatchers.isEmpty());
   }
 
   @Test

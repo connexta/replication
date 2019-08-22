@@ -72,6 +72,11 @@ public class FilterIndexPojoTest {
   }
 
   @Test
+  public void testEqualsDifferentObject() {
+    assertThat(POJO.equals(new Object()), is(false));
+  }
+
+  @Test
   public void testHashIsConsistent() {
     final int hash = POJO.hashCode();
     assertThat(POJO.hashCode(), is(hash));

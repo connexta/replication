@@ -17,15 +17,22 @@ import com.connexta.ion.replication.api.ReplicationPersistenceException;
 import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** Simple implementation of FilterIndex. */
 public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implements FilterIndex {
 
   private static final String TYPE = "filter_index";
 
-  private Instant modifiedSince;
+  @Nullable private Instant modifiedSince;
+
+  @VisibleForTesting
+  FilterIndexImpl() {
+    super(FilterIndexImpl.TYPE, null);
+  }
 
   /**
    * Creates a new index for a Filter.
@@ -83,6 +90,6 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   }
 
   private void readFromCurrentOrFutureVersion(FilterIndexPojo pojo) {
-    setOrFailIfNull("modifiedSince", pojo::getModifiedSince, this::setModifiedSince);
+    setModifiedSince(pojo.getModifiedSince());
   }
 }
