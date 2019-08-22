@@ -86,6 +86,13 @@ public class FilterIndexManagerImplTest {
   }
 
   @Test
+  public void testSaveInvalidFilterIndex() {
+    exception.expect(ReplicationPersistenceException.class);
+    exception.expectMessage("missing filter_index id");
+    indices.save(new FilterIndexImpl(INVALID_POJO));
+  }
+
+  @Test
   public void testSaveWrongObjectType() {
     exception.expect(ReplicationPersistenceException.class);
     exception.expectMessage("Expected FilterIndexImpl");
