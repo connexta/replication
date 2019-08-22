@@ -65,7 +65,7 @@ public interface Site extends Persistable {
    * @return the maximum amount of time to wait in between polling attempts or empty if polling is
    *     not required or if the local configured default value should be used
    */
-  Optional<Duration> getPollingTimeout();
+  Optional<Duration> getPollingPeriod();
 
   /**
    * Gets the parallelism factor for this site. This corresponds to the maximum number of pieces of

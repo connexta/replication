@@ -27,7 +27,7 @@ public class SitePojoTest {
   private static final String URL = "http://localhost/service";
   private static final String TYPE = SiteType.DDF.name();
   private static final String KIND = SiteKind.TACTICAL.name();
-  private static final long POLLING_TIMEOUT = 60L;
+  private static final long POLLING_PERIOD = 60L;
   private static final int PARALLELISM_FACTOR = 3;
 
   private static final SitePojo POJO =
@@ -39,7 +39,7 @@ public class SitePojoTest {
           .setUrl(SitePojoTest.URL)
           .setType(SitePojoTest.TYPE)
           .setKind(SitePojoTest.KIND)
-          .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+          .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
           .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
   @Test
@@ -92,10 +92,10 @@ public class SitePojoTest {
   }
 
   @Test
-  public void testSetAndGetPollingTimeout() throws Exception {
-    final SitePojo pojo = new SitePojo().setPollingTimeout(SitePojoTest.POLLING_TIMEOUT);
+  public void testSetAndGetPollingPeriod() throws Exception {
+    final SitePojo pojo = new SitePojo().setPollingPeriod(SitePojoTest.POLLING_PERIOD);
 
-    Assert.assertThat(pojo.getPollingTimeout(), Matchers.equalTo(SitePojoTest.POLLING_TIMEOUT));
+    Assert.assertThat(pojo.getPollingPeriod(), Matchers.equalTo(SitePojoTest.POLLING_PERIOD));
   }
 
   @Test
@@ -117,7 +117,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.hashCode(), Matchers.equalTo(pojo2.hashCode()));
@@ -134,7 +134,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(
@@ -152,7 +152,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.equalTo(true));
@@ -187,7 +187,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
@@ -204,7 +204,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
@@ -221,7 +221,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
@@ -238,7 +238,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
@@ -255,7 +255,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL + "2")
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
@@ -272,7 +272,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE + "2")
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
@@ -289,14 +289,14 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND + "2")
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
   }
 
   @Test
-  public void testEqualsWhenPollingTimeoutIsDifferent() throws Exception {
+  public void testEqualsWhenPollingPeriodIsDifferent() throws Exception {
     final SitePojo pojo2 =
         new SitePojo()
             .setVersion(SitePojoTest.VERSION)
@@ -306,7 +306,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(0L)
+            .setPollingPeriod(0L)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));
@@ -323,7 +323,7 @@ public class SitePojoTest {
             .setUrl(SitePojoTest.URL)
             .setType(SitePojoTest.TYPE)
             .setKind(SitePojoTest.KIND)
-            .setPollingTimeout(SitePojoTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SitePojoTest.POLLING_PERIOD)
             .setParallelismFactor(SitePojoTest.PARALLELISM_FACTOR + 2);
 
     Assert.assertThat(SitePojoTest.POJO.equals(pojo2), Matchers.not(Matchers.equalTo(true)));

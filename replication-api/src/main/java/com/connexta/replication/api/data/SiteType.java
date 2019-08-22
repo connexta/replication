@@ -20,14 +20,14 @@ public enum SiteType {
 
   /**
    * The unknown value is used for forward compatibility where the current code might not be able to
-   * understand a new type of site and would mapped this new site to <code>UNKNOWN</code> and most
+   * understand a new type of site and would map this new site to <code>UNKNOWN</code> and most
    * likely ignore it.
    */
   UNKNOWN(false);
 
   /**
    * Flag indicating if this type of site must be polled to discover changes or if polling is not
-   * required as sites of this type supports pushing their changes.
+   * required as sites of this type support pushing their changes.
    */
   private final boolean mustBePolled;
 
@@ -42,8 +42,8 @@ public enum SiteType {
   }
 
   /**
-   * Checks if sites of this type must be polled to discover changes or if polling is not * required
-   * as sites of this type supports pushing their changes.
+   * Checks if sites of this type must be polled to discover changes or if polling is not required
+   * as sites of this type support pushing their changes.
    *
    * @return <code>true</code> if sites of this type must be polled for changes; <code>false</code>
    *     if they support pushing their changes

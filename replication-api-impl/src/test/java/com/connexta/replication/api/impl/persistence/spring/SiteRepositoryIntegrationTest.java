@@ -77,7 +77,7 @@ public class SiteRepositoryIntegrationTest {
           .setUrl(SiteRepositoryIntegrationTest.URL)
           .setType(SiteRepositoryIntegrationTest.TYPE)
           .setKind(SiteRepositoryIntegrationTest.KIND)
-          .setPollingTimeout(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+          .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
           .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
   private static final SitePojo POJO2 =
       new SitePojo()
@@ -88,7 +88,7 @@ public class SiteRepositoryIntegrationTest {
           .setUrl(SiteRepositoryIntegrationTest.URL2)
           .setType(SiteRepositoryIntegrationTest.TYPE2)
           .setKind(SiteRepositoryIntegrationTest.KIND2)
-          .setPollingTimeout(SiteRepositoryIntegrationTest.POLLING_TIMEOUT2)
+          .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT2)
           .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR2);
   private static final SitePojo POJO3 =
       new SitePojo()
@@ -99,7 +99,7 @@ public class SiteRepositoryIntegrationTest {
           .setUrl(SiteRepositoryIntegrationTest.URL3)
           .setType(SiteRepositoryIntegrationTest.TYPE3)
           .setKind(SiteRepositoryIntegrationTest.KIND3)
-          .setPollingTimeout(SiteRepositoryIntegrationTest.POLLING_TIMEOUT3)
+          .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT3)
           .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR3);
 
   @TestConfiguration
@@ -152,7 +152,7 @@ public class SiteRepositoryIntegrationTest {
             .setUrl(SiteRepositoryIntegrationTest.URL)
             .setType(SiteRepositoryIntegrationTest.TYPE)
             .setKind(SiteRepositoryIntegrationTest.KIND)
-            .setPollingTimeout(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
             .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
     final SitePojo saved = repo.save(pojo);
 
@@ -172,7 +172,7 @@ public class SiteRepositoryIntegrationTest {
             .setUrl(SiteRepositoryIntegrationTest.URL)
             .setType(SiteRepositoryIntegrationTest.TYPE)
             .setKind(SiteRepositoryIntegrationTest.KIND)
-            .setPollingTimeout(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
             .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
     final SitePojo saved = repo.save(pojo);
 
@@ -192,7 +192,7 @@ public class SiteRepositoryIntegrationTest {
             .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
             .setType(SiteRepositoryIntegrationTest.TYPE)
             .setKind(SiteRepositoryIntegrationTest.KIND)
-            .setPollingTimeout(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
             .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
     final SitePojo saved = repo.save(pojo);
 
@@ -213,7 +213,7 @@ public class SiteRepositoryIntegrationTest {
             .setUrl(SiteRepositoryIntegrationTest.URL)
             .setType(SiteRepositoryIntegrationTest.TYPE)
             .setKind(SiteRepositoryIntegrationTest.KIND)
-            .setPollingTimeout(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
             .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
     final SitePojo saved = repo.save(pojo);
 
@@ -232,8 +232,8 @@ public class SiteRepositoryIntegrationTest {
             .setName(SiteRepositoryIntegrationTest.NAME)
             .setDescription(SiteRepositoryIntegrationTest.DESCRIPTION)
             .setUrl(SiteRepositoryIntegrationTest.URL)
-            .setKind(SiteRepositoryIntegrationTest.KIND)
-            .setPollingTimeout(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
+            .setType(SiteRepositoryIntegrationTest.TYPE)
+            .setPollingPeriod(SiteRepositoryIntegrationTest.POLLING_TIMEOUT)
             .setParallelismFactor(SiteRepositoryIntegrationTest.PARALLELISM_FACTOR);
     final SitePojo saved = repo.save(pojo);
 

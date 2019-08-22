@@ -61,8 +61,8 @@ public class SitePojo extends Pojo<SitePojo> {
   @Nullable
   private String kind;
 
-  @Indexed(name = "polling_timeout", searchable = false)
-  private long pollingTimeout;
+  @Indexed(name = "polling_period", searchable = false)
+  private long pollingPeriod;
 
   @Indexed(name = "parallelism_factor", searchable = false)
   private int parallelismFactor;
@@ -109,7 +109,6 @@ public class SitePojo extends Pojo<SitePojo> {
    * @param description the site description or <code>null</code> if none defined
    * @return this for chaining
    */
-  @Nullable
   public SitePojo setDescription(@Nullable String description) {
     this.description = description;
     return this;
@@ -187,21 +186,21 @@ public class SitePojo extends Pojo<SitePojo> {
    *     be used
    */
   @Nullable
-  public long getPollingTimeout() {
-    return pollingTimeout;
+  public long getPollingPeriod() {
+    return pollingPeriod;
   }
 
   /**
    * Sets the optional amount of time in milliseconds to wait in between polling attempts whenever
    * polling for intel from this site.
    *
-   * @param pollingTimeout the maximum amount of time in milliseconds to wait in between polling
+   * @param pollingPeriod the maximum amount of time in milliseconds to wait in between polling
    *     attempts or <code>0L</code> if polling is not required or if the local configured default
    *     value should be used
    * @return this for chaining
    */
-  public SitePojo setPollingTimeout(long pollingTimeout) {
-    this.pollingTimeout = pollingTimeout;
+  public SitePojo setPollingPeriod(long pollingPeriod) {
+    this.pollingPeriod = pollingPeriod;
     return this;
   }
 
@@ -241,7 +240,7 @@ public class SitePojo extends Pojo<SitePojo> {
   @Override
   public int hashCode() {
     return Objects.hash(
-        super.hashCode(), name, description, url, type, kind, pollingTimeout, parallelismFactor);
+        super.hashCode(), name, description, url, type, kind, pollingPeriod, parallelismFactor);
   }
 
   @Override
@@ -249,7 +248,7 @@ public class SitePojo extends Pojo<SitePojo> {
     if (super.equals(obj) && (obj instanceof SitePojo)) {
       final SitePojo pojo = (SitePojo) obj;
 
-      return (pollingTimeout == pojo.pollingTimeout)
+      return (pollingPeriod == pojo.pollingPeriod)
           && (parallelismFactor == pojo.parallelismFactor)
           && Objects.equals(name, pojo.name)
           && Objects.equals(description, pojo.description)
@@ -263,14 +262,14 @@ public class SitePojo extends Pojo<SitePojo> {
   @Override
   public String toString() {
     return String.format(
-        "SitePojo[id=%s, version=%d, name=%s, url=%s, type=%s, kind=%s, pollingTimeout=%d, parallelismFactor=%d, description=%s]",
+        "SitePojo[id=%s, version=%d, name=%s, url=%s, type=%s, kind=%s, pollingPeriod=%d, parallelismFactor=%d, description=%s]",
         getId(),
         getVersion(),
         name,
         url,
         type,
         kind,
-        pollingTimeout,
+        pollingPeriod,
         parallelismFactor,
         description);
   }

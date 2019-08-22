@@ -45,7 +45,7 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
 
   private SiteKind kind = SiteKind.UNKNOWN;
 
-  @Nullable private Duration pollingTimeout = null;
+  @Nullable private Duration pollingPeriod = null;
 
   private int parallelismFactor = 0;
 
@@ -84,8 +84,8 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   }
 
   @Override
-  public Optional<Duration> getPollingTimeout() {
-    return Optional.ofNullable(pollingTimeout);
+  public Optional<Duration> getPollingPeriod() {
+    return Optional.ofNullable(pollingPeriod);
   }
 
   @Override
@@ -96,7 +96,7 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   @Override
   public int hashCode() {
     return Objects.hash(
-        super.hashCode(), name, description, url, type, kind, pollingTimeout, parallelismFactor);
+        super.hashCode(), name, description, url, type, kind, pollingPeriod, parallelismFactor);
   }
 
   @Override
@@ -110,7 +110,7 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
           && Objects.equals(url, persistable.url)
           && Objects.equals(type, persistable.type)
           && Objects.equals(kind, persistable.kind)
-          && Objects.equals(pollingTimeout, persistable.pollingTimeout);
+          && Objects.equals(pollingPeriod, persistable.pollingPeriod);
     }
     return false;
   }
@@ -118,8 +118,8 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   @Override
   public String toString() {
     return String.format(
-        "SiteImpl[id=%s, name=%s, url=%s, type=%s, kind=%s, pollingTimeout=%s, parallelismFactor=%d, description=%s]",
-        getId(), name, url, type, kind, pollingTimeout, parallelismFactor, description);
+        "SiteImpl[id=%s, name=%s, url=%s, type=%s, kind=%s, pollingPeriod=%s, parallelismFactor=%d, description=%s]",
+        getId(), name, url, type, kind, pollingPeriod, parallelismFactor, description);
   }
 
   @Override
@@ -131,7 +131,7 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
     convertAndSetOrFailIfNull("kind", this::getKind, SiteKind::name, pojo::setKind);
     return pojo.setVersion(SitePojo.CURRENT_VERSION)
         .setDescription(description)
-        .setPollingTimeout(SiteImpl.toMillis(pollingTimeout))
+        .setPollingPeriod(SiteImpl.toMillis(pollingPeriod))
         .setParallelismFactor(Math.max(0, parallelismFactor));
   }
 
@@ -176,8 +176,8 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   }
 
   @VisibleForTesting
-  void setPollingTimeout(@Nullable Duration pollingTimeout) {
-    this.pollingTimeout = pollingTimeout;
+  void setPollingPeriod(@Nullable Duration pollingPeriod) {
+    this.pollingPeriod = pollingPeriod;
   }
 
   @VisibleForTesting
@@ -193,8 +193,8 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
     convertAndSetEnumValueOrFailIfNullOrEmpty(
         "kind", SiteKind.class, SiteKind.UNKNOWN, pojo::getKind, this::setKind);
     this.description = pojo.getDescription();
-    this.pollingTimeout =
-        (pojo.getPollingTimeout() > 0) ? Duration.ofMillis(pojo.getPollingTimeout()) : null;
+    this.pollingPeriod =
+        (pojo.getPollingPeriod() > 0) ? Duration.ofMillis(pojo.getPollingPeriod()) : null;
     this.parallelismFactor = Math.max(0, pojo.getParallelismFactor());
   }
 
@@ -206,11 +206,11 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
     }
   }
 
-  private static long toMillis(@Nullable Duration pollingTimeout) {
+  private static long toMillis(@Nullable Duration pollingPeriod) {
     try {
-      return (pollingTimeout != null) ? pollingTimeout.toMillis() : 0L;
+      return (pollingPeriod != null) ? pollingPeriod.toMillis() : 0L;
     } catch (ArithmeticException e) {
-      throw new InvalidFieldException("invalid polling timeout: " + pollingTimeout, e);
+      throw new InvalidFieldException("invalid polling period: " + pollingPeriod, e);
     }
   }
 }

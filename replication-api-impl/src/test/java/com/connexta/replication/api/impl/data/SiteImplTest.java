@@ -37,7 +37,7 @@ public class SiteImplTest {
   private static final URL URL2;
   private static final SiteType TYPE = SiteType.DDF;
   private static final SiteKind KIND = SiteKind.TACTICAL;
-  private static final Duration POLLING_TIMEOUT = Duration.ofMinutes(5L);
+  private static final Duration POLLING_PERIOD = Duration.ofMinutes(5L);
   private static final int PARALLELISM_FACTOR = 3;
 
   static {
@@ -60,7 +60,7 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
   }
 
@@ -74,7 +74,7 @@ public class SiteImplTest {
     Assert.assertThat(persistable.getUrl(), Matchers.nullValue());
     Assert.assertThat(persistable.getType(), Matchers.equalTo(SiteType.UNKNOWN));
     Assert.assertThat(persistable.getKind(), Matchers.equalTo(SiteKind.UNKNOWN));
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isEmpty());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isEmpty());
     Assert.assertThat(persistable.getParallelismFactor().isEmpty(), Matchers.equalTo(true));
   }
 
@@ -88,7 +88,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     final SiteImpl persistable = new SiteImpl(pojo);
@@ -100,10 +100,9 @@ public class SiteImplTest {
     Assert.assertThat(persistable.getUrl().toString(), Matchers.equalTo(pojo.getUrl()));
     Assert.assertThat(persistable.getType().name(), Matchers.equalTo(pojo.getType()));
     Assert.assertThat(persistable.getKind().name(), Matchers.equalTo(pojo.getKind()));
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isPresent());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isPresent());
     Assert.assertThat(
-        persistable.getPollingTimeout().get().toMillis(),
-        Matchers.equalTo(pojo.getPollingTimeout()));
+        persistable.getPollingPeriod().get().toMillis(), Matchers.equalTo(pojo.getPollingPeriod()));
     Assert.assertThat(persistable.getParallelismFactor().isPresent(), Matchers.equalTo(true));
     Assert.assertThat(
         persistable.getParallelismFactor().getAsInt(),
@@ -144,17 +143,17 @@ public class SiteImplTest {
   }
 
   @Test
-  public void testGetPollingTimeout() throws Exception {
+  public void testGetPollingPeriod() throws Exception {
     Assert.assertThat(
-        persistable.getPollingTimeout(),
-        OptionalMatchers.isPresentAndIs(SiteImplTest.POLLING_TIMEOUT));
+        persistable.getPollingPeriod(),
+        OptionalMatchers.isPresentAndIs(SiteImplTest.POLLING_PERIOD));
   }
 
   @Test
-  public void testGetPollingTimeoutWhenNoneDefined() throws Exception {
-    persistable.setPollingTimeout(null);
+  public void testGetPollingPeriodWhenNoneDefined() throws Exception {
+    persistable.setPollingPeriod(null);
 
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isEmpty());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isEmpty());
   }
 
   @Test
@@ -193,8 +192,7 @@ public class SiteImplTest {
     Assert.assertThat(pojo.getType(), Matchers.equalTo(persistable.getType().name()));
     Assert.assertThat(pojo.getKind(), Matchers.equalTo(persistable.getKind().name()));
     Assert.assertThat(
-        pojo.getPollingTimeout(),
-        Matchers.equalTo(persistable.getPollingTimeout().get().toMillis()));
+        pojo.getPollingPeriod(), Matchers.equalTo(persistable.getPollingPeriod().get().toMillis()));
     Assert.assertThat(
         pojo.getParallelismFactor(),
         Matchers.equalTo(persistable.getParallelismFactor().getAsInt()));
@@ -212,7 +210,7 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     persistable.writeTo(pojo);
@@ -231,7 +229,7 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     persistable.writeTo(pojo);
@@ -246,7 +244,7 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     persistable.writeTo(pojo);
@@ -259,8 +257,7 @@ public class SiteImplTest {
     Assert.assertThat(pojo.getType(), Matchers.equalTo(persistable.getType().name()));
     Assert.assertThat(pojo.getKind(), Matchers.equalTo(persistable.getKind().name()));
     Assert.assertThat(
-        pojo.getPollingTimeout(),
-        Matchers.equalTo(persistable.getPollingTimeout().get().toMillis()));
+        pojo.getPollingPeriod(), Matchers.equalTo(persistable.getPollingPeriod().get().toMillis()));
     Assert.assertThat(
         pojo.getParallelismFactor(),
         Matchers.equalTo(persistable.getParallelismFactor().getAsInt()));
@@ -278,7 +275,7 @@ public class SiteImplTest {
     persistable.setDescription(SiteImplTest.DESCRIPTION);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     persistable.writeTo(pojo);
@@ -297,7 +294,7 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(null);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     persistable.writeTo(pojo);
@@ -316,14 +313,14 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(null);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     persistable.writeTo(pojo);
   }
 
   @Test
-  public void testWriteToWhenPollingTimeoutIsNull() throws Exception {
+  public void testWriteToWhenPollingPeriodIsNull() throws Exception {
     final SiteImpl persistable = new SiteImpl();
     final SitePojo pojo = new SitePojo();
 
@@ -343,16 +340,16 @@ public class SiteImplTest {
     Assert.assertThat(pojo.getUrl(), Matchers.equalTo(persistable.getUrl().toString()));
     Assert.assertThat(pojo.getType(), Matchers.equalTo(persistable.getType().name()));
     Assert.assertThat(pojo.getKind(), Matchers.equalTo(persistable.getKind().name()));
-    Assert.assertThat(pojo.getPollingTimeout(), Matchers.equalTo(0L));
+    Assert.assertThat(pojo.getPollingPeriod(), Matchers.equalTo(0L));
     Assert.assertThat(
         pojo.getParallelismFactor(),
         Matchers.equalTo(persistable.getParallelismFactor().getAsInt()));
   }
 
   @Test
-  public void testWriteToWhenPollingTimeoutResolutionIsLessThanMilliseconds() throws Exception {
+  public void testWriteToWhenPollingPeriodResolutionIsLessThanMilliseconds() throws Exception {
     exception.expect(InvalidFieldException.class);
-    exception.expectMessage(Matchers.matchesPattern(".*invalid.*polling timeout.*"));
+    exception.expectMessage(Matchers.matchesPattern(".*invalid.*polling period.*"));
 
     final SiteImpl persistable = new SiteImpl();
     final SitePojo pojo = new SitePojo();
@@ -362,7 +359,7 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(Duration.ofSeconds(Long.MAX_VALUE / 1000L + 1L));
+    persistable.setPollingPeriod(Duration.ofSeconds(Long.MAX_VALUE / 1000L + 1L));
     persistable.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     persistable.writeTo(pojo);
@@ -378,7 +375,7 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(0);
 
     persistable.writeTo(pojo);
@@ -391,8 +388,7 @@ public class SiteImplTest {
     Assert.assertThat(pojo.getType(), Matchers.equalTo(persistable.getType().name()));
     Assert.assertThat(pojo.getKind(), Matchers.equalTo(persistable.getKind().name()));
     Assert.assertThat(
-        pojo.getPollingTimeout(),
-        Matchers.equalTo(persistable.getPollingTimeout().get().toMillis()));
+        pojo.getPollingPeriod(), Matchers.equalTo(persistable.getPollingPeriod().get().toMillis()));
     Assert.assertThat(pojo.getParallelismFactor(), Matchers.equalTo(0));
   }
 
@@ -406,7 +402,7 @@ public class SiteImplTest {
     persistable.setUrl(SiteImplTest.URL);
     persistable.setType(SiteImplTest.TYPE);
     persistable.setKind(SiteImplTest.KIND);
-    persistable.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(-1);
 
     persistable.writeTo(pojo);
@@ -419,8 +415,7 @@ public class SiteImplTest {
     Assert.assertThat(pojo.getType(), Matchers.equalTo(persistable.getType().name()));
     Assert.assertThat(pojo.getKind(), Matchers.equalTo(persistable.getKind().name()));
     Assert.assertThat(
-        pojo.getPollingTimeout(),
-        Matchers.equalTo(persistable.getPollingTimeout().get().toMillis()));
+        pojo.getPollingPeriod(), Matchers.equalTo(persistable.getPollingPeriod().get().toMillis()));
     Assert.assertThat(pojo.getParallelismFactor(), Matchers.equalTo(0));
   }
 
@@ -434,7 +429,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -446,10 +441,9 @@ public class SiteImplTest {
     Assert.assertThat(persistable.getUrl().toString(), Matchers.equalTo(pojo.getUrl()));
     Assert.assertThat(persistable.getType().name(), Matchers.equalTo(pojo.getType()));
     Assert.assertThat(persistable.getKind().name(), Matchers.equalTo(pojo.getKind()));
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isPresent());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isPresent());
     Assert.assertThat(
-        persistable.getPollingTimeout().get().toMillis(),
-        Matchers.equalTo(pojo.getPollingTimeout()));
+        persistable.getPollingPeriod().get().toMillis(), Matchers.equalTo(pojo.getPollingPeriod()));
     Assert.assertThat(
         persistable.getParallelismFactor().getAsInt(),
         Matchers.equalTo(pojo.getParallelismFactor()));
@@ -466,7 +460,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -478,10 +472,9 @@ public class SiteImplTest {
     Assert.assertThat(persistable.getUrl().toString(), Matchers.equalTo(pojo.getUrl()));
     Assert.assertThat(persistable.getType().name(), Matchers.equalTo(pojo.getType()));
     Assert.assertThat(persistable.getKind().name(), Matchers.equalTo(pojo.getKind()));
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isPresent());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isPresent());
     Assert.assertThat(
-        persistable.getPollingTimeout().get().toMillis(),
-        Matchers.equalTo(pojo.getPollingTimeout()));
+        persistable.getPollingPeriod().get().toMillis(), Matchers.equalTo(pojo.getPollingPeriod()));
     Assert.assertThat(
         persistable.getParallelismFactor().getAsInt(),
         Matchers.equalTo(pojo.getParallelismFactor()));
@@ -510,7 +503,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -530,7 +523,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -549,7 +542,7 @@ public class SiteImplTest {
             .setDescription((SiteImplTest.DESCRIPTION))
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -569,7 +562,7 @@ public class SiteImplTest {
             .setUrl("")
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -590,7 +583,7 @@ public class SiteImplTest {
             .setUrl("invalid-url")
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -609,7 +602,7 @@ public class SiteImplTest {
             .setDescription((SiteImplTest.DESCRIPTION))
             .setUrl(SiteImplTest.URL.toString())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -629,7 +622,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType("")
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -646,7 +639,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType("some-new-type")
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -658,10 +651,9 @@ public class SiteImplTest {
     Assert.assertThat(persistable.getUrl().toString(), Matchers.equalTo(pojo.getUrl()));
     Assert.assertThat(persistable.getType(), Matchers.equalTo(SiteType.UNKNOWN));
     Assert.assertThat(persistable.getKind().name(), Matchers.equalTo(pojo.getKind()));
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isPresent());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isPresent());
     Assert.assertThat(
-        persistable.getPollingTimeout().get().toMillis(),
-        Matchers.equalTo(pojo.getPollingTimeout()));
+        persistable.getPollingPeriod().get().toMillis(), Matchers.equalTo(pojo.getPollingPeriod()));
     Assert.assertThat(
         persistable.getParallelismFactor().getAsInt(),
         Matchers.equalTo(pojo.getParallelismFactor()));
@@ -679,7 +671,7 @@ public class SiteImplTest {
             .setDescription((SiteImplTest.DESCRIPTION))
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -699,7 +691,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind("")
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -716,7 +708,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind("some-new-kind")
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
     final SiteImpl persistable = new SiteImpl();
 
@@ -728,10 +720,9 @@ public class SiteImplTest {
     Assert.assertThat(persistable.getUrl().toString(), Matchers.equalTo(pojo.getUrl()));
     Assert.assertThat(persistable.getType().name(), Matchers.equalTo(pojo.getType()));
     Assert.assertThat(persistable.getKind(), Matchers.equalTo(SiteKind.UNKNOWN));
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isPresent());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isPresent());
     Assert.assertThat(
-        persistable.getPollingTimeout().get().toMillis(),
-        Matchers.equalTo(pojo.getPollingTimeout()));
+        persistable.getPollingPeriod().get().toMillis(), Matchers.equalTo(pojo.getPollingPeriod()));
     Assert.assertThat(
         persistable.getParallelismFactor().getAsInt(),
         Matchers.equalTo(pojo.getParallelismFactor()));
@@ -747,7 +738,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(0);
     final SiteImpl persistable = new SiteImpl();
 
@@ -759,10 +750,9 @@ public class SiteImplTest {
     Assert.assertThat(persistable.getUrl().toString(), Matchers.equalTo(pojo.getUrl()));
     Assert.assertThat(persistable.getType().name(), Matchers.equalTo(pojo.getType()));
     Assert.assertThat(persistable.getKind().name(), Matchers.equalTo(pojo.getKind()));
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isPresent());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isPresent());
     Assert.assertThat(
-        persistable.getPollingTimeout().get().toMillis(),
-        Matchers.equalTo(pojo.getPollingTimeout()));
+        persistable.getPollingPeriod().get().toMillis(), Matchers.equalTo(pojo.getPollingPeriod()));
     Assert.assertThat(persistable.getParallelismFactor().isEmpty(), Matchers.equalTo(true));
   }
 
@@ -776,7 +766,7 @@ public class SiteImplTest {
             .setUrl(SiteImplTest.URL.toString())
             .setType(SiteImplTest.TYPE.name())
             .setKind(SiteImplTest.KIND.name())
-            .setPollingTimeout(SiteImplTest.POLLING_TIMEOUT.toMillis())
+            .setPollingPeriod(SiteImplTest.POLLING_PERIOD.toMillis())
             .setParallelismFactor(-1);
     final SiteImpl persistable = new SiteImpl();
 
@@ -788,10 +778,9 @@ public class SiteImplTest {
     Assert.assertThat(persistable.getUrl().toString(), Matchers.equalTo(pojo.getUrl()));
     Assert.assertThat(persistable.getType().name(), Matchers.equalTo(pojo.getType()));
     Assert.assertThat(persistable.getKind().name(), Matchers.equalTo(pojo.getKind()));
-    Assert.assertThat(persistable.getPollingTimeout(), OptionalMatchers.isPresent());
+    Assert.assertThat(persistable.getPollingPeriod(), OptionalMatchers.isPresent());
     Assert.assertThat(
-        persistable.getPollingTimeout().get().toMillis(),
-        Matchers.equalTo(pojo.getPollingTimeout()));
+        persistable.getPollingPeriod().get().toMillis(), Matchers.equalTo(pojo.getPollingPeriod()));
     Assert.assertThat(persistable.getParallelismFactor().isEmpty(), Matchers.equalTo(true));
   }
 
@@ -805,7 +794,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.hashCode(), Matchers.equalTo(persistable2.hashCode()));
@@ -821,7 +810,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(
@@ -838,7 +827,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.equalTo(true));
@@ -872,7 +861,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.not(Matchers.equalTo(true)));
@@ -888,7 +877,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.not(Matchers.equalTo(true)));
@@ -904,7 +893,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.not(Matchers.equalTo(true)));
@@ -920,7 +909,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL2);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.not(Matchers.equalTo(true)));
@@ -936,7 +925,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteType.UNKNOWN);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.not(Matchers.equalTo(true)));
@@ -952,14 +941,14 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteKind.UNKNOWN);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.not(Matchers.equalTo(true)));
   }
 
   @Test
-  public void testEqualsWhenPollingTimeoutIsDifferent() throws Exception {
+  public void testEqualsWhenPollingPeriodIsDifferent() throws Exception {
     final SiteImpl persistable2 = new SiteImpl();
 
     persistable2.setId(SiteImplTest.ID);
@@ -968,7 +957,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(Duration.ZERO);
+    persistable2.setPollingPeriod(Duration.ZERO);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.not(Matchers.equalTo(true)));
@@ -984,7 +973,7 @@ public class SiteImplTest {
     persistable2.setUrl(SiteImplTest.URL);
     persistable2.setType(SiteImplTest.TYPE);
     persistable2.setKind(SiteImplTest.KIND);
-    persistable2.setPollingTimeout(SiteImplTest.POLLING_TIMEOUT);
+    persistable2.setPollingPeriod(SiteImplTest.POLLING_PERIOD);
     persistable2.setParallelismFactor(SiteImplTest.PARALLELISM_FACTOR + 2);
 
     Assert.assertThat(persistable.equals(persistable2), Matchers.not(Matchers.equalTo(true)));

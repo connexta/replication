@@ -61,13 +61,12 @@ public class SiteManagerImplTest {
   private static final SiteKind KIND = SiteKind.REGIONAL;
   private static final SiteKind KIND2 = SiteKind.TACTICAL;
   private static final SiteKind KIND3 = SiteKind.UNKNOWN;
-  private static final Duration POLLING_TIMEOUT = Duration.ofMinutes(10L);
-  private static final Duration POLLING_TIMEOUT2 = null;
-  private static final Duration POLLING_TIMEOUT3 = Duration.ofMinutes(30L);
-  private static final long POLLING_TIMEOUT_MILLIS = SiteManagerImplTest.POLLING_TIMEOUT.toMillis();
-  private static final long POLLING_TIMEOUT_MILLIS2 = 0L;
-  private static final long POLLING_TIMEOUT_MILLIS3 =
-      SiteManagerImplTest.POLLING_TIMEOUT3.toMillis();
+  private static final Duration POLLING_PERIOD = Duration.ofMinutes(10L);
+  private static final Duration POLLING_PERIOD2 = null;
+  private static final Duration POLLING_PERIOD3 = Duration.ofMinutes(30L);
+  private static final long POLLING_PERIOD_MILLIS = SiteManagerImplTest.POLLING_PERIOD.toMillis();
+  private static final long POLLING_PERIOD_MILLIS2 = 0L;
+  private static final long POLLING_PERIOD_MILLIS3 = SiteManagerImplTest.POLLING_PERIOD3.toMillis();
   private static final int PARALLELISM_FACTOR = 1;
   private static final int PARALLELISM_FACTOR2 = 0;
   private static final int PARALLELISM_FACTOR3 = 3;
@@ -93,7 +92,7 @@ public class SiteManagerImplTest {
     persistable.setUrl(SiteManagerImplTest.URL);
     persistable.setType(SiteManagerImplTest.TYPE);
     persistable.setKind(SiteManagerImplTest.KIND);
-    persistable.setPollingTimeout(SiteManagerImplTest.POLLING_TIMEOUT);
+    persistable.setPollingPeriod(SiteManagerImplTest.POLLING_PERIOD);
     persistable.setParallelismFactor(SiteManagerImplTest.PARALLELISM_FACTOR);
 
     persistable2.setId(SiteManagerImplTest.ID2);
@@ -102,7 +101,7 @@ public class SiteManagerImplTest {
     persistable2.setUrl(SiteManagerImplTest.URL2);
     persistable2.setType(SiteManagerImplTest.TYPE2);
     persistable2.setKind(SiteManagerImplTest.KIND2);
-    persistable2.setPollingTimeout(SiteManagerImplTest.POLLING_TIMEOUT2);
+    persistable2.setPollingPeriod(SiteManagerImplTest.POLLING_PERIOD2);
     persistable2.setParallelismFactor(SiteManagerImplTest.PARALLELISM_FACTOR2);
 
     persistable3.setId(SiteManagerImplTest.ID3);
@@ -111,7 +110,7 @@ public class SiteManagerImplTest {
     persistable3.setUrl(SiteManagerImplTest.URL3);
     persistable3.setType(SiteManagerImplTest.TYPE3);
     persistable3.setKind(SiteManagerImplTest.KIND3);
-    persistable3.setPollingTimeout(SiteManagerImplTest.POLLING_TIMEOUT3);
+    persistable3.setPollingPeriod(SiteManagerImplTest.POLLING_PERIOD3);
     persistable3.setParallelismFactor(SiteManagerImplTest.PARALLELISM_FACTOR3);
   }
 
@@ -124,7 +123,7 @@ public class SiteManagerImplTest {
           .setUrl(SiteManagerImplTest.URL.toString())
           .setType(SiteManagerImplTest.TYPE.name())
           .setKind(SiteManagerImplTest.KIND.name())
-          .setPollingTimeout(SiteManagerImplTest.POLLING_TIMEOUT_MILLIS)
+          .setPollingPeriod(SiteManagerImplTest.POLLING_PERIOD_MILLIS)
           .setParallelismFactor(SiteManagerImplTest.PARALLELISM_FACTOR);
   private final SitePojo pojo2 =
       new SitePojo()
@@ -135,7 +134,7 @@ public class SiteManagerImplTest {
           .setUrl(SiteManagerImplTest.URL2.toString())
           .setType(SiteManagerImplTest.TYPE2.name())
           .setKind(SiteManagerImplTest.KIND2.name())
-          .setPollingTimeout(SiteManagerImplTest.POLLING_TIMEOUT_MILLIS2)
+          .setPollingPeriod(SiteManagerImplTest.POLLING_PERIOD_MILLIS2)
           .setParallelismFactor(SiteManagerImplTest.PARALLELISM_FACTOR2);
   private final SitePojo pojo3 =
       new SitePojo()
@@ -146,7 +145,7 @@ public class SiteManagerImplTest {
           .setUrl(SiteManagerImplTest.URL3.toString())
           .setType(SiteManagerImplTest.TYPE3.name())
           .setKind(SiteManagerImplTest.KIND3.name())
-          .setPollingTimeout(SiteManagerImplTest.POLLING_TIMEOUT_MILLIS3)
+          .setPollingPeriod(SiteManagerImplTest.POLLING_PERIOD_MILLIS3)
           .setParallelismFactor(SiteManagerImplTest.PARALLELISM_FACTOR3);
 
   private final SiteRepository repo = Mockito.mock(SiteRepository.class);

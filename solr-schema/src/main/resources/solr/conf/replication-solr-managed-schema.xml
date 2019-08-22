@@ -165,14 +165,14 @@
            multiValued="false" />
     <field name="kind" type="string" indexed="true" stored="true" required="false"
            multiValued="false" />
-    <field name="polling_timeout" type="plong" indexed="false" stored="false" multiValued="false" />
-    <field name="parallelism_factor" type="pint" indexed="false" stored="false"
+    <field name="polling_period" type="plong" indexed="false" stored="true" multiValued="false" />
+    <field name="parallelism_factor" type="pint" indexed="false" stored="true"
            multiValued="false" />
 
     <!-- replication_config fields -->
     <field name="bidirectional" type="boolean" indexed="true" stored="true" required="false"
            multiValued="false" />
-    <field name="last_metadata_modified" type="pdate" indexed="true" stored="false" required="false"
+    <field name="last_metadata_modified" type="pdate" indexed="true" stored="true" required="false"
            multiValued="false" />
 
     <!-- replication_filter fields -->
@@ -187,7 +187,7 @@
 
     <!-- site_index fields -->
     <field name="modified_since" type="pdate" indexed="false" stored="true" required="false"
-      multiValued="false"/>
+           multiValued="false" />
 
     <!-- This can be enabled, in case the client does not know what fields may be searched. It isn't enabled by default
          because it's very expensive to index everything twice. -->

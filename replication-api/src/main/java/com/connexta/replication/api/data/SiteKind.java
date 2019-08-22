@@ -25,7 +25,7 @@ public enum SiteKind {
 
   /**
    * The unknown value is used for forward compatibility where the current code might not be able to
-   * understand a new kind of site and would mapped this new site to <code>UNKNOWN</code> and most
+   * understand a new kind of site and would map this new site to <code>UNKNOWN</code> and most
    * likely ignore it.
    */
   UNKNOWN
