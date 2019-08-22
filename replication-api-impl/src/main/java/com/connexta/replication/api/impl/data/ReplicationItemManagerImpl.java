@@ -60,11 +60,6 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public ReplicationItem create() {
-    return new ReplicationItemImpl();
-  }
-
-  @Override
   public ReplicationItem get(String id) {
     return itemRepository
         .findById(id)
@@ -149,7 +144,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
         new GroupOptions().addGroupByField("metadata_id").setLimit(1).addSort(doneTimeDescSort);
     groupQuery.setGroupOptions(options);
 
-    return solrTemplate.queryForGroupPage("replication_item", groupQuery, ItemPojo.class);
+    return solrTemplate.queryForGroupPage(ItemPojo.COLLECTION, groupQuery, ItemPojo.class);
   }
 
   @Override

@@ -23,13 +23,6 @@ import java.util.stream.Stream;
 public interface DataManager<T extends Persistable> {
 
   /**
-   * Creates a new implementation of T
-   *
-   * @return a new implementation of T
-   */
-  T create();
-
-  /**
    * Get the object of type T associated with the given id
    *
    * @param id The object id
