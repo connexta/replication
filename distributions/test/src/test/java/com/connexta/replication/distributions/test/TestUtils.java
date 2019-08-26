@@ -345,9 +345,8 @@ public class TestUtils {
 
   /**
    * Updates a product on the node and waits for the update to be reflected in queries. It does this
-   * by first querying for the product and getting the metacard.modified date. Then, after the
-   * update request is sent, it queries for the product until the metacard.modified date has
-   * changed, or the wait times out.
+   * by first querying for the product and getting the modified date. Then, after the update request
+   * is sent, it queries for the product until the modified date has changed, or the wait times out.
    *
    * @param nodeUrl The URL of the node.
    * @param id The ID of the product.
@@ -361,8 +360,7 @@ public class TestUtils {
       String nodeUrl, String id, InputStream metadata, InputStream resource) {
     // retrieve the modified time as it currently exists (we do this instead of comparing to a
     // timestamp we create ourselves because system times can differ).
-    Instant originalModifiedTime =
-        extractDateTimeAttribute(getById(nodeUrl, id), "metacard.modified");
+    Instant originalModifiedTime = extractDateTimeAttribute(getById(nodeUrl, id), "modified");
 
     given()
         .relaxedHTTPSValidation()
@@ -373,22 +371,22 @@ public class TestUtils {
         .when()
         .put(nodeUrl + CATALOG_ENDPOINT + "/" + id);
 
-    await().until(() -> nodeHasMetadataModifiedAfter(nodeUrl, id, originalModifiedTime));
+    await().until(() -> nodeHasResourceModifiedAfter(nodeUrl, id, originalModifiedTime));
   }
 
   /**
    * Returns true if querying the node for a product with the given ID returns a metacard with a
-   * metacard.modified date that is after the given timestamp.
+   * modified date that is after the given timestamp.
    *
    * @param nodeUrl The URL of the node.
    * @param id The ID of the product to fetch.
-   * @param timeStamp The timestamp to compare to the metacard.modified date.
-   * @return True if the metacard.modified date of the metacard is after the given timestamp, false
+   * @param timeStamp The timestamp to compare to the modified date.
+   * @return True if the modified date of the resource is after the given timestamp, false
    *     otherwise.
    * @throws NullPointerException if the modified date can't be retrieved from the response.
    */
-  public static Boolean nodeHasMetadataModifiedAfter(String nodeUrl, String id, Instant timeStamp) {
-    Instant modifiedTime = extractDateTimeAttribute(getById(nodeUrl, id), "metacard.modified");
+  public static Boolean nodeHasResourceModifiedAfter(String nodeUrl, String id, Instant timeStamp) {
+    Instant modifiedTime = extractDateTimeAttribute(getById(nodeUrl, id), "modified");
     return modifiedTime.isAfter(timeStamp);
   }
 

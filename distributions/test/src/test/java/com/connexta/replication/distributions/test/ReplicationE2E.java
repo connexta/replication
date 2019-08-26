@@ -28,7 +28,7 @@ import static com.connexta.replication.distributions.test.TestUtils.getById;
 import static com.connexta.replication.distributions.test.TestUtils.getFileAsStream;
 import static com.connexta.replication.distributions.test.TestUtils.getFileAsText;
 import static com.connexta.replication.distributions.test.TestUtils.nodeHasMetadata;
-import static com.connexta.replication.distributions.test.TestUtils.nodeHasMetadataModifiedAfter;
+import static com.connexta.replication.distributions.test.TestUtils.nodeHasResourceModifiedAfter;
 import static com.connexta.replication.distributions.test.TestUtils.postToSolrCore;
 import static com.connexta.replication.distributions.test.TestUtils.updateProductOnNode;
 import static com.connexta.replication.distributions.test.TestUtils.waitAtMost30SecondsUntil;
@@ -120,7 +120,7 @@ public class ReplicationE2E {
         sourceUrl, productId, updatedMetadataIs, getFileAsStream("data/UpdatedTestResource.txt"));
     LOGGER.info("product with ID: {} updated on the source node", productId);
     waitAtMost30SecondsUntil(
-        () -> nodeHasMetadataModifiedAfter(destinationUrl, productId, originalModifiedTime));
+        () -> nodeHasResourceModifiedAfter(destinationUrl, productId, originalModifiedTime));
     LOGGER.info("product with ID: {} updated through replication on the destination node");
 
     // verify resource was updated by checking the extracted text
