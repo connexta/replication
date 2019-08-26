@@ -29,6 +29,7 @@ import com.connexta.replication.api.data.RecoverableReplicationPersistenceExcept
 import com.connexta.replication.api.data.TransientReplicationPersistenceException;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
 import com.connexta.replication.api.impl.persistence.spring.FilterRepository;
+import com.connexta.replication.api.persistence.FilterIndexManager;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -61,11 +63,13 @@ public class FilterManagerImplTest {
 
   @Mock private FilterRepository filterRepository;
 
+  @Mock private FilterIndexManager filterIndexManager;
+
   private FilterManagerImpl filterManager;
 
   @Before
   public void setup() {
-    filterManager = new FilterManagerImpl(filterRepository);
+    filterManager = new FilterManagerImpl(filterRepository, filterIndexManager);
   }
 
   @Test
@@ -225,7 +229,9 @@ public class FilterManagerImplTest {
   @Test
   public void remove() {
     filterManager.remove("id");
-    verify(filterRepository).deleteById("id");
+    InOrder inOrder = Mockito.inOrder(filterRepository, filterIndexManager);
+    inOrder.verify(filterRepository).deleteById("id");
+    inOrder.verify(filterIndexManager).remove("id");
   }
 
   @Test(expected = NonTransientReplicationPersistenceException.class)

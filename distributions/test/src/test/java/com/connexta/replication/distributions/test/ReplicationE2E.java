@@ -13,7 +13,7 @@
  */
 package com.connexta.replication.distributions.test;
 
-import static com.connexta.replication.distributions.test.TestUtils.CONFIG;
+import static com.connexta.replication.distributions.test.TestUtils.FILTER;
 import static com.connexta.replication.distributions.test.TestUtils.SITE;
 import static com.connexta.replication.distributions.test.TestUtils.clearAllSolrCores;
 import static com.connexta.replication.distributions.test.TestUtils.createProductOnNode;
@@ -159,10 +159,10 @@ public class ReplicationE2E {
     // create nodes and jobs
     String sites =
         getFileAsText("sites.json", Map.of("source", sourceUrl, "destination", destinationUrl));
-    String jobs = getFileAsText("jobs.json", Map.of("testId", testId));
+    String jobs = getFileAsText("filters.json", Map.of("testId", testId));
     postToSolrCore(solrUrl, SITE, sites);
     LOGGER.info("Sites Created");
-    postToSolrCore(solrUrl, CONFIG, jobs);
+    postToSolrCore(solrUrl, FILTER, jobs);
     LOGGER.info("Jobs Created");
 
     // wait for metadata to be replicated

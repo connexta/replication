@@ -17,10 +17,11 @@ import com.connexta.replication.api.Action;
 import com.connexta.replication.api.NodeAdapter;
 import com.connexta.replication.api.Replication;
 import com.connexta.replication.api.Status;
+import com.connexta.replication.api.data.Filter;
+import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.QueryRequest;
 import com.connexta.replication.api.data.ReplicationItem;
-import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.data.Resource;
 import com.connexta.replication.api.data.ResourceResponse;
 import com.connexta.replication.api.impl.data.CreateRequestImpl;
@@ -30,8 +31,8 @@ import com.connexta.replication.api.impl.data.ReplicationItemImpl;
 import com.connexta.replication.api.impl.data.ResourceRequestImpl;
 import com.connexta.replication.api.impl.data.UpdateRequestImpl;
 import com.connexta.replication.api.impl.data.UpdateStorageRequestImpl;
+import com.connexta.replication.api.persistence.FilterIndexManager;
 import com.connexta.replication.api.persistence.ReplicationItemManager;
-import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import com.connexta.replication.data.QueryRequestImpl;
 import java.time.Instant;
 import java.util.Collections;
@@ -45,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Performs creates, updates and deletes between source and destination {@link NodeAdapter}s based
- * on the given {@link ReplicatorConfig}.
+ * on the given {@link Filter}.
  */
 public class Syncer {
 
@@ -53,17 +54,18 @@ public class Syncer {
 
   private final ReplicationItemManager replicationItemManager;
 
-  private final ReplicatorConfigManager configs;
+  private final FilterIndexManager filterIndexManager;
 
   /**
    * Creates a new {@code Syncer}.
    *
    * @param replicationItemManager bean for operating on {@link ReplicationItem}s
-   * @param configs bean for operating on {@link ReplicatorConfig}s
+   * @param filterIndexManager bean for operating on {@link FilterIndex}s
    */
-  public Syncer(ReplicationItemManager replicationItemManager, ReplicatorConfigManager configs) {
+  public Syncer(
+      ReplicationItemManager replicationItemManager, FilterIndexManager filterIndexManager) {
     this.replicationItemManager = replicationItemManager;
-    this.configs = configs;
+    this.filterIndexManager = filterIndexManager;
   }
 
   /**
@@ -72,15 +74,15 @@ public class Syncer {
    *
    * @param source the source {@link NodeAdapter}
    * @param destination the destination {@link NodeAdapter}
-   * @param replicatorConfig a {@link ReplicatorConfig} defining the context of the sync
+   * @param filter a {@link Filter} defining the context of the sync
    * @return a job ready for syncing
    */
   Job create(
       NodeAdapter source,
       NodeAdapter destination,
-      ReplicatorConfig replicatorConfig,
+      Filter filter,
       Set<Consumer<ReplicationItem>> callbacks) {
-    return new Job(source, destination, replicatorConfig, callbacks);
+    return new Job(source, destination, filter, callbacks);
   }
 
   /**
@@ -97,18 +99,21 @@ public class Syncer {
 
     private final String destinationName;
 
-    private final ReplicatorConfig replicatorConfig;
+    private final Filter filter;
+
+    private final FilterIndex filterIndex;
 
     private final Set<Consumer<ReplicationItem>> callbacks;
 
     Job(
         NodeAdapter source,
         NodeAdapter destination,
-        ReplicatorConfig replicatorConfig,
+        Filter filter,
         Set<Consumer<ReplicationItem>> callbacks) {
       this.source = source;
       this.destination = destination;
-      this.replicatorConfig = replicatorConfig;
+      this.filter = filter;
+      this.filterIndex = filterIndexManager.getOrCreate(filter);
       this.callbacks = callbacks;
 
       this.sourceName = source.getSystemName();
@@ -118,11 +123,11 @@ public class Syncer {
     /** Blocking call that begins syncing between a source and destination {@link NodeAdapter}s. */
     void sync() {
       Date modifiedAfter = getModifiedAfter();
-      List<String> failedItemIds = replicationItemManager.getFailureList(replicatorConfig.getId());
+      List<String> failedItemIds = replicationItemManager.getFailureList(filter.getId());
 
       QueryRequest queryRequest =
           new QueryRequestImpl(
-              replicatorConfig.getFilter(),
+              filter.getFilter(),
               Collections.singletonList(destinationName),
               failedItemIds,
               modifiedAfter);
@@ -131,9 +136,7 @@ public class Syncer {
 
       for (Metadata metadata : changeSet) {
         ReplicationItem existingItem =
-            replicationItemManager
-                .getLatest(replicatorConfig.getId(), metadata.getId())
-                .orElse(null);
+            replicationItemManager.getLatest(filter.getId(), metadata.getId()).orElse(null);
 
         Status status;
         ReplicationItemImpl.Builder builder = createReplicationItem(metadata);
@@ -174,11 +177,11 @@ public class Syncer {
           replicationItemManager.save(item);
           callbacks.forEach(callback -> callback.accept(item));
         }
-        final Instant lastModified = replicatorConfig.getLastMetadataModified();
+        final Date lastModified = filterIndex.getModifiedSince().map(Date::from).orElse(null);
 
-        if (lastModified == null || metadata.getMetadataModified().after(Date.from(lastModified))) {
-          replicatorConfig.setLastMetadataModified(metadata.getMetadataModified().toInstant());
-          configs.save(replicatorConfig);
+        if (lastModified == null || metadata.getMetadataModified().after(lastModified)) {
+          filterIndex.setModifiedSince(metadata.getMetadataModified().toInstant());
+          filterIndexManager.save(filterIndex);
         }
       }
     }
@@ -280,7 +283,7 @@ public class Syncer {
 
     private ReplicationItemImpl.Builder createReplicationItem(Metadata metadata) {
       return new ReplicationItemImpl.Builder(
-              metadata.getId(), replicatorConfig.getId(), sourceName, destinationName)
+              metadata.getId(), filter.getId(), sourceName, destinationName)
           .resourceModified(metadata.getResourceModified())
           .metadataModified(metadata.getMetadataModified())
           .resourceSize(metadata.getResourceSize())
@@ -289,12 +292,12 @@ public class Syncer {
 
     @Nullable
     private Date getModifiedAfter() {
-      final Instant lastModified = replicatorConfig.getLastMetadataModified();
+      final Instant lastModified = filterIndex.getModifiedSince().orElse(null);
 
       if (lastModified != null) {
         return Date.from(lastModified);
       } else {
-        LOGGER.trace("no previous successful run for config {} found.", replicatorConfig.getName());
+        LOGGER.trace("no previous successful run for filter {} found.", filter.getName());
         return null;
       }
     }

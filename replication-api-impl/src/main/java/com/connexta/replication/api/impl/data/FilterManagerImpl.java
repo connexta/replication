@@ -20,6 +20,7 @@ import com.connexta.replication.api.data.RecoverableReplicationPersistenceExcept
 import com.connexta.replication.api.data.TransientReplicationPersistenceException;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
 import com.connexta.replication.api.impl.persistence.spring.FilterRepository;
+import com.connexta.replication.api.persistence.FilterIndexManager;
 import com.connexta.replication.api.persistence.FilterManager;
 import java.util.Spliterator;
 import java.util.stream.Stream;
@@ -30,11 +31,14 @@ import org.springframework.dao.TransientDataAccessException;
 
 /** Performs CRUD operations for {@link Filter}s. */
 public class FilterManagerImpl implements FilterManager {
-
   private final FilterRepository filterRepository;
 
-  public FilterManagerImpl(FilterRepository filterRepository) {
+  private final FilterIndexManager filterIndexManager;
+
+  public FilterManagerImpl(
+      FilterRepository filterRepository, FilterIndexManager filterIndexManager) {
     this.filterRepository = filterRepository;
+    this.filterIndexManager = filterIndexManager;
   }
 
   @Override
@@ -88,6 +92,7 @@ public class FilterManagerImpl implements FilterManager {
   public void remove(String id) {
     try {
       filterRepository.deleteById(id);
+      filterIndexManager.remove(id);
     } catch (NonTransientDataAccessException e) {
       throw new NonTransientReplicationPersistenceException(e);
     } catch (TransientDataAccessException e) {

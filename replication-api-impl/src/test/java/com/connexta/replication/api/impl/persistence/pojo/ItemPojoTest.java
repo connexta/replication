@@ -29,7 +29,7 @@ public class ItemPojoTest {
   private static final Date DONE_TIME = new Date(3L);
   private static final String SOURCE = "source";
   private static final String DESTINATION = "destination";
-  private static final String CONFIG_ID = "config.id";
+  private static final String FILTER_ID = "filter.id";
   private static final long METADATA_SIZE = 123L;
   private static final long RESOURCE_SIZE = 234L;
   private static final Date START_TIME = new Date(4L);
@@ -46,7 +46,7 @@ public class ItemPojoTest {
           .setDoneTime(ItemPojoTest.DONE_TIME)
           .setSource(ItemPojoTest.SOURCE)
           .setDestination(ItemPojoTest.DESTINATION)
-          .setConfigId(ItemPojoTest.CONFIG_ID)
+          .setFilterId(ItemPojoTest.FILTER_ID)
           .setMetadataSize(ItemPojoTest.METADATA_SIZE)
           .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
           .setStartTime(ItemPojoTest.START_TIME)
@@ -110,10 +110,10 @@ public class ItemPojoTest {
   }
 
   @Test
-  public void testSetAndGetConfigId() throws Exception {
-    final ItemPojo pojo = new ItemPojo().setConfigId(ItemPojoTest.CONFIG_ID);
+  public void testSetAndGetFilterId() throws Exception {
+    final ItemPojo pojo = new ItemPojo().setFilterId(ItemPojoTest.FILTER_ID);
 
-    Assert.assertThat(pojo.getConfigId(), Matchers.equalTo(ItemPojoTest.CONFIG_ID));
+    Assert.assertThat(pojo.getFilterId(), Matchers.equalTo(ItemPojoTest.FILTER_ID));
   }
 
   @Test
@@ -156,7 +156,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -178,7 +178,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -201,7 +201,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -241,7 +241,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -263,7 +263,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -285,7 +285,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -307,7 +307,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -329,7 +329,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -351,7 +351,7 @@ public class ItemPojoTest {
             .setDoneTime(new Date())
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -373,7 +373,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE + "2")
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -395,7 +395,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION + "2")
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -406,7 +406,7 @@ public class ItemPojoTest {
   }
 
   @Test
-  public void testEqualsWhenConfigIdIsDifferent() throws Exception {
+  public void testEqualsWhenFilterIdIsDifferent() throws Exception {
     final ItemPojo pojo2 =
         new ItemPojo()
             .setVersion(ItemPojoTest.VERSION)
@@ -417,7 +417,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID + "2")
+            .setFilterId(ItemPojoTest.FILTER_ID + "2")
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -439,7 +439,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE + 2L)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -461,7 +461,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE + 2L)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -483,7 +483,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(new Date())
@@ -505,7 +505,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)
@@ -527,7 +527,7 @@ public class ItemPojoTest {
             .setDoneTime(ItemPojoTest.DONE_TIME)
             .setSource(ItemPojoTest.SOURCE)
             .setDestination(ItemPojoTest.DESTINATION)
-            .setConfigId(ItemPojoTest.CONFIG_ID)
+            .setFilterId(ItemPojoTest.FILTER_ID)
             .setMetadataSize(ItemPojoTest.METADATA_SIZE)
             .setResourceSize(ItemPojoTest.RESOURCE_SIZE)
             .setStartTime(ItemPojoTest.START_TIME)

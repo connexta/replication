@@ -19,13 +19,21 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.connexta.replication.api.Replicator;
 import com.connexta.replication.api.SyncRequest;
-import com.connexta.replication.api.data.ReplicatorConfig;
-import com.connexta.replication.api.persistence.ReplicatorConfigManager;
+import com.connexta.replication.api.data.Filter;
+import com.connexta.replication.api.data.NotFoundException;
+import com.connexta.replication.api.data.Site;
+import com.connexta.replication.api.data.SiteKind;
+import com.connexta.replication.api.data.SiteType;
+import com.connexta.replication.api.persistence.FilterManager;
+import com.connexta.replication.api.persistence.SiteManager;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -50,13 +58,19 @@ public class ReplicatorRunnerTest {
 
   @Mock Replicator replicator;
 
-  @Mock ReplicatorConfigManager configManager;
+  @Mock FilterManager filterManager;
+
+  @Mock SiteManager siteManager;
 
   @Mock ScheduledExecutorService scheduledExecutor;
 
-  private Stream<ReplicatorConfig> configStream;
+  private List<Filter> filters;
 
-  @Mock ReplicatorConfig config;
+  private Set<Site> sites;
+
+  @Mock Filter filter;
+
+  @Mock Site site;
 
   @Before
   public void setUp() throws Exception {
@@ -64,10 +78,12 @@ public class ReplicatorRunnerTest {
         new ReplicatorRunner(
             scheduledExecutor,
             replicator,
-            configManager,
+            filterManager,
+            siteManager,
             Stream.of(ReplicatorRunnerTest.SITE_ID),
             0);
-    configStream = Stream.of(config);
+    filters = List.of(filter);
+    sites = Set.of(site);
   }
 
   @Test
@@ -81,7 +97,9 @@ public class ReplicatorRunnerTest {
 
   @Test
   public void initNonDefaultPeriod() {
-    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, Stream.empty(), 1);
+    runner =
+        new ReplicatorRunner(
+            scheduledExecutor, replicator, filterManager, siteManager, Stream.empty(), 1);
     ArgumentCaptor<Long> period = ArgumentCaptor.forClass(Long.class);
     runner.init();
     verify(scheduledExecutor)
@@ -98,37 +116,70 @@ public class ReplicatorRunnerTest {
   @Test
   public void scheduleReplication() throws Exception {
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
-    when(config.getName()).thenReturn("test");
-    when(config.getDestination()).thenReturn(ReplicatorRunnerTest.SITE_ID);
-    when(configManager.objects()).thenReturn(configStream);
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+    when(site.getKind()).thenReturn(SiteKind.REGIONAL);
+    when(site.getType()).thenReturn(SiteType.DDF);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(filterManager.filtersForSite(SITE_ID)).thenReturn(filters.stream());
     runner.scheduleReplication();
     verify(replicator).submitSyncRequest(request.capture());
-    assertThat(request.getValue().getConfig().getName(), is("test"));
+    assertThat(request.getValue().getFilter(), is(filter));
+  }
+
+  @Test
+  public void scheduleReplicationWithMissingSite() throws Exception {
+    ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
+    when(siteManager.get(SITE_ID)).thenReturn(site).thenThrow(new NotFoundException(""));
+    when(site.getKind()).thenReturn(SiteKind.REGIONAL);
+    when(site.getType()).thenReturn(SiteType.DDF);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(filterManager.filtersForSite(SITE_ID)).thenReturn(filters.stream());
+    runner.scheduleReplication();
+    verify(replicator, times(1)).submitSyncRequest(request.capture());
+    assertThat(request.getValue().getFilter(), is(filter));
+  }
+
+  @Test
+  public void scheduleReplicationWithSiteOfUnknownType() throws Exception {
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+    when(site.getType()).thenReturn(SiteType.UNKNOWN);
+    runner.scheduleReplication();
+    verify(replicator, never()).submitSyncRequest(any(SyncRequest.class));
+  }
+
+  @Test
+  public void scheduleReplicationWithSiteOfUnknownKind() throws Exception {
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+    when(site.getKind()).thenReturn(SiteKind.UNKNOWN);
+    when(site.getType()).thenReturn(SiteType.DDF);
+    runner.scheduleReplication();
+    verify(replicator, never()).submitSyncRequest(any(SyncRequest.class));
   }
 
   @Test
   public void scheduleReplicationWhenReplicatingAllSites() throws Exception {
-    runner = new ReplicatorRunner(scheduledExecutor, replicator, configManager, Stream.empty(), 1);
+    runner =
+        new ReplicatorRunner(
+            scheduledExecutor, replicator, filterManager, siteManager, Stream.empty(), 1);
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
-    when(config.getName()).thenReturn("test");
-    when(configManager.objects()).thenReturn(configStream);
+    when(siteManager.objects()).thenReturn(sites.stream());
+    when(site.getKind()).thenReturn(SiteKind.REGIONAL);
+    when(site.getType()).thenReturn(SiteType.DDF);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(filterManager.filtersForSite(SITE_ID)).thenReturn(filters.stream());
     runner.scheduleReplication();
     verify(replicator).submitSyncRequest(request.capture());
-    assertThat(request.getValue().getConfig().getName(), is("test"));
-  }
-
-  @Test
-  public void scheduleReplicationWhenDestinationNotMatched() throws Exception {
-    when(config.getDestination()).thenReturn("some_other_site");
-    when(configManager.objects()).thenReturn(configStream);
-    runner.scheduleReplication();
-    verify(replicator, never()).submitSyncRequest(any());
+    assertThat(request.getValue().getFilter(), is(filter));
   }
 
   @Test
   public void scheduleReplicationWithSuspend() throws Exception {
-    when(config.isSuspended()).thenReturn(true);
-    when(configManager.objects()).thenReturn(configStream);
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+    when(site.getKind()).thenReturn(SiteKind.REGIONAL);
+    when(site.getType()).thenReturn(SiteType.DDF);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(filter.isSuspended()).thenReturn(true);
+    when(filterManager.filtersForSite(SITE_ID)).thenReturn(filters.stream());
     runner.scheduleReplication();
     verify(replicator, never()).submitSyncRequest(any());
   }
@@ -137,12 +188,14 @@ public class ReplicatorRunnerTest {
   @ClearInterruptions
   public void scheduleReplicationInterruptException() throws Exception {
     ArgumentCaptor<SyncRequest> request = ArgumentCaptor.forClass(SyncRequest.class);
-    when(config.getName()).thenReturn("test");
-    when(config.getDestination()).thenReturn(ReplicatorRunnerTest.SITE_ID);
-    when(configManager.objects()).thenReturn(configStream);
+    when(siteManager.get(SITE_ID)).thenReturn(site);
+    when(site.getKind()).thenReturn(SiteKind.REGIONAL);
+    when(site.getType()).thenReturn(SiteType.DDF);
+    when(site.getId()).thenReturn(SITE_ID);
+    when(filterManager.filtersForSite(SITE_ID)).thenReturn(filters.stream());
     doThrow(new InterruptedException()).when(replicator).submitSyncRequest(any(SyncRequest.class));
     runner.scheduleReplication();
     verify(replicator).submitSyncRequest(request.capture());
-    assertThat(request.getValue().getConfig().getName(), is("test"));
+    assertThat(request.getValue().getFilter(), is(filter));
   }
 }

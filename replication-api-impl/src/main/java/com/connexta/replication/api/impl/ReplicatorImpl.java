@@ -13,15 +13,21 @@
  */
 package com.connexta.replication.api.impl;
 
+import static com.connexta.replication.api.data.SiteKind.REGIONAL;
+import static com.connexta.replication.api.data.SiteKind.TACTICAL;
+import static com.connexta.replication.api.data.SiteType.DDF;
+import static com.connexta.replication.api.data.SiteType.ION;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import com.connexta.replication.api.NodeAdapter;
 import com.connexta.replication.api.ReplicationException;
 import com.connexta.replication.api.Replicator;
 import com.connexta.replication.api.SyncRequest;
+import com.connexta.replication.api.data.Filter;
 import com.connexta.replication.api.data.ReplicationItem;
-import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.data.Site;
+import com.connexta.replication.api.data.SiteKind;
+import com.connexta.replication.api.data.SiteType;
 import com.connexta.replication.api.persistence.SiteManager;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
@@ -54,6 +60,8 @@ public class ReplicatorImpl implements Replicator {
 
   private final Syncer syncer;
 
+  private final String localSiteId;
+
   /** Does not contain duplicates */
   private BlockingQueue<SyncRequest> pendingSyncRequests = new LinkedBlockingQueue<>();
 
@@ -69,18 +77,30 @@ public class ReplicatorImpl implements Replicator {
    * @param nodeAdapters bean for creating {@link NodeAdapter}s
    * @param siteManager manager for accessing {@link Site}s
    * @param syncer bean for transferring metadata and/or resources
+   * @param localSiteId the ID of the local site
    */
-  public ReplicatorImpl(NodeAdapters nodeAdapters, SiteManager siteManager, Syncer syncer) {
-    this(nodeAdapters, siteManager, Executors.newSingleThreadScheduledExecutor(), syncer);
+  public ReplicatorImpl(
+      NodeAdapters nodeAdapters, SiteManager siteManager, Syncer syncer, String localSiteId) {
+    this(
+        nodeAdapters,
+        siteManager,
+        Executors.newSingleThreadScheduledExecutor(),
+        syncer,
+        localSiteId);
   }
 
   @VisibleForTesting
   ReplicatorImpl(
-      NodeAdapters nodeAdapters, SiteManager siteManager, ExecutorService executor, Syncer syncer) {
+      NodeAdapters nodeAdapters,
+      SiteManager siteManager,
+      ExecutorService executor,
+      Syncer syncer,
+      String localSiteId) {
     this.nodeAdapters = notNull(nodeAdapters);
     this.executor = notNull(executor);
     this.siteManager = notNull(siteManager);
     this.syncer = notNull(syncer);
+    this.localSiteId = notNull(localSiteId);
   }
 
   public void init() {
@@ -121,36 +141,46 @@ public class ReplicatorImpl implements Replicator {
   @VisibleForTesting
   void executeSyncRequest(final SyncRequest syncRequest) {
     LOGGER.trace("Executing sync request {} with subject", syncRequest);
-    ReplicatorConfig config = syncRequest.getConfig();
-    NodeAdapter node1 = null;
-    NodeAdapter node2 = null;
+    Filter filter = syncRequest.getFilter();
+    NodeAdapter localNode = null;
+    NodeAdapter remoteNode = null;
+    Site remoteSite;
 
     try {
-      node1 = getStoreForId(config.getSource());
-      node2 = getStoreForId(config.getDestination());
+      remoteSite = siteManager.get(filter.getSiteId());
+      localNode = getStoreForSite(siteManager.get(localSiteId));
+      remoteNode = getStoreForSite(remoteSite);
     } catch (ReplicationException e) {
-      LOGGER.debug("Error getting node adapters for replicator config {}.", config.getName(), e);
+      LOGGER.debug("Error getting node adapters for replicator filter {}.", filter.getName(), e);
       completeActiveSyncRequest(syncRequest);
-      closeQuietly(node1);
-      closeQuietly(node2);
+      closeQuietly(localNode);
+      closeQuietly(remoteNode);
       return;
     }
 
-    try (NodeAdapter store1 = node1;
-        NodeAdapter store2 = node2) {
-      if (config.isBidirectional()) {
-        sync(store2, store1, config);
+    SiteType type = remoteSite.getType();
+    SiteKind kind = remoteSite.getKind();
+    try (NodeAdapter localStore = localNode;
+        NodeAdapter remoteStore = remoteNode) {
+      if (type == DDF) {
+        if (kind == TACTICAL) {
+          sync(localStore, remoteStore, filter);
+          sync(remoteStore, localStore, filter);
+        } else if (kind == REGIONAL) {
+          sync(remoteStore, localStore, filter);
+        }
+      } else if (type == ION) {
+        sync(localStore, remoteStore, filter);
       }
-      sync(store1, store2, config);
     } catch (Exception e) {
-      LOGGER.warn("Unexpected error when running config {}", config.getName(), e);
+      LOGGER.warn("Unexpected error when running filter {}", filter.getName(), e);
     } finally {
       completeActiveSyncRequest(syncRequest);
     }
   }
 
-  private void sync(NodeAdapter source, NodeAdapter destination, ReplicatorConfig config) {
-    Syncer.Job job = syncer.create(source, destination, config, Set.copyOf(callbacks));
+  private void sync(NodeAdapter source, NodeAdapter destination, Filter filter) {
+    Syncer.Job job = syncer.create(source, destination, filter, Set.copyOf(callbacks));
     job.sync();
   }
 
@@ -195,7 +225,7 @@ public class ReplicatorImpl implements Replicator {
 
   @Override
   public void submitSyncRequest(final SyncRequest syncRequest) throws InterruptedException {
-    LOGGER.trace("Submitting sync request for name = {}", syncRequest.getConfig().getName());
+    LOGGER.trace("Submitting sync request for name = {}", syncRequest.getFilter().getName());
     if (pendingSyncRequests.contains(syncRequest) || activeSyncRequests.contains(syncRequest)) {
       LOGGER.debug(
           "The pendingSyncRequests already contains sync request {}, or it is already running. Not adding again to pending requests.",
@@ -221,9 +251,8 @@ public class ReplicatorImpl implements Replicator {
   }
 
   @VisibleForTesting
-  NodeAdapter getStoreForId(String siteId) {
+  NodeAdapter getStoreForSite(Site site) {
     NodeAdapter store;
-    Site site = siteManager.get(siteId);
     try {
       store = nodeAdapters.factoryFor(site.getType()).create(site.getUrl());
     } catch (Exception e) {

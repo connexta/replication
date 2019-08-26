@@ -63,8 +63,8 @@ public class ItemPojo extends Pojo<ItemPojo> {
   @Indexed(name = "destination", searchable = false)
   private String destination;
 
-  @Indexed(name = "config_id")
-  private String configId;
+  @Indexed(name = "filter_id")
+  private String filterId;
 
   @Indexed(name = "metadata_size", searchable = false)
   private long metadataSize;
@@ -330,23 +330,23 @@ public class ItemPojo extends Pojo<ItemPojo> {
   }
 
   /**
-   * Gets the identifier of the {@link ConfigPojo} this item belongs to.
+   * Gets the identifier of the {@link FilterPojo} this item belongs to.
    *
-   * @return the id of the {@link ConfigPojo} this item belongs to
+   * @return the id of the {@link FilterPojo} this item belongs to
    */
   @Nullable
-  public String getConfigId() {
-    return configId;
+  public String getFilterId() {
+    return filterId;
   }
 
   /**
-   * Sets the identifier of the {@link ConfigPojo} this item belongs to.
+   * Sets the identifier of the {@link FilterPojo} this item belongs to.
    *
-   * @param configId the id of the {@link ConfigPojo} this item belongs to
+   * @param filterId the id of the {@link FilterPojo} this item belongs to
    * @return this for chaining
    */
-  public ItemPojo setConfigId(@Nullable String configId) {
-    this.configId = configId;
+  public ItemPojo setFilterId(@Nullable String filterId) {
+    this.filterId = filterId;
     return this;
   }
 
@@ -360,7 +360,7 @@ public class ItemPojo extends Pojo<ItemPojo> {
         doneTime,
         source,
         destination,
-        configId,
+        filterId,
         metadataSize,
         resourceSize,
         startTime,
@@ -381,7 +381,7 @@ public class ItemPojo extends Pojo<ItemPojo> {
           && Objects.equals(doneTime, pojo.doneTime)
           && Objects.equals(source, pojo.source)
           && Objects.equals(destination, pojo.destination)
-          && Objects.equals(configId, pojo.configId)
+          && Objects.equals(filterId, pojo.filterId)
           && Objects.equals(startTime, pojo.startTime)
           && Objects.equals(status, pojo.status)
           && Objects.equals(action, pojo.action);
@@ -392,7 +392,7 @@ public class ItemPojo extends Pojo<ItemPojo> {
   @Override
   public String toString() {
     return String.format(
-        "ItemPojo[id=%s, version=%d, metadataId=%s, resourceModified=%s, metadataModified=%s, doneTime=%s, source=%s, destination=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, status=%s, action=%s]",
+        "ItemPojo[id=%s, version=%d, metadataId=%s, resourceModified=%s, metadataModified=%s, doneTime=%s, source=%s, destination=%s, filterId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, status=%s, action=%s]",
         getId(),
         getVersion(),
         metadataId,
@@ -401,7 +401,7 @@ public class ItemPojo extends Pojo<ItemPojo> {
         doneTime,
         source,
         destination,
-        configId,
+        filterId,
         metadataSize,
         resourceSize,
         startTime,

@@ -72,9 +72,9 @@ public class ItemRepositoryIntegrationTest {
   private static final String DESTINATION2 = "destination2";
   private static final String DESTINATION3 = "destination3";
   private static final String DESTINATION12 = "destination12";
-  private static final String CONFIG_ID = "config.id";
-  private static final String CONFIG_ID2 = "config.id2";
-  private static final String CONFIG_ID3 = "config.id3";
+  private static final String FILTER_ID = "filter.id";
+  private static final String FILTER_ID2 = "filter.id2";
+  private static final String FILTER_ID3 = "filter.id3";
   private static final long METADATA_SIZE = 123L;
   private static final long METADATA_SIZE2 = 1232L;
   private static final long METADATA_SIZE3 = 1233L;
@@ -101,7 +101,7 @@ public class ItemRepositoryIntegrationTest {
           .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
           .setSource(ItemRepositoryIntegrationTest.SOURCE)
           .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-          .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+          .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
           .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
           .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
           .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -117,7 +117,7 @@ public class ItemRepositoryIntegrationTest {
           .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME2)
           .setSource(ItemRepositoryIntegrationTest.SOURCE2)
           .setDestination(ItemRepositoryIntegrationTest.DESTINATION2)
-          .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID2)
+          .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID2)
           .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE2)
           .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE2)
           .setStartTime(ItemRepositoryIntegrationTest.START_TIME2)
@@ -133,7 +133,7 @@ public class ItemRepositoryIntegrationTest {
           .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME3)
           .setSource(ItemRepositoryIntegrationTest.SOURCE3)
           .setDestination(ItemRepositoryIntegrationTest.DESTINATION3)
-          .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID3)
+          .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID3)
           .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE3)
           .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE3)
           .setStartTime(ItemRepositoryIntegrationTest.START_TIME3)
@@ -149,7 +149,7 @@ public class ItemRepositoryIntegrationTest {
           .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME11)
           .setSource(ItemRepositoryIntegrationTest.SOURCE)
           .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-          .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+          .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
           .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
           .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
           .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -165,7 +165,7 @@ public class ItemRepositoryIntegrationTest {
           .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME12)
           .setSource(ItemRepositoryIntegrationTest.SOURCE)
           .setDestination(ItemRepositoryIntegrationTest.DESTINATION12)
-          .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+          .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
           .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
           .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
           .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -209,7 +209,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -230,7 +230,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -255,7 +255,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -280,7 +280,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -305,7 +305,7 @@ public class ItemRepositoryIntegrationTest {
             .setMetadataModified(ItemRepositoryIntegrationTest.METADATA_MODIFIED)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -330,7 +330,7 @@ public class ItemRepositoryIntegrationTest {
             .setMetadataModified(ItemRepositoryIntegrationTest.METADATA_MODIFIED)
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -355,7 +355,7 @@ public class ItemRepositoryIntegrationTest {
             .setMetadataModified(ItemRepositoryIntegrationTest.METADATA_MODIFIED)
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -370,7 +370,7 @@ public class ItemRepositoryIntegrationTest {
   }
 
   @Test
-  public void testPojoPersistenceWhenConfigIdIsNotDefined() throws Exception {
+  public void testPojoPersistenceWhenFilterIdIsNotDefined() throws Exception {
     final ItemPojo pojo =
         new ItemPojo()
             .setVersion(ItemRepositoryIntegrationTest.VERSION)
@@ -406,7 +406,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
             .setStatus(ItemRepositoryIntegrationTest.STATUS)
@@ -431,7 +431,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
             .setStatus(ItemRepositoryIntegrationTest.STATUS)
@@ -456,7 +456,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStatus(ItemRepositoryIntegrationTest.STATUS)
@@ -481,7 +481,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -506,7 +506,7 @@ public class ItemRepositoryIntegrationTest {
             .setDoneTime(ItemRepositoryIntegrationTest.DONE_TIME)
             .setSource(ItemRepositoryIntegrationTest.SOURCE)
             .setDestination(ItemRepositoryIntegrationTest.DESTINATION)
-            .setConfigId(ItemRepositoryIntegrationTest.CONFIG_ID)
+            .setFilterId(ItemRepositoryIntegrationTest.FILTER_ID)
             .setMetadataSize(ItemRepositoryIntegrationTest.METADATA_SIZE)
             .setResourceSize(ItemRepositoryIntegrationTest.RESOURCE_SIZE)
             .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
@@ -699,7 +699,7 @@ public class ItemRepositoryIntegrationTest {
   }
 
   @Test
-  public void testFindByConfigIdAndMetadataIdOrderByDoneTimeDesc() throws Exception {
+  public void testFindByFilterIdAndMetadataIdOrderByDoneTimeDesc() throws Exception {
     repo.save(ItemRepositoryIntegrationTest.POJO11);
     repo.save(ItemRepositoryIntegrationTest.POJO);
     repo.save(ItemRepositoryIntegrationTest.POJO2);
@@ -707,8 +707,8 @@ public class ItemRepositoryIntegrationTest {
     repo.save(ItemRepositoryIntegrationTest.POJO12);
 
     final List<ItemPojo> page =
-        repo.findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
-                ItemRepositoryIntegrationTest.CONFIG_ID,
+        repo.findByFilterIdAndMetadataIdOrderByDoneTimeDesc(
+                ItemRepositoryIntegrationTest.FILTER_ID,
                 ItemRepositoryIntegrationTest.METADATA_ID,
                 PageRequest.of(0, (int) repo.count()))
             .toList();
@@ -722,7 +722,7 @@ public class ItemRepositoryIntegrationTest {
   }
 
   @Test
-  public void testFindByConfigId() throws Exception {
+  public void testFindByFilterId() throws Exception {
     repo.save(ItemRepositoryIntegrationTest.POJO11);
     repo.save(ItemRepositoryIntegrationTest.POJO);
     repo.save(ItemRepositoryIntegrationTest.POJO2);
@@ -730,8 +730,8 @@ public class ItemRepositoryIntegrationTest {
     repo.save(ItemRepositoryIntegrationTest.POJO12);
 
     final List<ItemPojo> page =
-        repo.findByConfigId(
-                ItemRepositoryIntegrationTest.CONFIG_ID, PageRequest.of(0, (int) repo.count()))
+        repo.findByFilterId(
+                ItemRepositoryIntegrationTest.FILTER_ID, PageRequest.of(0, (int) repo.count()))
             .toList();
 
     Assert.assertThat(
@@ -743,14 +743,14 @@ public class ItemRepositoryIntegrationTest {
   }
 
   @Test
-  public void testDeleteByConfigId() throws Exception {
+  public void testDeleteByFilterId() throws Exception {
     repo.save(ItemRepositoryIntegrationTest.POJO11);
     repo.save(ItemRepositoryIntegrationTest.POJO);
     repo.save(ItemRepositoryIntegrationTest.POJO2);
     repo.save(ItemRepositoryIntegrationTest.POJO3);
     repo.save(ItemRepositoryIntegrationTest.POJO12);
 
-    repo.deleteByConfigId(ItemRepositoryIntegrationTest.CONFIG_ID);
+    repo.deleteByFilterId(ItemRepositoryIntegrationTest.FILTER_ID);
 
     Assert.assertThat(
         repo.findAll(),

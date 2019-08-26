@@ -32,19 +32,20 @@ import com.connexta.replication.api.Status;
 import com.connexta.replication.api.data.CreateRequest;
 import com.connexta.replication.api.data.CreateStorageRequest;
 import com.connexta.replication.api.data.DeleteRequest;
+import com.connexta.replication.api.data.Filter;
+import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.QueryRequest;
 import com.connexta.replication.api.data.QueryResponse;
 import com.connexta.replication.api.data.ReplicationItem;
-import com.connexta.replication.api.data.ReplicatorConfig;
 import com.connexta.replication.api.data.Resource;
 import com.connexta.replication.api.data.ResourceRequest;
 import com.connexta.replication.api.data.ResourceResponse;
 import com.connexta.replication.api.data.UpdateRequest;
 import com.connexta.replication.api.data.UpdateStorageRequest;
 import com.connexta.replication.api.impl.Syncer.Job;
+import com.connexta.replication.api.persistence.FilterIndexManager;
 import com.connexta.replication.api.persistence.ReplicationItemManager;
-import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
@@ -72,9 +73,11 @@ public class SyncerTest {
 
   @Mock NodeAdapter destination;
 
-  @Mock ReplicatorConfig replicatorConfig;
+  @Mock Filter filter;
 
-  @Mock ReplicatorConfigManager configs;
+  @Mock FilterIndex filterIndex;
+
+  @Mock FilterIndexManager filterIndexManager;
 
   private Syncer syncer;
 
@@ -82,7 +85,7 @@ public class SyncerTest {
 
   private static final String DESTINATION_NAME = "destinationName";
 
-  private static final String REPLICATOR_ID = "replicatorId";
+  private static final String FILTER_ID = "replicatorId";
 
   private static final String CQL = "title like '*'";
 
@@ -99,19 +102,21 @@ public class SyncerTest {
     when(source.getSystemName()).thenReturn(SOURCE_NAME);
     when(destination.getSystemName()).thenReturn(DESTINATION_NAME);
 
-    when(replicatorConfig.getId()).thenReturn(REPLICATOR_ID);
-    when(replicatorConfig.getFilter()).thenReturn(CQL);
+    when(filter.getId()).thenReturn(FILTER_ID);
+    when(filter.getFilter()).thenReturn(CQL);
+    when(filterIndex.getModifiedSince()).thenReturn(Optional.empty());
+    when(filterIndexManager.getOrCreate(any(Filter.class))).thenReturn(filterIndex);
 
     callbacks.add(callback);
 
-    syncer = new Syncer(replicationItemManager, configs);
+    syncer = new Syncer(replicationItemManager, filterIndexManager);
   }
 
   @Test
   public void testSyncCreate() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -135,14 +140,14 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     ArgumentCaptor<CreateRequest> createRequestCaptor =
         ArgumentCaptor.forClass(CreateRequest.class);
     when(destination.createRequest(createRequestCaptor.capture())).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -165,7 +170,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -184,7 +189,7 @@ public class SyncerTest {
   public void testSyncCreateFailCreateToRemoteAdapter() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -208,14 +213,14 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     ArgumentCaptor<CreateRequest> createRequestCaptor =
         ArgumentCaptor.forClass(CreateRequest.class);
     when(destination.createRequest(createRequestCaptor.capture())).thenReturn(false);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -238,7 +243,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -257,7 +262,7 @@ public class SyncerTest {
   public void testSyncCreateConnectionLost() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -280,7 +285,7 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     when(source.isAvailable()).thenReturn(false);
 
@@ -290,7 +295,7 @@ public class SyncerTest {
         .thenThrow(AdapterException.class);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -313,7 +318,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -332,7 +337,7 @@ public class SyncerTest {
   public void testSyncCreateUnknownFailure() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -356,7 +361,7 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     ArgumentCaptor<CreateRequest> createRequestCaptor =
         ArgumentCaptor.forClass(CreateRequest.class);
@@ -367,7 +372,7 @@ public class SyncerTest {
     when(destination.isAvailable()).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -390,7 +395,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -409,7 +414,7 @@ public class SyncerTest {
   public void testSyncCreateResource() throws URISyntaxException {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -435,7 +440,7 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     Resource resource = mock(Resource.class);
     ResourceResponse resourceResponse = mock(ResourceResponse.class);
@@ -450,7 +455,7 @@ public class SyncerTest {
     when(destination.createResource(createStorageRequestCaptor.capture())).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -476,7 +481,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -495,7 +500,7 @@ public class SyncerTest {
   public void testSyncCreateResourceFailCreateToDestinationAdapter() throws URISyntaxException {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -521,7 +526,7 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     Resource resource = mock(Resource.class);
     ResourceResponse resourceResponse = mock(ResourceResponse.class);
@@ -536,7 +541,7 @@ public class SyncerTest {
     when(destination.createResource(createStorageRequestCaptor.capture())).thenReturn(false);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -562,7 +567,7 @@ public class SyncerTest {
 
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -581,7 +586,7 @@ public class SyncerTest {
   public void testSyncCreateResourceFailReadResource() throws URISyntaxException {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -607,7 +612,7 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     ArgumentCaptor<ResourceRequest> resourceRequestCaptor =
         ArgumentCaptor.forClass(ResourceRequest.class);
@@ -618,7 +623,7 @@ public class SyncerTest {
     when(destination.isAvailable()).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -643,7 +648,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -662,7 +667,7 @@ public class SyncerTest {
   public void testSyncCreateResourceConnectionLost() throws URISyntaxException {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -688,7 +693,7 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     ArgumentCaptor<ResourceRequest> resourceRequestCaptor =
         ArgumentCaptor.forClass(ResourceRequest.class);
@@ -699,7 +704,7 @@ public class SyncerTest {
     when(destination.isAvailable()).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -724,7 +729,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -743,7 +748,7 @@ public class SyncerTest {
   public void testSyncUpdate() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -771,7 +776,7 @@ public class SyncerTest {
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
     when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId))
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId))
         .thenReturn(Optional.of(replicationItem));
 
     ArgumentCaptor<UpdateRequest> updateRequestCaptor =
@@ -779,7 +784,7 @@ public class SyncerTest {
     when(destination.updateRequest(updateRequestCaptor.capture())).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -801,7 +806,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -820,7 +825,7 @@ public class SyncerTest {
   public void testSyncUpdateFail() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -848,7 +853,7 @@ public class SyncerTest {
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
     when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId))
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId))
         .thenReturn(Optional.of(replicationItem));
 
     ArgumentCaptor<UpdateRequest> updateRequestCaptor =
@@ -856,7 +861,7 @@ public class SyncerTest {
     when(destination.updateRequest(updateRequestCaptor.capture())).thenReturn(false);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -878,7 +883,7 @@ public class SyncerTest {
     final ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -897,7 +902,7 @@ public class SyncerTest {
   public void testSyncUpdateResource() throws URISyntaxException {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -930,7 +935,7 @@ public class SyncerTest {
     when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItem.getResourceModified())
         .thenReturn(new Date(resourceModified.getTime() - 1000));
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId))
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId))
         .thenReturn(Optional.of(replicationItem));
 
     Resource resource = mock(Resource.class);
@@ -946,7 +951,7 @@ public class SyncerTest {
     when(destination.updateResource(updateStorageRequestCaptor.capture())).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -970,7 +975,7 @@ public class SyncerTest {
     ReplicationItem capturedItem = repItem.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -989,7 +994,7 @@ public class SyncerTest {
   public void testSyncUpdateStorageFail() throws URISyntaxException {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -1022,7 +1027,7 @@ public class SyncerTest {
     when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItem.getResourceModified())
         .thenReturn(new Date(resourceModified.getTime() - 1000));
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId))
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId))
         .thenReturn(Optional.of(replicationItem));
 
     Resource resource = mock(Resource.class);
@@ -1038,7 +1043,7 @@ public class SyncerTest {
     when(destination.updateResource(updateStorageRequestCaptor.capture())).thenReturn(false);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -1062,7 +1067,7 @@ public class SyncerTest {
     ReplicationItem capturedItem = repItem.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -1081,7 +1086,7 @@ public class SyncerTest {
   public void testSyncDelete() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -1105,7 +1110,7 @@ public class SyncerTest {
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId))
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId))
         .thenReturn(Optional.of(replicationItem));
 
     ArgumentCaptor<DeleteRequest> deleteRequestCaptor =
@@ -1113,7 +1118,7 @@ public class SyncerTest {
     when(destination.deleteRequest(deleteRequestCaptor.capture())).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -1131,7 +1136,7 @@ public class SyncerTest {
   public void testSyncDeleteFail() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -1152,7 +1157,7 @@ public class SyncerTest {
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId))
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId))
         .thenReturn(Optional.of(replicationItem));
 
     ArgumentCaptor<DeleteRequest> deleteRequestCaptor =
@@ -1160,7 +1165,7 @@ public class SyncerTest {
     when(destination.deleteRequest(deleteRequestCaptor.capture())).thenReturn(false);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -1177,7 +1182,7 @@ public class SyncerTest {
     verify(replicationItemManager, times(1)).save(repItem.capture());
     ReplicationItem capturedItem = repItem.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -1194,7 +1199,7 @@ public class SyncerTest {
   @Test
   public void testUpdateOnMetadataDeletedOnDestinationDoesCreate() {
     // setup
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -1230,7 +1235,7 @@ public class SyncerTest {
     ReplicationItem replicationItem = mock(ReplicationItem.class);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -1249,7 +1254,7 @@ public class SyncerTest {
     ReplicationItem capturedItem = replicationItemCaptor.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -1266,18 +1271,18 @@ public class SyncerTest {
   @Test
   public void testFailedItemsAndModifiedAfterIncludedInQuery() {
     // setup
-    ReplicatorConfig config = mock(ReplicatorConfig.class);
+    Filter filter = mock(Filter.class);
     Instant lastMetadataModified = Instant.now();
-    when(config.getLastMetadataModified()).thenReturn(lastMetadataModified);
-    when(config.getId()).thenReturn(REPLICATOR_ID);
-    when(config.getFilter()).thenReturn(CQL);
+    when(filterIndex.getModifiedSince()).thenReturn(Optional.of(lastMetadataModified));
+    when(filter.getId()).thenReturn(FILTER_ID);
+    when(filter.getFilter()).thenReturn(CQL);
 
     final String failureId1 = "failureId1";
     final String failureId2 = "failureId2";
     final List<String> failedItemIds = new ArrayList<>();
     failedItemIds.add(failureId1);
     failedItemIds.add(failureId2);
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(failedItemIds);
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(failedItemIds);
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date(System.currentTimeMillis() + 10000);
@@ -1298,14 +1303,14 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     ArgumentCaptor<CreateRequest> createRequestCaptor =
         ArgumentCaptor.forClass(CreateRequest.class);
     when(destination.createRequest(createRequestCaptor.capture())).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, config, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -1314,14 +1319,14 @@ public class SyncerTest {
     assertThat(queryRequest.getExcludedNodes(), is(Collections.singletonList(DESTINATION_NAME)));
     assertThat(queryRequest.getFailedItemIds(), is(failedItemIds));
     assertThat(queryRequest.getModifiedAfter(), is(Date.from(lastMetadataModified)));
-    verify(config).setLastMetadataModified(any(Instant.class));
+    verify(filterIndex).setModifiedSince(any(Instant.class));
   }
 
   @Test
   public void testFailedUpdatesAreRetriedWhenNotAfterModifiedDate() throws Exception {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date(new Date().getTime() - 1000);
@@ -1335,8 +1340,8 @@ public class SyncerTest {
     when(metadata.getMetadataSize()).thenReturn(METADATA_SIZE);
     when(metadata.getResourceSize()).thenReturn(RESOURCE_SIZE);
 
-    final Instant lastMetadataModified = Instant.now();
-    when(replicatorConfig.getLastMetadataModified()).thenReturn(lastMetadataModified);
+    Instant lastMetadataModified = Instant.now();
+    when(filterIndex.getModifiedSince()).thenReturn(Optional.of(lastMetadataModified));
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1353,19 +1358,18 @@ public class SyncerTest {
     when(replicationItem.getMetadataModified()).thenReturn(modifiedDate);
     when(replicationItem.getResourceModified()).thenReturn(resourceModified);
     when(replicationItem.getStatus()).thenReturn(Status.FAILURE);
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId))
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId))
         .thenReturn(Optional.of(replicationItem));
 
     when(destination.exists(metadata)).thenReturn(true);
 
-    Resource resource = mock(Resource.class);
     ResourceResponse resourceResponse = mock(ResourceResponse.class);
 
     when(source.readResource(any(ResourceRequest.class))).thenReturn(resourceResponse);
     when(destination.updateResource(any(UpdateStorageRequest.class))).thenReturn(true);
 
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
@@ -1377,7 +1381,7 @@ public class SyncerTest {
     ReplicationItem capturedItem = repItem.getValue();
     assertThat(capturedItem.getId(), is(notNullValue()));
     assertThat(capturedItem.getMetadataId(), is(metadataId));
-    assertThat(capturedItem.getConfigId(), is(REPLICATOR_ID));
+    assertThat(capturedItem.getFilterId(), is(FILTER_ID));
     assertThat(capturedItem.getSource(), is(SOURCE_NAME));
     assertThat(capturedItem.getDestination(), is(DESTINATION_NAME));
     assertThat(capturedItem.getMetadataModified(), is(modifiedDate));
@@ -1390,14 +1394,14 @@ public class SyncerTest {
     assertThat(capturedItem.getResourceSize(), is(RESOURCE_SIZE));
 
     verify(callback).accept(capturedItem);
-    verify(replicatorConfig, never()).setLastMetadataModified(any(Instant.class));
+    verify(filterIndex, never()).setModifiedSince(any(Instant.class));
   }
 
   @Test
   public void testSkippingUpdate() {
     // setup
 
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(Collections.emptyList());
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(Collections.emptyList());
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date(new Date().getTime() - 1000);
@@ -1407,8 +1411,8 @@ public class SyncerTest {
     when(metadata.getMetadataSize()).thenReturn(METADATA_SIZE);
     when(metadata.getResourceSize()).thenReturn(RESOURCE_SIZE);
 
-    final Instant lastMetadataModified = Instant.now();
-    when(replicatorConfig.getLastMetadataModified()).thenReturn(lastMetadataModified);
+    Instant lastMetadataModified = Instant.now();
+    when(filterIndex.getModifiedSince()).thenReturn(Optional.of(lastMetadataModified));
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1424,38 +1428,35 @@ public class SyncerTest {
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     when(replicationItem.getMetadataModified()).thenReturn(modifiedDate);
     when(replicationItem.getStatus()).thenReturn(Status.SUCCESS);
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId))
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId))
         .thenReturn(Optional.of(replicationItem));
 
     when(destination.exists(metadata)).thenReturn(true);
 
-    Resource resource = mock(Resource.class);
-    ResourceResponse resourceResponse = mock(ResourceResponse.class);
-
     // when
-    Job job = syncer.create(source, destination, replicatorConfig, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
     verify(replicationItemManager, never()).save(any(ReplicationItem.class));
     verify(callback, never()).accept(any(ReplicationItem.class));
-    verify(replicatorConfig, never()).setLastMetadataModified(any(Instant.class));
+    verify(filterIndex, never()).setModifiedSince(any(Instant.class));
   }
 
   @Test
   public void testFailedItemsAndModifiedBeforeLastModified() {
     // setup
-    ReplicatorConfig config = mock(ReplicatorConfig.class);
+    Filter filter = mock(Filter.class);
     Instant lastMetadataModified = Instant.now();
-    when(config.getLastMetadataModified()).thenReturn(lastMetadataModified);
-    when(config.getId()).thenReturn(REPLICATOR_ID);
+    when(filterIndex.getModifiedSince()).thenReturn(Optional.of(lastMetadataModified));
+    when(filter.getId()).thenReturn(FILTER_ID);
 
     final String failureId1 = "failureId1";
     final String failureId2 = "failureId2";
     final List<String> failedItemIds = new ArrayList<>();
     failedItemIds.add(failureId1);
     failedItemIds.add(failureId2);
-    when(replicationItemManager.getFailureList(REPLICATOR_ID)).thenReturn(failedItemIds);
+    when(replicationItemManager.getFailureList(FILTER_ID)).thenReturn(failedItemIds);
 
     final String metadataId = "metadataId";
     final Date modifiedDate = new Date();
@@ -1477,7 +1478,7 @@ public class SyncerTest {
     ArgumentCaptor<QueryRequest> queryRequestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
     when(source.query(queryRequestCaptor.capture())).thenReturn(queryResponse);
 
-    when(replicationItemManager.getLatest(REPLICATOR_ID, metadataId)).thenReturn(Optional.empty());
+    when(replicationItemManager.getLatest(FILTER_ID, metadataId)).thenReturn(Optional.empty());
 
     ArgumentCaptor<CreateRequest> createRequestCaptor =
         ArgumentCaptor.forClass(CreateRequest.class);
@@ -1485,15 +1486,15 @@ public class SyncerTest {
 
     // this is a time after the failed items modified date, so the last metadata modified value
     // should not be updated
-    when(config.getLastMetadataModified())
-        .thenReturn(Instant.ofEpochMilli(System.currentTimeMillis() + 10000));
+    when(filterIndex.getModifiedSince())
+        .thenReturn(Optional.of(Instant.ofEpochMilli(System.currentTimeMillis() + 10000)));
 
     // when
-    Job job = syncer.create(source, destination, config, callbacks);
+    Job job = syncer.create(source, destination, filter, callbacks);
     job.sync();
 
     // then
-    verify(config, never()).setLastMetadataModified(any(Instant.class));
+    verify(filterIndex, never()).setModifiedSince(any(Instant.class));
   }
 
   private Metadata mockMetadata(String id) {

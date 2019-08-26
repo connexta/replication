@@ -13,14 +13,14 @@
  */
 package com.connexta.replication.api;
 
-import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.data.Filter;
 
 public interface SyncRequest {
 
   /**
-   * Get the configuration for this request
+   * Get the filter for this request
    *
-   * @return The configuration of this request
+   * @return The filter of this request
    */
-  ReplicatorConfig getConfig();
+  Filter getFilter();
 }

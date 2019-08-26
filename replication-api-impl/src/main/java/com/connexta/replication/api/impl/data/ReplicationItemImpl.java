@@ -39,7 +39,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
 
   private String destination;
 
-  private String configId;
+  private String filterId;
 
   private long metadataSize;
 
@@ -68,7 +68,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
     this.metadataModified = builder.metadataModified;
     this.source = builder.source;
     this.destination = builder.destination;
-    this.configId = builder.configId;
+    this.filterId = builder.filterId;
     this.metadataSize = builder.metadataSize;
     this.resourceSize = builder.resourceSize;
     this.status = builder.status;
@@ -147,8 +147,8 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   }
 
   @Override
-  public String getConfigId() {
-    return configId;
+  public String getFilterId() {
+    return filterId;
   }
 
   @Override
@@ -161,7 +161,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
         doneTime,
         source,
         destination,
-        configId,
+        filterId,
         metadataSize,
         resourceSize,
         startTime,
@@ -182,7 +182,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
           && Objects.equals(doneTime, persistable.doneTime)
           && Objects.equals(source, persistable.source)
           && Objects.equals(destination, persistable.destination)
-          && Objects.equals(configId, persistable.configId)
+          && Objects.equals(filterId, persistable.filterId)
           && Objects.equals(startTime, persistable.startTime)
           && Objects.equals(status, persistable.status)
           && Objects.equals(action, persistable.action);
@@ -193,7 +193,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   @Override
   public String toString() {
     return String.format(
-        "ReplicationItemImpl{id=%s, metadataId=%s, resourceModified=%s, metadataModified=%s, doneTime=%s, source=%s, destination=%s, configId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, status=%s, action=%s}",
+        "ReplicationItemImpl{id=%s, metadataId=%s, resourceModified=%s, metadataModified=%s, doneTime=%s, source=%s, destination=%s, filterId=%s, metadataSize=%d, resourceSize=%d, startTime=%s, status=%s, action=%s}",
         getId(),
         metadataId,
         resourceModified,
@@ -201,7 +201,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
         doneTime,
         source,
         destination,
-        configId,
+        filterId,
         metadataSize,
         resourceSize,
         startTime,
@@ -213,7 +213,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   protected ItemPojo writeTo(ItemPojo pojo) {
     super.writeTo(pojo);
     setOrFailIfNullOrEmpty("metadataId", this::getMetadataId, pojo::setMetadataId);
-    setOrFailIfNullOrEmpty("configId", this::getConfigId, pojo::setConfigId);
+    setOrFailIfNullOrEmpty("filterId", this::getFilterId, pojo::setFilterId);
     setOrFailIfNullOrEmpty("source", this::getSource, pojo::setSource);
     setOrFailIfNullOrEmpty("destination", this::getDestination, pojo::setDestination);
     setOrFailIfNull("startTime", this::getStartTime, pojo::setStartTime);
@@ -248,8 +248,8 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
   }
 
   @VisibleForTesting
-  void setConfigId(String configId) {
-    this.configId = configId;
+  void setFilterId(String filterId) {
+    this.filterId = filterId;
   }
 
   @VisibleForTesting
@@ -289,7 +289,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
 
   private void readFromCurrentAndFutureVersion(ItemPojo pojo) {
     setOrFailIfNullOrEmpty("metadataId", pojo::getMetadataId, this::setMetadataId);
-    setOrFailIfNullOrEmpty("configId", pojo::getConfigId, this::setConfigId);
+    setOrFailIfNullOrEmpty("filterId", pojo::getFilterId, this::setFilterId);
     setOrFailIfNullOrEmpty("source", pojo::getSource, this::setSource);
     setOrFailIfNullOrEmpty("destination", pojo::getDestination, this::setDestination);
     setOrFailIfNull("startTime", pojo::getStartTime, this::setStartTime);
@@ -309,7 +309,7 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
 
     private final String id;
 
-    private final String configId;
+    private final String filterId;
 
     private final String source;
 
@@ -335,14 +335,14 @@ public class ReplicationItemImpl extends AbstractPersistable<ItemPojo> implement
 
     /**
      * @param metadataId id of the {@link ReplicationItem}
-     * @param configId replicator id the replication item is associated with
+     * @param filterId replicator id the replication item is associated with
      * @param source the source the item comes from
      * @param destination the destination the item was sent to
      */
-    public Builder(String metadataId, String configId, String source, String destination) {
+    public Builder(String metadataId, String filterId, String source, String destination) {
       this.id = UUID.randomUUID().toString();
       this.metadataId = Validate.notEmpty(metadataId);
-      this.configId = Validate.notEmpty(configId);
+      this.filterId = Validate.notEmpty(filterId);
       this.source = Validate.notEmpty(source);
       this.destination = Validate.notEmpty(destination);
     }

@@ -23,8 +23,8 @@ public interface ReplicationItem extends Persistable {
   /** @return id of the metadata retrieved from a remote system */
   String getMetadataId();
 
-  /** @return the id of the {@link ReplicatorConfig} this item belongs to */
-  String getConfigId();
+  /** @return the id of the {@link Filter} this item belongs to */
+  String getFilterId();
 
   /**
    * @return this last time the resource associated with this item modified, or {@code null} if

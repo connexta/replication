@@ -14,26 +14,26 @@
 package com.connexta.replication.api.impl.data;
 
 import com.connexta.replication.api.SyncRequest;
-import com.connexta.replication.api.data.ReplicatorConfig;
+import com.connexta.replication.api.data.Filter;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /** Simple SyncRequest implementation. */
 public class SyncRequestImpl implements SyncRequest {
 
-  private ReplicatorConfig config;
+  private Filter filter;
 
   /**
    * Creates a new SyncRequest.
    *
-   * @param config the {@link ReplicatorConfig} which will be used for replicating
+   * @param filter the {@link Filter} which will be used for replicating
    */
-  public SyncRequestImpl(ReplicatorConfig config) {
-    this.config = config;
+  public SyncRequestImpl(Filter filter) {
+    this.filter = filter;
   }
 
   @Override
-  public ReplicatorConfig getConfig() {
-    return config;
+  public Filter getFilter() {
+    return filter;
   }
 
   @Override
@@ -43,18 +43,18 @@ public class SyncRequestImpl implements SyncRequest {
     }
 
     if (o instanceof SyncRequest) {
-      return ((SyncRequest) o).getConfig().getName().equals(config.getName());
+      return ((SyncRequest) o).getFilter().getName().equals(filter.getName());
     }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(3, 7).append(this.getConfig().getName()).toHashCode();
+    return new HashCodeBuilder(3, 7).append(this.getFilter().getName()).toHashCode();
   }
 
   @Override
   public String toString() {
-    return String.format("SyncRequestImpl{config=%s}", config);
+    return String.format("SyncRequestImpl{filter=%s}", filter);
   }
 }

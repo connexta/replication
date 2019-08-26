@@ -68,7 +68,7 @@ public class ReplicationItemManagerTest {
         new ItemPojo()
             .setId("12345")
             .setMetadataId("m123")
-            .setConfigId("c123")
+            .setFilterId("c123")
             .setSource("sourceA")
             .setDestination("destinationB")
             .setStartTime(new Date())
@@ -79,15 +79,15 @@ public class ReplicationItemManagerTest {
     Page page = mock(Page.class);
 
     when(page.stream()).thenReturn(items.stream());
-    when(itemRepository.findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
+    when(itemRepository.findByFilterIdAndMetadataIdOrderByDoneTimeDesc(
             anyString(), anyString(), any(Pageable.class)))
         .thenReturn(page);
 
-    final ReplicationItem item = itemManager.getLatest("configId", "id").get();
+    final ReplicationItem item = itemManager.getLatest("filterId", "id").get();
 
     assertThat(item.getId(), is(pojo.getId()));
     assertThat(item.getMetadataId(), is(pojo.getMetadataId()));
-    assertThat(item.getConfigId(), is(pojo.getConfigId()));
+    assertThat(item.getFilterId(), is(pojo.getFilterId()));
     assertThat(item.getSource(), is(pojo.getSource()));
     assertThat(item.getDestination(), is(pojo.getDestination()));
     assertThat(item.getStartTime(), is(pojo.getStartTime()));
@@ -97,12 +97,12 @@ public class ReplicationItemManagerTest {
   }
 
   @Test
-  public void getItemsForConfig() {
+  public void getItemsForFilter() {
     final ItemPojo pojo =
         new ItemPojo()
             .setId("12345")
             .setMetadataId("m123")
-            .setConfigId("c123")
+            .setFilterId("c123")
             .setSource("sourceA")
             .setDestination("destinationB")
             .setStartTime(new Date())
@@ -111,17 +111,17 @@ public class ReplicationItemManagerTest {
             .setStatus(Status.CONNECTION_LOST.name());
     final List<ItemPojo> pojos = Collections.singletonList(pojo);
 
-    when(itemRepository.findByConfigId(anyString(), any(PageRequest.class)))
+    when(itemRepository.findByFilterId(anyString(), any(PageRequest.class)))
         .thenReturn(
             new PageImpl(pojos.stream().map(ItemPojo.class::cast).collect(Collectors.toList())));
-    final List<ReplicationItem> items = itemManager.getAllForConfig("configId", 0, 1);
+    final List<ReplicationItem> items = itemManager.getAllForFilter("filterId", 0, 1);
 
     assertThat(items.size(), is(1));
     final ReplicationItem item = items.get(0);
 
     assertThat(item.getId(), is(pojo.getId()));
     assertThat(item.getMetadataId(), is(pojo.getMetadataId()));
-    assertThat(item.getConfigId(), is(pojo.getConfigId()));
+    assertThat(item.getFilterId(), is(pojo.getFilterId()));
     assertThat(item.getSource(), is(pojo.getSource()));
     assertThat(item.getDestination(), is(pojo.getDestination()));
     assertThat(item.getStartTime(), is(pojo.getStartTime()));
@@ -136,7 +136,7 @@ public class ReplicationItemManagerTest {
 
     item.setId("12345");
     item.setMetadataId("m123");
-    item.setConfigId("c123");
+    item.setFilterId("c123");
     item.setSource("sourceA");
     item.setDestination("destinationB");
     item.setStartTime(new Date());
@@ -152,7 +152,7 @@ public class ReplicationItemManagerTest {
 
     assertThat(pojo.getValue().getId(), is(item.getId()));
     assertThat(pojo.getValue().getMetadataId(), is(item.getMetadataId()));
-    assertThat(pojo.getValue().getConfigId(), is(item.getConfigId()));
+    assertThat(pojo.getValue().getFilterId(), is(item.getFilterId()));
     assertThat(pojo.getValue().getSource(), is(item.getSource()));
     assertThat(pojo.getValue().getDestination(), is(item.getDestination()));
     assertThat(pojo.getValue().getStartTime(), is(item.getStartTime()));
@@ -177,9 +177,9 @@ public class ReplicationItemManagerTest {
   }
 
   @Test
-  public void deleteItemsForConfig() {
-    itemManager.removeAllForConfig("configId");
-    verify(itemRepository).deleteByConfigId("configId");
+  public void deleteItemsForFilter() {
+    itemManager.removeAllForFilter("filterId");
+    verify(itemRepository).deleteByFilterId("filterId");
   }
 
   private GroupPage mockGroupPage(int num, int failItemIndex, String failMetadataId) {

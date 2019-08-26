@@ -22,9 +22,7 @@ import com.connexta.replication.api.impl.Syncer;
 import com.connexta.replication.api.impl.data.FilterIndexManagerImpl;
 import com.connexta.replication.api.impl.data.FilterManagerImpl;
 import com.connexta.replication.api.impl.data.ReplicationItemManagerImpl;
-import com.connexta.replication.api.impl.data.ReplicatorConfigManagerImpl;
 import com.connexta.replication.api.impl.data.SiteManagerImpl;
-import com.connexta.replication.api.impl.persistence.spring.ConfigRepository;
 import com.connexta.replication.api.impl.persistence.spring.FilterIndexRepository;
 import com.connexta.replication.api.impl.persistence.spring.FilterRepository;
 import com.connexta.replication.api.impl.persistence.spring.ItemRepository;
@@ -32,7 +30,6 @@ import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
 import com.connexta.replication.api.persistence.FilterIndexManager;
 import com.connexta.replication.api.persistence.FilterManager;
 import com.connexta.replication.api.persistence.ReplicationItemManager;
-import com.connexta.replication.api.persistence.ReplicatorConfigManager;
 import com.connexta.replication.api.persistence.SiteManager;
 import com.connexta.replication.spring.ReplicationProperties;
 import java.util.List;
@@ -51,11 +48,6 @@ public class ServiceConfig {
   }
 
   @Bean
-  public ReplicatorConfigManager replicatorConfigManager(ConfigRepository configRepository) {
-    return new ReplicatorConfigManagerImpl(configRepository);
-  }
-
-  @Bean
   public SiteManager siteManager(SiteRepository siteRepository) {
     return new SiteManagerImpl(siteRepository);
   }
@@ -69,20 +61,20 @@ public class ServiceConfig {
    * @return the {@link FilterManager}
    */
   @Bean
-  public FilterManager filterManager(FilterRepository filterRepository) {
-    return new FilterManagerImpl(filterRepository);
+  public FilterManager filterManager(
+      FilterRepository filterRepository, FilterIndexManager filterIndexManager) {
+    return new FilterManagerImpl(filterRepository, filterIndexManager);
   }
 
   @Bean
-  public FilterIndexManager siteIndexManager(FilterIndexRepository filterIndexRepository) {
+  public FilterIndexManager filterIndexManager(FilterIndexRepository filterIndexRepository) {
     return new FilterIndexManagerImpl(filterIndexRepository);
   }
 
   @Bean
   public Syncer syncer(
-      ReplicationItemManager replicationItemManager,
-      ReplicatorConfigManager replicatorConfigManager) {
-    return new Syncer(replicationItemManager, replicatorConfigManager);
+      ReplicationItemManager replicationItemManager, FilterIndexManager filterIndexManager) {
+    return new Syncer(replicationItemManager, filterIndexManager);
   }
 
   @Bean
@@ -93,8 +85,13 @@ public class ServiceConfig {
   }
 
   @Bean(destroyMethod = "cleanUp")
-  public Replicator replicator(NodeAdapters nodeAdapters, SiteManager siteManager, Syncer syncer) {
-    ReplicatorImpl replicator = new ReplicatorImpl(nodeAdapters, siteManager, syncer);
+  public Replicator replicator(
+      NodeAdapters nodeAdapters,
+      SiteManager siteManager,
+      Syncer syncer,
+      ReplicationProperties properties) {
+    ReplicatorImpl replicator =
+        new ReplicatorImpl(nodeAdapters, siteManager, syncer, properties.getLocalSite());
     replicator.init();
     return replicator;
   }
@@ -102,11 +99,12 @@ public class ServiceConfig {
   @Bean(destroyMethod = "destroy")
   public ReplicatorRunner replicatorRunner(
       Replicator replicator,
-      ReplicatorConfigManager replicatorConfigManager,
+      FilterManager filterManager,
+      SiteManager siteManager,
       ReplicationProperties properties) {
     ReplicatorRunner replicatorRunner =
         new ReplicatorRunner(
-            replicator, replicatorConfigManager, properties.sites(), properties.getPeriod());
+            replicator, filterManager, siteManager, properties.sites(), properties.getPeriod());
     replicatorRunner.init();
     return replicatorRunner;
   }

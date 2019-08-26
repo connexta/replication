@@ -21,10 +21,10 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 // This will be AUTO IMPLEMENTED by Spring into a Bean called itemRepository
 public interface ItemRepository extends PagingAndSortingRepository<ItemPojo, String> {
 
-  Page<ItemPojo> findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
-      String configId, String metadataId, Pageable pageable);
+  Page<ItemPojo> findByFilterIdAndMetadataIdOrderByDoneTimeDesc(
+      String filterId, String metadataId, Pageable pageable);
 
-  Page<ItemPojo> findByConfigId(String configId, Pageable pageable);
+  Page<ItemPojo> findByFilterId(String filterId, Pageable pageable);
 
-  void deleteByConfigId(String configId);
+  void deleteByFilterId(String filterId);
 }
