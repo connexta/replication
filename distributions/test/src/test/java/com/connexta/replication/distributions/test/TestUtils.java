@@ -118,7 +118,7 @@ public class TestUtils {
         .waitingFor(Wait.forLogMessage(".*Started Main.*", 1));
   }
 
-  public static String getProjectVersion() {
+  private static String getProjectVersion() {
     Properties pomProps = new Properties();
     InputStream propsIs = getFileAsStream("test.properties");
     String version = "";

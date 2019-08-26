@@ -9,7 +9,7 @@ services:
     networks:
       - replication
   replication-rabbitmq:
-    image: r.ion.phx.connexta.com/replication-rabbitmq:${project.version}
+    image: rabbitmq:${rabbitmq-docker.version}-management
     ports:
       - "5672:5672"
     networks:
