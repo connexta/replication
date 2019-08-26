@@ -17,5 +17,6 @@
  <modules>
    <module>solr</module>
    <module>replication</module>
+   <module>rabbitmq</module>
  </modules>
 </project>

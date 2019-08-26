@@ -118,7 +118,7 @@ public class TestUtils {
         .waitingFor(Wait.forLogMessage(".*Started Main.*", 1));
   }
 
-  private static String getProjectVersion() {
+  public static String getProjectVersion() {
     Properties pomProps = new Properties();
     InputStream propsIs = getFileAsStream("test.properties");
     String version = "";
@@ -249,8 +249,8 @@ public class TestUtils {
    *
    * @param filePath The path of the file
    * @param params A map of variables in the resource file and their replacement values
-   * @throws IllegalStateException if an error occurs while trying to read the file
    * @return A String containing the contents of the file with any variables replaced
+   * @throws IllegalStateException if an error occurs while trying to read the file
    */
   public static String getFileAsText(String filePath, Map<String, String> params) {
 
@@ -293,9 +293,9 @@ public class TestUtils {
    * @param nodeUrl The URL of the node to create the product on.
    * @param metadata The metadata to include in the request.
    * @param resource The resource to include in the request.
+   * @return The ID of the created product.
    * @throws org.awaitility.core.ConditionTimeoutException if the product isn't queryable within 10
    *     seconds.
-   * @return The ID of the created product.
    */
   public static String createProductOnNode(
       String nodeUrl, InputStream metadata, InputStream resource) {
@@ -383,9 +383,9 @@ public class TestUtils {
    * @param nodeUrl The URL of the node.
    * @param id The ID of the product to fetch.
    * @param timeStamp The timestamp to compare to the metacard.modified date.
-   * @throws NullPointerException if the modified date can't be retrieved from the response.
    * @return True if the metacard.modified date of the metacard is after the given timestamp, false
    *     otherwise.
+   * @throws NullPointerException if the modified date can't be retrieved from the response.
    */
   public static Boolean nodeHasMetadataModifiedAfter(String nodeUrl, String id, Instant timeStamp) {
     Instant modifiedTime = extractDateTimeAttribute(getById(nodeUrl, id), "metacard.modified");
@@ -425,8 +425,8 @@ public class TestUtils {
    *
    * @param metacardXml The {@link XmlPath} of a metacard.
    * @param attributeName The name of the dateTime attribute to extract.
-   * @throws NullPointerException if the attribute isn't contained in the response.
    * @return The extracted dateTime as an {@link Instant}.
+   * @throws NullPointerException if the attribute isn't contained in the response.
    */
   public static Instant extractDateTimeAttribute(XmlPath metacardXml, String attributeName) {
     String modifiedString =
