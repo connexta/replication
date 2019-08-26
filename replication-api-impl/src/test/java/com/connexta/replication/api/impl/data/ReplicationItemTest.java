@@ -28,7 +28,7 @@ public class ReplicationItemTest {
 
   private static final String ID = "id";
 
-  private static final String CONFIG_ID = "configId";
+  private static final String FILTER_ID = "filterId";
 
   private static final String SOURCE = "source";
 
@@ -44,27 +44,27 @@ public class ReplicationItemTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderIdRequired() {
-    new ReplicationItemImpl.Builder("", CONFIG_ID, SOURCE, DESTINATION).build();
+    new ReplicationItemImpl.Builder("", FILTER_ID, SOURCE, DESTINATION).build();
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testBuilderConfigIdRequired() {
+  public void testBuilderFilterIdRequired() {
     new ReplicationItemImpl.Builder(ID, "", SOURCE, DESTINATION).build();
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderSourceRequired() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, "", DESTINATION).build();
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, "", DESTINATION).build();
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderDestinationRequired() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, "").build();
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, "").build();
   }
 
   @Test(expected = NullPointerException.class)
   public void testBuilderMetadataModifiedRequired() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
         .markStartTime()
         .markDoneTime()
         .action(ACTION)
@@ -74,7 +74,7 @@ public class ReplicationItemTest {
 
   @Test(expected = NullPointerException.class)
   public void testBuilderStartTimeRequired() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
         .metadataModified(METADATA_MODIFIED)
         .action(ACTION)
         .status(STATUS)
@@ -83,7 +83,7 @@ public class ReplicationItemTest {
 
   @Test(expected = NullPointerException.class)
   public void testBuilderDoneTimeRequired() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
         .metadataModified(METADATA_MODIFIED)
         .markStartTime()
         .action(ACTION)
@@ -93,7 +93,7 @@ public class ReplicationItemTest {
 
   @Test(expected = NullPointerException.class)
   public void testBuilderActionRequired() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
         .metadataModified(METADATA_MODIFIED)
         .markStartTime()
         .markDoneTime()
@@ -103,7 +103,7 @@ public class ReplicationItemTest {
 
   @Test(expected = NullPointerException.class)
   public void testBuilderStatusRequired() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
         .metadataModified(METADATA_MODIFIED)
         .markStartTime()
         .markDoneTime()
@@ -113,7 +113,7 @@ public class ReplicationItemTest {
 
   @Test(expected = IllegalStateException.class)
   public void testBuilderSettingDoneTimeBeforeStartTime() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
         .metadataModified(METADATA_MODIFIED)
         .markDoneTime();
   }
@@ -126,7 +126,7 @@ public class ReplicationItemTest {
 
   @Test(expected = IllegalStateException.class)
   public void testResourceSizeRequiresResourceModified() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
         .metadataModified(METADATA_MODIFIED)
         .markStartTime()
         .markDoneTime()
@@ -138,7 +138,7 @@ public class ReplicationItemTest {
 
   @Test(expected = IllegalStateException.class)
   public void testResourceModifiedRequiresResourceSize() {
-    new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+    new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
         .metadataModified(METADATA_MODIFIED)
         .markStartTime()
         .markDoneTime()
@@ -151,7 +151,7 @@ public class ReplicationItemTest {
   @Test
   public void testResourceTransferRateWithoutResource() {
     replicationItem =
-        new ReplicationItemImpl.Builder(ID, CONFIG_ID, SOURCE, DESTINATION)
+        new ReplicationItemImpl.Builder(ID, FILTER_ID, SOURCE, DESTINATION)
             .metadataModified(METADATA_MODIFIED)
             .markStartTime()
             .markDoneTime()

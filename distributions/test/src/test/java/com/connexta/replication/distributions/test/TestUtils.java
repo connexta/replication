@@ -59,7 +59,7 @@ public class TestUtils {
 
   public static final String APPLICATION_XML = "application/xml";
 
-  public static final String CONFIG = "config";
+  public static final String FILTER = "filter";
 
   public static final String SITE = "site";
 
@@ -86,7 +86,7 @@ public class TestUtils {
         .withNetwork(network)
         .withNetworkAliases("replication-solr")
         .withExposedPorts(SOLR_PORT)
-        .waitingFor(Wait.forHttp("/solr/replication_" + CONFIG + "/admin/ping"));
+        .waitingFor(Wait.forHttp("/solr/replication_" + FILTER + "/admin/ping"));
   }
 
   /**
@@ -172,7 +172,7 @@ public class TestUtils {
    * @throws AssertionError If clearing one of the cores is unsuccessful.
    */
   public static void clearAllSolrCores(String solrUrl) {
-    clearSolrCore(solrUrl, CONFIG);
+    clearSolrCore(solrUrl, FILTER);
     clearSolrCore(solrUrl, SITE);
     clearSolrCore(solrUrl, ITEM);
   }

@@ -20,3 +20,4 @@ replication:
   period: 1
   connectionTimeout: 30
   receiveTimeout: 60
+  localSite: source-id

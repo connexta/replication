@@ -47,6 +47,7 @@ replication:
   period: 300
   connectionTimeout: 30
   receiveTimeout: 60
+  localSite: some-unique-id-1234
   sites:
   - site1
   - site2

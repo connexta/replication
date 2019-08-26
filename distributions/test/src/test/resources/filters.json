@@ -1,11 +1,10 @@
  [
     {
-      "name":"star",
-      "bidirectional":false,
-      "source":"source-id",
-      "destination":"destination-id",
+      "name":"test",
+      "site_id":"destination-id",
       "filter":"title like '@testId@'",
       "suspended":false,
+      "priority": 2,
       "id":"@testId@",
       "version":1
     }

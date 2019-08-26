@@ -127,11 +127,11 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public Optional<ReplicationItem> getLatest(String configId, String metadataId) {
+  public Optional<ReplicationItem> getLatest(String filterId, String metadataId) {
     try {
       return itemRepository
-          .findByConfigIdAndMetadataIdOrderByDoneTimeDesc(
-              configId, metadataId, PageRequest.of(0, 1))
+          .findByFilterIdAndMetadataIdOrderByDoneTimeDesc(
+              filterId, metadataId, PageRequest.of(0, 1))
           .stream()
           .map(ReplicationItemImpl::new)
           .map(ReplicationItem.class::cast)
@@ -146,10 +146,10 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public List<ReplicationItem> getAllForConfig(String configId, int startIndex, int pageSize) {
+  public List<ReplicationItem> getAllForFilter(String filterId, int startIndex, int pageSize) {
     try {
       return itemRepository
-          .findByConfigId(configId, PageRequest.of(startIndex, pageSize))
+          .findByFilterId(filterId, PageRequest.of(startIndex, pageSize))
           .map(ReplicationItemImpl::new)
           .map(ReplicationItem.class::cast)
           .getContent();
@@ -163,7 +163,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public List<String> getFailureList(String configId) {
+  public List<String> getFailureList(String filterId) {
     try {
       long pageTotal;
       int pageNum = 0;
@@ -171,7 +171,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
       List<String> failureList = new LinkedList<>();
       do {
-        GroupPage<ItemPojo> groupPage = doSolrQuery(configId, pageRequest);
+        GroupPage<ItemPojo> groupPage = doSolrQuery(filterId, pageRequest);
         GroupResult<ItemPojo> groupResult = groupPage.getGroupResult("metadata_id");
         Page<GroupEntry<ItemPojo>> page = groupResult.getGroupEntries();
         pageTotal = page.getTotalElements();
@@ -198,8 +198,8 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
     }
   }
 
-  private GroupPage<ItemPojo> doSolrQuery(String configId, Pageable pageable) {
-    Criteria queryCriteria = Crotch.where("config_id").is(configId);
+  private GroupPage<ItemPojo> doSolrQuery(String filterId, Pageable pageable) {
+    Criteria queryCriteria = Crotch.where("filter_id").is(filterId);
     Sort doneTimeDescSort = Sort.by(Direction.DESC, "done_time");
     SimpleQuery groupQuery =
         new SimpleQuery(queryCriteria).addSort(doneTimeDescSort).setPageRequest(pageable);
@@ -211,9 +211,9 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   }
 
   @Override
-  public void removeAllForConfig(String configId) {
+  public void removeAllForFilter(String filterId) {
     try {
-      itemRepository.deleteByConfigId(configId);
+      itemRepository.deleteByFilterId(filterId);
     } catch (NonTransientDataAccessException e) {
       throw new NonTransientReplicationPersistenceException(e);
     } catch (TransientDataAccessException e) {

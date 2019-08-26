@@ -50,6 +50,9 @@ public class ReplicationProperties {
   /** The receive timeout, in seconds, for any requests made by replication */
   private int receiveTimeout;
 
+  /** The ID of the localSite */
+  private String localSite;
+
   public long getPeriod() {
     return period;
   }
@@ -102,5 +105,23 @@ public class ReplicationProperties {
    */
   public Stream<String> sites() {
     return sites.stream();
+  }
+
+  /**
+   * Gets the ID of the site to consider the local site for this replication instance.
+   *
+   * @return the ID of the local site
+   */
+  public String getLocalSite() {
+    return localSite;
+  }
+
+  /**
+   * Sets the ID of the site to consider the local site for this replication instance.
+   *
+   * @param localSite the ID of the local site
+   */
+  public void setLocalSite(String localSite) {
+    this.localSite = localSite;
   }
 }
