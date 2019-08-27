@@ -20,7 +20,8 @@ import java.util.stream.Stream;
 /** Represents a task that can be queued for later processing by a worker. */
 public interface TaskInfo {
   /**
-   * Gets the priority for this task, represented as a number between 1 and 10.
+   * Gets the priority for this task, represented as a number from 9 being the highest level to 0
+   * being the lowest.
    *
    * @return the priority for the task
    */

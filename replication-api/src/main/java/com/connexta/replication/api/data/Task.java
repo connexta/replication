@@ -71,8 +71,10 @@ public interface Task extends TaskInfo {
    * Attempts to unlock this task. An unlocked task will be picked up by the next worker attempting
    * to poll for a task from the associated queue.
    *
-   * @throws IllegalStateException if the current thread/worker doesn't own the lock to the task or
-   *     if the task is not currently locked
+   * @throws IllegalStateException if the task was already marked completed via one of {@link
+   *     #complete()}, {@link #fail(ErrorCode)}, or {@link #fail(ErrorCode, String)}
+   * @throws IllegalMonitorStateException if the current thread/worker doesn't own the lock to the
+   *     task or if the task is not currently locked
    * @throws InterruptedException if the thread was interrupted while attempting to unlock the task
    * @throws QueueException if an error occurred while performing the operation
    */
@@ -82,9 +84,12 @@ public interface Task extends TaskInfo {
    * Reports the successful completion of this task. The task will automatically be unlocked and
    * removed from the associated queue.
    *
-   * @throws IllegalStateException if the current thread/worker doesn't own the lock to the task or
-   *     if the task is not currently or no longer locked
-   * @throws InterruptedException if the thread was interrupted while attempting to unlock the task
+   * @throws IllegalStateException if the task was already marked completed via one of {@link
+   *     #complete()}, {@link #fail(ErrorCode)}, or {@link #fail(ErrorCode, String)}
+   * @throws IllegalMonitorStateException if the current thread/worker doesn't own the lock to the
+   *     task or if the task is not currently or no longer locked
+   * @throws InterruptedException if the thread was interrupted while attempting to mark the task as
+   *     completed
    * @throws QueueException if an error occurred while performing the operation
    */
   public void complete() throws QueueException, InterruptedException;
@@ -98,8 +103,10 @@ public interface Task extends TaskInfo {
    * code and there is a need to wait for space to become available on the queue.
    *
    * @param code the error code for the failure
-   * @throws IllegalStateException if the current thread/worker doesn't own the lock to the task or
-   *     if the task is not currently or no longer locked
+   * @throws IllegalStateException if the task was already marked completed via one of {@link
+   *     #complete()}, {@link #fail(ErrorCode)}, or {@link #fail(ErrorCode, String)}
+   * @throws IllegalMonitorStateException if the current thread/worker doesn't own the lock to the
+   *     task or if the task is not currently or no longer locked
    * @throws InterruptedException if the thread was interrupted while attempting to unlock the task
    * @throws QueueException if an error occurred while performing the operation
    */
@@ -115,8 +122,10 @@ public interface Task extends TaskInfo {
    *
    * @param code the error code for the failure
    * @param reason a reason associated with the failure (used for traceability)
-   * @throws IllegalStateException if the current thread/worker doesn't own the lock to the task or
-   *     if the task is not currently or no longer locked
+   * @throws IllegalStateException if the task was already marked completed via one of {@link
+   *     #complete()}, {@link #fail(ErrorCode)}, or {@link #fail(ErrorCode, String)}
+   * @throws IllegalMonitorStateException if the current thread/worker doesn't own the lock to the
+   *     task or if the task is not currently or no longer locked
    * @throws InterruptedException if the thread was interrupted while attempting to unlock the task
    * @throws QueueException if an error occurred while performing the operation
    */

@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
 /**
  * Copyright (c) Connexta
  *
@@ -13,9 +11,6 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
--->
-<configuration>
-    <include resource="org/springframework/boot/logging/logback/base.xml" />
-    <logger name="org.springframework" level="INFO" />
-    <logger name="org.apache.solr" level="WARN" />
-</configuration>
+package com.connexta.replication.api.impl.queue.memory;
+
+public class AbstractTaskTest {}

@@ -57,7 +57,8 @@ public interface Filter extends Persistable {
   boolean isSuspended();
 
   /**
-   * Gets the priority level of this filter, represented as a number between 1 and 10.
+   * Gets the priority level of this filter, represented as a number from 9 being the highest level
+   * to 0 being the lowest.
    *
    * @return the priority level of this filter
    */

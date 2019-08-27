@@ -38,7 +38,7 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
 
   private boolean isSuspended;
 
-  private byte priority = 1;
+  private byte priority = 0;
 
   /** Creates a default filter. */
   public FilterImpl() {
@@ -139,12 +139,7 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
 
   @VisibleForTesting
   void setPriority(byte priority) {
-    if (priority < 1 || priority > 10) {
-      throw new IllegalArgumentException(
-          "Filter priority must be between 1 and 10 but was " + priority);
-    } else {
-      this.priority = priority;
-    }
+    this.priority = priority;
   }
 
   @Override
@@ -156,7 +151,7 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
     return pojo.setVersion(FilterPojo.CURRENT_VERSION)
         .setDescription(description)
         .setSuspended(isSuspended)
-        .setPriority(priority);
+        .setPriority((byte) Math.min(Math.max(priority, 0), 9));
   }
 
   @Override
@@ -180,6 +175,6 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
     setOrFailIfNullOrEmpty("name", pojo::getName, this::setName);
     this.description = pojo.getDescription();
     this.isSuspended = pojo.isSuspended();
-    this.priority = (byte) Math.min(Math.max(pojo.getPriority(), 1), 10);
+    this.priority = (byte) Math.min(Math.max(pojo.getPriority(), 0), 9);
   }
 }
