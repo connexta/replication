@@ -135,6 +135,7 @@
         <to-string-verifier.version>1.4.5</to-string-verifier.version>
         <spotless.maven.plugin.version>1.24.1</spotless.maven.plugin.version>
         <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
+        <rabbitmq-docker.version>3.7</rabbitmq-docker.version>
 
     </properties>
 

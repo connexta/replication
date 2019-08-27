@@ -14,8 +14,8 @@
   <packaging>pom</packaging>
 
 
- <modules>
-   <module>solr</module>
-   <module>replication</module>
- </modules>
+  <modules>
+    <module>solr</module>
+    <module>replication</module>
+  </modules>
 </project>

@@ -8,6 +8,12 @@ services:
       - replication-data:/var/solr
     networks:
       - replication
+  replication-rabbitmq:
+    image: rabbitmq:${rabbitmq-docker.version}-management
+    ports:
+      - "5672:5672"
+    networks:
+      - replication
   ion-replication:
     image: r.ion.phx.connexta.com/replication:${project.version}
     ports:
