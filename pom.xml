@@ -58,6 +58,26 @@
 
     <repositories>
         <repository>
+            <id>codice</id>
+            <name>Codice Repository</name>
+            <url>https://artifacts.codice.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>central</id>
+            <name>Maven Repository Switchboard</name>
+            <url>http://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+            <id>jboss</id>
+            <name>JBoss Public</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/public/</url>
+        </repository>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>	https://repo.spring.io/milestone/</url>
+        </repository>
+        <repository>
             <id>ossrh</id>
             <name>OSSRH Snapshots</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -136,6 +156,7 @@
         <spotless.maven.plugin.version>1.24.1</spotless.maven.plugin.version>
         <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
         <rabbitmq-docker.version>3.7</rabbitmq-docker.version>
+        <beanutils.version>1.9.4</beanutils.version>
 
     </properties>
 
@@ -671,7 +692,7 @@
                     <executions>
                         <execution>
                             <id>build-image</id>
-                            <phase>install</phase>
+                            <phase>verify</phase>
                             <goals>
                                 <goal>build</goal>
                             </goals>

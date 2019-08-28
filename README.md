@@ -1,4 +1,4 @@
-# Replication [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=replication&metric=alert_status)](https://sonarcloud.io/dashboard?id=replication) [![Known Vulnerabilities](https://snyk.io/test/github/connexta/replication/badge.svg)](https://snyk.io/test/github/connexta/replication)
+# Replication [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=replication&metric=alert_status)](https://sonarcloud.io/dashboard?id=replication) [![Known Vulnerabilities](https://snyk.io/test/github/connexta/replication/badge.svg)](https://snyk.io/test/github/connexta/replication) [![CircleCI](https://circleci.com/gh/connexta/replication.svg?style=svg)](https://circleci.com/gh/connexta/replication)
 
 ## Overview
 Replication is the process of creating a copy of a subset of data and storing it on another DDF or ION based System. Data can be pulled from a remote DDF and saved to another DDF or ION system. Metacards produced by replication are marked with a "Replication Origins" attribute and a tag of "replicated". Replication will automatically start transferring data once an admin creates a replication configuration.
