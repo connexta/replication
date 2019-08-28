@@ -1,0 +1,138 @@
+version: 2.1
+orbs:
+  anchore: anchore/anchore-engine@1.4.0
+jobs:
+  Build:
+    machine: &virtual_machine
+      image: circleci/classic:latest
+      docker_layer_caching: true
+    steps:
+      - run: &install_java
+          name: Install java 11
+          command: |
+            sudo add-apt-repository ppa:openjdk-r/ppa
+            sudo apt-get -qq update
+            sudo apt-get -qq install -y openjdk-11-jdk
+      - run: &configure_java
+          name: Set default java 11
+          command:
+            sudo update-java-alternatives --set java-1.11.0-openjdk-amd64
+      - checkout
+      - restore_cache: &restore_cache
+          keys:
+            - mvn-repo-build-{{ .Branch }}-
+            - mvn-repo-build-
+      - run:
+          name: Building
+          command: |
+            mvn -B clean install -DskipTests=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - save_cache: &save_cache
+          paths:
+            - ~/.m2
+          key: mvn-repo-build-{{ .Branch }}
+      - run:
+          name: Make workspace directory
+          command: mkdir -p /tmp/workspace
+      - run: &tar_project
+          name: Archive Project Artifacts
+          command: tar -c -f /tmp/workspace/project.tar -C ~/ project
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - project.tar
+  Test:
+    machine: *virtual_machine
+    steps:
+      - run: *install_java
+      - run: *configure_java
+      - checkout
+      - restore_cache: *restore_cache
+      - attach_workspace: &attach_workspace
+          at: /tmp/workspace
+      - run: &extract_project_archive
+          name: Extract Project Archive
+          command: tar -x -k -f /tmp/workspace/project.tar
+      - run:
+          name: Run Tests
+          command: mvn -B verify
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: mvn-repo-test-{{ .Branch }}
+      - run: *tar_project
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - project.tar
+  Sonar:
+    docker:
+      - image: circleci/openjdk:11-jdk
+    steps:
+      - checkout
+      - restore_cache: *restore_cache
+      - attach_workspace: *attach_workspace
+      - run: *extract_project_archive
+      - run:
+          name: Sonar Scan
+          command: >
+            mvn sonar:sonar
+            -Dsonar.projectKey=$CIRCLE_PROJECT_REPONAME
+            -Dsonar.organization=cx
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.pullrequest.key=$CIRCLE_PR_NUMBER
+            -Dsonar.pullrequest.branch=$CIRCLE_BRANCH
+            -Dsonar.pullrequest.base=master
+            -Dsonar.pullrequest.provider=github
+            -Dsonar.exclusions='**/test/**/*'
+            -Dsonar.login=$REP_SONAR_TOKEN
+      - run:
+          name: Sonar Results
+          command: |
+            printf "For the results of the scan, visit https://sonarcloud.io/dashboard?id=$CIRCLE_PROJECT_REPONAME"
+            if [ ! -z ${CIRCLE_PULL_REQUEST} ]; then
+              printf "&pullRequest=$CIRCLE_PR_NUMBER"
+            fi
+            echo
+  OWASP:
+    docker:
+      - image: circleci/openjdk:11-jdk
+    steps:
+      - checkout
+      - restore_cache: *restore_cache
+      - attach_workspace: *attach_workspace
+      - run: *extract_project_archive
+      - run:
+          name: OWASP
+          command: |
+            mvn verify -B -Powasp -DskipTests=true -pl \!distributions/docker/solr,\!distributions/docker/replication
+  Scan Docker Image:
+    executor: anchore/anchore_engine
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - checkout
+      - attach_workspace: *attach_workspace
+      - run: *extract_project_archive
+      - anchore/analyze_local_image:
+          dockerfile_path: ./Dockerfile
+          image_name: 'r.ion.phx.connexta.com/replication'
+          policy_bundle_file_path: .circleci/.anchore/policy_bundle.json
+          policy_failure: true
+          timeout: '500'
+      - anchore/parse_reports
+      - store_artifacts:
+          path: anchore-reports
+workflows:
+  version: 2.1
+  default:
+    jobs:
+      - Build
+      - Test:
+          requires:
+            - Build
+      - OWASP:
+          requires:
+            - Test
+      - Sonar:
+          requires:
+            - Test
