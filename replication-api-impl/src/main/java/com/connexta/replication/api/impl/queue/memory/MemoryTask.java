@@ -17,30 +17,42 @@ import com.connexta.replication.api.data.ErrorCode;
 import com.connexta.replication.api.data.Task;
 import com.connexta.replication.api.data.TaskInfo;
 import com.connexta.replication.api.impl.queue.AbstractTask;
-import com.connexta.replication.api.queue.QueueException;
+import io.micrometer.core.instrument.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.Nullable;
 
 /** Provides an in-memory implement for the {@link Task} interface. */
 public class MemoryTask extends AbstractTask {
+  private final Clock clock;
   private final MemorySiteQueue queue;
-  private final Instant originalQueuedTime;
-  private volatile Instant queueTime;
-  private volatile int attempts;
-  private final ReentrantLock lock = new ReentrantLock();
-  @Nullable private volatile Thread owner = null;
 
-  /** Flag indicating if the task was completed either successfully or failed. */
-  private volatile boolean completed;
+  private volatile int attempts = 1;
+
+  private volatile State state = State.PENDING;
 
   /**
    * The error code associated with the completion of this task. Will be <code>null</code> until it
-   * fails at which point it will be used to tracked the reason for its failure.
+   * fails at which point it will be used to tracked the reason for its failure. Will be reset to
+   * <code>null</code> when picked up for processing again.
    */
-  @Nullable private volatile ErrorCode code;
+  @Nullable private volatile ErrorCode code = null;
 
-  @Nullable private volatile String reason;
+  @Nullable private volatile String reason = null;
+
+  private final Instant originalQueuedTime;
+  private volatile long queueTime;
+
+  // use to track duration - all in nanoseconds
+  private volatile long startTime;
+  private volatile Duration duration = Duration.ZERO;
+  private volatile Duration pendingDuration = Duration.ZERO;
+  private volatile Duration activeDuration = Duration.ZERO;
+
+  private final ReentrantLock lock = new ReentrantLock();
+  @Nullable private volatile Thread owner = null;
 
   /**
    * Creates a new task for the corresponding task information as it is being queued to a given
@@ -48,16 +60,56 @@ public class MemoryTask extends AbstractTask {
    *
    * @param info the corresponding task info
    * @param queue the queue where the task is being queued.
+   * @param clock the clock to use for retrieving wall and monotonic times
    */
-  MemoryTask(TaskInfo info, MemorySiteQueue queue) {
+  MemoryTask(TaskInfo info, MemorySiteQueue queue, Clock clock) {
     super(info);
+    this.clock = clock;
     this.queue = queue;
-    this.queueTime = Instant.now();
-    this.originalQueuedTime = queueTime;
-    this.attempts = 1;
-    this.completed = false;
-    this.code = null;
-    this.reason = null;
+    final long now = clock.wallTime();
+
+    this.startTime = clock.monotonicTime();
+    this.queueTime = now;
+    this.originalQueuedTime = Instant.ofEpochMilli(now);
+  }
+
+  @Override
+  public int getTotalAttempts() {
+    return attempts;
+  }
+
+  @Override
+  public State getState() {
+    return state;
+  }
+
+  /**
+   * Gets the optional error code indicating why the last processing of the task failed.
+   *
+   * <p><i>Note:</i> A task might that fails for reasons that allows for it to be retried later,
+   * will report an error until such time as to when the task is picked up again by a worker for a
+   * second attempt at which point where the error will be cleared automatically.
+   *
+   * @return the error code associated with the last processing attempt or empty if the processing
+   *     of the task completed successfully or if it is still being processed
+   */
+  public Optional<ErrorCode> getCode() {
+    return Optional.ofNullable(code);
+  }
+
+  /**
+   * Gets the optional reason providing additional information to the error code (see {@link
+   * #getCode()}) as to why the last processing of the task failed.
+   *
+   * <p><i>Note:</i> The returned value might be cleared right after calling this method if the task
+   * is being picked up for a second attempt.
+   *
+   * @return the reason associated with the last failed processing attempt or empty if the
+   *     processing of the task completed successfully if it is still being processed or if no
+   *     reason for the failure was provided
+   */
+  public Optional<String> getReason() {
+    return Optional.ofNullable(reason);
   }
 
   @Override
@@ -67,12 +119,55 @@ public class MemoryTask extends AbstractTask {
 
   @Override
   public Instant getQueuedTime() {
-    return queueTime;
+    return Instant.ofEpochMilli(queueTime);
   }
 
   @Override
-  public int getTotalAttempts() {
-    return attempts;
+  public Duration getDuration() {
+    final long startTime = this.startTime;
+    final Duration duration = this.duration;
+
+    switch (state) {
+      case PENDING:
+      case ACTIVE:
+        return duration.plusNanos(clock.monotonicTime() - startTime);
+      case FAILED:
+      case SUCCESSFUL:
+      default:
+        return duration;
+    }
+  }
+
+  @Override
+  public Duration getPendingDuration() {
+    final long startTime = this.startTime;
+    final Duration pendingDuration = this.pendingDuration;
+
+    switch (state) {
+      case PENDING:
+        return pendingDuration.plusNanos(clock.monotonicTime() - startTime);
+      case ACTIVE:
+      case FAILED:
+      case SUCCESSFUL:
+      default:
+        return pendingDuration;
+    }
+  }
+
+  @Override
+  public Duration getActiveDuration() {
+    final long startTime = this.startTime;
+    final Duration activeDuration = this.activeDuration;
+
+    switch (state) {
+      case ACTIVE:
+        return activeDuration.plusNanos(clock.monotonicTime() - startTime);
+      case PENDING:
+      case FAILED:
+      case SUCCESSFUL:
+      default:
+        return activeDuration;
+    }
   }
 
   @Override
@@ -80,58 +175,45 @@ public class MemoryTask extends AbstractTask {
     return lock.isHeldByCurrentThread();
   }
 
+  /**
+   * Gets the thread that is currently processing this task.
+   *
+   * <p><i>Note:</i> This is a best effort since ownership can change at any point in time.
+   *
+   * @return the thread currently processing the task or empty if the task is not currently being
+   *     processed
+   */
+  public Optional<Thread> getOwner() {
+    return Optional.ofNullable(owner);
+  }
+
   @Override
   public void unlock() throws InterruptedException {
-    if (completed) {
-      throw new IllegalStateException("task already completed or failed");
-    }
-    if (Thread.currentThread() != owner) {
-      throw new IllegalMonitorStateException();
-    }
+    verifyCompletionAndOwnership();
     // requeue in front of the queue and leave queue time as is since the owner didn't work on it
     // and is just unlocking it for another worker to pick it up
-    queue.requeue(this, true, lock::unlock);
+    queue.requeue(this, true, () -> requeued(null, null));
   }
 
   @Override
-  public void complete() throws QueueException, InterruptedException {
-    if (completed) {
-      throw new IllegalStateException("task already completed or failed");
-    }
-    if (Thread.currentThread() != owner) {
-      throw new IllegalMonitorStateException();
-    }
-    queue.remove(this);
-    this.completed = true;
-    this.code = null;
-    this.reason = null;
-    lock.unlock(); // should not fail since we already checked above
-    this.owner = null;
+  public void complete() throws InterruptedException {
+    verifyCompletionAndOwnership();
+    queue.remove(this, () -> removed(State.SUCCESSFUL, null, null));
   }
 
   @Override
-  public void fail(ErrorCode code) throws QueueException, InterruptedException {
+  public void fail(ErrorCode code) throws InterruptedException {
     fail(code, null);
   }
 
   @Override
-  public void fail(ErrorCode code, @Nullable String reason)
-      throws QueueException, InterruptedException {
-    if (completed) {
-      throw new IllegalStateException("task already completed or failed");
-    }
-    if (Thread.currentThread() != owner) {
-      throw new IllegalMonitorStateException();
-    }
-    if (code.shouldBeRetried()) { // re-queue at end of the queue and update it once it is queued
+  public void fail(ErrorCode code, @Nullable String reason) throws InterruptedException {
+    verifyCompletionAndOwnership();
+    if (code.shouldBeRetried()) {
+      // re-queue at end of the queue and update it once it is queued
       queue.requeue(this, false, () -> requeued(code, reason));
     } else { // done so just remove the task and mark it complete
-      queue.remove(this);
-      this.completed = true;
-      this.code = code;
-      this.reason = reason;
-      lock.unlock(); // should not fail since we already checked above
-      this.owner = null;
+      queue.remove(this, () -> removed(State.FAILED, code, reason));
     }
   }
 
@@ -141,29 +223,73 @@ public class MemoryTask extends AbstractTask {
    * @return this for chaining
    */
   MemoryTask lock() {
-    lock.lock();
-    this.owner = Thread.currentThread();
-    this.completed = false;
+    final long now = clock.monotonicTime();
+    final long duration = now - startTime;
+
+    this.state = State.ACTIVE;
     this.code = null;
     this.reason = null;
+    this.startTime = now;
+    this.duration = this.duration.plusNanos(duration);
+    this.pendingDuration = this.pendingDuration.plusNanos(duration);
+    lock.lock();
+    this.owner = Thread.currentThread();
     return this;
   }
 
   /**
-   * Callback passed to the {@link MemorySiteQueue} when re-queuing a failed task to update the
-   * internal state of the task after the task is about to be re-added to the queue.
+   * Callback passed to the {@link MemorySiteQueue} when removing a task to update the internal
+   * state of the task after the task was actually removed from the queue.
    *
-   * @param code the error code for the failure
-   * @param reason a reason associated with the failure (used for traceability)
+   * @param state the new state to record
+   * @param code the new error code to record or <code>null</code> if there was no failure
+   * @param reason a new reason to record or <code>null</code> if none provided
    */
-  private void requeued(ErrorCode code, @Nullable String reason) {
-    this.completed = false;
+  private void removed(State state, @Nullable ErrorCode code, @Nullable String reason) {
+    final long now = clock.monotonicTime();
+    final long duration = now - startTime;
+
+    this.state = state;
     this.code = code;
     this.reason = reason;
-    this.queueTime = Instant.now();
-    this.attempts++;
-    lock.unlock(); // should not fail since we already checked above as it is assumed that the
-    //                fail() method would have first checked
+    this.startTime = 0L;
+    this.duration = this.duration.plusNanos(duration);
+    this.activeDuration = this.activeDuration.plusNanos(duration);
+    lock.unlock(); // should not fail since we already checked in the complete() and fail() methods
     this.owner = null;
+  }
+
+  /**
+   * Callback passed to the {@link MemorySiteQueue} when re-queuing a task to update the internal
+   * state of the task after the task is about to be re-added to the queue.
+   *
+   * @param code the new error code to record or <code>null</code> if there was no failure
+   * @param reason a new reason to record or <code>null</code> if none provided
+   */
+  private void requeued(@Nullable ErrorCode code, @Nullable String reason) {
+    final long now = clock.monotonicTime();
+    final long duration = now - startTime;
+
+    this.state = State.PENDING;
+    this.code = code;
+    this.reason = reason;
+    if (code != null) {
+      // only increment attempt and update queue time if it is requeued because of error
+      this.attempts++;
+      this.queueTime = clock.wallTime();
+    }
+    this.startTime = now;
+    this.duration = this.duration.plusNanos(duration);
+    this.activeDuration = this.activeDuration.plusNanos(duration);
+    lock.unlock(); // should not fail since we already checked in the unlock() and fail() methods
+    this.owner = null;
+  }
+
+  private void verifyCompletionAndOwnership() {
+    if (isCompleted()) {
+      throw new IllegalStateException("task already completed or failed");
+    } else if (Thread.currentThread() != owner) {
+      throw new IllegalMonitorStateException();
+    }
   }
 }

@@ -17,10 +17,14 @@ package com.connexta.replication.api.data;
 public enum SiteKind {
   /**
    * A tactical site typically smaller in size (e.g. portable laptop, deployment on a ship, ...).
+   * Tactical sites (Ion or DDF) will always be managed (both directions) from the local site.
    */
   TACTICAL,
 
-  /** A regional site (e.g. east coast, west coast, ...). */
+  /**
+   * A regional site (e.g. east coast, west coast, ...). A regional DDF will only be harvested from
+   * whereas a regional Ion will only have the local data pushed to it.
+   */
   REGIONAL,
 
   /**

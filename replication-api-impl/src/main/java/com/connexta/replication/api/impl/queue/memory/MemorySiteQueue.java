@@ -17,7 +17,12 @@ import com.connexta.replication.api.data.Task;
 import com.connexta.replication.api.data.TaskInfo;
 import com.connexta.replication.api.queue.QueueBroker;
 import com.connexta.replication.api.queue.SiteQueue;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Timer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -37,8 +42,6 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
   private static final int MAX_PRIORITY = 9;
   private static final int MIN_PRIORITY = 0;
 
-  private final Object lock = new Object();
-
   private final MemoryQueueBroker broker;
 
   private final String site;
@@ -53,13 +56,13 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
   private final int capacity;
 
   /** Current number of tasks. */
-  private final AtomicInteger count = new AtomicInteger();
+  private final AtomicInteger count;
 
   /** Current number of pending tasks. */
-  private final AtomicInteger pendingCount = new AtomicInteger();
+  private final AtomicInteger pendingCount;
 
   /** Current number of active tasks. */
-  private final AtomicInteger activeCount = new AtomicInteger();
+  private final AtomicInteger activeCount;
 
   /** Lock held by take, poll, etc. */
   private final ReentrantLock takeLock = new ReentrantLock();
@@ -73,20 +76,49 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
   /** Wait queue for waiting puts. */
   private final Condition notFull = putLock.newCondition();
 
+  private final MeterRegistry registry;
+
+  private final Counter queuedCounter;
+  private final Counter requeuedCounter;
+  private final Counter successCounter;
+  private final Counter failCounter;
+  private final Timer timer;
+  private final Timer pendingTimer;
+  private final Timer activeTimer;
+
   /**
    * Instantiates a default in-memory site queue.
    *
    * @param broker the broker for which we are instantiating this queue
    * @param site the corresponding site id
    * @param capacity the capacity of the queue this broker manages
+   * @param registry the micrometer registry to report metrics
    */
-  public MemorySiteQueue(MemoryQueueBroker broker, String site, int capacity) {
+  public MemorySiteQueue(
+      MemoryQueueBroker broker, String site, int capacity, MeterRegistry registry) {
+    final Iterable<Tag> tags = Collections.singleton(Tag.of("site", site));
+
     this.broker = broker;
     this.site = site;
     this.capacity = capacity;
+    this.registry = registry;
+    this.count = registry.gauge("replication_tasks_in_queue", tags, new AtomicInteger());
+    this.pendingCount =
+        registry.gauge("replication_pending_tasks_in_queue", tags, new AtomicInteger());
+    this.activeCount =
+        registry.gauge("replication_active_tasks_in_queue", tags, new AtomicInteger());
     for (int i = MemorySiteQueue.MIN_PRIORITY; i <= MemorySiteQueue.MAX_PRIORITY; i++) {
-      pending.add(new LinkedList<>());
+      pending.add(
+          registry.gaugeCollectionSize(
+              "replication_pending_priority_" + i + "_tasks_in_queue", tags, new LinkedList<>()));
     }
+    this.queuedCounter = registry.counter("replication_queued_tasks", tags);
+    this.requeuedCounter = registry.counter("replication_requeued_tasks", tags);
+    this.successCounter = registry.counter("replication_success_tasks", tags);
+    this.failCounter = registry.counter("replication_fail_tasks", tags);
+    this.timer = registry.timer("replication_tasks_in_queue_timer", tags);
+    this.pendingTimer = registry.timer("replication_pending_tasks_in_queue_timer", tags);
+    this.activeTimer = registry.timer("replication_active_tasks_in_queue_timer", tags);
   }
 
   @Override
@@ -133,7 +165,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       while (remainingCapacity() <= 0) {
         notFull.await();
       }
-      queue.addLast(new MemoryTask(task, this));
+      queue.addLast(new MemoryTask(task, this, registry.config().clock()));
       if (count.incrementAndGet() < capacity) {
         notFull.signal();
       }
@@ -144,23 +176,24 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
     if (c == 0) {
       signalNotEmpty();
     }
+    queuedCounter.increment();
   }
 
   @Override
   public boolean offer(TaskInfo task, long timeout, TimeUnit unit) throws InterruptedException {
     final Deque<MemoryTask> queue = getQueueFor(task);
-    long nanos = unit.toNanos(timeout);
+    long duration = unit.toNanos(timeout);
     final int c;
 
     putLock.lockInterruptibly();
     try {
       while (remainingCapacity() <= 0) {
-        if (nanos <= 0L) {
+        if (duration <= 0L) {
           return false;
         }
-        nanos = notFull.awaitNanos(nanos);
+        duration = notFull.awaitNanos(duration);
       }
-      queue.addLast(new MemoryTask(task, this));
+      queue.addLast(new MemoryTask(task, this, registry.config().clock()));
       if (count.incrementAndGet() < capacity) {
         notFull.signal();
       }
@@ -171,6 +204,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
     if (c == 0) {
       signalNotEmpty();
     }
+    queuedCounter.increment();
     return true;
   }
 
@@ -187,7 +221,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       if (pendingCount.get() >= capacity) {
         return false;
       }
-      queue.addLast(new MemoryTask(task, this));
+      queue.addLast(new MemoryTask(task, this, registry.config().clock()));
       if (count.incrementAndGet() < capacity) {
         notFull.signal();
       }
@@ -198,6 +232,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
     if (c == 0) {
       signalNotEmpty();
     }
+    queuedCounter.increment();
     return true;
   }
 
@@ -242,15 +277,15 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
   @Nullable
   Task poll(int priority, long timeout, TimeUnit unit) throws InterruptedException {
     final MemoryTask task;
-    long nanos = unit.toNanos(timeout);
+    long duration = unit.toNanos(timeout);
 
     takeLock.lockInterruptibly();
     try {
       while (pendingCount.get() == 0) {
-        if (nanos <= 0L) {
+        if (duration <= 0L) {
           return null;
         }
-        nanos = notEmpty.awaitNanos(nanos);
+        duration = notEmpty.awaitNanos(duration);
       }
       task = removeFirst(priority);
       if (pendingCount.getAndDecrement() > 1) {
@@ -267,10 +302,12 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
    * the queue.
    *
    * @param task the task that should be removed
+   * @param whenRemoved a callback that will be called right after having removed the task from the
+   *     queue (it is expected that the task durations will be calculated at that point)
    * @throws InterruptedException if the current thread is interrupted while attempting to remove
    *     the active task
    */
-  void remove(MemoryTask task) throws InterruptedException {
+  void remove(MemoryTask task, Runnable whenRemoved) throws InterruptedException {
     int c;
 
     takeLock.lockInterruptibly();
@@ -278,12 +315,17 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       active.remove(task);
       activeCount.decrementAndGet();
       c = count.getAndDecrement();
+      whenRemoved.run();
+      timer.record(task.getDuration());
+      pendingTimer.record(task.getPendingDuration());
+      activeTimer.record(task.getActiveDuration());
     } finally {
       takeLock.unlock();
     }
     if (c == capacity) {
       signalNotFull();
     }
+    (task.hasFailed() ? failCounter : successCounter).increment();
   }
 
   /**
@@ -324,15 +366,14 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
     if (c == 0) {
       signalNotEmpty();
     }
+    requeuedCounter.increment();
   }
 
   private Deque<MemoryTask> getQueueFor(TaskInfo info) {
-    return getQueueFor(info.getPriority());
-  }
-
-  private Deque<MemoryTask> getQueueFor(byte priority) {
     return pending.get(
-        Math.min(Math.max(priority, MemorySiteQueue.MIN_PRIORITY), MemorySiteQueue.MAX_PRIORITY));
+        Math.min(
+            Math.max(info.getPriority(), MemorySiteQueue.MIN_PRIORITY),
+            MemorySiteQueue.MAX_PRIORITY));
   }
 
   /**

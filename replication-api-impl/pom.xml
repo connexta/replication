@@ -114,6 +114,10 @@
             <groupId>net.jodah</groupId>
             <artifactId>failsafe</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.connexta.replication</groupId>

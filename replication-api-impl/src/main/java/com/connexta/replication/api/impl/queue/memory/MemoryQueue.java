@@ -41,7 +41,7 @@ public interface MemoryQueue extends Queue {
   /**
    * Gets the number of additional tasks that this queue can ideally (in the absence of memory or
    * resource constraints) accept without blocking. This is always equal to the initial capacity of
-   * this queue less the current <code>size</code> of this queue.
+   * this queue minus the current {@link #size()} of this queue.
    *
    * <p><i>Note:</i> You <em>cannot</em> always tell if an attempt to insert an element will succeed
    * by inspecting {@link #remainingCapacity} because it may be the case that another thread is

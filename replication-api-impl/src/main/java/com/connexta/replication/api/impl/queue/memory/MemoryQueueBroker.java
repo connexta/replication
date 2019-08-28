@@ -16,11 +16,10 @@ package com.connexta.replication.api.impl.queue.memory;
 import com.connexta.replication.api.queue.Queue;
 import com.connexta.replication.api.queue.QueueBroker;
 import com.connexta.replication.api.queue.SiteQueue;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -36,14 +35,18 @@ public class MemoryQueueBroker implements QueueBroker {
 
   private final int queueCapacity;
 
+  private final MeterRegistry meterRegistry;
+
   /**
    * Instantiates a broker to manage queues for sites with the specified maximum task capacity
    * before a queue starts blocking.
    *
    * @param queueCapacity the capacity of the queue this broker manages
+   * @param meterRegistry the micrometer registry to report metrics
    */
-  public MemoryQueueBroker(int queueCapacity) {
+  public MemoryQueueBroker(int queueCapacity, MeterRegistry meterRegistry) {
     this.queueCapacity = queueCapacity;
+    this.meterRegistry = meterRegistry;
   }
 
   @Override
@@ -66,13 +69,7 @@ public class MemoryQueueBroker implements QueueBroker {
   @SuppressWarnings(
       "squid:CommentedOutCodeLine" /* will be removed when we support composite queues */)
   public Queue getQueue(Stream<String> sites) {
-    // return new MemoryCompositeQueue(this, sites);
-    final Set<String> set = sites.collect(Collectors.toSet());
-
-    if (set.size() == 1) {
-      return getQueue(set.iterator().next());
-    }
-    throw new UnsupportedOperationException("composite queues are not yet supported");
+    return new MemoryCompositeQueue(this, sites);
   }
 
   Optional<MemorySiteQueue> getQueueIfDefined(String site) {
@@ -80,6 +77,7 @@ public class MemoryQueueBroker implements QueueBroker {
   }
 
   private MemorySiteQueue getQueue0(String site) {
-    return queues.computeIfAbsent(site, s -> new MemorySiteQueue(this, s, queueCapacity));
+    return queues.computeIfAbsent(
+        site, s -> new MemorySiteQueue(this, s, queueCapacity, meterRegistry));
   }
 }
