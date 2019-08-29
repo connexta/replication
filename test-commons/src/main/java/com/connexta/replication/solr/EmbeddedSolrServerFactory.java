@@ -11,12 +11,13 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.api.impl.persistence;
+package com.connexta.replication.solr;
 
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.core.CoreContainer;
@@ -31,7 +32,8 @@ import org.springframework.util.ResourceUtils;
  */
 public class EmbeddedSolrServerFactory implements SolrClientFactory, DisposableBean {
   private final String solrHome;
-  private final String core;
+  private static final List<String> CORES =
+      List.of("replication_item", "replication_site", "replication_filter", "filter_index");
   private CoreContainer container = null;
 
   /**
@@ -39,18 +41,16 @@ public class EmbeddedSolrServerFactory implements SolrClientFactory, DisposableB
    *
    * @param solrHome any Path expression valid for use with {@link ResourceUtils} that points to the
    *     {@code solr.solr.home} directory
-   * @param core the name of the core to create
    */
-  public EmbeddedSolrServerFactory(String solrHome, String core) {
+  public EmbeddedSolrServerFactory(String solrHome) {
     Assert.hasText(solrHome, "SolrHome must not be null nor empty!");
     Assert.hasText(solrHome, "core must not be null nor empty!");
     this.solrHome = solrHome;
-    this.core = core;
   }
 
   @Override
   public EmbeddedSolrServer getSolrClient() {
-    return new EmbeddedSolrServer(getCoreContainer(), core);
+    return new EmbeddedSolrServer(getCoreContainer(), CORES.get(0));
   }
 
   @Override
@@ -77,26 +77,30 @@ public class EmbeddedSolrServerFactory implements SolrClientFactory, DisposableB
     final Path solrHome =
         Paths.get(URLDecoder.decode(ResourceUtils.getFile(this.solrHome).getPath(), "utf-8"));
     final Path defaultDir = solrHome.resolve("configsets").resolve("_default");
-    final Path coreDir = solrHome.resolve(core);
-    final Path coreProps = coreDir.resolve("core.properties");
 
-    // cleanup old core directory
-    FileUtils.deleteDirectory(coreDir.toFile());
-    // create/re-create core directory
-    FileUtils.forceMkdir(coreDir.toFile());
-    // cpy default Solr schema and config
-    FileUtils.copyDirectory(defaultDir.toFile(), coreDir.toFile());
-    // create the core.properties file
-    FileUtils.writeStringToFile(
-        coreProps.toFile(),
-        "name="
-            + core
-            + System.lineSeparator()
-            + "config="
-            + "solrconfig-inmemory.xml"
-            + System.lineSeparator()
-            + "schema=replication-solr-managed-schema.xml",
-        "utf-8");
+    for (String core : CORES) {
+      final Path coreDir = solrHome.resolve(core);
+      final Path coreProps = coreDir.resolve("core.properties");
+
+      // cleanup old core directory
+      FileUtils.deleteDirectory(coreDir.toFile());
+      // create/re-create core directory
+      FileUtils.forceMkdir(coreDir.toFile());
+      // cpy default Solr schema and config
+      FileUtils.copyDirectory(defaultDir.toFile(), coreDir.toFile());
+      // create the core.properties file
+      FileUtils.writeStringToFile(
+          coreProps.toFile(),
+          "name="
+              + core
+              + System.lineSeparator()
+              + "config="
+              + "solrconfig-inmemory.xml"
+              + System.lineSeparator()
+              + "schema=replication-solr-managed-schema.xml",
+          "utf-8");
+    }
+
     return CoreContainer.createAndLoad(solrHome);
   }
 }

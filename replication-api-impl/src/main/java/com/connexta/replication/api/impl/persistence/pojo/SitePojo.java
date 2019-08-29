@@ -13,6 +13,9 @@
  */
 package com.connexta.replication.api.impl.persistence.pojo;
 
+import com.connexta.replication.api.data.SiteKind;
+import com.connexta.replication.api.data.SiteType;
+import java.net.URL;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.data.solr.core.mapping.Indexed;
@@ -136,6 +139,17 @@ public class SitePojo extends Pojo<SitePojo> {
   }
 
   /**
+   * Set the URL of this site
+   *
+   * @param url the URL to give this site
+   * @return this for chaining
+   */
+  public SitePojo setUrl(@Nullable URL url) {
+    this.url = (url != null) ? url.toString() : null;
+    return this;
+  }
+
+  /**
    * Gets the type of this site.
    *
    * @return the type for this site
@@ -157,6 +171,17 @@ public class SitePojo extends Pojo<SitePojo> {
   }
 
   /**
+   * Sets the type of this site.
+   *
+   * @param type the type for the site
+   * @return this for chaining
+   */
+  public SitePojo setType(@Nullable SiteType type) {
+    this.type = (type != null) ? type.name() : null;
+    return this;
+  }
+
+  /**
    * Gets the kind of this site.
    *
    * @return the kind for this site
@@ -174,6 +199,17 @@ public class SitePojo extends Pojo<SitePojo> {
    */
   public SitePojo setKind(@Nullable String kind) {
     this.kind = kind;
+    return this;
+  }
+
+  /**
+   * Sets the kind of this site.
+   *
+   * @param kind the kind for the site
+   * @return this for chaining
+   */
+  public SitePojo setKind(@Nullable SiteKind kind) {
+    this.kind = (kind != null) ? kind.name() : null;
     return this;
   }
 

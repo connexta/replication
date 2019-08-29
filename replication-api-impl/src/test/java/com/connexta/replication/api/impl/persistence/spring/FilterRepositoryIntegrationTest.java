@@ -23,27 +23,24 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.connexta.replication.api.impl.persistence.EmbeddedSolrServerFactory;
 import com.connexta.replication.api.impl.persistence.pojo.FilterPojo;
+import com.connexta.replication.solr.EmbeddedSolrConfig;
 import java.util.Arrays;
 import java.util.Optional;
-import org.apache.solr.client.solrj.SolrClient;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.solr.UncategorizedSolrException;
 import org.springframework.data.solr.repository.config.EnableSolrRepositories;
-import org.springframework.data.solr.server.SolrClientFactory;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @ComponentScan(
-    basePackageClasses = FilterRepository.class) // to make sure we pickup the repositories
+    basePackageClasses = {EmbeddedSolrConfig.class}) // to make sure we pickup the repositories
+@EnableSolrRepositories(basePackages = "com.connexta.replication")
 @RunWith(SpringRunner.class)
 public class FilterRepositoryIntegrationTest {
   private static final int VERSION = 1;
@@ -101,20 +98,6 @@ public class FilterRepositoryIntegrationTest {
           .setDescription(DESCRIPTION3)
           .setSuspended(SUSPENDED3)
           .setPriority(PRIORITY3);
-
-  @TestConfiguration
-  @EnableSolrRepositories(basePackages = "com.connexta.replication")
-  static class FilterRepositoryTestConfiguration {
-    @Bean
-    SolrClientFactory solrFactory() {
-      return new EmbeddedSolrServerFactory("classpath:solr", FilterPojo.COLLECTION);
-    }
-
-    @Bean
-    SolrClient solrClient(SolrClientFactory solrFactory) {
-      return solrFactory.getSolrClient();
-    }
-  }
 
   @Rule public ExpectedException exception = ExpectedException.none();
 

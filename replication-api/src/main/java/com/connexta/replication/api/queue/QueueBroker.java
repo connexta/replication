@@ -25,7 +25,7 @@ public interface QueueBroker {
    *
    * <p>A new queue should be deployed if no queue currently exist for the specified site.
    *
-   * @param site the site for which to get a queue
+   * @param site the ID of the site for which to get a queue
    * @return the site queue to use for the specified site
    * @throws QueueException if an error occurred while performing the operation
    */

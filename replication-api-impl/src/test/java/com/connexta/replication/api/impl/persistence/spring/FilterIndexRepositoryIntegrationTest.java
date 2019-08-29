@@ -22,27 +22,24 @@ import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
 
-import com.connexta.replication.api.impl.persistence.EmbeddedSolrServerFactory;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
+import com.connexta.replication.solr.EmbeddedSolrConfig;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import org.apache.solr.client.solrj.SolrClient;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.solr.UncategorizedSolrException;
 import org.springframework.data.solr.repository.config.EnableSolrRepositories;
-import org.springframework.data.solr.server.SolrClientFactory;
 import org.springframework.test.context.junit4.SpringRunner;
 
-@ComponentScan(basePackageClasses = FilterIndexRepository.class)
+@ComponentScan(basePackageClasses = {EmbeddedSolrConfig.class})
+@EnableSolrRepositories(basePackages = "com.connexta.replication")
 @RunWith(SpringRunner.class)
 public class FilterIndexRepositoryIntegrationTest {
   private static final String ID1 = "id";
@@ -59,20 +56,6 @@ public class FilterIndexRepositoryIntegrationTest {
   private static final Instant MODIFIED_SINCE3 = Instant.ofEpochSecond(300);
   private static final FilterIndexPojo POJO3 =
       new FilterIndexPojo().setId(ID3).setModifiedSince(MODIFIED_SINCE3);
-
-  @TestConfiguration
-  @EnableSolrRepositories(basePackages = "com.connexta.replication")
-  static class ReplicationFilterIndexRepositoryTestConfiguration {
-    @Bean
-    SolrClientFactory solrFactory() {
-      return new EmbeddedSolrServerFactory("classpath:solr", FilterIndexPojo.COLLECTION);
-    }
-
-    @Bean
-    SolrClient solrClient(SolrClientFactory solrFactory) {
-      return solrFactory.getSolrClient();
-    }
-  }
 
   @Rule public ExpectedException exception = ExpectedException.none();
 

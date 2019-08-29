@@ -16,19 +16,25 @@ package com.connexta.replication.api.impl;
 import com.connexta.replication.api.NodeAdapter;
 import com.connexta.replication.api.NodeAdapterFactory;
 import com.connexta.replication.api.data.SiteType;
+import java.util.Collections;
 import java.util.List;
 
 /** Utility class for getting {@link NodeAdapterFactory}s. */
 public class NodeAdapters {
-
   private List<NodeAdapterFactory> nodeAdapterFactories;
+
+  /** Initialize a default node adapters with no registered factories. */
+  public NodeAdapters() {
+    this.nodeAdapterFactories = Collections.emptyList();
+  }
 
   /**
    * Returns a {@link NodeAdapterFactory} which is used to create a {@link NodeAdapter} for the
    * given site type.
    *
    * @param type the type of site for which to get a {@link NodeAdapter}
-   * @return the {@link NodeAdapter}s factory.
+   * @return the {@link NodeAdapter}s factory
+   * @throws IllegalArgumentException if no factory of the specified type exist
    */
   public NodeAdapterFactory factoryFor(SiteType type) {
     return nodeAdapterFactories.stream()

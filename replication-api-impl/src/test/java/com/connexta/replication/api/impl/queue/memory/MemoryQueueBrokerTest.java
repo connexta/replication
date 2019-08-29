@@ -106,7 +106,7 @@ public class MemoryQueueBrokerTest {
   @Test
   public void testGetQueueIfDefinedWhenNotDefined() throws Exception {
     Assert.assertThat(
-        broker.getQueueIfDefined(MemoryQueueBrokerTest.SITE), OptionalMatchers.isEmpty());
+        broker.getSiteQueueIfDefined(MemoryQueueBrokerTest.SITE), OptionalMatchers.isEmpty());
   }
 
   @Test
@@ -114,7 +114,7 @@ public class MemoryQueueBrokerTest {
     final SiteQueue queue = broker.getQueue(MemoryQueueBrokerTest.SITE);
 
     Assert.assertThat(
-        broker.getQueueIfDefined(MemoryQueueBrokerTest.SITE).map(SiteQueue.class::cast),
+        broker.getSiteQueueIfDefined(MemoryQueueBrokerTest.SITE).map(SiteQueue.class::cast),
         OptionalMatchers.isPresentAndIs(queue));
   }
 }

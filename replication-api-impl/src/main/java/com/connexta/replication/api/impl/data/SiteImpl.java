@@ -49,11 +49,17 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
 
   private int parallelismFactor = 0;
 
+  /** Instantiates a default site with a randomly generated identifier. */
   public SiteImpl() {
     super(SiteImpl.PERSISTABLE_TYPE);
   }
 
-  protected SiteImpl(SitePojo pojo) {
+  /**
+   * Instantiates a site based on the information provided by the specified pojo.
+   *
+   * @param pojo the pojo to initializes the site with
+   */
+  public SiteImpl(SitePojo pojo) {
     super(SiteImpl.PERSISTABLE_TYPE, null);
     readFrom(pojo);
   }
@@ -136,7 +142,7 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
   }
 
   @Override
-  protected void readFrom(SitePojo pojo) {
+  protected final void readFrom(SitePojo pojo) {
     super.readFrom(pojo);
     if (pojo.getVersion() < SitePojo.MINIMUM_VERSION) {
       throw new UnsupportedVersionException(

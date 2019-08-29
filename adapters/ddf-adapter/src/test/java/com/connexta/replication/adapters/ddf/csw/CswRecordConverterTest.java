@@ -181,7 +181,7 @@ public class CswRecordConverterTest {
     map.remove(Constants.METACARD_MODIFIED);
     String metacardXml =
         MetacardMarshaller.marshal(
-            new DdfMetadata("mcard metadata", Map.class, "123456789", new Date(1), map));
+            new DdfMetadata(Map.of("mcard", "metadata"), Map.class, "123456789", new Date(1), map));
 
     InputStream inStream = new ByteArrayInputStream(metacardXml.getBytes());
     HierarchicalStreamReader reader =
