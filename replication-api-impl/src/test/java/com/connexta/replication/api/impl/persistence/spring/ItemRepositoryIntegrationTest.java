@@ -15,14 +15,13 @@ package com.connexta.replication.api.impl.persistence.spring;
 
 import com.connexta.replication.api.Action;
 import com.connexta.replication.api.Status;
-import com.connexta.replication.api.impl.persistence.EmbeddedSolrServerFactory;
 import com.connexta.replication.api.impl.persistence.pojo.ItemPojo;
+import com.connexta.replication.solr.EmbeddedSolrConfig;
 import com.github.npathai.hamcrestopt.OptionalMatchers;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import org.apache.solr.client.solrj.SolrClient;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
@@ -31,16 +30,15 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.solr.UncategorizedSolrException;
 import org.springframework.data.solr.repository.config.EnableSolrRepositories;
-import org.springframework.data.solr.server.SolrClientFactory;
 import org.springframework.test.context.junit4.SpringRunner;
 
-@ComponentScan(basePackageClasses = ItemRepository.class) // to make sure we pickup the repositories
+@ComponentScan(
+    basePackageClasses = {EmbeddedSolrConfig.class}) // to make sure we pickup the repositories
+@EnableSolrRepositories(basePackages = "com.connexta.replication")
 @RunWith(SpringRunner.class)
 public class ItemRepositoryIntegrationTest {
   private static final int VERSION = 1;
@@ -171,20 +169,6 @@ public class ItemRepositoryIntegrationTest {
           .setStartTime(ItemRepositoryIntegrationTest.START_TIME)
           .setStatus(ItemRepositoryIntegrationTest.STATUS)
           .setAction(ItemRepositoryIntegrationTest.ACTION);
-
-  @TestConfiguration
-  @EnableSolrRepositories(basePackages = "com.connexta.replication")
-  static class ReplicationItemRepositoryTestConfiguration {
-    @Bean
-    SolrClientFactory solrFactory() {
-      return new EmbeddedSolrServerFactory("classpath:solr", ItemPojo.COLLECTION);
-    }
-
-    @Bean
-    SolrClient solrClient(SolrClientFactory solrFactory) {
-      return solrFactory.getSolrClient();
-    }
-  }
 
   @Rule public ExpectedException exception = ExpectedException.none();
 

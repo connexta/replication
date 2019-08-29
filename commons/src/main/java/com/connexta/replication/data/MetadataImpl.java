@@ -51,17 +51,41 @@ public class MetadataImpl implements Metadata {
   private boolean isDeleted = false;
 
   /**
+   * Instantiates a metadata with the specified information.
+   *
    * @param metadata the raw metadata to wrap, cannot be null
    * @param type the type of the metadata, cannot be null
    * @param id id the of the metadata, cannot be null or empty
    * @param metadataModified the last time the metadata was modified, cannot be null
+   * @throws NullPointerException if any of the parameters are null
+   * @throws IllegalArgumentException if ID is empty or the type doesn't match the metadata
    */
   public MetadataImpl(Object metadata, Class type, String id, Date metadataModified) {
+    this(0L, metadata, type, id, metadataModified);
+  }
+
+  /**
+   * Instantiates a metadata with the specified information.
+   *
+   * @param metadataSize the size of the metadata
+   * @param metadata the raw metadata to wrap, cannot be null
+   * @param type the type of the metadata, cannot be null
+   * @param id id the of the metadata, cannot be null or empty
+   * @param metadataModified the last time the metadata was modified, cannot be null
+   * @throws NullPointerException if any of the parameters are null
+   * @throws IllegalArgumentException if ID is empty or the type doesn't match the metadata
+   */
+  public MetadataImpl(
+      long metadataSize, Object metadata, Class type, String id, Date metadataModified) {
+    if (!type.isInstance(metadata)) {
+      throw new IllegalArgumentException("Type must match the class of the metadata");
+    }
+
+    this.metadataSize = metadataSize;
     this.metadata = notNull(metadata, "Argument metadata may not be null");
     this.type = notNull(type, "Argument type may not be null");
     this.id = notEmpty(id, "Argument id may not be null or empty");
     this.metadataModified = notNull(metadataModified, "Argument metadataModified may not be null");
-
     this.tags = new HashSet<>();
     this.lineage = new ArrayList<>();
   }
@@ -156,5 +180,21 @@ public class MetadataImpl implements Metadata {
   @Override
   public void setIsDeleted(boolean isDeleted) {
     this.isDeleted = isDeleted;
+  }
+
+  /**
+   * Sets the resource info.
+   *
+   * @param size the size for the resource or <code>0</code> if no resource are available
+   * @param uri the uri for the resource or <code>null</code> if no resource is available
+   * @param modified the modified timestamp for the resource or <code>null</code> if no resource is
+   *     available
+   * @return this for chaining
+   */
+  public MetadataImpl setResource(long size, @Nullable URI uri, @Nullable Date modified) {
+    this.resourceSize = size;
+    this.resourceUri = uri;
+    this.resourceModified = modified;
+    return this;
   }
 }

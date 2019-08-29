@@ -47,7 +47,7 @@ public class MemoryCompositeQueue implements MemoryQueue {
    * @return a stream of all site queues compounded together (never empty)
    */
   public Stream<MemorySiteQueue> queues() {
-    return sites.stream().map(broker::getQueueIfDefined).flatMap(Optional::stream);
+    return sites.stream().map(broker::getSiteQueueIfDefined).flatMap(Optional::stream);
   }
 
   /**
@@ -67,7 +67,7 @@ public class MemoryCompositeQueue implements MemoryQueue {
    *     the specified site
    */
   public Optional<MemorySiteQueue> getQueue(String site) {
-    return sites.contains(site) ? broker.getQueueIfDefined(site) : Optional.empty();
+    return sites.contains(site) ? broker.getSiteQueueIfDefined(site) : Optional.empty();
   }
 
   @Override

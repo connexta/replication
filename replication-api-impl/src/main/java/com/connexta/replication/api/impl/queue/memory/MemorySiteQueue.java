@@ -27,7 +27,9 @@ import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
@@ -76,6 +78,22 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
 
   /** Wait queue for waiting puts. */
   private final Condition notFull = putLock.newCondition();
+
+  /**
+   * Flag used while testing to let us know which should signal all waiters on the <code>notEmpty
+   * </code> condition whenever the <code>count</code> or <code>pendingCount</code> is affected and
+   * not just when it is no longer empty. This is primarily used when testing with this queue
+   * implementation.
+   */
+  private volatile boolean waitingForCountToChange = false;
+
+  /**
+   * Optional lists of suspended signals. This is initialized during testing when a test calls
+   * {@link #suspendSignals} such that any conditions that would normally signal threads that are
+   * currently waiting on them be recorded in the referenced list to be played when {@link
+   * #resumeSignals} is finally called.
+   */
+  private volatile Queue<Runnable> suspendedSignals = null; // not suspended to start with
 
   private final MeterRegistry registry;
 
@@ -156,31 +174,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
 
   @Override
   public void put(TaskInfo info) throws InterruptedException {
-    final MemoryTask task = new MemoryTask(info, this, registry.config().clock());
-    final Deque<MemoryTask> queue = pendings.get(task.getPriority());
-    final int c;
-
-    putLock.lockInterruptibly();
-    try {
-      // Note that count is used in wait guard even though it is not protected by lock. This works
-      // because count can only decrease at this point (all other puts are shut out by lock), and we
-      // (or some other waiting put) are signalled if it ever changes from capacity. Similarly for
-      // all other uses of count in other wait guards.
-      while (remainingCapacity() <= 0) {
-        notFull.await();
-      }
-      queue.addLast(task);
-      if (count.incrementAndGet() < capacity) {
-        notFull.signal();
-      }
-      c = pendingCount.getAndIncrement();
-    } finally {
-      putLock.unlock();
-    }
-    if (c == 0) {
-      signalNotEmpty();
-    }
-    queuedCounter.increment();
+    putAndPeek(info);
   }
 
   @Override
@@ -200,15 +194,13 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       }
       queue.addLast(task);
       if (count.incrementAndGet() < capacity) {
-        notFull.signal();
+        signalNotFullWhenAlreadyLocked();
       }
       c = pendingCount.getAndIncrement();
     } finally {
       putLock.unlock();
     }
-    if (c == 0) {
-      signalNotEmpty();
-    }
+    signalNotEmpty(c == 0);
     queuedCounter.increment();
     return true;
   }
@@ -229,15 +221,13 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       }
       queue.addLast(task);
       if (count.incrementAndGet() < capacity) {
-        notFull.signal();
+        signalNotFullWhenAlreadyLocked();
       }
       c = pendingCount.getAndIncrement();
     } finally {
       putLock.unlock();
     }
-    if (c == 0) {
-      signalNotEmpty();
-    }
+    signalNotEmpty(c == 0);
     queuedCounter.increment();
     return true;
   }
@@ -254,9 +244,9 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       // cannot return null since pendingCount is not 0, we are looking at all priority queues,
       // and we are locked
       task = pollFirst(MemorySiteQueue.MIN_PRIORITY);
-      if (pendingCount.getAndDecrement() > 1) { // still some pending ones so let others know
-        notEmpty.signal();
-      }
+      final int c = pendingCount.getAndDecrement();
+
+      signalNotEmptyWhenAlreadyLocked(c > 1); // still some pending ones so let others know
     } finally {
       takeLock.unlock();
     }
@@ -267,6 +257,120 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
   @Override
   public Task poll(long timeout, TimeUnit unit) throws InterruptedException {
     return poll(MemorySiteQueue.MIN_PRIORITY, timeout, unit);
+  }
+
+  /**
+   * Inserts the specified task with the given priority into this queue, waiting if necessary for
+   * space to become available.
+   *
+   * @param info the task to be added to the queue
+   * @return the corresponding task that was added to the queue
+   * @throws InterruptedException if the current thread was interrupted while waiting to insert the
+   *     task
+   */
+  public MemoryTask putAndPeek(TaskInfo info) throws InterruptedException {
+    final MemoryTask task = new MemoryTask(info, this, registry.config().clock());
+    final Deque<MemoryTask> queue = pendings.get(task.getPriority());
+    final int c;
+
+    putLock.lockInterruptibly();
+    try {
+      // Note that count is used in wait guard even though it is not protected by lock. This works
+      // because count can only decrease at this point (all other puts are shut out by lock), and we
+      // (or some other waiting put) are signalled if it ever changes from capacity. Similarly for
+      // all other uses of count in other wait guards.
+      while (remainingCapacity() <= 0) {
+        notFull.await();
+      }
+      queue.addLast(task);
+      if (count.incrementAndGet() < capacity) {
+        signalNotFullWhenAlreadyLocked();
+      }
+      c = pendingCount.getAndIncrement();
+    } finally {
+      putLock.unlock();
+    }
+    signalNotEmpty(c == 0);
+    queuedCounter.increment();
+    return task;
+  }
+
+  /**
+   * Waits for a number of pending tasks in the queue to reach a given threshold before returning.
+   *
+   * @param size the number of pending tasks that should be in this queue before returning
+   * @param timeout how long to wait before giving up, in units of <code>unit</code>
+   * @param unit a {@code TimeUnit} determining how to interpret the <code>timeout</code> parameter
+   * @return <code>true</code> if the specified size was reached in time; <code>false</code> if we
+   *     timed out waiting
+   * @throws InterruptedException if the current thread was interrupted while waiting
+   */
+  public boolean waitForPendingSizeToReach(int size, long timeout, TimeUnit unit)
+      throws InterruptedException {
+    return waitForToReach(pendingCount, size, timeout, unit);
+  }
+
+  /**
+   * Waits for a number of tasks in the queue to reach a given threshold before returning.
+   *
+   * @param size the number of tasks that should be in this queue before returning
+   * @param timeout how long to wait before giving up, in units of <code>unit</code>
+   * @param unit a {@code TimeUnit} determining how to interpret the <code>timeout</code> parameter
+   * @return <code>true</code> if the specified size was reached in time; <code>false</code> if we
+   *     timed out waiting
+   * @throws InterruptedException if the current thread was interrupted while waiting
+   */
+  public boolean waitForSizeToReach(int size, long timeout, TimeUnit unit)
+      throws InterruptedException {
+    return waitForToReach(count, size, timeout, unit);
+  }
+
+  /**
+   * Suspends all internal signals which might otherwise wakeup threads waiting on specific
+   * conditions until such time when {@link #resumeSignals} is called.
+   *
+   * <p><i>Note:</i> This method can be useful during testing when the side effect of completing
+   * tasks could allow parallel threads to start offering new ones. By suspending signals, these
+   * threads will remained blocked until such time when the test is ready to have them resume
+   * normally.
+   */
+  public void suspendSignals() {
+    // suspendSignals() and resumeSignals() are the only place we lock on both so make sure to do it
+    // in the same order
+    takeLock.lock();
+    putLock.lock();
+    try {
+      if (suspendedSignals == null) {
+        this.suspendedSignals = new ConcurrentLinkedQueue<>();
+      } // else - no-op, continue with the list we had
+    } finally {
+      putLock.unlock();
+      takeLock.unlock();
+    }
+  }
+
+  /**
+   * Resumes all suspended signals while first processing those that have been accumulated.
+   *
+   * <p><i>Note:</i> This method can be useful during testing when the side effect of completing
+   * tasks could allow parallel threads to start offering new ones. By resuming previously suspended
+   * signals, these threads will finally continue processing as they would have in the first place
+   * when the condition actually happened.
+   */
+  public void resumeSignals() {
+    // suspendSignals() and resumeSignals() are the only place we lock on both so make sure to do it
+    // in the same order
+    takeLock.lock();
+    putLock.lock();
+    try {
+      if (suspendedSignals != null) { // play all accumulated signals
+        suspendedSignals.stream().peek(System.out::println).forEach(Runnable::run);
+        this.suspendedSignals = null;
+      }
+    } finally {
+      putLock.unlock();
+      takeLock.unlock();
+    }
   }
 
   /**
@@ -298,9 +402,9 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       // cannot return null since pendingCount is not 0, we are looking at all priority queues,
       // and we are locked
       task = pollFirst(minPriority);
-      if (pendingCount.getAndDecrement() > 1) { // still some pending ones so let others know
-        notEmpty.signal();
-      }
+      final int c = pendingCount.getAndDecrement();
+
+      signalNotEmptyWhenAlreadyLocked(c > 1); // still some pending ones so let others know
     } finally {
       takeLock.unlock();
     }
@@ -331,6 +435,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
           .get(task.getPriority())
           .record(task.getPendingDuration().toMillis(), TimeUnit.MILLISECONDS);
       activeTimer.record(task.getActiveDuration().toMillis(), TimeUnit.MILLISECONDS);
+      signalNotEmptyWhenAlreadyLocked(false); // change to count so signal all waiters
     } finally {
       takeLock.unlock();
     }
@@ -373,14 +478,12 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       }
       c = pendingCount.getAndIncrement();
       if (count.get() < capacity) {
-        notFull.signal();
+        signalNotFullWhenAlreadyLocked();
       }
     } finally {
       putLock.unlock();
     }
-    if (c == 0) {
-      signalNotEmpty();
-    }
+    signalNotEmpty(c == 0);
     requeuedCounter.increment();
   }
 
@@ -481,6 +584,38 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
   }
 
   /**
+   * Waits for a given count of tasks in the queue to reach a given threshold before returning.
+   *
+   * @param count the count to monitor
+   * @param size the number of tasks reported by the count that should be in this queue before
+   *     returning
+   * @param timeout how long to wait before giving up, in units of <code>unit</code>
+   * @param unit a {@code TimeUnit} determining how to interpret the <code>timeout</code> parameter
+   * @return <code>true</code> if the specified size was reached in time; <code>false</code> if we
+   *     timed out waiting
+   * @throws InterruptedException if the current thread was interrupted while waiting
+   */
+  private boolean waitForToReach(AtomicInteger count, int size, long timeout, TimeUnit unit)
+      throws InterruptedException {
+    long duration = unit.toNanos(timeout);
+
+    takeLock.lockInterruptibly();
+    try {
+      this.waitingForCountToChange = true;
+      while (count.get() != size) {
+        if (duration <= 0L) {
+          return false;
+        }
+        duration = notEmpty.awaitNanos(duration);
+      }
+      return true;
+    } finally {
+      this.waitingForCountToChange = false;
+      takeLock.unlock();
+    }
+  }
+
+  /**
    * Retrieves and removes the first task available from the highest priority queue which is greater
    * or equal to the specified priority.
    *
@@ -508,14 +643,42 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
 
   /**
    * Signals a waiting take. Called only from put/offer (which do not otherwise ordinarily lock
-   * takeLock.)
+   * takeLock).
+   *
+   * @param signal <code>true</code> to signal waiting takes; <code>false</code> not to (unless we
+   *     are testing and some threads are waiting on count changes)
    */
-  private void signalNotEmpty() {
-    takeLock.lock();
-    try {
+  private void signalNotEmpty(boolean signal) {
+    if (waitingForCountToChange || signal) {
+      takeLock.lock();
+      try {
+        if (suspendedSignals != null) {
+          // assume we will be locked when signal processing is resumed
+          suspendedSignals.add(this::signalNotEmptyDirectly);
+        } else {
+          signalNotEmptyDirectly();
+        }
+      } finally {
+        takeLock.unlock();
+      }
+    }
+  }
+
+  private void signalNotEmptyWhenAlreadyLocked(boolean signal) {
+    if (waitingForCountToChange || signal) {
+      if (suspendedSignals != null) {
+        suspendedSignals.add(this::signalNotEmptyDirectly);
+      } else {
+        signalNotEmptyDirectly();
+      }
+    }
+  }
+
+  private void signalNotEmptyDirectly() {
+    if (waitingForCountToChange) { // signal all waiters of the change
+      notEmpty.signalAll();
+    } else { // signal only one waiter
       notEmpty.signal();
-    } finally {
-      takeLock.unlock();
     }
   }
 
@@ -523,9 +686,22 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
   private void signalNotFull() {
     putLock.lock();
     try {
-      notFull.signal();
+      if (suspendedSignals != null) {
+        // assume we will be locked when signal processing is resumed
+        suspendedSignals.add(notFull::signal);
+      } else {
+        notFull.signal();
+      }
     } finally {
       putLock.unlock();
+    }
+  }
+
+  private void signalNotFullWhenAlreadyLocked() {
+    if (suspendedSignals != null) {
+      suspendedSignals.add(notFull::signal);
+    } else {
+      notFull.signal();
     }
   }
 }

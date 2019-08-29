@@ -50,7 +50,7 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
    *
    * @param pojo a pojo containing the values this filter should be instantiated with.
    */
-  protected FilterImpl(FilterPojo pojo) {
+  public FilterImpl(FilterPojo pojo) {
     super(FilterImpl.PERSISTABLE_TYPE);
     readFrom(pojo);
   }
@@ -155,7 +155,7 @@ public class FilterImpl extends AbstractPersistable<FilterPojo> implements Filte
   }
 
   @Override
-  protected void readFrom(FilterPojo pojo) {
+  protected final void readFrom(FilterPojo pojo) {
     super.readFrom(pojo);
     if (pojo.getVersion() < FilterPojo.MINIMUM_VERSION) {
       throw new UnsupportedVersionException(

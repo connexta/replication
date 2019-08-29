@@ -75,7 +75,7 @@
         <repository>
             <id>spring-milestones</id>
             <name>Spring Milestones</name>
-            <url>	https://repo.spring.io/milestone/</url>
+            <url>https://repo.spring.io/milestone/</url>
         </repository>
         <repository>
             <id>ossrh</id>
@@ -1013,8 +1013,10 @@
         <module>solr-schema</module>
         <module>replication-api</module>
         <module>commons</module>
+        <module>test-commons</module>
         <module>replication-api-impl</module>
         <module>adapters</module>
+        <module>query</module>
         <module>distributions</module>
     </modules>
 </project>

@@ -110,7 +110,7 @@ jobs:
       - run:
           name: Owasp Tests
           command: |
-            mvn verify -B -Powasp -DskipTests -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
+            mvn verify -B -Powasp -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
             cp **/dependency-check-report.* /tmp/artifacts
       - store_artifacts:
           path: /tmp/artifacts

@@ -45,6 +45,17 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   }
 
   /**
+   * Creates a new index for a Filter with the specified modified timestamp.
+   *
+   * @param filter to create an index for
+   * @param modifiedSince the modified time of the last metadata put into the queue
+   */
+  public FilterIndexImpl(Filter filter, Instant modifiedSince) {
+    super(FilterIndexImpl.TYPE, filter.getId());
+    this.modifiedSince = modifiedSince;
+  }
+
+  /**
    * Creates a new FilterIndex.
    *
    * @param pojo to create the filter index from
@@ -85,13 +96,13 @@ public class FilterIndexImpl extends AbstractPersistable<FilterIndexPojo> implem
   }
 
   @Override
-  public FilterIndexPojo writeTo(FilterIndexPojo pojo) {
+  protected FilterIndexPojo writeTo(FilterIndexPojo pojo) {
     super.writeTo(pojo);
     return pojo.setVersion(FilterIndexPojo.CURRENT_VERSION).setModifiedSince(modifiedSince);
   }
 
   @Override
-  public void readFrom(FilterIndexPojo pojo) {
+  protected final void readFrom(FilterIndexPojo pojo) {
     super.readFrom(pojo);
     if (pojo.getVersion() < FilterIndexPojo.MINIMUM_VERSION) {
       throw new UnsupportedVersionException(

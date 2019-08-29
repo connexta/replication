@@ -51,7 +51,7 @@ public class MemoryQueueBroker implements QueueBroker {
 
   @Override
   public SiteQueue getQueue(String site) {
-    return getQueue0(site);
+    return getSiteQueue(site);
   }
 
   @Override
@@ -67,12 +67,26 @@ public class MemoryQueueBroker implements QueueBroker {
     return new MemoryCompositeQueue(this, sites);
   }
 
-  Optional<MemorySiteQueue> getQueueIfDefined(String site) {
-    return Optional.ofNullable(queues.get(site));
-  }
-
-  private MemorySiteQueue getQueue0(String site) {
+  /**
+   * Gets a queue for a given site.
+   *
+   * <p>A new queue should be deployed if no queue currently exist for the specified site.
+   *
+   * @param site the ID of the site for which to get a queue
+   * @return the site queue to use for the specified site
+   */
+  public MemorySiteQueue getSiteQueue(String site) {
     return queues.computeIfAbsent(
         site, s -> new MemorySiteQueue(this, s, queueCapacity, meterRegistry));
+  }
+
+  /**
+   * Gets a queue for a given site if it is currently defined.
+   *
+   * @param site the ID of the site for which to get a queue
+   * @return the site queue to use for the specified site or empty if none already defined
+   */
+  public Optional<MemorySiteQueue> getSiteQueueIfDefined(String site) {
+    return Optional.ofNullable(queues.get(site));
   }
 }
