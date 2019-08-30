@@ -163,6 +163,11 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${beanutils.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
                 <artifactId>org.apache.servicemix.bundles.jsr305</artifactId>
                 <version>${jsr305.version}</version>

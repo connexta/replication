@@ -74,6 +74,10 @@
           <groupId>org.springframework</groupId>
           <artifactId>spring-context</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>ddf.security.core</groupId>
+          <artifactId>security-core-api</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -105,13 +109,25 @@
           <groupId>org.apache.logging.log4j</groupId>
           <artifactId>log4j-api</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>commons-beanutils</groupId>
+          <artifactId>commons-beanutils</artifactId>
+        </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
     </dependency>
     <dependency>
       <groupId>ddf.security</groupId>
       <artifactId>ddf-security-common</artifactId>
       <version>${ddf.version}</version>
       <exclusions>
+        <exclusion>
+          <groupId>ddf.security.core</groupId>
+          <artifactId>security-core-api</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>org.apache.karaf.jaas</groupId>
           <artifactId>org.apache.karaf.jaas.boot</artifactId>
@@ -159,6 +175,10 @@
       <artifactId>security-rest-cxfwrapper</artifactId>
       <version>${ddf.version}</version>
       <exclusions>
+        <exclusion>
+          <groupId>ddf.security.core</groupId>
+          <artifactId>security-core-api</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>org.springframework</groupId>
           <artifactId>spring-core</artifactId>
