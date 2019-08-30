@@ -155,7 +155,7 @@ public interface Task extends TaskInfo {
    * @throws InterruptedException if the thread was interrupted while attempting to unlock the task
    * @throws QueueException if an error occurred while performing the operation
    */
-  public void unlock() throws QueueException, InterruptedException;
+  public void unlock() throws InterruptedException;
 
   /**
    * Reports the successful completion of this task. The task will automatically be unlocked and
@@ -169,7 +169,7 @@ public interface Task extends TaskInfo {
    *     completed
    * @throws QueueException if an error occurred while performing the operation
    */
-  public void complete() throws QueueException, InterruptedException;
+  public void complete() throws InterruptedException;
 
   /**
    * Reports the failed completion of this task. The task will automatically be unlocked and either
@@ -187,7 +187,7 @@ public interface Task extends TaskInfo {
    * @throws InterruptedException if the thread was interrupted while attempting to unlock the task
    * @throws QueueException if an error occurred while performing the operation
    */
-  public void fail(ErrorCode code) throws QueueException, InterruptedException;
+  public void fail(ErrorCode code) throws InterruptedException;
 
   /**
    * Reports the failed completion of this task. The task will automatically be unlocked and either
@@ -206,7 +206,7 @@ public interface Task extends TaskInfo {
    * @throws InterruptedException if the thread was interrupted while attempting to unlock the task
    * @throws QueueException if an error occurred while performing the operation
    */
-  public void fail(ErrorCode code, String reason) throws QueueException, InterruptedException;
+  public void fail(ErrorCode code, String reason) throws InterruptedException;
 
   /** The various states a task can be in. */
   public enum State {

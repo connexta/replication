@@ -17,6 +17,7 @@ import com.connexta.replication.api.data.ErrorCode;
 import com.connexta.replication.api.data.Task;
 import com.connexta.replication.api.data.TaskInfo;
 import com.connexta.replication.api.impl.queue.AbstractTask;
+import com.google.common.annotations.VisibleForTesting;
 import io.micrometer.core.instrument.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -26,6 +27,7 @@ import javax.annotation.Nullable;
 
 /** Provides an in-memory implement for the {@link Task} interface. */
 public class MemoryTask extends AbstractTask {
+  private final byte priority;
   private final Clock clock;
   private final MemorySiteQueue queue;
 
@@ -64,6 +66,11 @@ public class MemoryTask extends AbstractTask {
    */
   MemoryTask(TaskInfo info, MemorySiteQueue queue, Clock clock) {
     super(info);
+    this.priority =
+        (byte)
+            Math.min(
+                Math.max(info.getPriority(), MemorySiteQueue.MIN_PRIORITY),
+                MemorySiteQueue.MAX_PRIORITY);
     this.clock = clock;
     this.queue = queue;
     final long now = clock.wallTime();
@@ -71,6 +78,11 @@ public class MemoryTask extends AbstractTask {
     this.startTime = clock.monotonicTime();
     this.queueTime = now;
     this.originalQueuedTime = Instant.ofEpochMilli(now);
+  }
+
+  @Override
+  public byte getPriority() {
+    return priority;
   }
 
   @Override
@@ -124,49 +136,49 @@ public class MemoryTask extends AbstractTask {
 
   @Override
   public Duration getDuration() {
-    final long startTime = this.startTime;
-    final Duration duration = this.duration;
+    final long s = this.startTime;
+    final Duration d = this.duration;
 
     switch (state) {
       case PENDING:
       case ACTIVE:
-        return duration.plusNanos(clock.monotonicTime() - startTime);
+        return d.plusNanos(clock.monotonicTime() - s);
       case FAILED:
       case SUCCESSFUL:
       default:
-        return duration;
+        return d;
     }
   }
 
   @Override
   public Duration getPendingDuration() {
-    final long startTime = this.startTime;
-    final Duration pendingDuration = this.pendingDuration;
+    final long s = this.startTime;
+    final Duration d = this.pendingDuration;
 
     switch (state) {
       case PENDING:
-        return pendingDuration.plusNanos(clock.monotonicTime() - startTime);
+        return d.plusNanos(clock.monotonicTime() - s);
       case ACTIVE:
       case FAILED:
       case SUCCESSFUL:
       default:
-        return pendingDuration;
+        return d;
     }
   }
 
   @Override
   public Duration getActiveDuration() {
-    final long startTime = this.startTime;
-    final Duration activeDuration = this.activeDuration;
+    final long s = this.startTime;
+    final Duration d = this.activeDuration;
 
     switch (state) {
       case ACTIVE:
-        return activeDuration.plusNanos(clock.monotonicTime() - startTime);
+        return d.plusNanos(clock.monotonicTime() - s);
       case PENDING:
       case FAILED:
       case SUCCESSFUL:
       default:
-        return activeDuration;
+        return d;
     }
   }
 
@@ -224,17 +236,22 @@ public class MemoryTask extends AbstractTask {
    */
   MemoryTask lock() {
     final long now = clock.monotonicTime();
-    final long duration = now - startTime;
+    final long d = now - startTime;
 
     this.state = State.ACTIVE;
     this.code = null;
     this.reason = null;
     this.startTime = now;
-    this.duration = this.duration.plusNanos(duration);
-    this.pendingDuration = this.pendingDuration.plusNanos(duration);
+    this.duration = duration.plusNanos(d);
+    this.pendingDuration = pendingDuration.plusNanos(d);
     lock.lock();
     this.owner = Thread.currentThread();
     return this;
+  }
+
+  @VisibleForTesting
+  TaskInfo getInfo() {
+    return info;
   }
 
   /**
@@ -247,14 +264,14 @@ public class MemoryTask extends AbstractTask {
    */
   private void removed(State state, @Nullable ErrorCode code, @Nullable String reason) {
     final long now = clock.monotonicTime();
-    final long duration = now - startTime;
+    final long d = now - startTime;
 
     this.state = state;
     this.code = code;
     this.reason = reason;
     this.startTime = 0L;
-    this.duration = this.duration.plusNanos(duration);
-    this.activeDuration = this.activeDuration.plusNanos(duration);
+    this.duration = duration.plusNanos(d);
+    this.activeDuration = activeDuration.plusNanos(d);
     lock.unlock(); // should not fail since we already checked in the complete() and fail() methods
     this.owner = null;
   }
@@ -268,7 +285,7 @@ public class MemoryTask extends AbstractTask {
    */
   private void requeued(@Nullable ErrorCode code, @Nullable String reason) {
     final long now = clock.monotonicTime();
-    final long duration = now - startTime;
+    final long d = now - startTime;
 
     this.state = State.PENDING;
     this.code = code;
@@ -279,15 +296,17 @@ public class MemoryTask extends AbstractTask {
       this.queueTime = clock.wallTime();
     }
     this.startTime = now;
-    this.duration = this.duration.plusNanos(duration);
-    this.activeDuration = this.activeDuration.plusNanos(duration);
+    this.duration = duration.plusNanos(d);
+    this.activeDuration = activeDuration.plusNanos(d);
     lock.unlock(); // should not fail since we already checked in the unlock() and fail() methods
     this.owner = null;
   }
 
   private void verifyCompletionAndOwnership() {
-    if (isCompleted()) {
-      throw new IllegalStateException("task already completed or failed");
+    if (wasSuccessful()) {
+      throw new IllegalStateException("task already completed successfully");
+    } else if (hasFailed()) {
+      throw new IllegalStateException("task already failed");
     } else if (Thread.currentThread() != owner) {
       throw new IllegalMonitorStateException();
     }

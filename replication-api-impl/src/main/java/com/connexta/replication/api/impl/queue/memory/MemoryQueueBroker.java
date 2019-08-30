@@ -61,8 +61,7 @@ public class MemoryQueueBroker implements QueueBroker {
     if (sites.length == 1) {
       return getQueue(sites[0]);
     }
-    throw new UnsupportedOperationException("composite queues are not yet supported");
-    // return getQueue(Stream.of(sites));
+    return getQueue(Stream.of(sites));
   }
 
   @Override
@@ -73,7 +72,7 @@ public class MemoryQueueBroker implements QueueBroker {
   }
 
   Optional<MemorySiteQueue> getQueueIfDefined(String site) {
-    return Optional.of(queues.get(site));
+    return Optional.ofNullable(queues.get(site));
   }
 
   private MemorySiteQueue getQueue0(String site) {
