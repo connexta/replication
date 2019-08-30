@@ -18,19 +18,21 @@ import com.connexta.replication.api.data.MetadataInfo;
 /**
  * Extension to the {@link MetadataInfo} class which provides additional collected information that
  * can be useful for a worker processing an associated task.
+ *
+ * @param <T> the type of raw data
  */
-public interface DDFMetadataInfo extends MetadataInfo {
+public interface DDFMetadataInfo<T> extends MetadataInfo {
   /**
    * The class format for the raw data defining the metadata.
    *
    * @return the class for the raw data
    */
-  public Class<?> getDataClass();
+  public Class<T> getDataClass();
 
   /**
    * The raw data defining the metadata.
    *
    * @return the raw data
    */
-  public Object getData();
+  public T getData();
 }
