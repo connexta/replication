@@ -58,6 +58,7 @@ public class ServiceConfig {
    *
    * @param filterRepository a {@link org.springframework.data.repository.CrudRepository} for basic
    *     CRUD operations
+   * @param filterIndexManager the {@link FilterIndexManager}
    * @return the {@link FilterManager}
    */
   @Bean

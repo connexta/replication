@@ -78,6 +78,7 @@ pipeline {
                             env.RELEASE_COMMIT =  sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
                         } else {
                             sh 'mvn clean install -B $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                            sh 'mvn javadoc:aggregate -B -DskipStatic=true -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                         }
                     }
                 }
