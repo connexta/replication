@@ -86,6 +86,10 @@
       <version>${ddf.version}</version>
       <exclusions>
         <exclusion>
+          <groupId>org.opensaml</groupId>
+          <artifactId>opensaml-xmlsec-api</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.apache.karaf.jaas</groupId>
           <artifactId>org.apache.karaf.jaas.boot</artifactId>
         </exclusion>
@@ -114,6 +118,22 @@
           <artifactId>commons-beanutils</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.opensaml</groupId>
+      <artifactId>opensaml-xmlsec-api</artifactId>
+      <version>${opensaml.xmlsec.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.santuario</groupId>
+          <artifactId>xmlsec</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.santuario</groupId>
+      <artifactId>xmlsec</artifactId>
+      <version>${xmlsec.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-beanutils</groupId>

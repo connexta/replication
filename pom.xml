@@ -156,6 +156,8 @@
         <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
         <rabbitmq-docker.version>3.7</rabbitmq-docker.version>
         <beanutils.version>1.9.4</beanutils.version>
+        <opensaml.xmlsec.version>3.4.3</opensaml.xmlsec.version>
+        <xmlsec.version>2.1.4</xmlsec.version>
 
     </properties>
 
