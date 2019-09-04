@@ -63,7 +63,7 @@ public class FilterImplTest {
     Assert.assertThat(persistable.getSiteId(), Matchers.nullValue());
     Assert.assertThat(persistable.getFilter(), Matchers.nullValue());
     Assert.assertThat(persistable.isSuspended(), Matchers.equalTo(false));
-    Assert.assertThat(persistable.getPriority(), Matchers.equalTo((byte) 1));
+    Assert.assertThat(persistable.getPriority(), Matchers.equalTo((byte) 0));
   }
 
   @Test
@@ -296,7 +296,7 @@ public class FilterImplTest {
     assertThat(filter.getName(), is(NAME));
     assertThat(filter.getDescription().get(), is(DESCRIPTION));
     assertThat(filter.isSuspended(), is(true));
-    assertThat(filter.getPriority(), is((byte) 1));
+    assertThat(filter.getPriority(), is((byte) 0));
   }
 
   @Test
@@ -317,7 +317,7 @@ public class FilterImplTest {
     assertThat(filter.getName(), is(NAME));
     assertThat(filter.getDescription().get(), is(DESCRIPTION));
     assertThat(filter.isSuspended(), is(true));
-    assertThat(filter.getPriority(), is((byte) 10));
+    assertThat(filter.getPriority(), is((byte) 9));
   }
 
   @Test
