@@ -283,8 +283,8 @@ public class ItemPojo extends Pojo<ItemPojo> {
    * Gets the name for the source {@link NodeAdapter} the metadata/resource was being replicated
    * from.
    *
-   * @return the name for the source {@link {@link NodeAdapter }} the metadata/resource was being
-   *     replicated from
+   * @return the name for the source {@link NodeAdapter } the metadata/resource was being replicated
+   *     from
    */
   @Nullable
   public String getSource() {
@@ -295,8 +295,8 @@ public class ItemPojo extends Pojo<ItemPojo> {
    * Sets the name for the source {@link NodeAdapter} the metadata/resource was being replicated
    * from.
    *
-   * @param source the name for the source {@link {@link NodeAdapter }} the metadata/resource was
-   *     being replicated from
+   * @param source the name for the source {@link NodeAdapter } the metadata/resource was being
+   *     replicated from
    * @return this for chaining
    */
   public ItemPojo setSource(@Nullable String source) {

@@ -196,7 +196,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    *     destination
    * @param consumer a consumer capable of updating the destination with the field's value if it is
    *     defined
-   * @param <> the consumed type
+   * @param <P> the consumed type
    * @throws InvalidFieldException if the field's value as supplied by <code>supplier
    *     </code> is <code>null</code> or empty or cannot be converted
    */
@@ -211,7 +211,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
   /**
    * Useful method that can be used to validate that the value of an enum field is defined as a
    * valid string representation of an enumeration value before setting it in a given destination.
-   * If it is not a valid value than <code>unknown</code>> is used as the value to set in the
+   * If it is not a valid value than <code>unknown</code> is used as the value to set in the
    * destination. Otherwise, the corresponding enum value is set accordingly. The field's value is
    * retrieved using a consumer (e.g. <code>pojo::getType</code>) and set in the destination using a
    * supplier (e.g. <code>this::setType</code>).
@@ -240,7 +240,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
   /**
    * Useful method that can be used to validate that the value of an enum field is defined as a
    * valid string representation of an enumeration value before setting it a given destination. If
-   * it is not a valid value than <code>unknown</code>> is used as the value to set in this object.
+   * it is not a valid value than <code>unknown</code> is used as the value to set in this object.
    * Otherwise, the corresponding enum value is set accordingly. The field's value is retrieved
    * using a consumer (e.g. <code>pojo::getType</code>) and set in the destination using a supplier
    * (e.g. <code>this::setType</code>).
@@ -261,7 +261,7 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
   /**
    * Useful method that can be used to validate that the value of an enum field is defined as a
    * valid string representation of an enumeration value before setting it in a given destination.
-   * If it is not a valid value than <code>unknown</code>> is used as the value to set in the
+   * If it is not a valid value than <code>unknown</code> is used as the value to set in the
    * destination. Otherwise, the corresponding enum value is set accordingly. The field's value is
    * retrieved using a consumer (e.g. <code>pojo::getType</code>) and set in the destination using a
    * supplier (e.g. <code>this::setType</code>).

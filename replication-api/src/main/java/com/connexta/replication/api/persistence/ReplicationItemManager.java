@@ -40,7 +40,8 @@ public interface ReplicationItemManager extends DataManager<ReplicationItem> {
    * @param startIndex index to start query at
    * @param pageSize max number of results to return in a single query
    * @return list of items for the given {@link Filter} id
-   * @throws ReplicationPersistenceException if there is an error fetching the items
+   * @throws com.connexta.replication.api.data.ReplicationPersistenceException if there is an error
+   *     fetching the items
    */
   List<ReplicationItem> getAllForFilter(String filterId, int startIndex, int pageSize);
 
@@ -57,7 +58,8 @@ public interface ReplicationItemManager extends DataManager<ReplicationItem> {
    * Deletes all the items for a {@link Filter}.
    *
    * @param filterId id of the {@link Filter}
-   * @throws ReplicationPersistenceException if there was an error deleting the items
+   * @throws com.connexta.replication.api.data.ReplicationPersistenceException if there was an error
+   *     deleting the items
    */
   void removeAllForFilter(String filterId);
 }
