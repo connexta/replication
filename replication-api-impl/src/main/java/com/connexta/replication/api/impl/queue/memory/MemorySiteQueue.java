@@ -274,7 +274,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
    * than the specified one, waiting up to the specified wait time if necessary for one to become
    * available. The returned task is considered locked by the current thread/worker.
    *
-   * @param priority the minimum priority for which to retrieve a task (0 to 9)
+   * @param minPriority the minimum priority for which to retrieve a task (0 to 9)
    * @param timeout how long to wait before giving up, in units of <code>unit</code>
    * @param unit a {@code TimeUnit} determining how to interpret the <code>timeout</code> parameter
    * @return the next available task with the highest priority from this queue or <code>null</code>
@@ -283,7 +283,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
    *     be returned
    */
   @Nullable
-  Task poll(int priority, long timeout, TimeUnit unit) throws InterruptedException {
+  Task poll(int minPriority, long timeout, TimeUnit unit) throws InterruptedException {
     final MemoryTask task;
     long duration = unit.toNanos(timeout);
 
@@ -297,7 +297,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
       }
       // cannot return null since pendingCount is not 0, we are looking at all priority queues,
       // and we are locked
-      task = pollFirst(priority);
+      task = pollFirst(minPriority);
       if (pendingCount.getAndDecrement() > 1) { // still some pending ones so let others know
         notEmpty.signal();
       }
@@ -488,13 +488,13 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
    * </code> prior to calling this method and that at least one task is available in the queue (
    * <code>count > 0</code>).
    *
-   * @param priority the minimum priority for which to remove a task (0 to 9)
+   * @param minPriority the minimum priority for which to remove a task (0 to 9)
    * @return the first available highest priority task with a priority no less than the specified
    *     priority (task will be locked to the current thread) or <code>null</code> if no tasks are
    *     available at or above the specified priority
    */
-  private MemoryTask pollFirst(int priority) {
-    for (int i = MemorySiteQueue.MAX_PRIORITY; i >= priority; i--) {
+  private MemoryTask pollFirst(int minPriority) {
+    for (int i = MemorySiteQueue.MAX_PRIORITY; i >= minPriority; i--) {
       final MemoryTask task = pendings.get(i).pollFirst();
 
       if (task != null) {

@@ -98,9 +98,9 @@ public class MemoryTask extends AbstractTask {
   /**
    * Gets the optional error code indicating why the last processing of the task failed.
    *
-   * <p><i>Note:</i> A task might that fails for reasons that allows for it to be retried later,
-   * will report an error until such time as to when the task is picked up again by a worker for a
-   * second attempt at which point where the error will be cleared automatically.
+   * <p><i>Note:</i> A task that fails for reasons that allow for it to be retried later will report
+   * an error until the task is picked up again by a worker for a subsequent attempt, at which point
+   * the error will be cleared automatically.
    *
    * @return the error code associated with the last processing attempt or empty if the processing
    *     of the task completed successfully or if it is still being processed
@@ -114,7 +114,7 @@ public class MemoryTask extends AbstractTask {
    * #getCode()}) as to why the last processing of the task failed.
    *
    * <p><i>Note:</i> The returned value might be cleared right after calling this method if the task
-   * is being picked up for a second attempt.
+   * is being picked up for a subsequent attempt.
    *
    * @return the reason associated with the last failed processing attempt or empty if the
    *     processing of the task completed successfully if it is still being processed or if no

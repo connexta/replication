@@ -55,8 +55,6 @@ public class MemoryQueueBroker implements QueueBroker {
   }
 
   @Override
-  @SuppressWarnings(
-      "squid:CommentedOutCodeLine" /* will be removed when we support composite queues */)
   public Queue getQueue(String... sites) {
     if (sites.length == 1) {
       return getQueue(sites[0]);
@@ -65,8 +63,6 @@ public class MemoryQueueBroker implements QueueBroker {
   }
 
   @Override
-  @SuppressWarnings(
-      "squid:CommentedOutCodeLine" /* will be removed when we support composite queues */)
   public Queue getQueue(Stream<String> sites) {
     return new MemoryCompositeQueue(this, sites);
   }
