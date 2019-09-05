@@ -15,19 +15,18 @@ package com.connexta.replication.api.impl.data;
 
 import com.connexta.replication.api.data.CreateStorageRequest;
 import com.connexta.replication.api.data.Resource;
-import java.util.List;
 
 /** Simple implementation of {@link CreateStorageRequest}. */
 public class CreateStorageRequestImpl implements CreateStorageRequest {
 
-  private final List<Resource> resources;
+  private final Resource resource;
 
-  public CreateStorageRequestImpl(List<Resource> resources) {
-    this.resources = resources;
+  public CreateStorageRequestImpl(Resource resource) {
+    this.resource = resource;
   }
 
   @Override
-  public List<Resource> getResources() {
-    return resources;
+  public Resource getResource() {
+    return resource;
   }
 }

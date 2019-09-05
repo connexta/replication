@@ -14,15 +14,14 @@
 package com.connexta.replication.api.data;
 
 import com.connexta.replication.api.NodeAdapter;
-import java.util.List;
 
-/** A create request object to be sent to {@link NodeAdapter}s to create {@link Resource}s. */
+/** A create request object to be sent to {@link NodeAdapter}s to create a {@link Resource}. */
 public interface CreateStorageRequest {
 
   /**
-   * Gets a list of {@link Resource}s to be stored.
+   * Gets the {@link Resource}s to be stored.
    *
-   * @return the list of {@link Resource}s
+   * @return the resource
    */
-  List<Resource> getResources();
+  Resource getResource();
 }

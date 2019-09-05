@@ -24,17 +24,22 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
+import com.connexta.replication.api.AdapterException;
+import com.connexta.replication.api.AdapterInterruptedException;
 import com.connexta.replication.api.data.CreateStorageRequest;
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.Resource;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Collections;
+import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -43,9 +48,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.response.DefaultResponseCreator;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 public class IonNodeAdapterTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   RestTemplate restTemplate;
 
@@ -124,13 +132,38 @@ public class IonNodeAdapterTest {
 
   @Test
   public void createResourceFailed401() {
+    thrown.expect(AdapterException.class);
+    thrown.expectCause(Matchers.instanceOf(HttpClientErrorException.Unauthorized.class));
+
     mockServer
         .expect(requestTo("http://localhost:1234/ingest"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
 
-    assertThat(adapter.createResource(getCreateStorageRequest()), is(false));
-    mockServer.verify();
+    try {
+      adapter.createResource(getCreateStorageRequest());
+    } finally {
+      mockServer.verify();
+    }
+  }
+
+  @Test
+  public void createResourceInterrupted() {
+    thrown.expect(AdapterInterruptedException.class);
+
+    mockServer
+        .expect(requestTo("http://localhost:1234/ingest"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            e -> {
+              throw new InterruptedIOException();
+            });
+
+    try {
+      adapter.createResource(getCreateStorageRequest());
+    } finally {
+      mockServer.verify();
+    }
   }
 
   @Test
@@ -144,57 +177,57 @@ public class IonNodeAdapterTest {
     assertThat(adapter.readResource(null), is(nullValue()));
     assertThat(adapter.updateResource(null), is(true));
     assertThat(adapter.query(null).getMetadata().iterator().hasNext(), is(false));
+    assertThat(adapter.exists(null), is(false));
   }
 
   private CreateStorageRequest getCreateStorageRequest() {
     CreateStorageRequest request =
         () ->
-            Collections.singletonList(
-                new Resource() {
-                  @Override
-                  public String getId() {
-                    return "1234";
-                  }
+            new Resource() {
+              @Override
+              public String getId() {
+                return "1234";
+              }
 
-                  @Override
-                  public String getName() {
-                    return "test";
-                  }
+              @Override
+              public String getName() {
+                return "test";
+              }
 
-                  @Override
-                  public URI getResourceUri() {
-                    return URI.create("https://host:1234/path/to/resource");
-                  }
+              @Override
+              public URI getResourceUri() {
+                return URI.create("https://host:1234/path/to/resource");
+              }
 
-                  @Nullable
-                  @Override
-                  public String getQualifier() {
-                    return null;
-                  }
+              @Nullable
+              @Override
+              public String getQualifier() {
+                return null;
+              }
 
-                  @Override
-                  public InputStream getInputStream() {
-                    return new ByteArrayInputStream("This is a test".getBytes());
-                  }
+              @Override
+              public InputStream getInputStream() {
+                return new ByteArrayInputStream("This is a test".getBytes());
+              }
 
-                  @Override
-                  public String getMimeType() {
-                    return MediaType.TEXT_PLAIN.toString();
-                  }
+              @Override
+              public String getMimeType() {
+                return MediaType.TEXT_PLAIN.toString();
+              }
 
-                  @Override
-                  public long getSize() {
-                    return 14;
-                  }
+              @Override
+              public long getSize() {
+                return 14;
+              }
 
-                  @Override
-                  public Metadata getMetadata() {
-                    Metadata metadata = mock(Metadata.class);
-                    when(metadata.getMetadataSize()).thenReturn((long) getRawMetadata().length());
-                    when(metadata.getRawMetadata()).thenReturn(getRawMetadata());
-                    return metadata;
-                  }
-                });
+              @Override
+              public Metadata getMetadata() {
+                Metadata metadata = mock(Metadata.class);
+                when(metadata.getMetadataSize()).thenReturn((long) getRawMetadata().length());
+                when(metadata.getRawMetadata()).thenReturn(getRawMetadata());
+                return metadata;
+              }
+            };
     return request;
   }
 

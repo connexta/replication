@@ -16,7 +16,6 @@ package com.connexta.replication.api.data;
 import com.connexta.replication.api.NodeAdapter;
 
 public interface QueryResponse {
-
   /**
    * An iterable of {@link Metadata} returned by a {@link QueryRequest} sent to a {@link
    * NodeAdapter}, which translates a node's specific metadata format into {@link Metadata}.
@@ -26,6 +25,16 @@ public interface QueryResponse {
    *
    * <p>Considerations of paging when iterating should be taken into account in order to avoid
    * memory issues.
+   *
+   * <p><i>Note:</i> the returned iterable can always throw the following exceptions out of its
+   * methods while iterating:
+   *
+   * <ul>
+   *   <li>{@link com.connexta.replication.api.AdapterException} - if there is an error
+   *       communicating with the remote server
+   *   <li>{@link com.connexta.replication.api.AdapterInterruptedException} - if the operation was
+   *       interrupted and could not complete
+   * </ul>
    *
    * @return the iterable of {@link Metadata}
    */

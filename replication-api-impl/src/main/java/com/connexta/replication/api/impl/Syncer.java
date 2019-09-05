@@ -22,7 +22,6 @@ import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.QueryRequest;
 import com.connexta.replication.api.data.ReplicationItem;
-import com.connexta.replication.api.data.Resource;
 import com.connexta.replication.api.data.ResourceResponse;
 import com.connexta.replication.api.impl.data.CreateRequestImpl;
 import com.connexta.replication.api.impl.data.CreateStorageRequestImpl;
@@ -121,6 +120,7 @@ public class Syncer {
     }
 
     /** Blocking call that begins syncing between a source and destination {@link NodeAdapter}s. */
+    @SuppressWarnings("squid:S3776" /* this class will be going away very soon */)
     void sync() {
       Date modifiedAfter = getModifiedAfter();
       List<String> failedItemIds = replicationItemManager.getFailureList(filter.getId());
@@ -193,14 +193,15 @@ public class Syncer {
       final String metadataId = metadata.getId();
       if (hasResource(metadata)) {
         ResourceResponse resourceResponse = source.readResource(new ResourceRequestImpl(metadata));
-        List<Resource> resources = Collections.singletonList(resourceResponse.getResource());
 
         LOGGER.trace(
             "Sending create storage from {} to {} for metadata {}",
             sourceName,
             destinationName,
             metadataId);
-        created = destination.createResource(new CreateStorageRequestImpl(resources));
+        created =
+            destination.createResource(
+                new CreateStorageRequestImpl(resourceResponse.getResource()));
       } else {
         LOGGER.trace(
             "Sending create from {} to {} for metadata {}",
@@ -231,14 +232,15 @@ public class Syncer {
       boolean updated;
       if (shouldUpdateResource) {
         ResourceResponse resourceResponse = source.readResource(new ResourceRequestImpl(metadata));
-        List<Resource> resources = Collections.singletonList(resourceResponse.getResource());
 
         LOGGER.trace(
             "Sending update storage from {} to {} for metadata {}",
             sourceName,
             destinationName,
             metadataId);
-        updated = destination.updateResource(new UpdateStorageRequestImpl(resources));
+        updated =
+            destination.updateResource(
+                new UpdateStorageRequestImpl(resourceResponse.getResource()));
       } else if (shouldUpdateMetadata) {
         LOGGER.trace(
             "Sending update from {} to {} for metadata {}",

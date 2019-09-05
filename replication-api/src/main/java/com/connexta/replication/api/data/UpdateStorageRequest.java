@@ -14,15 +14,14 @@
 package com.connexta.replication.api.data;
 
 import com.connexta.replication.api.NodeAdapter;
-import java.util.List;
 
-/** An update request object to be sent to {@link NodeAdapter}s to update {@link Resource}s. */
+/** An update request object to be sent to {@link NodeAdapter}s to update a {@link Resource}. */
 public interface UpdateStorageRequest {
 
   /**
-   * Gets a list of {@link Resource}s to be updated.
+   * Gets a @link Resource} to be updated.
    *
-   * @return the list of {@link Resource}s
+   * @return the resource
    */
-  List<Resource> getResources();
+  Resource getResource();
 }

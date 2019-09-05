@@ -211,13 +211,13 @@ public class DdfNodeAdapterTest {
   @Test
   public void createResource() {
     Resource resource = setupRestCall(restClient::post, this::getResource, false);
-    assertThat(adapter.createResource(() -> Collections.singletonList(resource)), is(true));
+    assertThat(adapter.createResource(() -> resource), is(true));
   }
 
   @Test
   public void updateResource() {
     Resource resource = setupRestCall(restClient::put, this::getResource, false);
-    assertThat(adapter.updateResource(() -> Collections.singletonList(resource)), is(true));
+    assertThat(adapter.updateResource(() -> resource), is(true));
   }
 
   @Test
