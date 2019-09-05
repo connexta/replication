@@ -30,9 +30,10 @@ public interface QueryResponse {
    * methods while iterating:
    *
    * <ul>
-   *   <li><{@link AdapterException} - if there is an error communicating with the remote server
-   *   <li>{@link AdapterInterruptedException} - if the operation was interrupted and could not
-   *       complete
+   *   <li>{@link com.connexta.replication.api.AdapterException} - if there is an error
+   *       communicating with the remote server
+   *   <li>{@link com.connexta.replication.api.AdapterInterruptedException} - if the operation was
+   *       interrupted and could not complete
    * </ul>
    *
    * @return the iterable of {@link Metadata}
