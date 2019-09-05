@@ -120,6 +120,7 @@ public class Syncer {
     }
 
     /** Blocking call that begins syncing between a source and destination {@link NodeAdapter}s. */
+    @SuppressWarnings("squid:S3776" /* this class will be going away very soon */)
     void sync() {
       Date modifiedAfter = getModifiedAfter();
       List<String> failedItemIds = replicationItemManager.getFailureList(filter.getId());

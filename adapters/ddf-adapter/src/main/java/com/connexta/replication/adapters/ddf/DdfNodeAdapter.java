@@ -76,6 +76,8 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DdfNodeAdapter.class);
 
+  private static final String CONTACT_ERROR = "Error contacting CSW Server at {}";
+
   private final DdfRestClientFactory ddfRestClientFactory;
 
   private final URL hostUrl;
@@ -120,13 +122,13 @@ public class DdfNodeAdapter implements NodeAdapter {
       if ((t instanceof InterruptedException) || (t instanceof InterruptedIOException)) {
         Thread.currentThread().interrupt(); // propagate interruption
       } else {
-        LOGGER.debug("Error contacting CSW Server at {}", hostUrl, t);
-        LOGGER.warn("Error contacting CSW Server at {}", hostUrl);
+        LOGGER.debug(DdfNodeAdapter.CONTACT_ERROR, hostUrl, t);
+        LOGGER.warn(DdfNodeAdapter.CONTACT_ERROR, hostUrl);
       }
       return false;
     } catch (Exception e) {
-      LOGGER.debug("Error contacting CSW Server at {}", hostUrl, e);
-      LOGGER.warn("Error contacting CSW Server at {}", hostUrl);
+      LOGGER.debug(DdfNodeAdapter.CONTACT_ERROR, hostUrl, e);
+      LOGGER.warn(DdfNodeAdapter.CONTACT_ERROR, hostUrl);
       return false;
     }
     return true;
