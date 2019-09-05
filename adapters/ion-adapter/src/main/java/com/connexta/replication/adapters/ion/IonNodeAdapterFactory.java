@@ -56,7 +56,6 @@ public class IonNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
-    // TODO change this when ingest endpoint supports https
     String baseUrl = "http://" + url.getHost() + ":" + url.getPort();
     try {
       RestTemplate template = new RestTemplate();

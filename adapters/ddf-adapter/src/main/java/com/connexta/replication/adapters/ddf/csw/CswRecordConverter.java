@@ -13,11 +13,11 @@
  */
 package com.connexta.replication.adapters.ddf.csw;
 
+import com.connexta.replication.adapters.ddf.DdfMetadata;
 import com.connexta.replication.adapters.ddf.MetacardAttribute;
 import com.connexta.replication.api.AdapterException;
 import com.connexta.replication.api.Replication;
 import com.connexta.replication.api.data.Metadata;
-import com.connexta.replication.data.MetadataImpl;
 import com.thoughtworks.xstream.converters.ConversionException;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
@@ -216,7 +216,8 @@ public class CswRecordConverter implements Converter {
       throw new AdapterException("Can't convert csw metacard without a metacard.modified field");
     }
 
-    MetadataImpl metadata = new MetadataImpl(metadataMap, Map.class, id, metacardModified);
+    DdfMetadata metadata =
+        new DdfMetadata(metadataStr, String.class, id, metacardModified, metadataMap);
     metadata.setMetadataSize(metadataStr.length());
     if (metadataMap.get(Constants.RESOURCE_SIZE) != null) {
       metadata.setResourceSize(Long.parseLong(metadataMap.get(Constants.RESOURCE_SIZE).getValue()));

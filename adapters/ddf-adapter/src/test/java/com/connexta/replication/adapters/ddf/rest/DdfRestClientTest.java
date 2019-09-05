@@ -20,13 +20,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.connexta.replication.adapters.ddf.DdfMetadata;
 import com.connexta.replication.adapters.ddf.MetacardAttribute;
 import com.connexta.replication.adapters.ddf.csw.Constants;
 import com.connexta.replication.adapters.ddf.csw.MetacardMarshaller;
 import com.connexta.replication.api.AdapterException;
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.Resource;
-import com.connexta.replication.data.MetadataImpl;
 import com.connexta.replication.data.ResourceImpl;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
@@ -188,7 +188,7 @@ public class DdfRestClientTest {
     map.put("type", new MetacardAttribute("type", null, "ddf.metacard"));
     map.put(Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, null, "tag"));
 
-    return new MetadataImpl(map, Map.class, id, new Date());
+    return new DdfMetadata("mcard metadata", String.class, id, new Date(), map);
   }
 
   private Resource getResource(String id, String name) {

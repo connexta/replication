@@ -16,6 +16,7 @@ package com.connexta.replication.adapters.ddf.csw;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
+import com.connexta.replication.adapters.ddf.DdfMetadata;
 import com.connexta.replication.adapters.ddf.MetacardAttribute;
 import com.connexta.replication.api.AdapterException;
 import com.connexta.replication.data.MetadataImpl;
@@ -55,7 +56,8 @@ public class MetacardMarshallerTest {
     map.put("not-marshaled", new MetacardAttribute("not-marshaled", null, "not-marshaled-value"));
 
     String metacardxml =
-        MetacardMarshaller.marshal(new MetadataImpl(map, Map.class, "123456789", new Date(1)));
+        MetacardMarshaller.marshal(
+            new DdfMetadata(minimalMetacardXml, String.class, "123456789", new Date(1), map));
     assertThat(metacardxml, is(String.format(expectedMetacardXml, "my-type")));
   }
 
@@ -80,7 +82,8 @@ public class MetacardMarshallerTest {
     map.put("not-marshaled", new MetacardAttribute("not-marshaled", null, "not-marshaled-value"));
 
     String metacardxml =
-        MetacardMarshaller.marshal(new MetadataImpl(map, Map.class, "123456789", new Date(1)));
+        MetacardMarshaller.marshal(
+            new DdfMetadata(minimalMetacardXml, String.class, "123456789", new Date(1), map));
     assertThat(metacardxml, is(String.format(expectedMetacardXml, "ddf.metacard")));
   }
 
@@ -94,8 +97,12 @@ public class MetacardMarshallerTest {
   public void marshalEmptyMap() {
     String metacardxml =
         MetacardMarshaller.marshal(
-            new MetadataImpl(
-                new HashMap<String, MetacardAttribute>(), Map.class, "123456789", new Date(1)));
+            new DdfMetadata(
+                minimalMetacardXml,
+                String.class,
+                "123456789",
+                new Date(1),
+                new HashMap<String, MetacardAttribute>()));
     assertThat(metacardxml, is(minimalMetacardXml));
   }
 }
