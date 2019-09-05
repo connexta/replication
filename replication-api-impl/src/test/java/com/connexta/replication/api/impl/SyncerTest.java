@@ -469,7 +469,7 @@ public class SyncerTest {
     assertThat(queryRequest.getModifiedAfter(), is(nullValue()));
 
     CreateStorageRequest createStorageRequest = createStorageRequestCaptor.getValue();
-    assertThat(createStorageRequest.getResources(), is(Collections.singletonList(resource)));
+    assertThat(createStorageRequest.getResource(), is(resource));
 
     verify(metadata, times(1)).addLineage(SOURCE_NAME);
     verify(metadata, times(1)).addTag(Replication.REPLICATED_TAG);
@@ -555,7 +555,7 @@ public class SyncerTest {
     assertThat(queryRequest.getModifiedAfter(), is(nullValue()));
 
     CreateStorageRequest createStorageRequest = createStorageRequestCaptor.getValue();
-    assertThat(createStorageRequest.getResources(), is(Collections.singletonList(resource)));
+    assertThat(createStorageRequest.getResource(), is(resource));
 
     verify(metadata, times(1)).addLineage(SOURCE_NAME);
     verify(metadata, times(1)).addTag(Replication.REPLICATED_TAG);
@@ -965,7 +965,7 @@ public class SyncerTest {
     assertThat(resourceRequest.getMetadata(), is(metadata));
 
     UpdateStorageRequest updateStorageRequest = updateStorageRequestCaptor.getValue();
-    assertThat(updateStorageRequest.getResources(), is(Collections.singletonList(resource)));
+    assertThat(updateStorageRequest.getResource(), is(resource));
 
     verify(metadata, times(1)).addLineage(SOURCE_NAME);
     verify(metadata, times(1)).addTag(Replication.REPLICATED_TAG);
@@ -1057,7 +1057,7 @@ public class SyncerTest {
     assertThat(resourceRequest.getMetadata(), is(metadata));
 
     UpdateStorageRequest updateStorageRequest = updateStorageRequestCaptor.getValue();
-    assertThat(updateStorageRequest.getResources(), is(Collections.singletonList(resource)));
+    assertThat(updateStorageRequest.getResource(), is(resource));
 
     verify(metadata, times(1)).addLineage(SOURCE_NAME);
     verify(metadata, times(1)).addTag(Replication.REPLICATED_TAG);

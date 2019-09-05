@@ -15,12 +15,31 @@ package com.connexta.replication.api;
 
 /** General exception for {@link NodeAdapter} errors. */
 public class AdapterException extends RuntimeException {
-
+  /**
+   * Instantiates a new exception.
+   *
+   * @param msg the message for this exception
+   */
   public AdapterException(String msg) {
     super(msg);
   }
 
-  public AdapterException(String msg, Exception cause) {
+  /**
+   * Instantiates a new exception.
+   *
+   * @param msg the message for this exception
+   * @param cause the cause for this exception
+   */
+  public AdapterException(String msg, Throwable cause) {
     super(msg, cause);
+  }
+
+  /**
+   * Instantiates a new exception.
+   *
+   * @param cause the cause for this exception
+   */
+  public AdapterException(Throwable cause) {
+    super(cause);
   }
 }

@@ -15,19 +15,18 @@ package com.connexta.replication.api.impl.data;
 
 import com.connexta.replication.api.data.Resource;
 import com.connexta.replication.api.data.UpdateStorageRequest;
-import java.util.List;
 
 /** Simple implementation of {@link UpdateStorageRequest}. */
 public class UpdateStorageRequestImpl implements UpdateStorageRequest {
 
-  private final List<Resource> updatedResources;
+  private final Resource updatedResource;
 
-  public UpdateStorageRequestImpl(List<Resource> updatedResources) {
-    this.updatedResources = updatedResources;
+  public UpdateStorageRequestImpl(Resource updatedResource) {
+    this.updatedResource = updatedResource;
   }
 
   @Override
-  public List<Resource> getResources() {
-    return updatedResources;
+  public Resource getResource() {
+    return updatedResource;
   }
 }

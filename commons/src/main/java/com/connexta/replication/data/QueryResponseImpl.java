@@ -15,18 +15,73 @@ package com.connexta.replication.data;
 
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.QueryResponse;
+import java.util.Iterator;
+import java.util.function.Function;
 
 /** Simple implementation of {@link QueryResponse}. */
 public class QueryResponseImpl implements QueryResponse {
 
   private final Iterable<Metadata> metadata;
 
-  public QueryResponseImpl(Iterable<Metadata> metadata) {
+  private final Function<Exception, RuntimeException> exceptionHandler;
+
+  /**
+   * Instantiates a new query response.
+   *
+   * @param metadata the metadata to provide as part of this response
+   * @param exceptionHandler a exception handler which will be consulted whenever an exception
+   *     occurs while iterating the metadata capable of transforming the exception if needed
+   */
+  public QueryResponseImpl(
+      Iterable<Metadata> metadata, Function<Exception, RuntimeException> exceptionHandler) {
     this.metadata = metadata;
+    this.exceptionHandler = exceptionHandler;
+  }
+
+  private Iterator<Metadata> iterator() {
+    return new Iterator<>() {
+      final Iterator<Metadata> iterator = metadata.iterator();
+
+      @Override
+      public Metadata next() {
+        if (Thread.interrupted()) {
+          throw exceptionHandler.apply(new InterruptedException());
+        }
+        try {
+          return iterator.next();
+        } catch (RuntimeException e) {
+          throw exceptionHandler.apply(e);
+        }
+      }
+
+      @Override
+      public boolean hasNext() {
+        if (Thread.interrupted()) {
+          throw exceptionHandler.apply(new InterruptedException());
+        }
+        try {
+          return iterator.hasNext();
+        } catch (RuntimeException e) {
+          throw exceptionHandler.apply(e);
+        }
+      }
+
+      @Override
+      public void remove() {
+        if (Thread.interrupted()) {
+          throw exceptionHandler.apply(new InterruptedException());
+        }
+        try {
+          iterator.remove();
+        } catch (RuntimeException e) {
+          throw exceptionHandler.apply(e);
+        }
+      }
+    };
   }
 
   @Override
   public Iterable<Metadata> getMetadata() {
-    return metadata;
+    return this::iterator;
   }
 }

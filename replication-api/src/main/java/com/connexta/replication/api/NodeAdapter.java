@@ -32,7 +32,11 @@ public interface NodeAdapter extends Closeable {
   /** @return {@code true} if available for replicating, otherwise {@code false}. */
   boolean isAvailable();
 
-  /** @return a human-readable name representing the name of this {@code NodeAdapter} */
+  /**
+   * @return a human-readable name representing the name of this {@code NodeAdapter}
+   * @throws AdapterException if there is an error communicating with the remote server
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
+   */
   String getSystemName();
 
   /**
@@ -42,6 +46,7 @@ public interface NodeAdapter extends Closeable {
    * @return a {@link QueryResponse} containing the {@link Metadata} matching the {@link
    *     QueryRequest} criteria
    * @throws AdapterException if there is an error communicating with the remote server
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
    */
   QueryResponse query(QueryRequest queryRequest);
 
@@ -50,6 +55,7 @@ public interface NodeAdapter extends Closeable {
    * @return {@code true} if the {@link Metadata} exists on the {@code NodeAdapter}, otherwise
    *     {@code false}.
    * @throws AdapterException if there is an error checking if the metadata exists
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
    */
   boolean exists(Metadata metadata);
 
@@ -58,6 +64,8 @@ public interface NodeAdapter extends Closeable {
    *
    * @param createRequest request containing {@link Metadata} to create.
    * @return {@code true} if the creation was successful, {@code false} otherwise
+   * @throws AdapterException if there is an error creating the metadata
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
    */
   boolean createRequest(CreateRequest createRequest);
 
@@ -66,6 +74,8 @@ public interface NodeAdapter extends Closeable {
    *
    * @param updateRequest request containing {@link Metadata} to update.
    * @return {@code true} if the update was successful, {@code false} otherwise
+   * @throws AdapterException if there is an error updating the metadata
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
    */
   boolean updateRequest(UpdateRequest updateRequest);
 
@@ -74,6 +84,8 @@ public interface NodeAdapter extends Closeable {
    *
    * @param deleteRequest request containing {@link Metadata} to delete.
    * @return {@code true} if the delete was successful, {@code false} otherwise
+   * @throws AdapterException if there is an error deleting the metadata
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
    */
   boolean deleteRequest(DeleteRequest deleteRequest);
 
@@ -84,6 +96,7 @@ public interface NodeAdapter extends Closeable {
    *     fetch
    * @return the {@link Resource}
    * @throws AdapterException if there was an error retrieving the {@link Resource}
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
    */
   ResourceResponse readResource(ResourceRequest resourceRequest);
 
@@ -92,6 +105,8 @@ public interface NodeAdapter extends Closeable {
    *
    * @param createStorageRequest request containing the {@link Resource} to create
    * @return {@code true} if the creation was successful, {@code false} otherwise
+   * @throws AdapterException if there was an error creating the {@link Resource}
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
    */
   boolean createResource(CreateStorageRequest createStorageRequest);
 
@@ -100,6 +115,8 @@ public interface NodeAdapter extends Closeable {
    *
    * @param updateStorageRequest request containing the {@link Resource} to update
    * @return {@code true} if the update was successful, {@code false} otherwise
+   * @throws AdapterException if there was an error updating the {@link Resource}
+   * @throws AdapterInterruptedException if the operation was interrupted and could not complete
    */
   boolean updateResource(UpdateStorageRequest updateStorageRequest);
 }

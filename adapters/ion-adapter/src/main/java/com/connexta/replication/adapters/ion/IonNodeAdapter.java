@@ -13,6 +13,8 @@
  */
 package com.connexta.replication.adapters.ion;
 
+import com.connexta.replication.api.AdapterException;
+import com.connexta.replication.api.AdapterInterruptedException;
 import com.connexta.replication.api.NodeAdapter;
 import com.connexta.replication.api.data.CreateRequest;
 import com.connexta.replication.api.data.CreateStorageRequest;
@@ -28,6 +30,8 @@ import com.connexta.replication.api.data.UpdateStorageRequest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URL;
 import java.util.ArrayList;
 import org.slf4j.Logger;
@@ -40,6 +44,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 
 public class IonNodeAdapter implements NodeAdapter {
@@ -108,39 +114,35 @@ public class IonNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean createResource(CreateStorageRequest createStorageRequest) {
-    boolean success = true;
+    Resource resource = createStorageRequest.getResource();
+    MultipartBodyBuilder builder = new MultipartBodyBuilder();
+    builder.part("file", getResourceEntity(resource));
+    builder.part("metacard", getMetadataEntity(resource.getMetadata()));
+    builder.part("correlationId", resource.getId());
+    MultiValueMap<String, HttpEntity<?>> multipartBody = builder.build();
 
-    for (Resource resource : createStorageRequest.getResources()) {
-      MultipartBodyBuilder builder = new MultipartBodyBuilder();
-      builder.part("file", getResourceEntity(resource));
-      builder.part("metacard", getMetadataEntity(resource.getMetadata()));
-      builder.part("correlationId", resource.getId());
-      MultiValueMap<String, HttpEntity<?>> multipartBody = builder.build();
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Accept-Version", "0.1.0");
+    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.set("Accept-Version", "0.1.0");
-      headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+    HttpEntity<MultiValueMap<String, Object>> requestEntity =
+        new HttpEntity(multipartBody, headers);
 
-      HttpEntity<MultiValueMap<String, Object>> requestEntity =
-          new HttpEntity(multipartBody, headers);
-
-      LOGGER.debug("Sending create request to ION at {}", ionUrl);
-      LOGGER.debug("Request body: {}", requestEntity);
-      try {
-        ResponseEntity<String> response =
-            restOps.exchange(
-                this.ionUrl.toString() + "/ingest", HttpMethod.POST, requestEntity, String.class);
-        if (!response.getStatusCode().is2xxSuccessful()) {
-          LOGGER.debug(
-              "Failed to replicate {}. Message: {}", resource.getName(), response.getBody());
-          success = false;
-        }
-      } catch (Exception e) {
-        LOGGER.debug("Error sending create request to ION.", e);
-        success = false;
+    LOGGER.debug("Sending create request to ION at {}", ionUrl);
+    LOGGER.debug("Request body: {}", requestEntity);
+    try {
+      ResponseEntity<String> response =
+          restOps.exchange(
+              this.ionUrl.toString() + "/ingest", HttpMethod.POST, requestEntity, String.class);
+      if (!response.getStatusCode().is2xxSuccessful()) {
+        LOGGER.debug("Failed to replicate {}. Message: {}", resource.getName(), response.getBody());
+        return false;
       }
+    } catch (RestClientException e) {
+      LOGGER.debug("Error sending create request to ION.", e);
+      throw wrapException("Failed to create resource on remote system", e);
     }
-    return success;
+    return true;
   }
 
   @Override
@@ -152,6 +154,33 @@ public class IonNodeAdapter implements NodeAdapter {
   @Override
   public void close() throws IOException {
     // nothing to close
+  }
+
+  private AdapterException wrapException(String msg, Exception e) {
+    Throwable t = e;
+
+    if (t instanceof UndeclaredThrowableException) {
+      t = ((UndeclaredThrowableException) t).getUndeclaredThrowable();
+    }
+    if ((t instanceof ResourceAccessException) // check nested cause to see if it was interrupted
+        && (t.getCause() instanceof InterruptedIOException)) {
+      return new AdapterInterruptedException(t, (InterruptedIOException) t.getCause());
+    } else if (t instanceof InterruptedIOException) {
+      return new AdapterInterruptedException((InterruptedIOException) t);
+    } else if (t instanceof InterruptedException) {
+      return new AdapterInterruptedException((InterruptedException) t);
+    } else if (t instanceof AdapterInterruptedException) {
+      return (AdapterInterruptedException) t;
+    } else if (t instanceof Error) {
+      throw (Error) t;
+    } else if (t instanceof AdapterException) {
+      // re-write the exception with our message while preserving its stack trace
+      final AdapterException ae = new AdapterException(msg, t.getCause());
+
+      ae.setStackTrace(t.getStackTrace());
+      throw ae;
+    }
+    return new AdapterException(msg, (Exception) t);
   }
 
   private HttpEntity getMetadataEntity(Metadata metadata) {

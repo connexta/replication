@@ -21,7 +21,7 @@ import com.connexta.replication.api.data.MetadataInfo;
  *
  * @param <T> the type of raw data
  */
-public interface DDFMetadataInfo<T> extends MetadataInfo {
+public interface DdfMetadataInfo<T> extends MetadataInfo {
   /**
    * The class format for the raw data defining the metadata.
    *

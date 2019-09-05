@@ -19,6 +19,7 @@ import com.connexta.replication.adapters.ddf.csw.CswRecordCollection;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClient;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
 import com.connexta.replication.api.AdapterException;
+import com.connexta.replication.api.AdapterInterruptedException;
 import com.connexta.replication.api.NodeAdapter;
 import com.connexta.replication.api.Replication;
 import com.connexta.replication.api.data.CreateRequest;
@@ -36,7 +37,8 @@ import com.connexta.replication.data.QueryRequestImpl;
 import com.connexta.replication.data.QueryResponseImpl;
 import com.connexta.replication.data.ResourceResponseImpl;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
@@ -78,9 +80,9 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   private final URL hostUrl;
 
-  private String cachedSystemName;
+  private volatile String cachedSystemName;
 
-  private SecureCxfClientFactory<Csw> factory;
+  private final SecureCxfClientFactory<Csw> factory;
 
   /**
    * Creates a DdfNodeAdapter.
@@ -100,15 +102,31 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean isAvailable() {
-    Csw csw = factory.getClient();
-    GetCapabilitiesType getCapabilitiesType = new GetCapabilitiesType();
-    getCapabilitiesType.setService("CSW");
     try {
-      CapabilitiesType response = csw.getCapabilities(getCapabilitiesType);
+      final Csw csw = factory.getClient();
+      final GetCapabilitiesType getCapabilitiesType = new GetCapabilitiesType();
+
+      getCapabilitiesType.setService("CSW");
+      final CapabilitiesType response = csw.getCapabilities(getCapabilitiesType);
+
       LOGGER.info(
           "Successfully contacted CSW server version {} at {}", response.getVersion(), hostUrl);
+    } catch (InterruptedException | InterruptedIOException e) {
+      Thread.currentThread().interrupt(); // propagate interruption
+      return false;
+    } catch (UndeclaredThrowableException e) {
+      final Throwable t = e.getUndeclaredThrowable();
+
+      if ((t instanceof InterruptedException) || (t instanceof InterruptedIOException)) {
+        Thread.currentThread().interrupt(); // propagate interruption
+      } else {
+        LOGGER.debug("Error contacting CSW Server at {}", hostUrl, t);
+        LOGGER.warn("Error contacting CSW Server at {}", hostUrl);
+      }
+      return false;
     } catch (Exception e) {
-      LOGGER.warn("Error contacting CSW Server at {}", hostUrl, e);
+      LOGGER.debug("Error contacting CSW Server at {}", hostUrl, e);
+      LOGGER.warn("Error contacting CSW Server at {}", hostUrl);
       return false;
     }
     return true;
@@ -154,11 +172,14 @@ public class DdfNodeAdapter implements NodeAdapter {
 
       CswRecordCollection response = csw.getRecords(getRecordsType);
       LOGGER.debug("Csw query returned {} results", response.getCswRecords().size());
-      LOGGER.trace("============================ END CSW GetRecords ============================");
 
       return response.getCswRecords();
+    } catch (RuntimeException e) { // let these bubble out and be handled by the caller
+      throw e;
     } catch (Exception e) {
-      throw new AdapterException("Error executing csw getRecords", e);
+      throw wrapException("Error executing csw getRecords", e);
+    } finally {
+      LOGGER.trace("============================ END CSW GetRecords ============================");
     }
   }
 
@@ -176,7 +197,7 @@ public class DdfNodeAdapter implements NodeAdapter {
     try {
       results = getRecords(new QueryRequestImpl(filter, 1, 1));
     } catch (Exception e) {
-      throw new AdapterException("Failed to retrieve remote system name", e);
+      throw wrapException("Failed to retrieve remote system name", e);
     }
 
     String systemName;
@@ -189,20 +210,24 @@ public class DdfNodeAdapter implements NodeAdapter {
               hostUrl));
     }
     this.cachedSystemName = systemName;
-    return this.cachedSystemName;
+    return systemName;
   }
 
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
     // Failed items and new items are queried separately due to a bug in DDF that was only fixed
     // recently
-    Iterable<Metadata> results =
-        ResultIterable.resultIterable(
-            this::getRecords,
-            createDdfFailedItemQueryRequest(queryRequest),
-            createDdfQueryRequest(queryRequest));
+    try {
+      Iterable<Metadata> results =
+          ResultIterable.resultIterable(
+              this::getRecords,
+              createDdfFailedItemQueryRequest(queryRequest),
+              createDdfQueryRequest(queryRequest));
 
-    return new QueryResponseImpl(results);
+      return new QueryResponseImpl(results, e -> wrapException("Failed to query remote system", e));
+    } catch (Exception e) {
+      throw wrapException("Failed to query remote system", e);
+    }
   }
 
   @Override
@@ -213,7 +238,7 @@ public class DdfNodeAdapter implements NodeAdapter {
                   CqlBuilder.equalTo(Constants.METACARD_ID, metadata.getId()), 1, 1))
           .isEmpty();
     } catch (Exception e) {
-      throw new AdapterException(
+      throw wrapException(
           String.format(
               "Error checking for the existence of metacard %s on %s",
               metadata.getId(), getSystemName()),
@@ -223,50 +248,74 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean createRequest(CreateRequest createRequest) {
-    List<Metadata> metadata = createRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
-    metadata.forEach(this::prepareMetadata);
-    return performRequestForEach(client::post, metadata);
+    try {
+      List<Metadata> metadata = createRequest.getMetadata();
+      DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+      metadata.forEach(this::prepareMetadata);
+      return performRequestForEach(client::post, metadata);
+    } catch (Exception e) {
+      throw wrapException("Failed to create on remote system", e);
+    }
   }
 
   @Override
   public boolean updateRequest(UpdateRequest updateRequest) {
-    List<Metadata> metadata = updateRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
-    metadata.forEach(this::prepareMetadata);
-    return performRequestForEach(client::put, metadata);
+    try {
+      List<Metadata> metadata = updateRequest.getMetadata();
+      DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+      metadata.forEach(this::prepareMetadata);
+      return performRequestForEach(client::put, metadata);
+    } catch (Exception e) {
+      throw wrapException("Failed to update remote system", e);
+    }
   }
 
   @Override
   public boolean deleteRequest(DeleteRequest deleteRequest) {
-    List<String> ids =
-        deleteRequest.getMetadata().stream().map(Metadata::getId).collect(Collectors.toList());
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
-    return performRequestForEach(client::delete, ids);
+    try {
+      List<String> ids =
+          deleteRequest.getMetadata().stream().map(Metadata::getId).collect(Collectors.toList());
+      DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+      return performRequestForEach(client::delete, ids);
+    } catch (Exception e) {
+      throw wrapException("Failed to delete on remote system", e);
+    }
   }
 
   @Override
   public ResourceResponse readResource(ResourceRequest resourceRequest) {
-    Metadata metadata = resourceRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
-    Resource resource = client.get(metadata);
-    return new ResourceResponseImpl(resource);
+    try {
+      Metadata metadata = resourceRequest.getMetadata();
+      DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+      Resource resource = client.get(metadata);
+      return new ResourceResponseImpl(resource);
+    } catch (Exception e) {
+      throw wrapException("Failed to read resource from remote system", e);
+    }
   }
 
   @Override
   public boolean createResource(CreateStorageRequest createStorageRequest) {
-    List<Resource> resources = createStorageRequest.getResources();
-    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
-    resources.forEach(e -> prepareMetadata(e.getMetadata()));
-    return performRequestForEach(client::post, resources);
+    try {
+      Resource resource = createStorageRequest.getResource();
+      DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
+      prepareMetadata(resource.getMetadata());
+      return performRequestForEach(client::post, List.of(resource));
+    } catch (Exception e) {
+      throw wrapException("Failed to create resource on remote system", e);
+    }
   }
 
   @Override
   public boolean updateResource(UpdateStorageRequest updateStorageRequest) {
-    List<Resource> resources = updateStorageRequest.getResources();
-    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
-    resources.forEach(e -> prepareMetadata(e.getMetadata()));
-    return performRequestForEach(client::put, resources);
+    try {
+      Resource resource = updateStorageRequest.getResource();
+      DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
+      prepareMetadata(resource.getMetadata());
+      return performRequestForEach(client::put, List.of(resource));
+    } catch (Exception e) {
+      throw wrapException("Failed to update resource on remote system", e);
+    }
   }
 
   private void prepareMetadata(Metadata metadata) {
@@ -291,7 +340,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     // nothing to close
   }
 
@@ -361,5 +410,29 @@ public class DdfNodeAdapter implements NodeAdapter {
     LOGGER.debug("Final cql query filter: {}", finalFilter);
     return new QueryRequestImpl(
         finalFilter, queryRequest.getStartIndex(), queryRequest.getPageSize());
+  }
+
+  private AdapterException wrapException(String msg, Exception e) {
+    Throwable t = e;
+
+    if (t instanceof UndeclaredThrowableException) {
+      t = ((UndeclaredThrowableException) t).getUndeclaredThrowable();
+    }
+    if (t instanceof InterruptedIOException) {
+      return new AdapterInterruptedException((InterruptedIOException) t);
+    } else if (t instanceof InterruptedException) {
+      return new AdapterInterruptedException((InterruptedException) t);
+    } else if (t instanceof AdapterInterruptedException) {
+      return (AdapterInterruptedException) t;
+    } else if (t instanceof Error) {
+      throw (Error) t;
+    } else if (t instanceof AdapterException) {
+      // re-write the exception with our message while preserving its stack trace
+      final AdapterException ae = new AdapterException(msg, t.getCause());
+
+      ae.setStackTrace(t.getStackTrace());
+      throw ae;
+    }
+    return new AdapterException(msg, (Exception) t);
   }
 }
