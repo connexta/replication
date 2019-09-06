@@ -24,6 +24,11 @@ jobs:
               echo "export EXCLUDED_MODULES='-pl !distributions/docker/solr,!distributions/docker/replication,!distributions/test'" >> $BASH_ENV
               source $BASH_ENV
       - checkout
+      - restore_cache: &restore_cache
+          keys:
+            - mvn-repo-v1-{{ .Branch }}-sonar
+            - mvn-repo-v1-{{ .Branch }}-owasp
+            - mvn-repo-v1-{{ .Branch }}
       - run:
           name: Building
           command: |
@@ -50,11 +55,16 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
+      - save_cache:
+          key: mvn-repo-v1-{{ .Branch }}
+          paths:
+            - ~/.m2
   owasp:
     docker: *image
     steps:
       - run: *env
       - checkout
+      - restore_cache: *restore_cache
       - run:
           name: Owasp Tests
           command: |
@@ -67,11 +77,16 @@ jobs:
             cp **/dependency-check-report.* /tmp/artifacts
       - store_artifacts:
           path: /tmp/artifacts
+      - save_cache:
+          key: mvn-repo-v1-{{ .Branch }}-owasp
+          paths:
+            - ~/.m2
   sonar:
     docker: *image
     steps:
       - run: *env
       - checkout
+      - restore_cache: *restore_cache
       - run:
           name: Sonar check
           command: |
@@ -96,6 +111,10 @@ jobs:
               -Dsonar.exclusions='**/test/**/*' \
               -Dsonar.login=$REP_SONAR_TOKEN
             fi
+      - save_cache:
+          key: mvn-repo-v1-{{ .Branch }}-sonar
+          paths:
+            - ~/.m2
   release_tag:
     docker: *image
     steps:
@@ -117,6 +136,7 @@ jobs:
     steps:
       - run: *env
       - checkout
+      - restore_cache: *restore_cache
       - run:
           name: Deploy
           command: |
