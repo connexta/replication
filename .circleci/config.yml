@@ -21,7 +21,7 @@ jobs:
               echo "export GITHUB_USERNAME=connexta" >> $BASH_ENV
               echo "export GITHUB_REPONAME=replication" >> $BASH_ENV
               echo "export GITHUB_KEY=$GITHUB_REPONAME-github-key" >> $BASH_ENV
-              echo "export EXCLUDED_MODULES='-pl !distributions/docker/solr,!distributions/docker/replication,!distributions/test'" >> $BASH_ENV
+              echo "export EXCLUDED_MODULES='-pl !distributions/test'" >> $BASH_ENV
               source $BASH_ENV
       - checkout
       - restore_cache: &restore_cache
@@ -29,6 +29,8 @@ jobs:
             - mvn-repo-v1-{{ .Branch }}-sonar
             - mvn-repo-v1-{{ .Branch }}-owasp
             - mvn-repo-v1-{{ .Branch }}
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Building
           command: |
@@ -42,7 +44,7 @@ jobs:
                 mvn clean install javadoc:aggregate -B $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
               fi
             else
-              mvn install -B -DskipTests $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
+              mvn install -B -DskipTests $DISABLE_DOWNLOAD_PROGRESS_OPTS
               mvn clean install javadoc:aggregate -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
             fi
       - run:
@@ -65,14 +67,16 @@ jobs:
       - run: *env
       - checkout
       - restore_cache: *restore_cache
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Owasp Tests
           command: |
             if [ $CIRCLE_PR_NUMBER ]
             then
-              mvn install -B -Powasp -DskipTests -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
+              mvn install -B -Powasp -DskipTests -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS
             else
-              mvn install -B -Powasp -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
+              mvn install -B -Powasp -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS
             fi
             cp **/dependency-check-report.* /tmp/artifacts
       - store_artifacts:
@@ -87,6 +91,8 @@ jobs:
       - run: *env
       - checkout
       - restore_cache: *restore_cache
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Sonar check
           command: |
