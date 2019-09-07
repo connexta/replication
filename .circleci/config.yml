@@ -52,6 +52,13 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
+      - run: &make_workspace
+          name: Create Workspace Dir
+          command: mkdir -p /tmp/workspace
+      - persist_to_workspace: &persist_workspace
+          root: ~/
+          paths:
+            - project
       - save_cache: &save_cache
           key: mvn-repo-v1-{{ .Branch }}
           paths:
@@ -74,6 +81,8 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
+      - run: *make_workspace
+      - persist_to_workspace: *persist_workspace
       - save_cache: *save_cache
   owasp:
     docker: *image
@@ -81,10 +90,12 @@ jobs:
       - run: *env
       - checkout
       - restore_cache: *restore_cache
+      - attach_workspace: &attach_workspace
+          at: ~/
       - run:
           name: Owasp Tests
           command: |
-            mvn install -B -Powasp -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
+            mvn verify -B -Powasp -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
             cp **/dependency-check-report.* /tmp/artifacts
       - store_artifacts:
           path: /tmp/artifacts
@@ -98,10 +109,11 @@ jobs:
       - run: *env
       - checkout
       - restore_cache: *restore_cache
+      - attach_workspace: *attach_workspace
       - run:
           name: Owasp Tests
           command: |
-            mvn install -B -Powasp -DskipTests -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
+            mvn verify -B -Powasp -DskipTests -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
             cp **/dependency-check-report.* /tmp/artifacts
       - store_artifacts:
           path: /tmp/artifacts
@@ -112,6 +124,7 @@ jobs:
       - run: *env
       - checkout
       - restore_cache: *restore_cache
+      - attach_workspace: *attach_workspace
       - run:
           name: Sonar check
           command: |
@@ -119,7 +132,7 @@ jobs:
             then
               git checkout $RELEASE_TAG
             fi
-            mvn -q -B install sonar:sonar \
+            mvn -q -B sonar:sonar \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$REP_SONAR_TOKEN  \
             -Dsonar.organization=cx \
@@ -136,10 +149,11 @@ jobs:
       - run: *env
       - checkout
       - restore_cache: *restore_cache
+      - attach_workspace: *attach_workspace
       - run:
           name: Sonar check
           command: |
-            mvn clean install sonar:sonar $EXCLUDED_MODULES \
+            mvn sonar:sonar $EXCLUDED_MODULES \
             -Dsonar.projectKey=$CIRCLE_PROJECT_REPONAME \
             -Dsonar.organization=cx \
             -Dsonar.host.url=https://sonarcloud.io \
