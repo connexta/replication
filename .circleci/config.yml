@@ -1,138 +1,257 @@
+#Base CircleCI template for Maven projects.
+#Defined below are steps for building, unit tests, OWasp, Sonar, and release tag
+
 version: 2.1
-orbs:
-  anchore: anchore/anchore-engine@1.4.0
 jobs:
-  Build:
-    machine: &virtual_machine
-      image: circleci/classic:latest
-      docker_layer_caching: true
+  build:
+    docker: &image
+      - image: circleci/openjdk:11-jdk
     steps:
-      - run: &install_java
-          name: Install java 11
+      - run: &env
+          name: Setting environment
           command: |
-            sudo add-apt-repository ppa:openjdk-r/ppa
-            sudo apt-get -qq update
-            sudo apt-get -qq install -y openjdk-11-jdk
-      - run: &configure_java
-          name: Set default java 11
-          command:
-            sudo update-java-alternatives --set java-1.11.0-openjdk-amd64
+              echo "export RELEASE=0" >> $BASH_ENV
+              echo "export RELEASE_VERSION=NA" >> $BASH_ENV
+              echo "export RELEASE_TAG=NA" >> $BASH_ENV
+              echo "export NEXT_VERSION=NA" >> $BASH_ENV
+              echo "export ION_GPG_KEYRING=$ION_RELEASE_KEY" >> $BASH_ENV
+              echo "export DISABLE_DOWNLOAD_PROGRESS_OPTS=-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn" >> $BASH_ENV
+              echo "export LINUX_MVN_RANDOM=-Djava.security.egd=file:/dev/./urandom" >> $BASH_ENV
+              echo "export COVERAGE_EXCLUSIONS=**/test/**/*,**/itests/**/*,**/*Test*,**/sdk/**/*,**/*.js,**/node_modules/**/*,**/jaxb/**/*,**/wsdl/**/*,**/nces/sws/**/*,**/*.adoc,**/*.txt,**/*.xml" >> $BASH_ENV
+              echo "export GITHUB_USERNAME=connexta" >> $BASH_ENV
+              echo "export GITHUB_REPONAME=replication" >> $BASH_ENV
+              echo "export GITHUB_KEY=$GITHUB_REPONAME-github-key" >> $BASH_ENV
+              echo "export EXCLUDED_MODULES='-pl !distributions/docker/solr,!distributions/docker/replication,!distributions/test'" >> $BASH_ENV
+              echo "export EXCLUDED_ITEST_MODULES='-pl !distributions/test'" >> $BASH_ENV
+              source $BASH_ENV
       - checkout
       - restore_cache: &restore_cache
           keys:
-            - mvn-repo-build-{{ .Branch }}-
-            - mvn-repo-build-
+            - mvn-repo-v1-{{ .Branch }}-sonar
+            - mvn-repo-v1-{{ .Branch }}-owasp
+            - mvn-repo-v1-{{ .Branch }}
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Building
           command: |
-            mvn -B clean install -DskipTests=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+            if [ $RELEASE = true ]
+            then
+              mvn -B -Dtag=$RELEASE_TAG -DreleaseVersion=$RELEASE_VERSION -DdevelopmentVersion=$NEXT_VERSION -Dgpg.secretKeyring=$ION_GPG_KEYRING -Dgpg.publicKeyring=$ION_GPG_KEYRING release:prepare
+              echo "export RELEASE_CONFIG = `git rev-parse HEAD`" >> $BASH_ENV
+            else
+              mvn clean install javadoc:aggregate -B $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_ITEST_MODULES
+            fi
+      - run: &save_test_results
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+      - run: &make_workspace
+          name: Create Workspace Dir
+          command: mkdir -p /tmp/workspace
+      - persist_to_workspace: &persist_workspace
+          root: ~/
+          paths:
+            - project
       - save_cache: &save_cache
+          key: mvn-repo-v1-{{ .Branch }}
           paths:
             - ~/.m2
-          key: mvn-repo-build-{{ .Branch }}
-      - run:
-          name: Make workspace directory
-          command: mkdir -p /tmp/workspace
-      - run: &tar_project
-          name: Archive Project Artifacts
-          command: tar -c -f /tmp/workspace/project.tar -C ~/ project
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - project.tar
-  Test:
-    machine: *virtual_machine
+  incremental_build:
+    docker: *image
     steps:
-      - run: *install_java
-      - run: *configure_java
+      - run: *env
+      - checkout
+      - restore_cache: *restore_cache
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Building
+          command: |
+              mvn install -B -DskipTests $DISABLE_DOWNLOAD_PROGRESS_OPTS
+              mvn clean install javadoc:aggregate -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_ITEST_MODULES
+      - run: *save_test_results
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+      - run: *make_workspace
+      - persist_to_workspace: *persist_workspace
+      - save_cache: *save_cache
+  owasp:
+    docker: *image
+    steps:
+      - run: *env
       - checkout
       - restore_cache: *restore_cache
       - attach_workspace: &attach_workspace
-          at: /tmp/workspace
-      - run: &extract_project_archive
-          name: Extract Project Archive
-          command: tar -x -k -f /tmp/workspace/project.tar
+          at: ~/
       - run:
-          name: Run Tests
-          command: mvn -B verify
-      - save_cache:
+          name: Owasp Tests
+          command: |
+            mvn verify -B -Powasp -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
+            cp **/dependency-check-report.* /tmp/artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
+      - save_cache: &save_owasp_cache
+          key: mvn-repo-v1-{{ .Branch }}-owasp
           paths:
             - ~/.m2
-          key: mvn-repo-test-{{ .Branch }}
-      - run: *tar_project
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - project.tar
-  Sonar:
-    docker:
-      - image: circleci/openjdk:11-jdk
+  owasp_pr:
+    docker: *image
     steps:
+      - run: *env
       - checkout
       - restore_cache: *restore_cache
       - attach_workspace: *attach_workspace
-      - run: *extract_project_archive
       - run:
-          name: Sonar Scan
-          command: >
-            mvn sonar:sonar
-            -Dsonar.projectKey=$CIRCLE_PROJECT_REPONAME
-            -Dsonar.organization=cx
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.pullrequest.key=$CIRCLE_PR_NUMBER
-            -Dsonar.pullrequest.branch=$CIRCLE_BRANCH
-            -Dsonar.pullrequest.base=master
-            -Dsonar.pullrequest.provider=github
-            -Dsonar.exclusions='**/test/**/*'
-            -Dsonar.login=$REP_SONAR_TOKEN
-      - run:
-          name: Sonar Results
+          name: Owasp Tests
           command: |
-            printf "For the results of the scan, visit https://sonarcloud.io/dashboard?id=$CIRCLE_PROJECT_REPONAME"
-            if [ ! -z ${CIRCLE_PULL_REQUEST} ]; then
-              printf "&pullRequest=$CIRCLE_PR_NUMBER"
-            fi
-            echo
-  OWASP:
-    docker:
-      - image: circleci/openjdk:11-jdk
-    steps:
-      - checkout
-      - restore_cache: *restore_cache
-      - attach_workspace: *attach_workspace
-      - run: *extract_project_archive
-      - run:
-          name: OWASP
-          command: |
-            mvn verify -B -Powasp -DskipTests=true -pl \!distributions/docker/solr,\!distributions/docker/replication
-  Scan Docker Image:
-    executor: anchore/anchore_engine
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: *extract_project_archive
-      - anchore/analyze_local_image:
-          dockerfile_path: ./Dockerfile
-          image_name: 'r.ion.phx.connexta.com/replication'
-          policy_bundle_file_path: .circleci/.anchore/policy_bundle.json
-          policy_failure: true
-          timeout: '500'
-      - anchore/parse_reports
+            mvn verify -B -Powasp -DskipTests -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS $EXCLUDED_MODULES
+            cp **/dependency-check-report.* /tmp/artifacts
       - store_artifacts:
-          path: anchore-reports
+          path: /tmp/artifacts
+      - save_cache: *save_owasp_cache
+  sonar:
+    docker: *image
+    steps:
+      - run: *env
+      - checkout
+      - restore_cache: *restore_cache
+      - attach_workspace: *attach_workspace
+      - run:
+          name: Sonar check
+          command: |
+            if [ $RELEASE = true ]
+            then
+              git checkout $RELEASE_TAG
+            fi
+            mvn -q -B sonar:sonar \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=$REP_SONAR_TOKEN  \
+            -Dsonar.organization=cx \
+            -Dsonar.projectKey=$GITHUB_REPONAME \
+            -Dsonar.exclusions=$COVERAGE_EXCLUSIONS \
+            $DISABLE_DOWNLOAD_PROGRESS_OPTS
+      - save_cache: &save_sonar_cache
+          key: mvn-repo-v1-{{ .Branch }}-sonar
+          paths:
+            - ~/.m2
+  sonar_pr:
+    docker: *image
+    steps:
+      - run: *env
+      - checkout
+      - restore_cache: *restore_cache
+      - attach_workspace: *attach_workspace
+      - run:
+          name: Sonar check
+          command: |
+            mvn sonar:sonar $EXCLUDED_MODULES \
+            -Dsonar.projectKey=$CIRCLE_PROJECT_REPONAME \
+            -Dsonar.organization=cx \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.pullrequest.key=$CIRCLE_PR_NUMBER \
+            -Dsonar.pullrequest.branch=$CIRCLE_BRANCH \
+            -Dsonar.pullrequest.base=master \
+            -Dsonar.pullrequest.provider=github \
+            -Dsonar.pullrequest.github.repository=connexta/$GITHUB_REPONAME \
+            -Dsonar.pullrequest.github.endpoint=https://api.github.com \
+            -Dsonar.exclusions='**/test/**/*' \
+            -Dsonar.login=$REP_SONAR_TOKEN
+      - save_cache: *save_sonar_cache
+  release_tag:
+    docker: *image
+    steps:
+      - run: *env
+      - checkout
+      - run:
+          name: Release Tag
+          command: |
+            if [ $RELEASE = true ]
+            then
+              git checkout $RELEASE_COMMIT
+              git remote add ssh-origin git@github.com:connexta/$CIRCLE_PROJECT_REPONAME.git
+              echo ssh -i $GITHUB_KEY -l git -o StrictHostKeyChecking=no \\"\\$@\\" > run_ssh.sh
+              chmod +x run_ssh.sh
+              git push ssh-origin HEAD:$CIRCLE_BRANCH && git push ssh-origin $RELEASE_TAG
+            fi
+  deploy:
+    docker: *image
+    steps:
+      - run: *env
+      - checkout
+      - restore_cache: *restore_cache
+      - run:
+          name: Deploy
+          command: |
+            if [ $RELEASE = true ]
+            then
+              git checkout $RELEASE_TAG
+            fi
+            mvn javadoc:aggregate -B -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS
+            if [ $RELEASE = true]
+            then
+              mvn deploy -B -DskipTests -DretryFailedDeploymentCount=10 -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS -Dgpg.secretKeyring=$ION_GPG_KEYRING -Dgpg.publicKeyring=$ION_GPG_KEYRING -Dgpg.passphraseServerId=\"ion-signing\"
+            else
+              mvn deploy -B -DskipTests -DretryFailedDeploymentCount=10 -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS
+            fi
 workflows:
   version: 2.1
-  default:
+  master:
     jobs:
-      - Build
-      - Test:
+      - build:
+          filters:
+            branches:
+              only: master
+      - owasp:
           requires:
-            - Build
-      - OWASP:
+            - build
+          filters:
+            branches:
+              only: master
+      - sonar:
           requires:
-            - Test
-      - Sonar:
+            - owasp
+          filters:
+            branches:
+              only: master
+      - release_tag:
           requires:
-            - Test
+            - sonar
+          filters:
+            branches:
+              only: master
+      - deploy:
+          requires:
+            - release_tag
+          filters:
+            branches:
+              only: master
+  pull_request:
+    jobs:
+      - incremental_build:
+          filters:
+            branches:
+              ignore:
+                - master
+      - owasp_pr:
+          requires:
+            - incremental_build
+          filters:
+            branches:
+              ignore:
+                - master
+      - sonar_pr:
+          requires:
+            - owasp_pr
+          filters:
+            branches:
+              ignore:
+                - master
