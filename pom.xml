@@ -48,11 +48,11 @@
     <distributionManagement>
         <snapshotRepository>
             <id>ion-snapshots</id>
-            <url>http://nexus.phx.connexta.com:8081/nexus/content/repositories/ion-snapshots/</url>
+            <url>https://artifacts.codice.org/content/repositories/ion-snapshots/</url>
         </snapshotRepository>
         <repository>
             <id>ion-releases</id>
-            <url>http://nexus.phx.connexta.com:8081/nexus/content/repositories/ion-releases/</url>
+            <url>https://artifacts.codice.org/content/repositories/ion-releases/</url>
         </repository>
     </distributionManagement>
 
