@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.iterableWithSize;
 import com.connexta.replication.api.impl.persistence.pojo.FilterIndexPojo;
 import com.connexta.replication.solr.EmbeddedSolrConfig;
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.junit.After;
@@ -243,6 +244,14 @@ public class FilterIndexRepositoryIntegrationTest {
 
     FilterIndexPojo updated = repo.findById(ID1).get();
     assertThat(updated.getModifiedSince(), is(updatedModifiedSince));
+    assertThat(repo.count(), is(1L));
+  }
+
+  @Test
+  public void testCanSaveMinDate() {
+    final FilterIndexPojo pojo =
+        new FilterIndexPojo().setId(ID1).setModifiedSince(new Date(Long.MIN_VALUE).toInstant());
+    repo.save(pojo);
     assertThat(repo.count(), is(1L));
   }
 }

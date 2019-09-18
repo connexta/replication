@@ -26,7 +26,6 @@ import com.connexta.replication.api.AdapterException;
 import com.connexta.replication.api.NodeAdapter;
 import com.connexta.replication.api.NodeAdapterFactory;
 import com.connexta.replication.api.data.Filter;
-import com.connexta.replication.api.data.FilterIndex;
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.MetadataInfo;
 import com.connexta.replication.api.data.OperationType;
@@ -56,7 +55,6 @@ import com.connexta.replication.solr.EmbeddedSolrConfig;
 import com.github.npathai.hamcrestopt.OptionalMatchers;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.net.URL;
-import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -110,6 +108,17 @@ public class QueryServiceComponentTest {
   private final NodeAdapter adapter = mock(NodeAdapter.class);
   private QueryManager queryManager;
 
+  private void startQueryManager(long period) {
+    queryManager =
+        new QueryManager(
+            Stream.empty(),
+            new QueryServiceTools(
+                nodeAdapters, siteManager, filterManager, indexManager, broker, period),
+            period,
+            "localSite");
+    queryManager.init();
+  }
+
   @Before
   public void setup() {
     when(adapterFactory.create(any(URL.class))).thenReturn(adapter);
@@ -152,8 +161,13 @@ public class QueryServiceComponentTest {
             generateMetadataWithResource(112),
             generateMetadataWithResource(113, new Date(1)));
     when(adapter.query(Mockito.argThat(isQueryRequestWithFilter(filter.getFilter()))))
-        .thenReturn(new QueryResponseImpl(metadataList, this::collectError));
-
+        .thenReturn(
+            new QueryResponseImpl(metadataList, this::collectError),
+            new QueryResponseImpl(
+                List.of(),
+                RuntimeException
+                    ::new)); // we don't care about polls after the first one so we pass a response
+    // without the error collector
     startQueryManager(THIRTY_MINUTES);
 
     final MemorySiteQueue queue = (MemorySiteQueue) broker.getQueue(site.getId());
@@ -185,8 +199,8 @@ public class QueryServiceComponentTest {
     when(adapter.query(Mockito.argThat(isQueryRequestWithFilter(filter.getFilter()))))
         .thenReturn(
             new QueryResponseImpl(metadataList, this::collectError),
-            new QueryResponseImpl(List.of(secondPollMetadata), this::collectError));
-
+            new QueryResponseImpl(List.of(secondPollMetadata), this::collectError),
+            new QueryResponseImpl(List.of(), RuntimeException::new));
     startQueryManager(THIRTY_MINUTES);
 
     final MemorySiteQueue queue = (MemorySiteQueue) broker.getQueue(site.getId());
@@ -248,7 +262,9 @@ public class QueryServiceComponentTest {
     for (int i = 0; i < filterList.size(); i++) {
       filterManager.save(filterList.get(i));
       when(adapter.query(Mockito.argThat(isQueryRequestWithFilter(filterList.get(i).getFilter()))))
-          .thenReturn(new QueryResponseImpl(List.of(metadataList.get(i)), this::collectError));
+          .thenReturn(
+              new QueryResponseImpl(List.of(metadataList.get(i)), this::collectError),
+              new QueryResponseImpl(List.of(), RuntimeException::new));
     }
 
     startQueryManager(THIRTY_MINUTES);
@@ -295,7 +311,9 @@ public class QueryServiceComponentTest {
       siteManager.save(siteList.get(i));
       filterManager.save(filterList.get(i));
       when(adapter.query(Mockito.argThat(isQueryRequestWithFilter(filterList.get(i).getFilter()))))
-          .thenReturn(new QueryResponseImpl(List.of(metadataList.get(i)), this::collectError));
+          .thenReturn(
+              new QueryResponseImpl(List.of(metadataList.get(i)), this::collectError),
+              new QueryResponseImpl(List.of(), RuntimeException::new));
     }
 
     startQueryManager(THIRTY_MINUTES);
@@ -319,29 +337,20 @@ public class QueryServiceComponentTest {
 
   private void assertIndexSaved(Filter filter, Date lastModified) {
     // Awaitility has a default polling period of 100ms and timeout of 10s
-    Awaitility.await().until(() -> indexManager.getOrCreate(filter).getModifiedSince().isPresent());
-    assertThat(
-        indexManager.getOrCreate(filter).getModifiedSince().get(),
-        Matchers.equalTo(lastModified.toInstant()));
+    Awaitility.await()
+        .catchUncaughtExceptions()
+        .until(
+            () ->
+                indexManager
+                    .getOrCreate(filter)
+                    .getModifiedSince()
+                    .get()
+                    .equals(lastModified.toInstant()));
   }
 
   private RuntimeException collectError(Throwable e) {
     collector.addError(new AssertionError(e));
     return new RuntimeException(e);
-  }
-
-  private void startQueryManager(long period) {
-    queryManager =
-        new QueryManager(
-            Stream.empty(),
-            new QueryServiceTools(
-                nodeAdapters, siteManager, filterManager, indexManager, broker, period),
-            period);
-    queryManager.init();
-  }
-
-  private ArgumentMatcher<FilterIndex> isIndexWithModified(Instant modified) {
-    return filterIndex -> filterIndex.getModifiedSince().get().equals(modified);
   }
 
   private ArgumentMatcher<QueryRequest> isQueryRequestWithFilter(String filter) {
@@ -376,7 +385,8 @@ public class QueryServiceComponentTest {
     };
   }
 
-  private void assertTask(Task task, Metadata metacard, byte priority, OperationType operation) {
+  private void assertTask(Task task, Metadata metacard, byte priority, OperationType operation)
+      throws Exception {
     tasks.add(task);
     assertThat(task.getId(), Matchers.equalTo(metacard.getId()));
     assertThat(task.getPriority(), Matchers.equalTo(priority));

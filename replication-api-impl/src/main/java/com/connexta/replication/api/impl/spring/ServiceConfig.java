@@ -27,14 +27,19 @@ import com.connexta.replication.api.impl.persistence.spring.FilterIndexRepositor
 import com.connexta.replication.api.impl.persistence.spring.FilterRepository;
 import com.connexta.replication.api.impl.persistence.spring.ItemRepository;
 import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
+import com.connexta.replication.api.impl.queue.memory.MemoryQueueBroker;
+import com.connexta.replication.api.impl.worker.WorkerManager;
 import com.connexta.replication.api.persistence.FilterIndexManager;
 import com.connexta.replication.api.persistence.FilterManager;
 import com.connexta.replication.api.persistence.ReplicationItemManager;
 import com.connexta.replication.api.persistence.SiteManager;
+import com.connexta.replication.api.queue.QueueBroker;
 import com.connexta.replication.spring.ReplicationProperties;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.solr.core.SolrTemplate;
 
 /** Spring auto configuration class for replication implementations. */
@@ -72,6 +77,7 @@ public class ServiceConfig {
     return new FilterIndexManagerImpl(filterIndexRepository);
   }
 
+  @Profile("Classic")
   @Bean
   public Syncer syncer(
       ReplicationItemManager replicationItemManager, FilterIndexManager filterIndexManager) {
@@ -85,6 +91,26 @@ public class ServiceConfig {
     return nodeAdapters;
   }
 
+  @Profile("Ion")
+  @Bean
+  public QueueBroker queueBroker(MeterRegistry meterRegistry) {
+    return new MemoryQueueBroker(2000, meterRegistry);
+  }
+
+  @Profile("Ion")
+  @Bean(destroyMethod = "destroy")
+  public WorkerManager workerManager(
+      QueueBroker queueBroker,
+      SiteManager siteManager,
+      NodeAdapters nodeAdapters,
+      ReplicationProperties properties) {
+    WorkerManager workerManager =
+        new WorkerManager(queueBroker, siteManager, nodeAdapters, properties);
+    workerManager.init();
+    return workerManager;
+  }
+
+  @Profile("Classic")
   @Bean(destroyMethod = "cleanUp")
   public Replicator replicator(
       NodeAdapters nodeAdapters,
@@ -97,6 +123,7 @@ public class ServiceConfig {
     return replicator;
   }
 
+  @Profile("Classic")
   @Bean(destroyMethod = "destroy")
   public ReplicatorRunner replicatorRunner(
       Replicator replicator,

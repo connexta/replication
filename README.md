@@ -43,6 +43,7 @@ spring:
   data:
     solr:
       host: http://replication-solr:8983/solr
+  profiles.active: Classic
 replication:
   period: 300
   connectionTimeout: 30
@@ -68,6 +69,12 @@ management:
       prometheus:
         enabled: true
 ```
+
+###### Profiles
+
+Replication can be run with one of two profiles. You can specify which profile to use in the 'spring.profiles.active'
+property as demonstrated in the example above. "Classic" will use the classic monolithic implementation.
+"Ion" will use the new scalable, cloud oriented implementation.
 
 ###### Metrics 
 

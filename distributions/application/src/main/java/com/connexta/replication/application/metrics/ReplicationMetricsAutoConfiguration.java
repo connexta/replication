@@ -21,11 +21,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /** Enable auto configuration for Replication related metrics. */
 @Configuration
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnClass(MeterRegistry.class)
+@Profile("Classic")
 public class ReplicationMetricsAutoConfiguration {
 
   @Bean

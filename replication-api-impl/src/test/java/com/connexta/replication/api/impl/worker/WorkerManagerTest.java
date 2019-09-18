@@ -29,10 +29,9 @@ import com.connexta.replication.spring.ReplicationProperties;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Stream;
-import org.junit.Rule;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 
 class WorkerManagerTest {
 
@@ -52,8 +51,6 @@ class WorkerManagerTest {
   private static final int LOCAL_PARALLELISM = 1;
   private Site localSite;
 
-  @Rule ExpectedException exception = ExpectedException.none();
-
   private SiteManager siteManager;
 
   private WorkerManager workerManager;
@@ -68,6 +65,7 @@ class WorkerManagerTest {
     site2 = mockSite(SITE2_ID, SITE2_PARALLELISM, SiteType.DDF, SiteKind.TACTICAL);
     site3 = mockSite(SITE3_ID, SITE3_PARALLELISM, SiteType.DDF, SiteKind.TACTICAL);
     localSite = mockSite(LOCAL_SITE, LOCAL_PARALLELISM, SiteType.DDF, SiteKind.TACTICAL);
+    when(localSite.getName()).thenReturn(LOCAL_SITE);
 
     siteManager = mock(SiteManager.class);
     when(siteManager.get(LOCAL_SITE)).thenReturn(localSite);
@@ -251,15 +249,13 @@ class WorkerManagerTest {
 
   @Test
   void testNoLocalSiteConfigured() {
-    // setup
-    when(properties.getLocalSite()).thenReturn("");
+    // given
     when(siteManager.get(LOCAL_SITE)).thenThrow(NotFoundException.class);
 
-    // when
-    new WorkerManager(siteManager, properties, threadPoolFactory);
-
-    // then
-    exception.expect(NotFoundException.class);
+    // expect
+    Assertions.assertThrows(
+        NotFoundException.class,
+        () -> new WorkerManager(siteManager, properties, threadPoolFactory));
   }
 
   private Site mockSite(

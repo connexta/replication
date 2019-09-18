@@ -76,6 +76,8 @@ public class QueryServiceTest {
 
   private static final long PERIOD = 60L;
 
+  private static final Date MIN_DATE = new Date(Long.MIN_VALUE);
+
   public static final String METADATA_ID = "metadataId";
 
   public static final String METADATA_RESOURCE_URI = "http://test:123";
@@ -374,7 +376,7 @@ public class QueryServiceTest {
     queryService.query();
 
     verify(siteQueue, never()).put(any(TaskInfoImpl.class));
-    verify(filterIndex).setModifiedSince(Instant.MIN);
+    verify(filterIndex).setModifiedSince(MIN_DATE.toInstant());
     verify(queryServiceTools).saveFilterIndex(filterIndex);
   }
 
@@ -395,7 +397,7 @@ public class QueryServiceTest {
     queryService.query();
 
     verify(siteQueue, never()).put(any(TaskInfoImpl.class));
-    verify(filterIndex).setModifiedSince(Instant.MIN);
+    verify(filterIndex).setModifiedSince(MIN_DATE.toInstant());
     verify(queryServiceTools).saveFilterIndex(filterIndex);
     Assert.assertTrue(Thread.currentThread().isInterrupted());
   }
@@ -424,7 +426,7 @@ public class QueryServiceTest {
     queryService.query();
 
     verify(siteQueue, never()).put(any(TaskInfoImpl.class));
-    verify(filterIndex).setModifiedSince(Instant.MIN);
+    verify(filterIndex).setModifiedSince(MIN_DATE.toInstant());
     verify(queryServiceTools).saveFilterIndex(filterIndex);
     Assert.assertTrue(Thread.currentThread().isInterrupted());
   }
@@ -463,7 +465,7 @@ public class QueryServiceTest {
     verify(adapter).query(requestArgumentCaptor.capture());
     assertThat(requestArgumentCaptor.getValue().getModifiedAfter(), is(nullValue()));
     verify(siteQueue).put(any(TaskInfoImpl.class));
-    verify(filterIndex).setModifiedSince(Instant.MIN);
+    verify(filterIndex).setModifiedSince(MIN_DATE.toInstant());
     verify(queryServiceTools).saveFilterIndex(filterIndex);
   }
 
@@ -501,7 +503,7 @@ public class QueryServiceTest {
     verify(adapter).query(requestArgumentCaptor.capture());
     assertThat(requestArgumentCaptor.getValue().getModifiedAfter(), is(nullValue()));
     verify(siteQueue).put(any(TaskInfoImpl.class));
-    verify(filterIndex).setModifiedSince(Instant.MIN);
+    verify(filterIndex).setModifiedSince(MIN_DATE.toInstant());
     verify(queryServiceTools).saveFilterIndex(filterIndex);
   }
 

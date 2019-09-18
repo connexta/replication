@@ -16,6 +16,7 @@ package com.connexta.replication.adapters.ddf;
 import com.connexta.replication.adapters.ddf.csw.Constants;
 import com.connexta.replication.adapters.ddf.csw.Csw;
 import com.connexta.replication.adapters.ddf.csw.CswRecordCollection;
+import com.connexta.replication.adapters.ddf.csw.MetacardMarshaller;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClient;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
 import com.connexta.replication.api.AdapterException;
@@ -35,6 +36,7 @@ import com.connexta.replication.api.data.UpdateRequest;
 import com.connexta.replication.api.data.UpdateStorageRequest;
 import com.connexta.replication.data.QueryRequestImpl;
 import com.connexta.replication.data.QueryResponseImpl;
+import com.connexta.replication.data.ResourceImpl;
 import com.connexta.replication.data.ResourceResponseImpl;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.InterruptedIOException;
@@ -253,7 +255,7 @@ public class DdfNodeAdapter implements NodeAdapter {
     try {
       List<Metadata> metadata = createRequest.getMetadata();
       DdfRestClient client = ddfRestClientFactory.create(hostUrl);
-      metadata.forEach(this::prepareMetadata);
+      metadata = metadata.stream().map(this::prepareMetadata).collect(Collectors.toList());
       return performRequestForEach(client::post, metadata);
     } catch (Exception e) {
       throw wrapException("Failed to create on remote system", e);
@@ -265,7 +267,7 @@ public class DdfNodeAdapter implements NodeAdapter {
     try {
       List<Metadata> metadata = updateRequest.getMetadata();
       DdfRestClient client = ddfRestClientFactory.create(hostUrl);
-      metadata.forEach(this::prepareMetadata);
+      metadata = metadata.stream().map(this::prepareMetadata).collect(Collectors.toList());
       return performRequestForEach(client::put, metadata);
     } catch (Exception e) {
       throw wrapException("Failed to update remote system", e);
@@ -301,7 +303,7 @@ public class DdfNodeAdapter implements NodeAdapter {
     try {
       Resource resource = createStorageRequest.getResource();
       DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
-      prepareMetadata(resource.getMetadata());
+      resource = cloneResourceWithPreparedMetadata(resource);
       return performRequestForEach(client::post, List.of(resource));
     } catch (Exception e) {
       throw wrapException("Failed to create resource on remote system", e);
@@ -313,20 +315,41 @@ public class DdfNodeAdapter implements NodeAdapter {
     try {
       Resource resource = updateStorageRequest.getResource();
       DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
-      prepareMetadata(resource.getMetadata());
+      resource = cloneResourceWithPreparedMetadata(resource);
       return performRequestForEach(client::put, List.of(resource));
     } catch (Exception e) {
       throw wrapException("Failed to update resource on remote system", e);
     }
   }
 
-  private void prepareMetadata(Metadata metadata) {
+  private Resource cloneResourceWithPreparedMetadata(Resource resource) {
+    return new ResourceImpl(
+        resource.getId(),
+        resource.getName(),
+        resource.getResourceUri(),
+        resource.getQualifier(),
+        resource.getInputStream(),
+        resource.getMimeType(),
+        resource.getSize(),
+        prepareMetadata(resource.getMetadata()));
+  }
 
-    if (!(metadata instanceof DdfMetadata)) {
+  /**
+   * Unmarshals the metadata containing metacard xml into a {@link DdfMetadata} which contains a map
+   * which we can add tags and the origins attribute to.
+   *
+   * @param metadata The metadata to modify
+   * @return A DdfMetadata with the metacard tags and origins
+   */
+  private DdfMetadata prepareMetadata(Metadata metadata) {
+    if (metadata.getType() != String.class) {
       throw new AdapterException(
-          "DDF adapter can't process raw metadata of type " + metadata.getClass());
+          "DDF adapter can't process raw metadata of type " + metadata.getType());
     }
-    DdfMetadata ddfMetadata = (DdfMetadata) metadata;
+
+    DdfMetadata ddfMetadata =
+        MetacardMarshaller.unmarshal(
+            (String) metadata.getRawMetadata(), MetacardMarshaller.metacardNamespaceMap());
     Map metadataMap = ddfMetadata.getAttributes();
     metadataMap.put(
         Constants.METACARD_TAGS,
@@ -339,6 +362,7 @@ public class DdfNodeAdapter implements NodeAdapter {
         Replication.ORIGINS,
         new MetacardAttribute(
             Replication.ORIGINS, "string", metadata.getLineage(), Collections.emptyList()));
+    return ddfMetadata;
   }
 
   @Override
@@ -349,6 +373,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   private <T> boolean performRequestForEach(Function<T, Response> request, List<T> requestBodies) {
     for (T body : requestBodies) {
       Response response = request.apply(body);
+      LOGGER.debug("Response received for request {}. Response: {}", body, response);
       if (response == null || !response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
         return false;
       }

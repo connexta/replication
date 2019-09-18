@@ -57,6 +57,8 @@ public class QueryManager {
    */
   private long serviceRefreshPeriod;
 
+  private String localSiteId;
+
   /**
    * Instantiate a new query manager.
    *
@@ -64,11 +66,15 @@ public class QueryManager {
    * @param queryServiceTools facade for various objects used by the queryService
    */
   public QueryManager(
-      Stream<String> sites, QueryServiceTools queryServiceTools, long serviceRefreshPeriod) {
+      Stream<String> sites,
+      QueryServiceTools queryServiceTools,
+      long serviceRefreshPeriod,
+      String localSiteId) {
     this(
         sites,
         queryServiceTools,
         serviceRefreshPeriod,
+        localSiteId,
         Executors.newSingleThreadScheduledExecutor());
   }
 
@@ -76,10 +82,12 @@ public class QueryManager {
       Stream<String> sites,
       QueryServiceTools queryServiceTools,
       long serviceRefreshPeriod,
+      String localSiteId,
       ScheduledExecutorService executor) {
     this.sites = sites.collect(Collectors.toSet());
     this.queryServiceTools = queryServiceTools;
-    this.serviceRefreshPeriod = serviceRefreshPeriod;
+    this.serviceRefreshPeriod = serviceRefreshPeriod > 0L ? serviceRefreshPeriod : 30L;
+    this.localSiteId = localSiteId;
     this.executor = executor;
   }
 
@@ -95,6 +103,10 @@ public class QueryManager {
     }
     executor.scheduleAtFixedRate(
         this::reloadSiteConfigs, 0, serviceRefreshPeriod, TimeUnit.SECONDS);
+    LOGGER.info(
+        "Query Manager started with a service refresh period of {} seconds. The local site is {}.",
+        serviceRefreshPeriod,
+        localSiteId);
   }
 
   /** Destroys the query manager and stop all currently running query services. */
@@ -111,7 +123,9 @@ public class QueryManager {
 
   @VisibleForTesting
   void reloadSiteConfigs() {
-    Stream<Site> siteStream = queryServiceTools.sites();
+    LOGGER.trace("reloading site configs.");
+    Stream<Site> siteStream =
+        queryServiceTools.sites().filter(site -> !site.getId().equals(localSiteId));
     synchronized (this) {
       if (Thread.currentThread().isInterrupted()) {
         return;
@@ -122,6 +136,7 @@ public class QueryManager {
       }
       final Map<String, Site> newSites =
           siteStream.collect(Collectors.toMap(Site::getId, Function.identity()));
+      LOGGER.debug("Creating/updating services for sites: {}.", newSites);
 
       // stop query services for sites that are no longer configured or have changed to a non-polled
       // type
@@ -143,6 +158,10 @@ public class QueryManager {
             e);
         Thread.currentThread().interrupt();
       }
+
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Running QueryServices: {}", services.values());
+      }
     }
   }
 
@@ -162,9 +181,12 @@ public class QueryManager {
           throw e;
         } catch (AdapterException | IllegalArgumentException e) {
           LOGGER.warn(
-              "Failed to create an adapter for {} stopping the query service for now."
-                  + updatedSite);
-          LOGGER.debug("", e);
+              "Failed to create an adapter for {} stopping the query service for now.",
+              updatedSite);
+          LOGGER.debug(
+              "Failed to create an adapter for {} stopping the query service for now.",
+              updatedSite,
+              e);
           entry.getValue().stop();
           serviceIterator.remove();
         }
@@ -193,8 +215,11 @@ public class QueryManager {
       throw e;
     } catch (AdapterException | IllegalArgumentException | QueueException e) {
       LOGGER.warn(
-          "Failed to create an adapter for {} not creating a query service for this site." + site);
-      LOGGER.debug("", e);
+          "Failed to create an adapter for {} not creating a query service for this site.", site);
+      LOGGER.debug(
+          "Failed to create an adapter for {} not creating a query service for this site.",
+          site,
+          e);
       return null;
     }
   }

@@ -56,6 +56,8 @@ public class QueryManagerTest {
 
   private static final String SITE_ID3 = "siteid3";
 
+  public static final String LOCAL_SITE = "localSite";
+
   @Mock QueryServiceTools queryServiceTools;
 
   @Mock ScheduledExecutorService executor;
@@ -73,8 +75,10 @@ public class QueryManagerTest {
   @Before
   public void setUp() throws Exception {
     queryManager =
-        new QueryManager(Stream.empty(), queryServiceTools, SERVICE_REFRESH_PERIOD, executor);
+        new QueryManager(
+            Stream.empty(), queryServiceTools, SERVICE_REFRESH_PERIOD, LOCAL_SITE, executor);
     when(queryServiceTools.getGlobalPeriod()).thenReturn(60L);
+    when(queryServiceTools.getAdapterFor(any(Site.class))).thenReturn(mock(NodeAdapter.class));
     when(site.getId()).thenReturn(SITE_ID);
     when(site.getType()).thenReturn(SiteType.DDF);
     when(site.getKind()).thenReturn(SiteKind.REGIONAL);
@@ -89,6 +93,15 @@ public class QueryManagerTest {
 
   @Test
   public void init() {
+    queryManager.init();
+    verify(executor)
+        .scheduleAtFixedRate(
+            any(Runnable.class), eq(0L), eq(SERVICE_REFRESH_PERIOD), eq(TimeUnit.SECONDS));
+  }
+
+  @Test
+  public void creationWithNoServiceRefreshUsesDefault() {
+    queryManager = new QueryManager(Stream.empty(), queryServiceTools, 0L, LOCAL_SITE, executor);
     queryManager.init();
     verify(executor)
         .scheduleAtFixedRate(
@@ -114,7 +127,8 @@ public class QueryManagerTest {
   @Test
   public void reloadSiteConfigsSitesIsNotEmpty() {
     queryManager =
-        new QueryManager(Stream.of(SITE_ID), queryServiceTools, SERVICE_REFRESH_PERIOD, executor);
+        new QueryManager(
+            Stream.of(SITE_ID), queryServiceTools, SERVICE_REFRESH_PERIOD, LOCAL_SITE, executor);
     when(queryServiceTools.sites()).thenReturn(Stream.of(site, site2));
     queryManager.reloadSiteConfigs();
     // assert that a query service was created and started for site1
@@ -128,6 +142,22 @@ public class QueryManagerTest {
     when(queryServiceTools.sites()).thenReturn(Stream.of(site3));
     queryManager.reloadSiteConfigs();
     assertThat(queryManager.getServices().get(SITE_ID3), is(Matchers.nullValue()));
+  }
+
+  @Test
+  public void reloadSiteConfigsIgnoresLocalSite() {
+    when(site.getId()).thenReturn(LOCAL_SITE);
+    when(queryServiceTools.sites()).thenReturn(Stream.of(site));
+    queryManager.reloadSiteConfigs();
+    assertThat(queryManager.getServices().get(LOCAL_SITE), is(Matchers.nullValue()));
+  }
+
+  @Test
+  public void reloadSiteConfigsReturnsImmediatelyIfInterrupted() {
+    when(queryServiceTools.sites()).thenReturn(Stream.of(site));
+    Thread.currentThread().interrupt();
+    queryManager.reloadSiteConfigs();
+    assertThat(queryManager.getServices().get(SITE_ID), is(Matchers.nullValue()));
   }
 
   @Test
@@ -241,5 +271,16 @@ public class QueryManagerTest {
     queryManager.updateQueryServices(newSites);
     verify(queryService).stop();
     assertThat(queryManager.getServices().keySet(), Matchers.not(Matchers.contains(SITE_ID)));
+  }
+
+  @Test
+  public void updateQueryServicesNoLongerRegionalSite() {
+    queryManager.putService(SITE_ID, queryService);
+    Map<String, Site> newSites = mock(Map.class);
+    when(newSites.remove(SITE_ID)).thenReturn(site);
+    when(site.getKind()).thenReturn(SiteKind.TACTICAL);
+    queryManager.updateQueryServices(newSites);
+    assertThat(queryManager.getServices().keySet(), Matchers.not(Matchers.contains(SITE_ID)));
+    verify(queryService).stop();
   }
 }

@@ -1,7 +1,7 @@
  [
     {
       "name":"test",
-      "site_id":"destination-id",
+      "site_id":"source-id",
       "filter":"title like '@testId@'",
       "suspended":false,
       "priority": 2,
