@@ -15,13 +15,11 @@ package com.connexta.replication.adapters.ddf.csw;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 import com.connexta.replication.adapters.ddf.DdfMetadata;
 import com.connexta.replication.adapters.ddf.MetacardAttribute;
-import com.connexta.replication.api.AdapterException;
 import com.connexta.replication.api.Replication;
 import com.connexta.replication.api.data.Metadata;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
@@ -174,33 +172,5 @@ public class CswRecordConverterTest {
             ISODateTimeFormat.dateOptionalTimeParser()
                 .parseDateTime("1234-01-01T03:04:05.060")
                 .toDate()));
-  }
-
-  @Test(expected = AdapterException.class)
-  public void unmarshalNoModifiedDate() throws Exception {
-    map.remove(Constants.METACARD_MODIFIED);
-    String metacardXml =
-        MetacardMarshaller.marshal(
-            new DdfMetadata(Map.of("mcard", "metadata"), Map.class, "123456789", new Date(1), map));
-
-    InputStream inStream = new ByteArrayInputStream(metacardXml.getBytes());
-    HierarchicalStreamReader reader =
-        new XppReader(
-            new InputStreamReader(inStream, StandardCharsets.UTF_8),
-            XmlPullParserFactory.newInstance().newPullParser());
-    UnmarshallingContext context = mock(UnmarshallingContext.class);
-    new CswRecordConverter().unmarshal(reader, context);
-  }
-
-  @Test
-  public void convertToDateBadFormat() {
-    assertThat(
-        CswRecordConverter.convertToDate(new MetacardAttribute("att", "string", "notadate")),
-        is(nullValue()));
-  }
-
-  @Test
-  public void convertToDateNullValue() {
-    assertThat(CswRecordConverter.convertToDate(null), is(nullValue()));
   }
 }

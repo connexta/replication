@@ -86,7 +86,7 @@ public class TestUtils {
         .withNetwork(network)
         .withNetworkAliases("replication-solr")
         .withExposedPorts(SOLR_PORT)
-        .waitingFor(Wait.forHttp("/solr/replication_" + FILTER + "/admin/ping"));
+        .waitingFor(Wait.forHttp("/solr/replication_" + SITE + "/admin/ping"));
   }
 
   /**
@@ -99,7 +99,7 @@ public class TestUtils {
    * @param network The {@link Network} to expose the container on.
    * @return A {@link GenericContainer} which will run the replication service.
    */
-  public static GenericContainer defaultReplicationContainer(Network network) {
+  public static GenericContainer defaultReplicationContainer(Network network, String profiles) {
     return new GenericContainer("r.ion.phx.connexta.com/replication:" + getProjectVersion())
         .withNetwork(network)
         .withNetworkAliases("ion-replication")
@@ -115,6 +115,7 @@ public class TestUtils {
             "ssl.properties", "/opt/replication/config/ssl.properties", BindMode.READ_ONLY)
         .withClasspathResourceMapping(
             "application.yml", "/opt/replication/config/application.yml", BindMode.READ_ONLY)
+        .withEnv("spring.profiles.active", profiles)
         .waitingFor(Wait.forLogMessage(".*Started Main.*", 1));
   }
 

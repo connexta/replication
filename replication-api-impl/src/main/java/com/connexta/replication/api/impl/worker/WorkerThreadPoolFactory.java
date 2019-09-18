@@ -17,9 +17,13 @@ import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.impl.NodeAdapters;
 import com.connexta.replication.api.persistence.SiteManager;
 import com.connexta.replication.api.queue.QueueBroker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Factory for creating new worker thread pools. Primarily to facilitate testing. */
 public class WorkerThreadPoolFactory {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(WorkerThreadPoolFactory.class);
 
   private QueueBroker broker;
 
@@ -53,6 +57,7 @@ public class WorkerThreadPoolFactory {
    * @return the new worker thread pool
    */
   public WorkerThreadPool create(String siteId, int poolSize) {
+    LOGGER.trace("Creating WorkerThreadPool for site with ID: {}", siteId);
     return new WorkerThreadPool(
         broker.getQueue(siteId), poolSize, localSite, siteManager, nodeAdapters);
   }

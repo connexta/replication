@@ -97,4 +97,28 @@ public class ResourceImpl implements Resource {
   public Metadata getMetadata() {
     return metadata;
   }
+
+  @Override
+  public String toString() {
+    return "ResourceImpl{"
+        + "id='"
+        + id
+        + '\''
+        + ", name='"
+        + name
+        + '\''
+        + ", uri="
+        + uri
+        + ", qualifier='"
+        + qualifier
+        + '\''
+        + ", mimeType='"
+        + mimeType
+        + '\''
+        + ", size="
+        + size
+        + ", metadata="
+        + metadata
+        + '}';
+  }
 }

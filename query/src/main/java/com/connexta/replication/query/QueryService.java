@@ -110,6 +110,7 @@ public class QueryService {
    *     can't be found for the site
    */
   public void update(Site site) {
+    LOGGER.trace("Updating QueryService site from {} to {}", this.site, site);
     synchronized (this) {
       this.site = site;
       this.adapter = queryServiceTools.getAdapterFor(site);
@@ -119,19 +120,22 @@ public class QueryService {
   /** Starts this query service. */
   public void start() {
     if (!isRunning()) {
-      this.future =
-          executor.scheduleAtFixedRate(
-              this::query,
-              0,
-              site.getPollingPeriod()
-                  .orElse(Duration.of(queryServiceTools.getGlobalPeriod(), ChronoUnit.SECONDS))
-                  .toMillis(),
-              TimeUnit.MILLISECONDS);
+      LOGGER.trace("Starting QueryService for site {}", site.getName());
+      long period =
+          site.getPollingPeriod()
+              .orElse(Duration.of(queryServiceTools.getGlobalPeriod(), ChronoUnit.SECONDS))
+              .toMillis();
+      this.future = executor.scheduleAtFixedRate(this::query, 0, period, TimeUnit.MILLISECONDS);
+      LOGGER.debug(
+          "QueryService started for site {} with a polling period of {}ms.",
+          site.getName(),
+          period);
     }
   }
 
   /** Stops this query service. */
   public void stop() {
+    LOGGER.trace("Shutting down QueryService for site {}", site.getName());
     if (isRunning()) {
       future.cancel(true);
     }
@@ -154,8 +158,12 @@ public class QueryService {
       doQuery();
     } catch (ReplicationException e) {
       LOGGER.warn(
-          "An exception occurred in the persistence layer while trying to query a site for metadata. Waiting until the next polling interval to try again.");
-      LOGGER.debug("", e);
+          "An exception occurred in the persistence layer while trying to query site {} for metadata. Waiting until the next polling interval to try again.",
+          site);
+      LOGGER.debug(
+          "An exception occurred in the persistence layer while trying to query site {} for metadata. Waiting until the next polling interval to try again.",
+          site,
+          e);
     }
   }
 
@@ -170,12 +178,16 @@ public class QueryService {
             .activeFiltersFor(site)
             .sorted(Comparator.comparingInt(Filter::getPriority).reversed())
             .collect(Collectors.toList());
+    LOGGER.debug("Filters retrieved for site {}:{}", site.getName(), filters);
     for (Filter filter : filters) {
       final FilterIndex filterIndex = queryServiceTools.getOrCreateFilterIndex(filter);
+      LOGGER.debug(
+          "Obtained FilterIndex {}, of filter {}, of site {}", filterIndex, filter, site.getName());
 
       // holds the latest modified time received so far
       AtomicReference<Instant> latestModifiedTime =
-          new AtomicReference<>(filterIndex.getModifiedSince().orElse(Instant.MIN));
+          new AtomicReference<>(
+              filterIndex.getModifiedSince().orElse(new Date(Long.MIN_VALUE).toInstant()));
 
       try {
         getNewMetadataForFilter(filter, filterIndex)
@@ -224,12 +236,14 @@ public class QueryService {
             indexDate);
 
     Iterable<Metadata> changeSet;
+    LOGGER.trace("Attempting to query site: {}", site.getName());
     changeSet = adapter.query(queryRequest).getMetadata();
 
     return StreamSupport.stream(changeSet.spliterator(), false);
   }
 
   private TaskInfo metadataToTask(Metadata metadata, byte filterPriority) {
+    LOGGER.trace("Converting metadata with ID: {} to task", metadata.getId());
     ResourceInfoImpl resourceInfo = null;
     if (metadata.getResourceSize() > 0) { // determine if there is a resource
       resourceInfo = new ResourceInfoImpl(metadata);
@@ -256,6 +270,7 @@ public class QueryService {
 
   private void queueTaskAndUpdateLastModified(
       TaskInfo task, AtomicReference<Instant> latestModifiedTime) {
+    LOGGER.trace("Putting task {} in Queue for site {}", task, site);
     try {
       siteQueue.put(task);
     } catch (InterruptedException e) {
@@ -271,6 +286,7 @@ public class QueryService {
       FilterIndex filterIndex, AtomicReference<Instant> latestModifiedTime) {
     filterIndex.setModifiedSince(latestModifiedTime.get());
     queryServiceTools.saveFilterIndex(filterIndex);
+    LOGGER.debug("Saved filter index:{}", filterIndex);
   }
 
   boolean isRunning() {

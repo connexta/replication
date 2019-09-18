@@ -6,8 +6,8 @@
         "description": "test source",
         "url": "@source@",
         "type": "DDF",
-        "kind": "TACTICAL",
-        "polling_period": 600000,
+        "kind": "REGIONAL",
+        "polling_period": 1000,
         "parallelism_factor": 1
     },
     {
@@ -17,8 +17,8 @@
         "description": "test destination",
         "url": "@destination@",
         "type": "DDF",
-        "kind": "TACTICAL",
-        "polling_period": 600000,
+        "kind": "REGIONAL",
+        "polling_period": 1000,
         "parallelism_factor": 1
     }
 ]

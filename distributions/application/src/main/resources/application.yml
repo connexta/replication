@@ -9,6 +9,7 @@ spring:
   data:
     solr:
       host: http://replication-solr:8983/solr
+  profiles.active: Classic
 replication:
   period: 300
   connectionTimeout: 30

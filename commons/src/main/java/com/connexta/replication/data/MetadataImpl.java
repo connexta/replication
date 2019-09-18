@@ -197,4 +197,33 @@ public class MetadataImpl implements Metadata {
     this.resourceModified = modified;
     return this;
   }
+
+  @Override
+  public String toString() {
+    return "MetadataImpl{"
+        + "metadata="
+        + metadata
+        + ", id='"
+        + id
+        + '\''
+        + ", type="
+        + type
+        + ", metadataModified="
+        + metadataModified
+        + ", tags="
+        + tags
+        + ", lineage="
+        + lineage
+        + ", resourceSize="
+        + resourceSize
+        + ", metadataSize="
+        + metadataSize
+        + ", resourceUri="
+        + resourceUri
+        + ", resourceModified="
+        + resourceModified
+        + ", isDeleted="
+        + isDeleted
+        + '}';
+  }
 }

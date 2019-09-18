@@ -43,6 +43,7 @@ public class ReplicationMetricsAutoConfigurationTest {
   }
 
   private void registerAndRefresh() {
+    System.setProperty("spring.profiles.active", "Classic");
     this.context.register(
         MeterRegistryConfiguration.class,
         ReplicatorConfiguration.class,

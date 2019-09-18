@@ -187,6 +187,7 @@ public class Worker extends Thread {
 
       final OperationType type = task.getOperation();
       if (type == OperationType.HARVEST) {
+        LOGGER.trace("Harvesting metadata with ID: {}", metadata.getId());
         doCreate(task, metadata, remote, local);
       } else {
         // should never hit this since deserialization will return UNKNOWN
@@ -243,6 +244,7 @@ public class Worker extends Thread {
 
     URI uri = task.getResource().flatMap(ResourceInfo::getResourceUri).orElse(null);
     if (uri != null) {
+      LOGGER.debug("Resource URI received: {} attempting to create resource.", uri);
       if (!createResource(task, metadata, source, destination, operation, uri)) {
         return;
       }
@@ -294,11 +296,12 @@ public class Worker extends Thread {
       CreateRequest request = new CreateRequestImpl(List.of(metadata));
       boolean success = destination.createRequest(request);
       if (!success) {
-        task.fail(
-            ErrorCode.OPERATION_FAILURE,
+        String errorMessage =
             String.format(
                 "Failed to %s metadata %s from %s to %s",
-                operation, metadataId, source.getSystemName(), destination.getSystemName()));
+                operation, metadataId, source.getSystemName(), destination.getSystemName());
+        LOGGER.debug(errorMessage);
+        task.fail(ErrorCode.OPERATION_FAILURE, errorMessage);
         return false;
       }
     } catch (AdapterInterruptedException e) {
@@ -321,10 +324,12 @@ public class Worker extends Thread {
       String operation,
       URI uri)
       throws InterruptedException {
+    LOGGER.trace("Creating resource for metadata with ID: {}", metadata.getId());
     ResourceRequest request = new ResourceRequestImpl(metadata);
     ResourceResponse response;
     try {
       response = source.readResource(request);
+      LOGGER.trace("Retrieved resource");
     } catch (AdapterInterruptedException e) {
       throw new InterruptedException();
     } catch (AdapterException e) {
@@ -339,11 +344,12 @@ public class Worker extends Thread {
       Resource resource = response.getResource();
       boolean success = destination.createResource(new CreateStorageRequestImpl(resource));
       if (!success) {
-        task.fail(
-            ErrorCode.OPERATION_FAILURE,
+        String errorMessage =
             String.format(
                 "Failed to %s resource %s from %s to %s",
-                operation, uri, source.getSystemName(), destination.getSystemName()));
+                operation, uri, source.getSystemName(), destination.getSystemName());
+        LOGGER.debug(errorMessage);
+        task.fail(ErrorCode.OPERATION_FAILURE, errorMessage);
         return false;
       }
     } catch (AdapterInterruptedException e) {

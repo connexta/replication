@@ -2,8 +2,9 @@ logging:
   level:
     root: INFO
     securityLogger: ERROR
-    com.connexta.replication.adapters.ddf.DdfNodeAdapter: TRACE
-    com.connexta.replication.adapters.ddf.csw.CswRecordConverter: TRACE
+    com.connexta.replication.adapters.ddf: TRACE
+    com.connexta.replication.query: TRACE
+    com.connexta.replication.api.impl.worker: TRACE
     org.apache.cxf.interceptor.LoggingOutInterceptor: WARN
     org.apache.cxf.interceptor.LoggingInInterceptor: WARN
 
@@ -20,4 +21,4 @@ replication:
   period: 1
   connectionTimeout: 30
   receiveTimeout: 60
-  localSite: source-id
+  localSite: destination-id

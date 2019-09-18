@@ -27,9 +27,12 @@ import com.connexta.replication.query.QueryManager;
 import com.connexta.replication.query.QueryService;
 import com.connexta.replication.query.QueryServiceTools;
 import com.connexta.replication.spring.ReplicationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
-@Configuration
+@Configuration("query")
+@Profile("Ion")
 public class ServiceConfig {
 
   /**
@@ -47,7 +50,7 @@ public class ServiceConfig {
    * @param queryProperties Application properties used to retrieve the query service refresh period
    * @return The QueryManager service
    */
-  // @Bean
+  @Bean(destroyMethod = "destroy")
   public QueryManager queryManager(
       NodeAdapters nodeAdapters,
       SiteManager siteManager,
@@ -64,9 +67,14 @@ public class ServiceConfig {
             filterIndexManager,
             queueBroker,
             replicationProperties.getPeriod());
-    return new QueryManager(
-        replicationProperties.getSites().stream(),
-        queryServiceTools,
-        queryProperties.getServiceRefreshPeriod());
+    QueryManager queryManager =
+        new QueryManager(
+            replicationProperties.getSites().stream(),
+            queryServiceTools,
+            queryProperties.getServiceRefreshPeriod(),
+            replicationProperties.getLocalSite());
+
+    queryManager.init();
+    return queryManager;
   }
 }

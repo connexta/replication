@@ -14,11 +14,13 @@
 package com.connexta.replication.query.spring;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /** Reads fields specific to the query service from the application configuration. */
 @Component
 @ConfigurationProperties("query")
+@Profile("Ion")
 public class QueryProperties {
 
   // TODO: move the default site polling period here

@@ -14,12 +14,12 @@
 package com.connexta.replication.distributions.test;
 
 import static com.connexta.replication.distributions.test.TestUtils.FILTER;
+import static com.connexta.replication.distributions.test.TestUtils.ITEM;
 import static com.connexta.replication.distributions.test.TestUtils.SITE;
-import static com.connexta.replication.distributions.test.TestUtils.clearAllSolrCores;
+import static com.connexta.replication.distributions.test.TestUtils.clearSolrCore;
 import static com.connexta.replication.distributions.test.TestUtils.createProductOnNode;
 import static com.connexta.replication.distributions.test.TestUtils.defaultReplicationContainer;
 import static com.connexta.replication.distributions.test.TestUtils.defaultSolrContainer;
-import static com.connexta.replication.distributions.test.TestUtils.deleteProductFromNode;
 import static com.connexta.replication.distributions.test.TestUtils.deleteQuietly;
 import static com.connexta.replication.distributions.test.TestUtils.extractDateTimeAttribute;
 import static com.connexta.replication.distributions.test.TestUtils.extractStringAttribute;
@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -53,40 +54,53 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-public class ReplicationE2E {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationE2E.class);
+public class IonReplicationE2E {
+  private static final Logger LOGGER = LoggerFactory.getLogger(IonReplicationE2E.class);
 
   // used to collect the replication service logs and print them with the test logs
   private static final Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LOGGER);
 
   @ClassRule public static Network network = Network.newNetwork();
 
-  @ClassRule public static GenericContainer solr = defaultSolrContainer(network);
-
-  @ClassRule public static GenericContainer replication = defaultReplicationContainer(network);
-
-  private static String solrUrl;
   private static final String sourceUrl = System.getenv("REPLICATION_SRC");
   private static final String destinationUrl = System.getenv("REPLICATION_DEST");
+
+  public static GenericContainer solr = defaultSolrContainer(network);
+
+  public static GenericContainer replication = defaultReplicationContainer(network, "Ion");
+
+  private static String solrUrl;
 
   private final Set<String> idsToDelete = new HashSet<>();
 
   @BeforeClass
   public static void beforeClass() {
+    solr.start();
     assertTrue("Source and destination URLs not set!", sourceUrl != null && destinationUrl != null);
     LOGGER.info("Source URL: {}", sourceUrl);
     LOGGER.info("Destination URL: {}", destinationUrl);
     RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    replication.followOutput(logConsumer);
     solrUrl = "http://" + solr.getContainerIpAddress() + ":" + solr.getFirstMappedPort();
     LOGGER.info("Solr URL: {}", solrUrl);
+    String sites =
+        getFileAsText("sites.json", Map.of("source", sourceUrl, "destination", destinationUrl));
+    postToSolrCore(solrUrl, SITE, sites);
+    LOGGER.info("Sites Created");
+    replication.start();
+    replication.followOutput(logConsumer);
   }
 
   @After
   public void cleanUp() {
-    clearAllSolrCores(solrUrl);
+    clearSolrCore(solrUrl, FILTER);
+    clearSolrCore(solrUrl, ITEM);
     idsToDelete.forEach(this::deleteFromNodes);
+  }
+
+  @AfterClass
+  public static void afterClass() {
+    replication.stop();
+    solr.stop();
   }
 
   @Test
@@ -131,21 +145,6 @@ public class ReplicationE2E {
     assertTrue(containsIgnoreCase(resourceText, "updated"));
   }
 
-  @Test
-  public void syncDelete() throws Exception {
-    String testId = generateTestId("syncDelete");
-    String productId = createAndReplicateTestProduct(testId);
-
-    // delete product
-    deleteProductFromNode(sourceUrl, productId);
-    LOGGER.info("product with ID: {} deleted on the source node", productId);
-
-    // wait for the delete to be replicated
-    waitAtMost30SecondsUntil(() -> !nodeHasMetadata(destinationUrl, productId));
-    LOGGER.info(
-        "product with ID: {} deleted through replication on the destination node", productId);
-  }
-
   private String createAndReplicateTestProduct(String testId) {
     // create product
     InputStream metadataIs =
@@ -156,14 +155,9 @@ public class ReplicationE2E {
     idsToDelete.add(productId);
     LOGGER.info("Product created on the source node with ID: {}", productId);
 
-    // create nodes and jobs
-    String sites =
-        getFileAsText("sites.json", Map.of("source", sourceUrl, "destination", destinationUrl));
-    String jobs = getFileAsText("filters.json", Map.of("testId", testId));
-    postToSolrCore(solrUrl, SITE, sites);
-    LOGGER.info("Sites Created");
-    postToSolrCore(solrUrl, FILTER, jobs);
-    LOGGER.info("Jobs Created");
+    String filters = getFileAsText("filters.json", Map.of("testId", testId));
+    postToSolrCore(solrUrl, FILTER, filters);
+    LOGGER.info("Filters Created");
 
     // wait for metadata to be replicated
     waitAtMost30SecondsUntil(() -> nodeHasMetadata(destinationUrl, productId));

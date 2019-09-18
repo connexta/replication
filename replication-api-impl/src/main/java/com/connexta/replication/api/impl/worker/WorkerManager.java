@@ -90,15 +90,18 @@ public class WorkerManager {
     this.siteIds = Set.of(properties.getSites().toArray(new String[0]));
     this.localSite = siteManager.get(properties.getLocalSite());
     this.threadPoolFactory = threadPoolFactory;
+    LOGGER.info("WorkerManager started with local site {}.", localSite.getName());
   }
 
   /** Initializes this manager and begins monitoring of sites. */
   public void init() {
+    LOGGER.trace("Starting WorkerManager.");
     executorService.scheduleAtFixedRate(this::monitorSites, 0L, 30L, TimeUnit.SECONDS);
   }
 
   /** Shutdown the manager and any workers that it is currently managing */
   public void destroy() {
+    LOGGER.trace("Shutting down WorkerManager.");
     executorService.shutdownNow();
     threadPools.forEach((site, pool) -> pool.shutdown());
     threadPools.clear();
@@ -106,6 +109,7 @@ public class WorkerManager {
 
   @VisibleForTesting
   void monitorSites() {
+    LOGGER.trace("Reloading monitored sites.");
     Stream<Site> supportedSites =
         siteManager
             .objects()
@@ -117,6 +121,7 @@ public class WorkerManager {
       supportedSites = supportedSites.filter(site -> siteIds.contains(site.getId()));
     }
     List<Site> sites = supportedSites.collect(Collectors.toList());
+    LOGGER.debug("Supported sites found by the WorkerManager: {}", sites);
     sites.forEach(this::monitorSite);
 
     // if a site has been removed from storage, cleanup its thread pool
