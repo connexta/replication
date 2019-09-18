@@ -98,7 +98,7 @@
         <snapshots.repository.url />
         <releases.repository.url />
         <ddf.support.version>2.3.16</ddf.support.version>
-        <ddf.version>2.16.1</ddf.version>
+        <ddf.version>2.18.0</ddf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <surefire.version>2.22.2</surefire.version>
 
