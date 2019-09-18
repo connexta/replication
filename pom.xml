@@ -137,7 +137,7 @@
         <solr.version>8.2.0</solr.version>
         <opengis.version>19.1</opengis.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
-        <jackson.version>2.10.0.pr2</jackson.version>
+        <jackson.version>2.10.0.pr3</jackson.version>
         <spring.version>5.2.0.RC2</spring.version>
         <spring-boot-starter.version>2.1.7.RELEASE</spring-boot-starter.version>
         <testcontainers.version>1.12.1</testcontainers.version>
