@@ -155,7 +155,7 @@ Example jobs.json
       "source":" some-unique-id-1234",
       "destination": "another-unique-id-5678",
       "filter": "\"media.type\" like 'application/pdf'",
-      "suspended": false,
+      "suspended": false
     }
   ]
 ```

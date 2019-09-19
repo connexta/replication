@@ -53,6 +53,13 @@ public interface Task extends TaskInfo {
   public State getState();
 
   /**
+   * Returns the queue that this task is in.
+   *
+   * @return the site queue this task is in
+   */
+  public SiteQueue getQueue();
+
+  /**
    * Checks if this task has been marked completed.
    *
    * <p><i>Note:</i> A task that fails for reasons that allows for it to be retried later will not

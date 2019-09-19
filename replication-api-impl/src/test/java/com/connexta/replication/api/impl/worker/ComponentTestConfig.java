@@ -11,28 +11,21 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.api.data.ddf;
+package com.connexta.replication.api.impl.worker;
 
-import com.connexta.replication.api.data.MetadataInfo;
+import com.connexta.replication.api.impl.data.SiteManagerImpl;
+import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
+import com.connexta.replication.api.persistence.SiteManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-/**
- * Extension to the {@link MetadataInfo} class which provides additional collected information that
- * can be useful for a worker processing an associated task.
- *
- * @param <T> the type of raw data
- */
-public interface DdfMetadataInfo<T> extends MetadataInfo {
-  /**
-   * The class format for the raw data defining the metadata.
-   *
-   * @return the class for the raw data
-   */
-  Class<T> getDataClass();
+// TODO: replace this with the config created for the worker manager when replication-api-impl
+// is split up
+@Configuration
+public class ComponentTestConfig {
 
-  /**
-   * The raw data defining the metadata.
-   *
-   * @return the raw data
-   */
-  Object getData();
+  @Bean
+  public SiteManager siteManager(SiteRepository siteRepository) {
+    return new SiteManagerImpl(siteRepository);
+  }
 }

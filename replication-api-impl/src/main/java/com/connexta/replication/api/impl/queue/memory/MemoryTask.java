@@ -17,6 +17,7 @@ import com.connexta.replication.api.data.ErrorCode;
 import com.connexta.replication.api.data.Task;
 import com.connexta.replication.api.data.TaskInfo;
 import com.connexta.replication.api.impl.queue.AbstractTask;
+import com.connexta.replication.api.queue.SiteQueue;
 import com.google.common.annotations.VisibleForTesting;
 import io.micrometer.core.instrument.Clock;
 import java.time.Duration;
@@ -93,6 +94,11 @@ public class MemoryTask extends AbstractTask {
   @Override
   public State getState() {
     return state;
+  }
+
+  @Override
+  public SiteQueue getQueue() {
+    return queue;
   }
 
   /**
