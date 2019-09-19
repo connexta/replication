@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.query;
+package com.connexta.replication.api.impl.query;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;

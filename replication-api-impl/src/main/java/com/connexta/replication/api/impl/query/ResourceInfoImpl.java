@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.query;
+package com.connexta.replication.api.impl.query;
 
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.ResourceInfo;
@@ -22,6 +22,7 @@ import java.util.OptionalLong;
 import javax.annotation.Nullable;
 
 /** Defines a resource to be transferred through replication */
+// todo Move back to query module when possible
 public class ResourceInfoImpl implements ResourceInfo {
 
   @Nullable private URI resourceUri;

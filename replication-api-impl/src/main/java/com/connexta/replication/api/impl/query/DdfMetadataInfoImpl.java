@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.query;
+package com.connexta.replication.api.impl.query;
 
 import com.connexta.replication.api.data.Metadata;
 import com.connexta.replication.api.data.Task;
@@ -23,6 +23,7 @@ import java.util.OptionalLong;
  * Provides Information about metadata collected from a DDF, which is useful when processing a
  * {@link Task}.
  */
+// todo Move back to query module when possible
 public class DdfMetadataInfoImpl<T> implements DdfMetadataInfo<T> {
 
   private String type;
