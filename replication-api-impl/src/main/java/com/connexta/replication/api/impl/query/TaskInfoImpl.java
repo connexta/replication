@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.query;
+package com.connexta.replication.api.impl.query;
 
 import com.connexta.replication.api.data.MetadataInfo;
 import com.connexta.replication.api.data.OperationType;
@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
  * {@link com.connexta.replication.api.queue.Queue} where an item worker will pick it up later as a
  * {@link com.connexta.replication.api.data.Task}.
  */
+// todo Move back to query module when possible
 public class TaskInfoImpl implements TaskInfo {
 
   private String id;

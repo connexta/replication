@@ -30,7 +30,7 @@ public abstract class AbstractTask implements Task {
   protected final TaskInfo info;
 
   /**
-   * Creates an abstract task which wrapps around the specified task information.
+   * Creates an abstract task which wraps around the specified task information.
    *
    * @param info the task info to wrap around
    */

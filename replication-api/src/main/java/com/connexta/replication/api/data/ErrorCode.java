@@ -21,11 +21,15 @@ public enum ErrorCode {
   SITE_TIMEOUT(true),
   UPSTREAM_SERVICE_UNAVAILABLE(true),
   UPSTREAM_SERVICE_TIMEOUT(true),
+  // TODO: Using this for now until adapters can report better errors
+  // see https://github.com/connexta/replication/issues/235
+  OPERATION_FAILURE(true),
+  NO_LONGER_EXISTS(false),
   UNKNOWN_ERROR(false);
 
   private final boolean shouldBeRetried;
 
-  private ErrorCode(boolean shouldBeRetried) {
+  ErrorCode(boolean shouldBeRetried) {
     this.shouldBeRetried = shouldBeRetried;
   }
 
@@ -34,7 +38,7 @@ public enum ErrorCode {
    * re-attempt to complete it.
    *
    * @return <code>true</code> if a task that fails because of this error should be retried; <code>
-   *     false</code> if not
+   * false</code> if not
    */
   public boolean shouldBeRetried() {
     return shouldBeRetried;

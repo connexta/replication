@@ -302,7 +302,7 @@ public class MemoryTaskTest {
   }
 
   @Test
-  public void testCompletefterSecondAttempt() throws Exception {
+  public void testCompleteAfterSecondAttempt() throws Exception {
     final Clock clock =
         MemoryTaskTest.mockClock(
             MemoryTaskTest.NOW, // creation

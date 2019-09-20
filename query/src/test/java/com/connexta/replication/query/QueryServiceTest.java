@@ -39,6 +39,7 @@ import com.connexta.replication.api.data.QueryResponse;
 import com.connexta.replication.api.data.ResourceInfo;
 import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.data.ddf.DdfMetadataInfo;
+import com.connexta.replication.api.impl.query.TaskInfoImpl;
 import com.connexta.replication.api.queue.QueueException;
 import com.connexta.replication.api.queue.SiteQueue;
 import java.io.IOException;

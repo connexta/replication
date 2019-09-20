@@ -32,8 +32,8 @@ public enum OperationType {
 
   /**
    * The unknown value is used for forward compatibility where a worker might not be able to
-   * understand a new type of operation and would mapped this new operation to <code>UNKNOWN</code>
-   * and most likely ignore it without removing it from the queue.
+   * understand a new type of operation and would map this new operation to <code>UNKNOWN</code> and
+   * most likely ignore it without removing it from the queue.
    */
   UNKNOWN
 }
