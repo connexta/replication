@@ -35,6 +35,8 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.URI;
 import java.net.URL;
+import org.codice.junit.ClearInterruptions;
+import org.codice.junit.rules.MethodRuleAnnotationProcessor;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,8 +54,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 public class IonNodeAdapterTest {
-
   @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule public final MethodRuleAnnotationProcessor processor = new MethodRuleAnnotationProcessor();
 
   RestTemplate restTemplate;
 
@@ -148,6 +150,7 @@ public class IonNodeAdapterTest {
   }
 
   @Test
+  @ClearInterruptions
   public void createResourceInterrupted() {
     thrown.expect(AdapterInterruptedException.class);
 
