@@ -39,11 +39,11 @@ import com.connexta.replication.api.data.SiteType;
 import com.connexta.replication.api.data.Task;
 import com.connexta.replication.api.data.TaskInfo;
 import com.connexta.replication.api.impl.NodeAdapters;
+import com.connexta.replication.api.impl.data.DdfMetadataInfoImpl;
+import com.connexta.replication.api.impl.data.ResourceInfoImpl;
 import com.connexta.replication.api.impl.data.SiteImpl;
+import com.connexta.replication.api.impl.data.TaskInfoImpl;
 import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
-import com.connexta.replication.api.impl.query.DdfMetadataInfoImpl;
-import com.connexta.replication.api.impl.query.ResourceInfoImpl;
-import com.connexta.replication.api.impl.query.TaskInfoImpl;
 import com.connexta.replication.api.impl.queue.memory.MemoryQueueBroker;
 import com.connexta.replication.api.impl.queue.memory.MemorySiteQueue;
 import com.connexta.replication.api.persistence.SiteManager;
@@ -106,9 +106,9 @@ public class WorkerManagerComponentTest {
 
   @Rule public final MultiThreadedErrorCollector collector = new MultiThreadedErrorCollector();
 
-  private NodeAdapters nodeAdapters = mock(NodeAdapters.class);
+  private final NodeAdapters nodeAdapters = mock(NodeAdapters.class);
 
-  private NodeAdapterFactory adapterFactory = mock(NodeAdapterFactory.class);
+  private final NodeAdapterFactory adapterFactory = mock(NodeAdapterFactory.class);
 
   private MemoryQueueBroker broker;
 
@@ -164,7 +164,9 @@ public class WorkerManagerComponentTest {
 
   @After
   public void cleanup() throws Exception {
-    workerManager.destroy();
+    if (workerManager != null) {
+      workerManager.destroy();
+    }
     siteManager.objects().map(Site::getId).forEach(siteManager::remove);
   }
 
@@ -328,6 +330,7 @@ public class WorkerManagerComponentTest {
 
   private SitePojo createSitePojo(String id, URL url, SiteType type, int seed) {
     return new SitePojo()
+        .setVersion(SitePojo.CURRENT_VERSION)
         .setId(id)
         .setName("name" + seed)
         .setDescription("description" + seed)

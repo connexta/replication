@@ -56,7 +56,11 @@ public class FilterIndexImplTest {
 
   @Test
   public void testFromPojoCtor() {
-    FilterIndexPojo pojo = new FilterIndexPojo().setModifiedSince(MODIFIED_SINCE).setId(ID);
+    FilterIndexPojo pojo =
+        new FilterIndexPojo()
+            .setModifiedSince(MODIFIED_SINCE)
+            .setId(ID)
+            .setVersion(FilterIndexPojo.CURRENT_VERSION);
     FilterIndexImpl index = new FilterIndexImpl(pojo);
     assertThat(index.getId(), is(ID));
     assertThat(index.getModifiedSince(), isPresentAnd(is(MODIFIED_SINCE)));
@@ -82,7 +86,11 @@ public class FilterIndexImplTest {
 
   @Test
   public void testReadFrom() {
-    FilterIndexPojo pojo = new FilterIndexPojo().setModifiedSince(MODIFIED_SINCE).setId(ID);
+    FilterIndexPojo pojo =
+        new FilterIndexPojo()
+            .setModifiedSince(MODIFIED_SINCE)
+            .setId(ID)
+            .setVersion(FilterIndexPojo.CURRENT_VERSION);
     FilterIndexImpl index = new FilterIndexImpl();
     index.readFrom(pojo);
     assertThat(index.getId(), is(ID));
@@ -91,7 +99,11 @@ public class FilterIndexImplTest {
 
   @Test
   public void testReadFromModifiedSinceNull() {
-    FilterIndexPojo pojo = new FilterIndexPojo().setModifiedSince(null).setId(ID);
+    FilterIndexPojo pojo =
+        new FilterIndexPojo()
+            .setModifiedSince(null)
+            .setId(ID)
+            .setVersion(FilterIndexPojo.CURRENT_VERSION);
     FilterIndexImpl index = new FilterIndexImpl();
     index.readFrom(pojo);
     assertThat(index.getModifiedSince(), OptionalMatchers.isEmpty());

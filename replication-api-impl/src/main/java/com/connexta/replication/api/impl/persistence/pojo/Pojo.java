@@ -13,6 +13,11 @@
  */
 package com.connexta.replication.api.impl.persistence.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.data.annotation.Id;
@@ -25,13 +30,18 @@ import org.springframework.data.solr.core.mapping.Indexed;
  *
  * @param <T> the type of pojo this is
  */
-public abstract class Pojo<T extends Pojo> {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonPropertyOrder({"id", "version"})
+@JsonInclude(Include.NON_NULL)
+public abstract class Pojo<T extends Pojo<?>> {
   @Id
   @Indexed(name = "id", required = true)
+  @JsonProperty("id")
   @Nullable
   private String id;
 
   @Indexed(name = "version", required = true)
+  @JsonProperty("version")
   private int version;
 
   /** Instantiates a blank pojo. */

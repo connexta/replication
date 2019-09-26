@@ -13,6 +13,11 @@
  */
 package com.connexta.replication.api.impl.persistence.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.data.solr.core.mapping.Indexed;
@@ -20,6 +25,9 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 
 /** A pojo used to load filters from persistence. */
 @SolrDocument(collection = FilterPojo.COLLECTION)
+@JsonPropertyOrder({"id", "version", "site_id", "name"})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class FilterPojo extends Pojo<FilterPojo> {
 
   /**
@@ -39,31 +47,32 @@ public class FilterPojo extends Pojo<FilterPojo> {
   public static final String COLLECTION = "replication_filter";
 
   @Indexed(name = "site_id")
+  @JsonProperty("site_id")
   @Nullable
   private String siteId;
 
   @Indexed(name = "filter", searchable = false)
+  @JsonProperty("filter")
   @Nullable
   private String filter;
 
   @Indexed(name = "name")
+  @JsonProperty("name")
   @Nullable
   private String name;
 
   @Indexed(name = "description", searchable = false)
+  @JsonProperty("description")
   @Nullable
   private String description;
 
   @Indexed(name = "suspended", searchable = false)
+  @JsonProperty("suspended")
   private boolean suspended;
 
   @Indexed(name = "priority", searchable = false, type = "pint")
+  @JsonProperty("priority")
   private byte priority;
-
-  /** Instantiates a default filter pojo set with the current version. */
-  public FilterPojo() {
-    super.setVersion(CURRENT_VERSION);
-  }
 
   /**
    * Gets the ID of the site associated with this filter.

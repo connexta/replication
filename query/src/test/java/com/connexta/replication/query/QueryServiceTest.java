@@ -15,7 +15,7 @@ package com.connexta.replication.query;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -39,7 +39,7 @@ import com.connexta.replication.api.data.QueryResponse;
 import com.connexta.replication.api.data.ResourceInfo;
 import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.data.ddf.DdfMetadataInfo;
-import com.connexta.replication.api.impl.query.TaskInfoImpl;
+import com.connexta.replication.api.impl.data.TaskInfoImpl;
 import com.connexta.replication.api.queue.QueueException;
 import com.connexta.replication.api.queue.SiteQueue;
 import java.io.IOException;
@@ -197,7 +197,7 @@ public class QueryServiceTest {
     ArgumentCaptor<TaskInfoImpl> taskCaptor = ArgumentCaptor.forClass(TaskInfoImpl.class);
     verify(siteQueue).put(taskCaptor.capture());
     TaskInfoImpl createdTask = taskCaptor.getValue();
-    assertThat(createdTask.getId(), is(metadata.getId()));
+    assertThat(createdTask.getIntelId(), is(metadata.getId()));
     assertThat(createdTask.getPriority(), is(filter.getPriority()));
     assertThat(createdTask.getOperation(), is(OperationType.HARVEST));
     assertThat(createdTask.getLastModified(), is(metadata.getMetadataModified().toInstant()));
@@ -574,12 +574,12 @@ public class QueryServiceTest {
     ArgumentCaptor<TaskInfoImpl> taskCaptor = ArgumentCaptor.forClass(TaskInfoImpl.class);
     verify(siteQueue).put(taskCaptor.capture());
     TaskInfoImpl createdTask = taskCaptor.getValue();
-    assertThat(createdTask.getId(), is(metadata.getId()));
+    assertThat(createdTask.getIntelId(), is(metadata.getId()));
     assertThat(createdTask.getPriority(), is(filter.getPriority()));
     assertThat(createdTask.getOperation(), is(OperationType.HARVEST));
     assertThat(createdTask.getLastModified(), is(metadata.getMetadataModified().toInstant()));
     ResourceInfo resourceInfo = createdTask.getResource().orElse(null);
-    assertThat(resourceInfo.getResourceUri().get(), is(metadata.getResourceUri()));
+    assertThat(resourceInfo.getUri().get(), is(metadata.getResourceUri()));
     assertThat(resourceInfo.getLastModified(), is(metadata.getResourceModified().toInstant()));
     assertThat(resourceInfo.getSize().getAsLong(), is(metadata.getResourceSize()));
   }

@@ -13,12 +13,24 @@
  */
 package com.connexta.replication.api.data;
 
+import java.util.Objects;
+
 /** Identifies a particular metadata to be transferred. */
 public interface MetadataInfo extends DataInfo {
   /**
-   * Gets the type of metadata to be transferred (e.g. DDMS 2.0, DDMS 5.0, ...).
+   * Gets the type of metadata to be transferred (e.g. metacard, DDMS 2.0, DDMS 5.0, ...).
    *
    * @return the type of metadata to be transferred
    */
   public String getType();
+
+  @Override
+  public default boolean sameAs(Object obj) {
+    if (obj instanceof MetadataInfo) {
+      final MetadataInfo info = (MetadataInfo) obj;
+
+      return DataInfo.super.sameAs(info) && Objects.equals(getType(), info.getType());
+    }
+    return false;
+  }
 }

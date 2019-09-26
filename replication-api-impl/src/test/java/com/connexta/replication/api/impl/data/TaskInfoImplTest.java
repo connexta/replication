@@ -11,16 +11,17 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.api.impl.query;
+package com.connexta.replication.api.impl.data;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.connexta.replication.api.data.MetadataInfo;
 import com.connexta.replication.api.data.OperationType;
 import com.connexta.replication.api.data.ResourceInfo;
-import com.connexta.replication.api.data.TaskInfo;
 import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
@@ -71,7 +72,7 @@ public class TaskInfoImplTest {
 
   @Test
   public void getters() {
-    assertThat(taskInfo.getId(), is(ID));
+    assertThat(taskInfo.getIntelId(), is(ID));
     assertThat(taskInfo.getPriority(), is(PRIORITY));
     assertThat(taskInfo.getOperation(), is(OPERATION));
     assertThat(taskInfo.getLastModified(), is(METADATA_MODIFIED));
@@ -82,7 +83,7 @@ public class TaskInfoImplTest {
   @Test
   public void metadatasConstructor() {
     taskInfo = new TaskInfoImpl(ID, PRIORITY, OPERATION, METADATA_MODIFIED, Set.of(metadataInfo));
-    assertThat(taskInfo.getId(), is(ID));
+    assertThat(taskInfo.getIntelId(), is(ID));
     assertThat(taskInfo.getPriority(), is(PRIORITY));
     assertThat(taskInfo.getOperation(), is(OPERATION));
     assertThat(taskInfo.getLastModified(), is(METADATA_MODIFIED));
@@ -93,7 +94,7 @@ public class TaskInfoImplTest {
   @Test
   public void resourceConstructor() {
     taskInfo = new TaskInfoImpl(ID, PRIORITY, OPERATION, METADATA_MODIFIED, resourceInfo);
-    assertThat(taskInfo.getId(), is(ID));
+    assertThat(taskInfo.getIntelId(), is(ID));
     assertThat(taskInfo.getPriority(), is(PRIORITY));
     assertThat(taskInfo.getOperation(), is(OPERATION));
     assertThat(taskInfo.getLastModified(), is(METADATA_MODIFIED));
@@ -136,34 +137,43 @@ public class TaskInfoImplTest {
 
   @Test
   public void equals() {
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             ID, PRIORITY, OPERATION, METADATA_MODIFIED, resourceInfo, Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertTrue(taskInfo.equals(taskInfo1));
     assertTrue(taskInfo1.equals(taskInfo));
   }
 
   @Test
   public void equalsDifferentID() {
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             "ID1", PRIORITY, OPERATION, METADATA_MODIFIED, resourceInfo, Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertFalse(taskInfo.equals(taskInfo1));
     assertFalse(taskInfo1.equals(taskInfo));
   }
 
   @Test
   public void equalsDifferentPriority() {
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             ID, (byte) 9, OPERATION, METADATA_MODIFIED, resourceInfo, Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertFalse(taskInfo.equals(taskInfo1));
     assertFalse(taskInfo1.equals(taskInfo));
   }
 
   @Test
   public void equalsDifferentOperation() {
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             ID,
             PRIORITY,
@@ -171,15 +181,21 @@ public class TaskInfoImplTest {
             METADATA_MODIFIED,
             resourceInfo,
             Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertFalse(taskInfo.equals(taskInfo1));
     assertFalse(taskInfo1.equals(taskInfo));
   }
 
   @Test
   public void equalsDifferentModifiedDate() {
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             ID, PRIORITY, OPERATION, Instant.EPOCH, resourceInfo, Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertFalse(taskInfo.equals(taskInfo1));
     assertFalse(taskInfo1.equals(taskInfo));
   }
@@ -187,9 +203,12 @@ public class TaskInfoImplTest {
   @Test
   public void equalsDifferentResourceInfo() throws Exception {
     resourceInfo = new ResourceInfoImpl(new URI("https://test:456"), RESOURCE_MODIFIED, SIZE);
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             ID, PRIORITY, OPERATION, METADATA_MODIFIED, resourceInfo, Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertFalse(taskInfo.equals(taskInfo1));
     assertFalse(taskInfo1.equals(taskInfo));
   }
@@ -198,9 +217,12 @@ public class TaskInfoImplTest {
   public void equalsDifferentMetadataInfo() throws Exception {
     metadataInfo =
         new DdfMetadataInfoImpl<>("something unique", METADATA_MODIFIED, SIZE, DATA_CLASS, DATA);
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             ID, PRIORITY, OPERATION, METADATA_MODIFIED, resourceInfo, Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertFalse(taskInfo.equals(taskInfo1));
     assertFalse(taskInfo1.equals(taskInfo));
   }
@@ -212,17 +234,23 @@ public class TaskInfoImplTest {
 
   @Test
   public void equalHashCodes() {
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             ID, PRIORITY, OPERATION, METADATA_MODIFIED, resourceInfo, Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertThat(taskInfo.hashCode(), is(taskInfo1.hashCode()));
   }
 
   @Test
   public void unequalHashCodes() {
-    TaskInfo taskInfo1 =
+    TaskInfoImpl taskInfo1 =
         new TaskInfoImpl(
             "ID1", PRIORITY, OPERATION, METADATA_MODIFIED, resourceInfo, Set.of(metadataInfo));
+
+    taskInfo1.setId(taskInfo.getId());
+
     assertThat(taskInfo.hashCode(), is(not(taskInfo1.hashCode())));
   }
 }

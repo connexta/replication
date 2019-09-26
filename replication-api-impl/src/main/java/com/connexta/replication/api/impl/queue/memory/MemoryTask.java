@@ -16,25 +16,16 @@ package com.connexta.replication.api.impl.queue.memory;
 import com.connexta.replication.api.data.ErrorCode;
 import com.connexta.replication.api.data.Task;
 import com.connexta.replication.api.data.TaskInfo;
-import com.connexta.replication.api.impl.queue.AbstractTask;
+import com.connexta.replication.api.impl.data.AbstractTaskImpl;
 import com.connexta.replication.api.queue.SiteQueue;
-import com.google.common.annotations.VisibleForTesting;
 import io.micrometer.core.instrument.Clock;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.Nullable;
 
 /** Provides an in-memory implement for the {@link Task} interface. */
-public class MemoryTask extends AbstractTask {
-  private final byte priority;
-  private final Clock clock;
+public class MemoryTask extends AbstractTaskImpl {
   private final MemorySiteQueue queue;
-
-  private volatile int attempts = 1;
-
-  private volatile State state = State.PENDING;
 
   /**
    * The error code associated with the completion of this task. Will be <code>null</code> until it
@@ -44,15 +35,6 @@ public class MemoryTask extends AbstractTask {
   @Nullable private volatile ErrorCode code = null;
 
   @Nullable private volatile String reason = null;
-
-  private final Instant originalQueuedTime;
-  private volatile long queueTime;
-
-  // use to track duration - all in nanoseconds
-  private volatile long startTime;
-  private volatile Duration duration = Duration.ZERO;
-  private volatile Duration pendingDuration = Duration.ZERO;
-  private volatile Duration activeDuration = Duration.ZERO;
 
   private final ReentrantLock lock = new ReentrantLock();
   @Nullable private volatile Thread owner = null;
@@ -66,34 +48,8 @@ public class MemoryTask extends AbstractTask {
    * @param clock the clock to use for retrieving wall and monotonic times
    */
   MemoryTask(TaskInfo info, MemorySiteQueue queue, Clock clock) {
-    super(info);
-    this.priority =
-        (byte)
-            Math.min(
-                Math.max(info.getPriority(), MemorySiteQueue.MIN_PRIORITY),
-                MemorySiteQueue.MAX_PRIORITY);
-    this.clock = clock;
+    super(info, clock);
     this.queue = queue;
-    final long now = clock.wallTime();
-
-    this.startTime = clock.monotonicTime();
-    this.queueTime = now;
-    this.originalQueuedTime = Instant.ofEpochMilli(now);
-  }
-
-  @Override
-  public byte getPriority() {
-    return priority;
-  }
-
-  @Override
-  public int getTotalAttempts() {
-    return attempts;
-  }
-
-  @Override
-  public State getState() {
-    return state;
   }
 
   @Override
@@ -128,64 +84,6 @@ public class MemoryTask extends AbstractTask {
    */
   public Optional<String> getReason() {
     return Optional.ofNullable(reason);
-  }
-
-  @Override
-  public Instant getOriginalQueuedTime() {
-    return originalQueuedTime;
-  }
-
-  @Override
-  public Instant getQueuedTime() {
-    return Instant.ofEpochMilli(queueTime);
-  }
-
-  @Override
-  public Duration getDuration() {
-    final long s = this.startTime;
-    final Duration d = this.duration;
-
-    switch (state) {
-      case PENDING:
-      case ACTIVE:
-        return d.plusNanos(clock.monotonicTime() - s);
-      case FAILED:
-      case SUCCESSFUL:
-      default:
-        return d;
-    }
-  }
-
-  @Override
-  public Duration getPendingDuration() {
-    final long s = this.startTime;
-    final Duration d = this.pendingDuration;
-
-    switch (state) {
-      case PENDING:
-        return d.plusNanos(clock.monotonicTime() - s);
-      case ACTIVE:
-      case FAILED:
-      case SUCCESSFUL:
-      default:
-        return d;
-    }
-  }
-
-  @Override
-  public Duration getActiveDuration() {
-    final long s = this.startTime;
-    final Duration d = this.activeDuration;
-
-    switch (state) {
-      case ACTIVE:
-        return d.plusNanos(clock.monotonicTime() - s);
-      case PENDING:
-      case FAILED:
-      case SUCCESSFUL:
-      default:
-        return d;
-    }
   }
 
   @Override
@@ -253,11 +151,6 @@ public class MemoryTask extends AbstractTask {
     lock.lock();
     this.owner = Thread.currentThread();
     return this;
-  }
-
-  @VisibleForTesting
-  TaskInfo getInfo() {
-    return info;
   }
 
   /**

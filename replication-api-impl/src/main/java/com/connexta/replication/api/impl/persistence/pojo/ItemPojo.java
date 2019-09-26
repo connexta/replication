@@ -81,11 +81,6 @@ public class ItemPojo extends Pojo<ItemPojo> {
   @Indexed(name = "action", type = "string", searchable = false)
   private String action;
 
-  /** This default ctor is needed for spring-solr to instantiate an item when querying solr */
-  public ItemPojo() {
-    super.setVersion(ItemPojo.CURRENT_VERSION);
-  }
-
   /**
    * Gets the identifier of the metadata retrieved from a remote system.
    *

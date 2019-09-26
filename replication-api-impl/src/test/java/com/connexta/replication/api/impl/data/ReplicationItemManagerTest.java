@@ -66,6 +66,7 @@ public class ReplicationItemManagerTest {
   public void getItemLatestItem() {
     final ItemPojo pojo =
         new ItemPojo()
+            .setVersion(ItemPojo.CURRENT_VERSION)
             .setId("12345")
             .setMetadataId("m123")
             .setFilterId("c123")
@@ -100,6 +101,7 @@ public class ReplicationItemManagerTest {
   public void getItemsForFilter() {
     final ItemPojo pojo =
         new ItemPojo()
+            .setVersion(ItemPojo.CURRENT_VERSION)
             .setId("12345")
             .setMetadataId("m123")
             .setFilterId("c123")

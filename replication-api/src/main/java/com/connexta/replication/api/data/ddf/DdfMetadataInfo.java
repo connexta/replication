@@ -14,6 +14,8 @@
 package com.connexta.replication.api.data.ddf;
 
 import com.connexta.replication.api.data.MetadataInfo;
+import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Extension to the {@link MetadataInfo} class which provides additional collected information that
@@ -23,16 +25,30 @@ import com.connexta.replication.api.data.MetadataInfo;
  */
 public interface DdfMetadataInfo<T> extends MetadataInfo {
   /**
-   * The class format for the raw data defining the metadata.
+   * Gets the class for the raw data defining the metadata.
    *
-   * @return the class for the raw data
+   * @return the class for the raw data or <code>null</code> if unknown
    */
+  @Nullable
   Class<T> getDataClass();
 
   /**
-   * The raw data defining the metadata.
+   * Gets the raw data defining the metadata.
    *
-   * @return the raw data
+   * @return the raw data or <code>null</code> if unknown
    */
+  @Nullable
   Object getData();
+
+  @Override
+  public default boolean sameAs(Object obj) {
+    if (obj instanceof DdfMetadataInfo) {
+      final DdfMetadataInfo info = (DdfMetadataInfo) obj;
+
+      return MetadataInfo.super.sameAs(info)
+          && Objects.equals(getDataClass(), info.getDataClass())
+          && Objects.equals(getData(), info.getData());
+    }
+    return false;
+  }
 }

@@ -388,7 +388,7 @@ public class QueryServiceComponentTest {
   private void assertTask(Task task, Metadata metacard, byte priority, OperationType operation)
       throws Exception {
     tasks.add(task);
-    assertThat(task.getId(), Matchers.equalTo(metacard.getId()));
+    assertThat(task.getIntelId(), Matchers.equalTo(metacard.getId()));
     assertThat(task.getPriority(), Matchers.equalTo(priority));
     assertThat(task.getOperation(), Matchers.equalTo(operation));
     assertThat(Date.from(task.getLastModified()), Matchers.equalTo(metacard.getMetadataModified()));
@@ -413,8 +413,7 @@ public class QueryServiceComponentTest {
       assertThat(task.getResource(), OptionalMatchers.isPresent());
       final ResourceInfo resource = task.getResource().get();
 
-      assertThat(
-          resource.getResourceUri(), OptionalMatchers.isPresentAndIs(metacard.getResourceUri()));
+      assertThat(resource.getUri(), OptionalMatchers.isPresentAndIs(metacard.getResourceUri()));
       assertThat(
           Date.from(resource.getLastModified()), Matchers.equalTo(metacard.getResourceModified()));
       assertThat(

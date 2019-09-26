@@ -14,6 +14,9 @@
 package com.connexta.replication.api.impl.persistence.pojo;
 
 import com.connexta.replication.api.data.FilterIndex;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.time.Instant;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -27,6 +30,8 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
  * fields based on the latest version format.
  */
 @SolrDocument(collection = FilterIndexPojo.COLLECTION)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
 
   /**
@@ -43,13 +48,9 @@ public class FilterIndexPojo extends Pojo<FilterIndexPojo> {
 
   public static final String COLLECTION = "filter_index";
 
-  @Nullable
   @Indexed(name = "modified_since", searchable = false)
+  @Nullable
   private Instant modifiedSince;
-
-  public FilterIndexPojo() {
-    super.setVersion(FilterIndexPojo.CURRENT_VERSION);
-  }
 
   /**
    * @see FilterIndex#getModifiedSince()
