@@ -21,16 +21,16 @@ import javax.annotation.Nullable;
  * Extension to the {@link MetadataInfo} class which provides additional collected information that
  * can be useful for a worker processing an associated task.
  *
- * @param <T> the type of raw data
+ * @param <D> the type of raw metadata held by this class
  */
-public interface DdfMetadataInfo<T> extends MetadataInfo {
+public interface DdfMetadataInfo<D> extends MetadataInfo {
   /**
    * Gets the class for the raw data defining the metadata.
    *
    * @return the class for the raw data or <code>null</code> if unknown
    */
   @Nullable
-  Class<T> getDataClass();
+  Class<D> getDataClass();
 
   /**
    * Gets the raw data defining the metadata.
@@ -38,12 +38,12 @@ public interface DdfMetadataInfo<T> extends MetadataInfo {
    * @return the raw data or <code>null</code> if unknown
    */
   @Nullable
-  Object getData();
+  D getData();
 
   @Override
   public default boolean sameAs(Object obj) {
     if (obj instanceof DdfMetadataInfo) {
-      final DdfMetadataInfo info = (DdfMetadataInfo) obj;
+      final DdfMetadataInfo<?> info = (DdfMetadataInfo<?>) obj;
 
       return MetadataInfo.super.sameAs(info)
           && Objects.equals(getDataClass(), info.getDataClass())
