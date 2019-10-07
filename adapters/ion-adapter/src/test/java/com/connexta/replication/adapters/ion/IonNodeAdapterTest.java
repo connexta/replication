@@ -20,6 +20,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -35,6 +36,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Date;
 import org.codice.junit.ClearInterruptions;
 import org.codice.junit.rules.MethodRuleAnnotationProcessor;
 import org.hamcrest.Matchers;
@@ -56,6 +58,8 @@ import org.springframework.web.client.RestTemplate;
 public class IonNodeAdapterTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public final MethodRuleAnnotationProcessor processor = new MethodRuleAnnotationProcessor();
+
+  private static final Date EPOCH = new Date(0);
 
   RestTemplate restTemplate;
 
@@ -104,6 +108,7 @@ public class IonNodeAdapterTest {
         .andExpect(content().string(containsString(resourceFormData())))
         .andExpect(content().string(containsString(correlationIdFormData())))
         .andExpect(content().string(containsString(metadataFormData())))
+        .andExpect(header("Last-Modified", EPOCH.toInstant().toString()))
         .andRespond(withStatus(HttpStatus.ACCEPTED));
 
     assertThat(adapter.createResource(getCreateStorageRequest()), is(true));
@@ -228,6 +233,7 @@ public class IonNodeAdapterTest {
                 Metadata metadata = mock(Metadata.class);
                 when(metadata.getMetadataSize()).thenReturn((long) getRawMetadata().length());
                 when(metadata.getRawMetadata()).thenReturn(getRawMetadata());
+                when(metadata.getMetadataModified()).thenReturn(EPOCH);
                 return metadata;
               }
             };

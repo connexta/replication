@@ -124,6 +124,8 @@ public class IonNodeAdapter implements NodeAdapter {
     HttpHeaders headers = new HttpHeaders();
     headers.set("Accept-Version", "0.1.0");
     headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+    headers.set(
+        "Last-Modified", resource.getMetadata().getMetadataModified().toInstant().toString());
 
     HttpEntity<MultiValueMap<String, Object>> requestEntity =
         new HttpEntity(multipartBody, headers);

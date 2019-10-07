@@ -150,26 +150,25 @@ curl -H "Content-Type: application/json" \
 -d @sites.json \
 http://localhost:8983/solr/replication_site/update?commitWithin=1000
 ```
-###### Adding Replication Jobs Example
-Example jobs.json
+###### Adding Replication Filters Example
+Example filters.json
 ```json
-  [
-    {
-      "version": 1,
-      "id": "unique-job-id-98765",
-      "name": "pdf-harvest",
-      "bidirectional": false,
-      "source":" some-unique-id-1234",
-      "destination": "another-unique-id-5678",
-      "filter": "\"media.type\" like 'application/pdf'",
-      "suspended": false
-    }
-  ]
+   [
+      {
+        "name":"pdf-harvest",
+        "site_id":"remote-node-id",
+        "filter":"\"media.type\" like 'application/pdf'",
+        "suspended":false,
+        "priority": 0,
+        "id":"unique-filter-id-98765",
+        "version":1
+      }
+    ]
 ```
 ```
 curl -H "Content-Type: application/json" \
--d @jobs.json \
-http://localhost:8983/solr/replication_config/update?commitWithin=1000
+-d @filters.json \
+http://localhost:8983/solr/replication_filter/update?commitWithin=1000
 ```
 
 #### Removing Replication Configuration
