@@ -153,7 +153,7 @@
         <javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
         <httpclient.version>4.5.10</httpclient.version>
         <to-string-verifier.version>1.4.5</to-string-verifier.version>
-        <spotless.maven.plugin.version>1.24.1</spotless.maven.plugin.version>
+        <spotless.maven.plugin.version>1.25.0</spotless.maven.plugin.version>
         <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
         <rabbitmq-docker.version>3.7</rabbitmq-docker.version>
         <beanutils.version>1.9.4</beanutils.version>
