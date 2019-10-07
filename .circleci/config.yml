@@ -27,8 +27,7 @@ jobs:
             - mvn-repo-v1-{{ .Branch }}-sonar
             - mvn-repo-v1-{{ .Branch }}-owasp
             - mvn-repo-v1-{{ .Branch }}
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
       - run:
           name: Building
           command: |
@@ -66,8 +65,7 @@ jobs:
       - run: *env
       - checkout
       - restore_cache: *restore_cache
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
       - run:
           name: Building
           command: |
