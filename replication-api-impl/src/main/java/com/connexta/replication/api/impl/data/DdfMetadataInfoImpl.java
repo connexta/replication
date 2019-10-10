@@ -77,7 +77,7 @@ public class DdfMetadataInfoImpl<D> extends MetadataInfoImpl implements DdfMetad
    * @param type a string describing the type of the metadata (e.g. DDMS 2.0, DDMS 5.0, ...)
    * @param lastModified rhe metadata modified time of the DDF metadata
    * @param size rhe size of the metadata in bytes
-   * @param dataClass rhe class (i.e. type) of the raw metadata
+   * @param dataClass the class (i.e. type) of the raw metadata
    * @param data rhe raw metadata
    * @throws IllegalArgumentException if the type of the data does not match the given dataclass
    */

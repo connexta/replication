@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 
 /**
  * Describes a piece of intel along with information about how to replicate it. This is picked up by
- * an item worker .
+ * an item worker.
  */
 public abstract class AbstractTaskImpl extends AbstractPersistable<TaskPojo> implements Task {
   private static final String PERSISTABLE_TYPE = "task";
