@@ -16,18 +16,28 @@ package com.connexta.replication.api.impl.data;
 import com.connexta.replication.api.data.InvalidFieldException;
 import com.connexta.replication.api.data.NonTransientReplicationPersistenceException;
 import com.connexta.replication.api.data.NotFoundException;
+import com.connexta.replication.api.data.OperationType;
 import com.connexta.replication.api.data.RecoverableReplicationPersistenceException;
 import com.connexta.replication.api.data.Site;
 import com.connexta.replication.api.data.SiteKind;
 import com.connexta.replication.api.data.SiteType;
+import com.connexta.replication.api.data.Task.State;
 import com.connexta.replication.api.data.TransientReplicationPersistenceException;
+import com.connexta.replication.api.impl.jackson.JsonUtils;
+import com.connexta.replication.api.impl.persistence.pojo.DdfMetadataInfoPojo;
+import com.connexta.replication.api.impl.persistence.pojo.MetadataInfoPojo;
+import com.connexta.replication.api.impl.persistence.pojo.ResourceInfoPojo;
 import com.connexta.replication.api.impl.persistence.pojo.SitePojo;
+import com.connexta.replication.api.impl.persistence.pojo.TaskInfoPojo;
+import com.connexta.replication.api.impl.persistence.pojo.TaskPojo;
 import com.connexta.replication.api.impl.persistence.spring.SiteRepository;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
@@ -150,6 +160,44 @@ public class SiteManagerImplTest {
 
   private final SiteRepository repo = Mockito.mock(SiteRepository.class);
   private final SiteManagerImpl mgr = new SiteManagerImpl(repo);
+
+  @Test
+  public void test() throws Exception {
+    final TaskPojo task =
+        new TaskPojo()
+            .setInfo(
+                new TaskInfoPojo()
+                    .setIntelId("intel.id")
+                    .setLastModified(Instant.now())
+                    .setOperation(OperationType.HARVEST)
+                    .setPriority((byte) 2)
+                    .setVersion(4)
+                    .setId("internal.task.info.id")
+                    .setResource(
+                        new ResourceInfoPojo()
+                            .setUri("http://uri.com")
+                            .setLastModified(Instant.EPOCH)
+                            .setSize(1234L))
+                    .addMetadata(
+                        new MetadataInfoPojo<>().setType("DDMS2.0").setLastModified(Instant.MIN))
+                    .addMetadata(
+                        new DdfMetadataInfoPojo()
+                            .setType("metacard")
+                            .setLastModified(Instant.MAX)
+                            .setDataClass(Map.class)
+                            .setData(Map.of("k1", "v1", "k2", "v2"))))
+            .setId("internal.task.id")
+            .setState(State.PENDING)
+            .setActiveDuration(Duration.ofMinutes(2))
+            .setDuration(Duration.ofMinutes(4))
+            .setOriginalQueuedTime(Instant.now())
+            .setPendingDuration(Duration.ofHours(15));
+    final String json = JsonUtils.write(task);
+
+    System.out.println(">>>>>>>>>> " + json);
+    final Object o = JsonUtils.read(TaskPojo.class, json);
+    System.out.println(">>>> " + o);
+  }
 
   @Test
   public void testGet() throws Exception {

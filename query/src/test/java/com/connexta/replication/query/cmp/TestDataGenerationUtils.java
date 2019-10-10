@@ -46,6 +46,7 @@ public class TestDataGenerationUtils {
    */
   public static SitePojo generateSitePojo(int seed) {
     return new SitePojo()
+        .setVersion(SitePojo.CURRENT_VERSION)
         .setId(String.valueOf(seed))
         .setName("name" + seed)
         .setDescription("description" + seed)
@@ -66,6 +67,7 @@ public class TestDataGenerationUtils {
    */
   public static FilterPojo generateFilterPojo(String siteId, int seed) {
     return new FilterPojo()
+        .setVersion(FilterPojo.CURRENT_VERSION)
         .setId(String.valueOf(seed))
         .setSiteId(siteId)
         .setFilter("filter" + seed)

@@ -82,6 +82,7 @@ public class SiteImplTest {
   public void testCtorWithPojo() throws Exception {
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription(SiteImplTest.DESCRIPTION)
@@ -423,6 +424,7 @@ public class SiteImplTest {
   public void testReadFromCurrentVersion() throws Exception {
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -498,6 +500,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setDescription((SiteImplTest.DESCRIPTION))
             .setUrl(SiteImplTest.URL.toString())
@@ -517,6 +520,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName("")
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -537,6 +541,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -556,6 +561,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -577,6 +583,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -597,6 +604,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -616,6 +624,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -633,6 +642,7 @@ public class SiteImplTest {
   public void testReadFromCurrentVersionWithNewType() throws Exception {
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -666,6 +676,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -685,6 +696,7 @@ public class SiteImplTest {
 
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -702,6 +714,7 @@ public class SiteImplTest {
   public void testReadFromCurrentVersionWithNewKind() throws Exception {
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -732,6 +745,7 @@ public class SiteImplTest {
   public void testReadFromCurrentVersionWithUndefinedParallelismFactor_0() throws Exception {
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))
@@ -760,6 +774,7 @@ public class SiteImplTest {
   public void testReadFromCurrentVersionWithUndefinedParallelismFactor_Negative() throws Exception {
     final SitePojo pojo =
         new SitePojo()
+            .setVersion(SitePojo.CURRENT_VERSION)
             .setId(SiteImplTest.ID)
             .setName(SiteImplTest.NAME)
             .setDescription((SiteImplTest.DESCRIPTION))

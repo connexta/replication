@@ -133,8 +133,8 @@ public class SiteImpl extends AbstractPersistable<SitePojo> implements Site {
     super.writeTo(pojo);
     setOrFailIfNullOrEmpty("name", this::getName, pojo::setName);
     convertAndSetOrFailIfNull("url", this::getUrl, URL::toString, pojo::setUrl);
-    convertAndSetOrFailIfNull("type", this::getType, SiteType::name, pojo::setType);
-    convertAndSetOrFailIfNull("kind", this::getKind, SiteKind::name, pojo::setKind);
+    convertAndSetEnumOrFailIfNullOrUnknown("type", SiteType.UNKNOWN, this::getType, pojo::setType);
+    convertAndSetEnumOrFailIfNullOrUnknown("kind", SiteKind.UNKNOWN, this::getKind, pojo::setKind);
     return pojo.setVersion(SitePojo.CURRENT_VERSION)
         .setDescription(description)
         .setPollingPeriod(SiteImpl.toMillis(pollingPeriod))

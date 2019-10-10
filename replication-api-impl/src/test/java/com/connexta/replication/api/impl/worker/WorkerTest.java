@@ -305,7 +305,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -340,11 +340,11 @@ public class WorkerTest {
     SiteQueue queue = mock(SiteQueue.class);
 
     ResourceInfo resourceInfo = mock(ResourceInfo.class);
-    when(resourceInfo.getResourceUri()).thenReturn(Optional.of(RESOURCE_URI));
+    when(resourceInfo.getUri()).thenReturn(Optional.of(RESOURCE_URI));
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     when(task.getResource()).thenReturn(Optional.of(resourceInfo));
 
     DdfMetadataInfo metadata = mockDdfMetadata();
@@ -381,7 +381,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -421,7 +421,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -457,7 +457,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -496,7 +496,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -535,11 +535,11 @@ public class WorkerTest {
     SiteQueue queue = mock(SiteQueue.class);
 
     ResourceInfo resourceInfo = mock(ResourceInfo.class);
-    when(resourceInfo.getResourceUri()).thenReturn(Optional.of(RESOURCE_URI));
+    when(resourceInfo.getUri()).thenReturn(Optional.of(RESOURCE_URI));
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     when(task.getResource()).thenReturn(Optional.of(resourceInfo));
 
     DdfMetadataInfo metadata = mockDdfMetadata();
@@ -578,11 +578,11 @@ public class WorkerTest {
     SiteQueue queue = mock(SiteQueue.class);
 
     ResourceInfo resourceInfo = mock(ResourceInfo.class);
-    when(resourceInfo.getResourceUri()).thenReturn(Optional.of(RESOURCE_URI));
+    when(resourceInfo.getUri()).thenReturn(Optional.of(RESOURCE_URI));
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     when(task.getResource()).thenReturn(Optional.of(resourceInfo));
 
     DdfMetadataInfo metadata = mockDdfMetadata();
@@ -618,11 +618,11 @@ public class WorkerTest {
     SiteQueue queue = mock(SiteQueue.class);
 
     ResourceInfo resourceInfo = mock(ResourceInfo.class);
-    when(resourceInfo.getResourceUri()).thenReturn(Optional.of(RESOURCE_URI));
+    when(resourceInfo.getUri()).thenReturn(Optional.of(RESOURCE_URI));
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     when(task.getResource()).thenReturn(Optional.of(resourceInfo));
 
     DdfMetadataInfo metadata = mockDdfMetadata();
@@ -676,7 +676,7 @@ public class WorkerTest {
     // setup
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -747,7 +747,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mock(DdfMetadataInfo.class);
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -775,7 +775,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mock(DdfMetadataInfo.class);
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -821,7 +821,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -852,7 +852,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -937,7 +937,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -972,7 +972,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     doThrow(InterruptedException.class).when(task).fail(any(), anyString());
 
     DdfMetadataInfo metadata = mockDdfMetadata();
@@ -1008,11 +1008,11 @@ public class WorkerTest {
     SiteQueue queue = mock(SiteQueue.class);
 
     ResourceInfo resourceInfo = mock(ResourceInfo.class);
-    when(resourceInfo.getResourceUri()).thenReturn(Optional.of(RESOURCE_URI));
+    when(resourceInfo.getUri()).thenReturn(Optional.of(RESOURCE_URI));
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     when(task.getResource()).thenReturn(Optional.of(resourceInfo));
     doThrow(InterruptedException.class).when(task).fail(any(), anyString());
 
@@ -1049,11 +1049,11 @@ public class WorkerTest {
     SiteQueue queue = mock(SiteQueue.class);
 
     ResourceInfo resourceInfo = mock(ResourceInfo.class);
-    when(resourceInfo.getResourceUri()).thenReturn(Optional.of(RESOURCE_URI));
+    when(resourceInfo.getUri()).thenReturn(Optional.of(RESOURCE_URI));
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     when(task.getResource()).thenReturn(Optional.of(resourceInfo));
 
     DdfMetadataInfo metadata = mockDdfMetadata();
@@ -1090,11 +1090,11 @@ public class WorkerTest {
     SiteQueue queue = mock(SiteQueue.class);
 
     ResourceInfo resourceInfo = mock(ResourceInfo.class);
-    when(resourceInfo.getResourceUri()).thenReturn(Optional.of(RESOURCE_URI));
+    when(resourceInfo.getUri()).thenReturn(Optional.of(RESOURCE_URI));
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     when(task.getResource()).thenReturn(Optional.of(resourceInfo));
     doThrow(InterruptedException.class).when(task).fail(any(), anyString());
 
@@ -1132,7 +1132,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));
@@ -1170,7 +1170,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
     doThrow(InterruptedException.class).when(task).fail(any(), anyString());
 
     DdfMetadataInfo metadata = mockDdfMetadata();
@@ -1272,7 +1272,7 @@ public class WorkerTest {
 
     Task task = mock(Task.class);
     when(task.getOperation()).thenReturn(OperationType.HARVEST);
-    when(task.getId()).thenReturn(TASK_ID);
+    when(task.getIntelId()).thenReturn(TASK_ID);
 
     DdfMetadataInfo metadata = mockDdfMetadata();
     when(task.metadatas()).thenReturn(Stream.of(metadata)).thenReturn(Stream.of(metadata));

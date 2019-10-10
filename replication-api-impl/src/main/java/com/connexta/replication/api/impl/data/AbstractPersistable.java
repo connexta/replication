@@ -57,13 +57,13 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    * a <code>null</code> identifier to ensure that the identifier is restored or set before
    * returning any instances of the object.
    *
-   * @param type a string representing the type of this object (used when generating exception or
-   *     logs)
+   * @param persistableType a string representing the type of this object (used when generating
+   *     exception or logs)
    * @param id the previously generated identifier for this object or <code>null</code> if it is
    *     expected to be restored later when {@link #readFrom(Pojo)} is called by the subclass
    */
-  protected AbstractPersistable(String type, @Nullable String id) {
-    this.persistableType = type;
+  protected AbstractPersistable(String persistableType, @Nullable String id) {
+    this.persistableType = persistableType;
     this.id = id;
   }
 
@@ -117,6 +117,31 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
   }
 
   /**
+   * Useful method that can be used to convert the value of a field if it is not <code>null</code>
+   * before setting it in a given destination. If it is <code>null</code> than <code>null</code> is
+   * set and no conversion happens. The destination's corresponding field would be set accordingly.
+   * The pojo field's value is retrieved using a consumer (e.g. <code>pojo::getName</code>) and set
+   * in the destination using a supplier (e.g. <code>this::setName</code>).
+   *
+   * @param supplier a supplier capable of retrieving the current value for the field
+   * @param converter a converter to convert from the field's value to the one set in the
+   *     destination
+   * @param consumer a consumer capable of updating the destination with the field's value if it is
+   *     defined
+   * @param <P> the consumed type
+   * @throws InvalidFieldException if the field's value as supplied by <code>supplier</code> cannot
+   *     be converted
+   */
+  protected <P> void convertAndSet(
+      Supplier<String> supplier,
+      Function<String, ? extends P> converter,
+      Consumer<? super P> consumer) {
+    final String s = supplier.get();
+
+    consumer.accept((s != null) ? converter.apply(s) : null);
+  }
+
+  /**
    * Useful method that can be used to validate if the value of a field is not <code>null</code>
    * before setting it in a given destination. If it is <code>null</code> than an exception is
    * thrown otherwise the destination's corresponding field would be set accordingly. The field's
@@ -152,8 +177,8 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    *     if it is defined
    * @param <F> the field's type
    * @param <P> the consumed type
-   * @throws InvalidFieldException if the field's value as supplied by <code>supplier
-   *     </code> is <code>null</code> or failed to be converted
+   * @throws InvalidFieldException if the field's value as supplied by <code>supplier</code> is
+   *     <code>null</code> or failed to be converted
    */
   protected <F, P> void convertAndSetOrFailIfNull(
       String field,
@@ -174,8 +199,8 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    * @param supplier a supplier capable of retrieving the current value for the field
    * @param consumer a consumer capable of updating the destination with the field's value if it is
    *     defined
-   * @throws InvalidFieldException if the field's value as supplied by <code>supplier
-   *     </code> is <code>null</code> or empty
+   * @throws InvalidFieldException if the field's value as supplied by <code>supplier</code> is
+   *     <code>null</code> or empty
    */
   protected void setOrFailIfNullOrEmpty(
       String field, Supplier<String> supplier, Consumer<String> consumer) {
@@ -197,8 +222,8 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    * @param consumer a consumer capable of updating the destination with the field's value if it is
    *     defined
    * @param <P> the consumed type
-   * @throws InvalidFieldException if the field's value as supplied by <code>supplier
-   *     </code> is <code>null</code> or empty or cannot be converted
+   * @throws InvalidFieldException if the field's value as supplied by <code>supplier</code> is
+   *     <code>null</code> or empty or cannot be converted
    */
   protected <P> void convertAndSetOrFailIfNullOrEmpty(
       String field,
@@ -206,6 +231,35 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
       Function<String, ? extends P> converter,
       Consumer<? super P> consumer) {
     consumer.accept(converter.apply(validateNotNullAndNotEmpty(field, supplier.get())));
+  }
+
+  /**
+   * Useful method that can be used to validate if the value of an enum field is not <code>null
+   * </code> or the specified <code>unknown</code> value before converting and setting it in a given
+   * destination. If it is <code>null</code> or equal to the <code>unknown</code> value than an
+   * exception is thrown otherwise the destination's corresponding field would be set accordingly.
+   * The field's value is retrieved using a consumer (e.g. <code>pojo::getName</code>) then
+   * converted before finally being set in the destination using a supplier (e.g. <code>
+   * this::setName</code>).
+   *
+   * @param field the name of the field being checked for presence (used in the exception message)
+   * @param unknown the enumeration value to be considered as an unknown value that shouldn't be
+   *     converted
+   * @param supplier a supplier capable of retrieving the current value for the field
+   * @param consumer a consumer capable of updating the destination with the converted field's value
+   *     if it is defined
+   * @param <E> the field's enum type
+   * @throws InvalidFieldException if the field's value as supplied by <code>supplier</code> is
+   *     <code>null</code> or failed to be converted
+   */
+  protected <E extends Enum<E>> void convertAndSetEnumOrFailIfNullOrUnknown(
+      String field, E unknown, Supplier<? extends E> supplier, Consumer<String> consumer) {
+    final E e = supplier.get();
+
+    if (e == unknown) {
+      throw new InvalidFieldException("unknown " + field);
+    }
+    consumer.accept(validateNotNull(field, e).name());
   }
 
   /**
@@ -224,8 +278,8 @@ public abstract class AbstractPersistable<P extends Pojo> implements Persistable
    * @param consumer a consumer capable of updating the destination with the field's value if it is
    *     defined
    * @param <E> the field's enum type
-   * @throws InvalidFieldException if the field's value as supplied by <code>supplier
-   *     </code> is <code>null</code> or empty
+   * @throws InvalidFieldException if the field's value as supplied by <code>supplier</code> is
+   *     <code>null</code> or empty
    */
   protected <E extends Enum<E>> void convertAndSetEnumValueOrFailIfNullOrEmpty(
       String field, Class<E> clazz, E unknown, Supplier<String> supplier, Consumer<E> consumer) {

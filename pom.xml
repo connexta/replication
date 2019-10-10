@@ -138,7 +138,7 @@
         <solr.version>8.2.0</solr.version>
         <opengis.version>19.1</opengis.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
-        <jackson.version>2.10.0.pr2</jackson.version>
+        <jackson.version>2.10.0.pr3</jackson.version>
         <spring.version>5.2.0.RC2</spring.version>
         <spring-boot-starter.version>2.1.7.RELEASE</spring-boot-starter.version>
         <testcontainers.version>1.12.1</testcontainers.version>
@@ -159,7 +159,7 @@
         <beanutils.version>1.9.4</beanutils.version>
         <opensaml.xmlsec.version>3.4.3</opensaml.xmlsec.version>
         <xmlsec.version>2.1.4</xmlsec.version>
-
+        <hamcrest.json.version>0.2</hamcrest.json.version>
     </properties>
 
     <dependencyManagement>
@@ -391,6 +391,21 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-parameter-names</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jdk8</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-alpn-client</artifactId>
                 <version>${jetty.version}</version>
@@ -497,6 +512,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>uk.co.datumedge</groupId>
+                <artifactId>hamcrest-json</artifactId>
+                <version>${hamcrest.json.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-all</artifactId>
                 <version>${mockito.version}</version>
@@ -561,6 +582,10 @@
         <dependency>
             <groupId>com.github.npathai</groupId>
             <artifactId>hamcrest-optional</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>uk.co.datumedge</groupId>
+            <artifactId>hamcrest-json</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

@@ -52,12 +52,18 @@ public class FilterIndexManagerImplTest {
   private static final String ID1 = "id1";
   private static final Instant MODIFIED_SINCE1 = Instant.ofEpochSecond(100);
   private static final FilterIndexPojo POJO1 =
-      new FilterIndexPojo().setId(ID1).setModifiedSince(MODIFIED_SINCE1);
+      new FilterIndexPojo()
+          .setId(ID1)
+          .setModifiedSince(MODIFIED_SINCE1)
+          .setVersion(FilterIndexPojo.CURRENT_VERSION);
 
   private static final String ID2 = "id2";
   private static final Instant MODIFIED_SINCE2 = Instant.ofEpochSecond(200);
   private static final FilterIndexPojo POJO2 =
-      new FilterIndexPojo().setId(ID2).setModifiedSince(MODIFIED_SINCE2);
+      new FilterIndexPojo()
+          .setId(ID2)
+          .setModifiedSince(MODIFIED_SINCE2)
+          .setVersion(FilterIndexPojo.CURRENT_VERSION);
 
   private static final FilterIndexPojo INVALID_POJO =
       new FilterIndexPojo().setId(null).setModifiedSince(null);

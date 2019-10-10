@@ -14,6 +14,7 @@
 package com.connexta.replication.api.data;
 
 import java.net.URI;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Identifies the need for the resource associated with an intel to be transferred. */
@@ -23,5 +24,15 @@ public interface ResourceInfo extends DataInfo {
    *
    * @return the optional URI for the resource
    */
-  public Optional<URI> getResourceUri();
+  public Optional<URI> getUri();
+
+  @Override
+  public default boolean sameAs(Object obj) {
+    if (obj instanceof ResourceInfo) {
+      final ResourceInfo info = (ResourceInfo) obj;
+
+      return DataInfo.super.sameAs(info) && Objects.equals(getUri(), info.getUri());
+    }
+    return false;
+  }
 }

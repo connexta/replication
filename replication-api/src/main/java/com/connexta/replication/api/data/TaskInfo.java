@@ -32,7 +32,7 @@ public interface TaskInfo {
    *
    * @return the intel document identifier
    */
-  public String getId();
+  public String getIntelId();
 
   /**
    * Gets the operation to be performed.

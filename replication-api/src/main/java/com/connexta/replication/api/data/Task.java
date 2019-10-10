@@ -227,6 +227,13 @@ public interface Task extends TaskInfo {
     FAILED,
 
     /** Indicates the task processing has successfully completed. */
-    SUCCESSFUL
+    SUCCESSFUL,
+
+    /**
+     * The unknown value is used for forward compatibility where the current code might not be able
+     * to understand a new task state and would map this new site to <code>UNKNOWN</code> and most
+     * likely ignore it.
+     */
+    UNKNOWN
   }
 }

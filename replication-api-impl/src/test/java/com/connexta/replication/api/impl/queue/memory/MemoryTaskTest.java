@@ -91,30 +91,6 @@ public class MemoryTaskTest {
   }
 
   @Test
-  public void testConstructorWhenPriorityIsMoreThanMax() throws Exception {
-    final TaskInfo info = Mockito.mock(TaskInfo.class);
-
-    Mockito.when(info.getPriority()).thenReturn((byte) (MemorySiteQueue.MAX_PRIORITY + 1));
-
-    final MemoryTask task = new MemoryTask(info, queue, Mockito.mock(Clock.class));
-
-    Assert.assertThat(
-        task.getPriority(), Matchers.equalTo(Byte.valueOf(MemorySiteQueue.MAX_PRIORITY)));
-  }
-
-  @Test
-  public void testConstructorWhenPriorityIsLessThanMin() throws Exception {
-    final TaskInfo info = Mockito.mock(TaskInfo.class);
-
-    Mockito.when(info.getPriority()).thenReturn((byte) (MemorySiteQueue.MIN_PRIORITY - 1));
-
-    final MemoryTask task = new MemoryTask(info, queue, Mockito.mock(Clock.class));
-
-    Assert.assertThat(
-        task.getPriority(), Matchers.equalTo(Byte.valueOf(MemorySiteQueue.MIN_PRIORITY)));
-  }
-
-  @Test
   public void testLockOnFirstAttempt() throws Exception {
     final Clock clock =
         MemoryTaskTest.mockClock(

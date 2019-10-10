@@ -15,6 +15,11 @@ package com.connexta.replication.api.impl.persistence.pojo;
 
 import com.connexta.replication.api.data.SiteKind;
 import com.connexta.replication.api.data.SiteType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.net.URL;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -27,6 +32,9 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
  * persisting back the fields based on the latest version format.
  */
 @SolrDocument(collection = SitePojo.COLLECTION)
+@JsonPropertyOrder({"id", "version", "name", "type", "kind"})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class SitePojo extends Pojo<SitePojo> {
   /**
    * Current version format.
@@ -45,35 +53,37 @@ public class SitePojo extends Pojo<SitePojo> {
   public static final String COLLECTION = "replication_site";
 
   @Indexed(name = "name")
+  @JsonProperty("name")
   @Nullable
   private String name;
 
   @Indexed(name = "description", searchable = false)
+  @JsonProperty("description")
   @Nullable
   private String description;
 
   @Indexed(name = "url")
+  @JsonProperty("url")
   @Nullable
   private String url;
 
   @Indexed(name = "type", searchable = false)
+  @JsonProperty("type")
   @Nullable
   private String type;
 
   @Indexed(name = "kind", searchable = false)
+  @JsonProperty("kind")
   @Nullable
   private String kind;
 
   @Indexed(name = "polling_period", searchable = false)
+  @JsonProperty("polling_period")
   private long pollingPeriod;
 
   @Indexed(name = "parallelism_factor", searchable = false)
+  @JsonProperty("parallelism_factor")
   private int parallelismFactor;
-
-  /** Instantiates a default site pojo set with the current version. */
-  public SitePojo() {
-    super.setVersion(SitePojo.CURRENT_VERSION);
-  }
 
   /**
    * Gets the human readable name of this site.

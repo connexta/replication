@@ -183,7 +183,10 @@ public class Worker extends Thread {
 
       final Metadata metadata =
           new MetadataImpl(
-              info.getData(), info.getDataClass(), task.getId(), Date.from(info.getLastModified()));
+              info.getData(),
+              info.getDataClass(),
+              task.getIntelId(),
+              Date.from(info.getLastModified()));
 
       final OperationType type = task.getOperation();
       if (type == OperationType.HARVEST) {
@@ -235,14 +238,14 @@ public class Worker extends Thread {
       final NodeAdapter source,
       final NodeAdapter destination)
       throws InterruptedException {
-    final String metadataId = task.getId();
+    final String metadataId = task.getIntelId();
     final String operation = task.getOperation().name();
 
     if (!metadataExists(task, metadata, source, destination)) {
       return;
     }
 
-    URI uri = task.getResource().flatMap(ResourceInfo::getResourceUri).orElse(null);
+    URI uri = task.getResource().flatMap(ResourceInfo::getUri).orElse(null);
     if (uri != null) {
       LOGGER.debug("Resource URI received: {} attempting to create resource.", uri);
       if (!createResource(task, metadata, source, destination, operation, uri)) {
