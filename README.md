@@ -21,10 +21,12 @@ Derived resources, from products such as NITFs, will not be replicated.
 ## Docker Compose Deployment
 
 #### Prerequisites
-The replication docker stack requires the following to be configured on the swarm before deploying:
+Replication is deployed as a docker stack in a docker swarm. So, before deploying replication,
+you need a running docker instance with an initialized swarm. Once you have a swarm running you can 
+configure it for replication with the following steps.
 
 ###### Configuration
-The configuration that replication uses that need to be populated in docker config
+The configuration that replication uses needs to be populated in docker config
 
 |Config Name | Description|
 |------------|------------|
@@ -34,7 +36,8 @@ The configuration that replication uses that need to be populated in docker conf
 Example replication-spring-config
 ```yaml
 logging:
-  level:
+  level: 
+  #You can adjust the log levels of a package or class in this section 
     root: INFO
     org.apache.cxf.interceptor.LoggingOutInterceptor: WARN
     org.apache.cxf.interceptor.LoggingInInterceptor: WARN
@@ -42,13 +45,21 @@ logging:
 spring:
   data:
     solr:
-      host: http://replication-solr:8983/solr
+    #This is the URL the replication service will use to communicate with solr.
+    #As long as you use the docker compose file you won't need to change this.
+      host: http://replication-solr:8983/solr 
   profiles.active: Classic
 replication:
+  #This is the number of seconds between each replication, lower it if you're going to be testing.
   period: 300
+  #Timeouts for calls to sites
   connectionTimeout: 30
   receiveTimeout: 60
+  #The ID of the local site. All replications will go to/from this site. Direction will be determined 
+  #by the type and kind of site being replicated with. This field needs to be set, and a site with
+  #this ID needs to be saved before any replication will take place. 
   localSite: some-unique-id-1234
+  #The remote sites to handle replication for, remove this to handle replication for all sites.
   sites:
   - site1
   - site2
@@ -69,6 +80,12 @@ management:
       prometheus:
         enabled: true
 ```
+
+To create a docker config use the `config create` command, which uses this syntax:
+`docker config create <CONFIG_NAME> <FILE_DIRECTORY>`
+
+Example:
+`docker config create replication-spring-config replication/configs/application.yml`
 
 ###### Profiles
 
@@ -103,6 +120,12 @@ javax.net.ssl.certAlias=localhost
 ```
 Only the properties that differ from the defaults above need to be specified in replication-ssl
 
+To add a docker secret use the `secret create` command, which uses this syntax:
+`docker secret create <SECRET_NAME> <FILE_DIRECTORY>`
+
+Example:
+`docker secret create replication-truststore replication/secrets/truststore.jks`
+
 #### Running
 Running the stack will start up a solr service and the replication service.
 
@@ -117,7 +140,28 @@ curl -H "Content-Type: application/json" \
 -d @/path/to/json/config/file.json \
 http://localhost:8983/solr/<target-core>/update?commitWithin=1000
 ``` 
+
+#### Types and Kinds of sites
+Sites can be of different types and kinds. The type and kind of the remote site (the one that's not 
+the local site) will determine whether the replication is a push, pull, harvest, or both push and pull.
+
+|Site Type | Site Kind | Replication Direction |
+|------------|------------|------------|
+|DDF | TACTICAL | BIDIRECTIONAL |
+|DDF | REGIONAL | HARVEST |
+|ION | TACTICAL | BIDIRECTIONAL |
+|ION | REGIONAL | PUSH |
+
+###### Directions
+Here's how the various replication directions are defined:
+PUSH - Send information to the remote site to be stored.
+PULL - Retrieve information from the remote site and store it locally.
+BIDIRECTIONAL - Perform both a push and a pull.
+HARVEST - Similar to a pull but harvesting will ignore updates and deletes on replicated information.  
+
 ###### Adding Site Example
+Create a json file with site descriptions like the example below and you can use the following curl 
+command to save those sites for replication to use.
 Example sites.json
 ```json
   [
@@ -151,12 +195,14 @@ curl -H "Content-Type: application/json" \
 http://localhost:8983/solr/replication_site/update?commitWithin=1000
 ```
 ###### Adding Replication Filters Example
+Create a json file with filter descriptions like the example below and you can use the following curl 
+command to save those filters for replication to use.
 Example filters.json
 ```json
    [
       {
         "name":"pdf-harvest",
-        "site_id":"remote-node-id",
+        "site_id":"remote-site-id",
         "filter":"\"media.type\" like 'application/pdf'",
         "suspended":false,
         "priority": 0,
@@ -179,3 +225,25 @@ curl -X POST \
   -H 'Content-Type: application/xml' \
   -d '<delete><query>name_txt:Test</query></delete>'
 ```
+Example removing all sites
+```
+curl -X POST \
+  'http://localhost:8983/solr/replication_site/update?commit=true' \
+  -H 'Content-Type: application/xml' \
+  -d '<delete><query>*:*</query></delete>'
+```
+
+#### Try it out
+You can try replication for yourself using the steps below as a high level overview. Details on how 
+to complete steps related to setting up replication can be found above, starting with 
+"Docker Compose Deployment".
+1. Make sure docker is up and running. Start up a docker swarm if you haven't already.
+3. Create docker config
+4. Create docker secrets
+5. Deploy stack
+6. Create two sites, Both as REGIONAL DDFs, with URLs pointing to running DDF instances.
+7. The remote site (The site that isn't the local site) will be your source of data. Upload test data to the source site if it has none.
+8. Create filter. The "site_id" should match the ID of remote site. The filter can be changed to something like "\"title\" like 'test'" or 
+	"\"title\" like '*'" to replicate everything.
+9. execute `docker service logs -f repsync_ion-replication` to view the logs and wait for replication to occur. Once you start seeing logs check the
+	local site to see the data start coming in.
