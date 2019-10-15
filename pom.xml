@@ -584,10 +584,6 @@
             <artifactId>hamcrest-optional</artifactId>
         </dependency>
         <dependency>
-            <groupId>uk.co.datumedge</groupId>
-            <artifactId>hamcrest-json</artifactId>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>

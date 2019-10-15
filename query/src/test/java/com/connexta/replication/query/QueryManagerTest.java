@@ -154,7 +154,6 @@ public class QueryManagerTest {
 
   @Test
   public void reloadSiteConfigsReturnsImmediatelyIfInterrupted() {
-    when(queryServiceTools.sites()).thenReturn(Stream.of(site));
     Thread.currentThread().interrupt();
     queryManager.reloadSiteConfigs();
     assertThat(queryManager.getServices().get(SITE_ID), is(Matchers.nullValue()));

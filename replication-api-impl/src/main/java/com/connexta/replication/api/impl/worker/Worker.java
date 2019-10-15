@@ -40,7 +40,7 @@ import com.connexta.replication.data.MetadataImpl;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.net.URI;
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -108,6 +108,7 @@ public class Worker extends Thread {
     }
   }
 
+  @SuppressWarnings("squid:S2142" /*InterruptedException will be thrown again when caught*/)
   @VisibleForTesting
   void doRun() throws InterruptedException {
     Task task = null;

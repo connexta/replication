@@ -124,12 +124,14 @@ public class QueryManager {
   @VisibleForTesting
   void reloadSiteConfigs() {
     LOGGER.trace("reloading site configs.");
-    Stream<Site> siteStream =
-        queryServiceTools.sites().filter(site -> !site.getId().equals(localSiteId));
+
     synchronized (this) {
       if (Thread.currentThread().isInterrupted()) {
         return;
       }
+
+      Stream<Site> siteStream =
+          queryServiceTools.sites().filter(site -> !site.getId().equals(localSiteId));
 
       if (!sites.isEmpty()) {
         siteStream = siteStream.filter(site -> sites.contains(site.getId()));

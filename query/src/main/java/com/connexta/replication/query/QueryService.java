@@ -169,7 +169,7 @@ public class QueryService {
 
   private void doQuery() {
     if (!adapter.isAvailable()) {
-      LOGGER.debug("System at " + site.getUrl() + " is currently unavailable");
+      LOGGER.debug("System at {} is currently unavailable", site.getUrl());
       return;
     }
 
@@ -200,27 +200,23 @@ public class QueryService {
             site.getName(),
             e);
         Thread.currentThread().interrupt();
-        return;
       } catch (AdapterException e) {
         LOGGER.debug(
             "Couldn't query site {}. Stopping queries for this site until next polling attempt.",
             site.getName(),
             e);
-        return;
       } catch (QueueException qe) {
         LOGGER.debug(
             "Failed to put a task in queue for site {}. Stopping queuing of tasks for this site. Will resume at next polling attempt.",
             site.getName(),
             qe);
-        return;
       } finally {
         saveLastModifiedInFilterIndex(filterIndex, latestModifiedTime);
       }
     }
   }
 
-  private Stream<Metadata> getNewMetadataForFilter(Filter filter, FilterIndex filterIndex)
-      throws AdapterException {
+  private Stream<Metadata> getNewMetadataForFilter(Filter filter, FilterIndex filterIndex) {
     // get last modified date
     final Date indexDate = filterIndex.getModifiedSince().map(Date::from).orElse(null);
     if (indexDate == null) {
@@ -268,6 +264,7 @@ public class QueryService {
     return OperationType.HARVEST;
   }
 
+  @SuppressWarnings("squid:S2142" /*InterruptedException is handled by caller*/)
   private void queueTaskAndUpdateLastModified(
       TaskInfo task, AtomicReference<Instant> latestModifiedTime) {
     LOGGER.trace("Putting task {} in Queue for site {}", task, site);
