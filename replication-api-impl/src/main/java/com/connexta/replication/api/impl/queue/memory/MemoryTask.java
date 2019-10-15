@@ -32,12 +32,14 @@ public class MemoryTask extends AbstractTaskImpl {
    * fails at which point it will be used to tracked the reason for its failure. Will be reset to
    * <code>null</code> when picked up for processing again.
    */
-  @Nullable private volatile ErrorCode code = null;
+  @SuppressWarnings("squid:S3077" /*This enum is not mutable*/)
+  @Nullable
+  private volatile ErrorCode code = null;
 
   @Nullable private volatile String reason = null;
 
   private final ReentrantLock lock = new ReentrantLock();
-  @Nullable private volatile Thread owner = null;
+  @Nullable private Thread owner = null;
 
   /**
    * Creates a new task for the corresponding task information as it is being queued to a given

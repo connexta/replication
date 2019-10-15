@@ -93,7 +93,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
    * currently waiting on them be recorded in the referenced list to be played when {@link
    * #resumeSignals} is finally called.
    */
-  private volatile Queue<Runnable> suspendedSignals = null; // not suspended to start with
+  private Queue<Runnable> suspendedSignals = null; // not suspended to start with
 
   private final MeterRegistry registry;
 
@@ -364,7 +364,7 @@ public class MemorySiteQueue implements MemoryQueue, SiteQueue {
     putLock.lock();
     try {
       if (suspendedSignals != null) { // play all accumulated signals
-        suspendedSignals.stream().peek(System.out::println).forEach(Runnable::run);
+        suspendedSignals.stream().forEach(Runnable::run);
         this.suspendedSignals = null;
       }
     } finally {
