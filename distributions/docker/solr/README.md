@@ -10,7 +10,8 @@ The cores created are
 - replication_item
 
 The image exposes port 8983.
-##Running
+
+## Running
 ```
 docker run cnxta/replication-solr:0.3.0-SNAPSHOT
 ```
