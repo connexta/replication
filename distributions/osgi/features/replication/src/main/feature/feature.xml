@@ -23,7 +23,8 @@
         <configfile finalname="${ddf.etc}/definitions/replication-attributes-injector.json">
             mvn:replication/replication-api-impl/${project.version}/json/injection
         </configfile>
-        <feature>admin-query-all</feature>
+        <feature>graphql-transformer-servlet</feature>
+        <feature>admin-query-ui</feature>
         <bundle>mvn:replication/replication-api/${project.version}</bundle>
         <bundle>mvn:replication/replication-api-impl/${project.version}</bundle>
         <bundle>mvn:replication/replication-commands/${project.version}</bundle>

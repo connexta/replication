@@ -70,6 +70,11 @@
             <artifactId>catalog-core-commands</artifactId>
             <version>${ddf.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>javax.activation</artifactId>
+            <version>1.2.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -83,6 +88,7 @@
                         <Karaf-Commands>*</Karaf-Commands>
                         <Export-Package />
                         <Embed-Dependency>
+                            javax.activation,
                             catalog-core-api-impl,
                             platform-util,
                             gt-cql,
@@ -90,6 +96,7 @@
                             platform-util-unavailableurls
                         </Embed-Dependency>
                         <Import-Packages>
+                            !javax.activation,
                             org.codice.ditto.replication.api.impl.data,
                             org.codice.ditto.replication.api.impl.mcard,
                             *
