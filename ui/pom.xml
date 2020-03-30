@@ -40,7 +40,7 @@
                         <_wab>${project.build.directory}/webapp</_wab>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Import-Package>
-                            org.eclipse.jetty.servlets;version="[9.4.11, 9.4.12]"
+                            org.eclipse.jetty.servlets
                         </Import-Package>
                     </instructions>
                 </configuration>
