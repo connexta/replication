@@ -115,51 +115,43 @@ pipeline {
                 }
             }
         }
-        stage('Security Analysis') {
-            parallel {
-                stage ('Owasp') {
-                    steps {
-                        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'replication-maven-settings-file', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            // If this build is not a pull request, run full owasp scan. Otherwise run incremental scan
-                            script {
-                                if(params.RELEASE == true) {
-                                    sh "git checkout ${env.RELEASE_TAG}"
-                                }
-                                if (env.CHANGE_ID == null) {
-                                    sh 'mvn install -B -Powasp -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                                } else {
-                                    sh 'mvn install -B -Powasp -DskipTests=true  -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                                }
-                            }
+        stage ('Owasp') {
+            steps {
+                withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'replication-maven-settings-file', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                    // If this build is not a pull request, run full owasp scan. Otherwise run incremental scan
+                    script {
+                        if(params.RELEASE == true) {
+                            sh "git checkout ${env.RELEASE_TAG}"
+                        }
+                        if (env.CHANGE_ID == null) {
+                            sh 'mvn install -B -Powasp -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                        } else {
+                            sh 'mvn install -B -Powasp -DskipTests=true  -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                         }
                     }
                 }
             }
         }
-        stage('Quality Analysis') {
-            parallel {
-                // Sonar stage only runs against master
-                stage ('SonarCloud') {
-                    when {
-                        allOf {
-                            branch '0.2.x'
-                            environment name: 'JENKINS_ENV', value: 'prod'
-                        }
+        // Sonar stage only runs against master
+        stage ('SonarCloud') {
+            when {
+                allOf {
+                    branch '0.2.x'
+                    environment name: 'JENKINS_ENV', value: 'prod'
+                }
+            }
+            steps {
+                script {
+                    if(params.RELEASE == true) {
+                        sh "git checkout ${env.RELEASE_TAG}"
                     }
-                    steps {
+                }
+                withMaven(maven: 'M35', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'replication-maven-settings-file', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                    withCredentials([string(credentialsId: 'SonarQubeGithubToken', variable: 'SONARQUBE_GITHUB_TOKEN'), string(credentialsId: 'cxbot-sonarcloud', variable: 'SONAR_TOKEN')]) {
                         script {
-                            if(params.RELEASE == true) {
-                                sh "git checkout ${env.RELEASE_TAG}"
-                            }
-                        }
-                        withMaven(maven: 'M35', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'replication-maven-settings-file', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            withCredentials([string(credentialsId: 'SonarQubeGithubToken', variable: 'SONARQUBE_GITHUB_TOKEN'), string(credentialsId: 'cxbot-sonarcloud', variable: 'SONAR_TOKEN')]) {
-                                script {
-                                    sh 'mvn -q -B -Dcheckstyle.skip=true org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN  -Dsonar.organization=cx -Dsonar.projectKey=replication-ddf -Dsonar.exclusions=${COVERAGE_EXCLUSIONS} $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                            sh 'mvn -q -B -Dcheckstyle.skip=true org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN  -Dsonar.organization=cx -Dsonar.projectKey=replication-ddf -Dsonar.exclusions=${COVERAGE_EXCLUSIONS} $DISABLE_DOWNLOAD_PROGRESS_OPTS'
 
-                                 }
                             }
-                        }
                     }
                 }
             }
