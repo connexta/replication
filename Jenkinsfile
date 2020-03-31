@@ -82,63 +82,41 @@ pipeline {
                     expression { env.CHANGE_TARGET != null }
                 }
             }
-            parallel {
-                stage ('Linux') {
-                    steps {
-                        // TODO: Maven downgraded to work around a linux build issue. Falling back to system java to work around a linux build issue. re-investigate upgrading later
-                        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            sh '''
-                                unset JAVA_TOOL_OPTIONS
-                                mvn install -B -DskipStatic=true -DskipTests=true $DISABLE_DOWNLOAD_PROGRESS_OPTS
-                                mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET $DISABLE_DOWNLOAD_PROGRESS_OPTS
-                            '''
-                        }
+            stage ('Linux') {
+                steps {
+                    // TODO: Maven downgraded to work around a linux build issue. Falling back to system java to work around a linux build issue. re-investigate upgrading later
+                    withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                        sh '''
+                            unset JAVA_TOOL_OPTIONS
+                            mvn install -B -DskipStatic=true -DskipTests=true $DISABLE_DOWNLOAD_PROGRESS_OPTS
+                            mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET $DISABLE_DOWNLOAD_PROGRESS_OPTS
+                        '''
                     }
                 }
-                //Commenting this out for now as the windows build is currently failing due to external environment issues and we may no longer need windows builds going forward
-                //stage ('Windows') {
-                //    agent { label 'server-2016-small' }
-                //    steps {
-                //        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
-                //             bat 'mvn install -B -DskipStatic=true -DskipTests=true  %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                //             bat 'mvn install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/%CHANGE_TARGET% %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                //        }
-                //    }
-                //}
             }
         }
         stage('Full Build') {
             when { expression { env.CHANGE_ID == null } }
-            parallel {
-                stage ('Linux') {
-                    steps {
-                        // TODO: Maven downgraded to work around a linux build issue. Falling back to system java to work around a linux build issue. re-investigate upgrading later
-                        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            script {
-                                if(params.RELEASE == true) {
-                                    sh '''
-                                        unset JAVA_TOOL_OPTIONS
-                                        mvn -B -Dtag=$RELEASE_TAG -DreleaseVersion=$RELEASE_VERSION -DdevelopmentVersion=$NEXT_VERSION release:prepare
-                                    '''
-                                    env.RELEASE_COMMIT =  sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
-                                } else {
-                                    sh '''
-                                        unset JAVA_TOOL_OPTIONS
-                                        mvn clean install -B $DISABLE_DOWNLOAD_PROGRESS_OPTS
-                                    '''
-                                }
+            stage ('Linux') {
+                steps {
+                    // TODO: Maven downgraded to work around a linux build issue. Falling back to system java to work around a linux build issue. re-investigate upgrading later
+                    withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                        script {
+                            if(params.RELEASE == true) {
+                                sh '''
+                                    unset JAVA_TOOL_OPTIONS
+                                    mvn -B -Dtag=$RELEASE_TAG -DreleaseVersion=$RELEASE_VERSION -DdevelopmentVersion=$NEXT_VERSION release:prepare
+                                '''
+                                env.RELEASE_COMMIT =  sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+                            } else {
+                                sh '''
+                                    unset JAVA_TOOL_OPTIONS
+                                    mvn clean install -B $DISABLE_DOWNLOAD_PROGRESS_OPTS
+                                '''
                             }
                         }
                     }
                 }
-                //stage ('Windows') {
-                //    agent { label 'server-2016-small' }
-                //    steps {
-                //        withMaven(maven: 'Maven 3.5.3', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings') {
-                //            bat 'mvn clean install -B %DISABLE_DOWNLOAD_PROGRESS_OPTS%'
-                //        }
-                //    }
-                //}
             }
         }
         stage('Security Analysis') {
