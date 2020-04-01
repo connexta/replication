@@ -52,9 +52,9 @@
         <jts.version>1.14.0</jts.version>
         <jaxb.version>0.9.4</jaxb.version>
         <sun.jaxb.version>2.3.0</sun.jaxb.version>
-        <cxf.frontent.version>3.2.5</cxf.frontent.version>
+        <cxf.frontent.version>3.2.12</cxf.frontent.version>
         <validation.version>1.1.0.Final</validation.version>
-        <xstream.version>1.4.9</xstream.version>
+        <xstream.version>1.4.11.1</xstream.version>
         <xerces.version>2.10.0</xerces.version>
         <jsr305.version>3.0.2_1</jsr305.version>
         <osgi.version>5.0.0</osgi.version>
