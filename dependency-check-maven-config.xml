@@ -220,6 +220,66 @@
         </notes>
         <cve>CVE-2008-0660</cve>
     </suppress>
+    <suppress>
+        <notes>
+            These are false matches on DDFs security-rest-cxfwrapper 2.21.10. Owasp thinks it is using cxf
+            version 2.13.10 which it is not.
+        </notes>
+        <cve>CVE-2017-3156</cve>
+        <cve>CVE-2018-8039</cve>
+        <cve>CVE-2016-6812</cve>
+        <cve>CVE-2016-8739</cve>
+        <cve>CVE-2019-12423</cve>
+        <cve>CVE-2019-12406</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            When using Apache Shiro with Spring dynamic controllers, a specially crafted request may
+            cause an authentication bypass. We don't use spring controllers however, or even receive requests.
+        </notes>
+        <cve>CVE-2020-1957</cve>
+    </suppress>
+    <suppress>
+    <notes>
+        This CVE comes from Spring, resolved in 5.1.13. Once we upgrade to that version this block can be removed.
+        This is being excluded and not upgraded at present for two reasons
+        1) There is no current upgrade path for 5.1.13 - Spring has no native feature, we use the one provided by
+        Karaf. Karaf has no version that uses newer Spring, and without ServiceMix having updated versions we can
+        not create our own feature without forking their repo and updating Spring versions.
+        2) Because we do input validation on filenames, this CVE is not applicable to us and our usages.
+    </notes>
+    <cve>CVE-2020-5398</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            The following CVEs come from parts of org.codice:lux:1.2 which we are not using.
+        </notes>
+        <cve>CVE-2018-1000632</cve>
+        <cve>CVE-2018-8009</cve>
+        <cve>CVE-2018-11768</cve>
+        <cve>CVE-2017-7656</cve>
+        <cve>CVE-2017-9735</cve>
+        <cve>CVE-2019-17571</cve>
+        <cve>CVE-2015-5237</cve>
+        <cve>CVE-2019-12401</cve>
+        <cve>CVE-2017-3164</cve>
+        <cve>CVE-2018-1308</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This CVE is in the hazelcast version used by the DDFs catalog-core-standardframework.
+            We aren't using any hazelcast features provided by that dependency.
+        </notes>
+        <cve>CVE-2016-10750</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            False positives on module names in this repo.
+        </notes>
+        <cve>CVE-2016-5017</cve>
+        <cve>CVE-2015-6420</cve>
+        <cve>CVE-2017-15708</cve>
+    </suppress>
     <!-- ************************************************************************************* -->
     <!-- END DDF related suppression -->
     <!-- ************************************************************************************* -->

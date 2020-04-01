@@ -59,6 +59,13 @@
             <groupId>org.codice.ddf.admin.query</groupId>
             <artifactId>admin-graphql</artifactId>
             <version>${admin-query.version}</version>
+            <!-- excluded due to multiple owasp findings -->
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.codice.ddf.admin.query</groupId>
