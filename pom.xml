@@ -82,6 +82,7 @@
         <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
         <servicemix-depends.version>1.4.0</servicemix-depends.version>
 
+        <mariadb.version>2.4.1</mariadb.version>
     </properties>
     <scm>
         <url>http://github.com/connexta/replication.git</url>
@@ -368,13 +369,25 @@
                             <groupId>org.owasp</groupId>
                             <artifactId>dependency-check-maven</artifactId>
                             <version>5.3.2</version>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>ddf.support</groupId>
+                                    <artifactId>support-owasp</artifactId>
+                                    <version>${ddf.support.version}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.mariadb.jdbc</groupId>
+                                    <artifactId>mariadb-java-client</artifactId>
+                                    <version>${mariadb.version}</version>
+                                </dependency>
+                            </dependencies>
                             <configuration>
-                                <!-- The following properties enable using a mirror for nist NVD data -->
-                                <cveUrl12Modified>${owasp.cveUrl12Modified}</cveUrl12Modified>
-                                <cveUrl20Modified>${owasp.cveUrl20Modified}</cveUrl20Modified>
-                                <cveUrl12Base>${owasp.cveUrl12Base}</cveUrl12Base>
-                                <cveUrl20Base>${owasp.cveUrl20Base}</cveUrl20Base>
-                                <!-- End NVD mirror configuration -->
+                                <!-- The following properties enable using a centralized nvd server -->
+                                <autoUpdate>${owasp.autoUpdate}</autoUpdate>
+                                <databaseDriverName>${owasp.database.driverName}</databaseDriverName>
+                                <connectionString>${owasp.database.url}</connectionString>
+                                <serverId>${owasp.serverId}</serverId>
+                                <!-- End Centralized NVD Server Configuration -->
                                 <failBuildOnCVSS>7</failBuildOnCVSS>
                                 <skipTestScope>true</skipTestScope>
                                 <!--Disable by plugin maintainer recommendation on https://github.com/jeremylong/DependencyCheck/issues/978#issuecomment-349620687-->
