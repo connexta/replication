@@ -78,25 +78,6 @@
     </suppress>
     <suppress>
         <notes>
-            FasterXML jackson-databind through 2.8.10 and 2.9.x through 2.9.3 allows unauthenticated
-            remote code execution because of an incomplete fix for the CVE-2017-7525 deserialization
-            flaw. This is exploitable by sending maliciously crafted JSON input to the
-            readValue method of the ObjectMapper, bypassing a blacklist that is ineffective
-            if the Spring libraries are available in the classpath.
-            We have upgraded to 2.9.4 which fixes the issue but version 2.6.3 is still being used by
-            org.apache.cxf:cxf-rt-rs-security-sso-saml -> ehcache-2.10.4 -> jackson-databind-2.6.3.
-            This suppression can be removed when DDF-3593 has been completed.
-        </notes>
-        <cve>CVE-2016-3720</cve>
-        <cve>CVE-2016-7051</cve>
-        <cve>CVE-2017-7525</cve>
-        <cve>CVE-2017-15095</cve>
-        <cve>CVE-2017-17485</cve>
-        <cve>CVE-2018-5968</cve>
-        <cve>CVE-2018-7489</cve>
-    </suppress>
-    <suppress>
-        <notes>
             file name: solr-*.jar
             OWASP is getting confused by our version number being on a jar with solr in the name we
             are on solr 6.6+ which is not affected by this issue.
@@ -125,21 +106,79 @@
     </suppress>
     <suppress>
         <notes>
-            These CVEs against jackson-databind only affect versions 2.9.7 and lower.
-        </notes>
-        <cve>CVE-2018-14719</cve>
-        <cve>CVE-2018-14718</cve>
-        <cve>CVE-2018-14721</cve>
-        <cve>CVE-2018-14720</cve>
-        <cve>CVE-2018-19362</cve>
-        <cve>CVE-2018-19361</cve>
-        <cve>CVE-2018-19360</cve>
-    </suppress>
-    <suppress>
-        <notes>
             This is not an issue since the console and deploy directories are protected via other means
         </notes>
         <cve>CVE-2018-11788</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This is from Shiro Core 1.4.2 and can only be removed when DDF uses an upgraded version
+        </notes>
+        <cve>CVE-2020-1957</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This CVE comes from Spring, resolved in 5.1.13. Once we upgrade to that version this block can be removed.
+            This is being excluded and not upgraded at present for two reasons
+            1) There is no current upgrade path for 5.1.13 - Spring has no native feature, we use the one provided by
+            Karaf. Karaf has no version that uses newer Spring, and without ServiceMix having updated versions we can
+            not create our own feature without forking their repo and updating Spring versions.
+            2) Because we do input validation on filenames, this CVE is not applicable to us and our usages.
+        </notes>
+        <cve>CVE-2020-5398</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This CVE has been addressed by upgrading commons-beanutils to version 1.9.3. OWASP will
+            continue to report the vulnerability since OWASP sees the DDF version instead of the
+            actual version.
+            security-pdp-authzrealm-2.11.4-SNAPSHOT.jar (cpe:/a:apache:commons_beanutils:2.11.4,
+            cpe:/a:apache:commons_collections:2.11.4,
+            ddf.security.pdp:security-pdp-authzrealm:2.11.4-SNAPSHOT)
+            security-sts-attributequeryclaimshandler-2.17.0-SNAPSHOT.jar
+        </notes>
+        <cve>CVE-2017-15708</cve>
+        <cve>CVE-2015-6420</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This list of CVEs comes from  jackson-databind 2.8.11 which is included in pac4j 3.8.2,
+            used in ddf.security.core. When this version of pac4j is upgraded we can remove the following list.
+        </notes>
+        <cve>CVE-2018-12022</cve>
+        <cve>CVE-2018-5968</cve>
+        <cve>CVE-2018-12023</cve>
+        <cve>CVE-2019-14379</cve>
+        <cve>CVE-2019-14439</cve>
+        <cve>CVE-2019-20330</cve>
+        <cve>CVE-2018-11307</cve>
+        <cve>CVE-2018-14718</cve>
+        <cve>CVE-2018-7489</cve>
+        <cve>CVE-2018-14719</cve>
+        <cve>CVE-2019-17531</cve>
+        <cve>CVE-2019-12086</cve>
+        <cve>CVE-2019-14540</cve>
+        <cve>CVE-2019-16942</cve>
+        <cve>CVE-2019-16943</cve>
+        <cve>CVE-2018-19362</cve>
+        <cve>CVE-2018-19361</cve>
+        <cve>CVE-2018-19360</cve>
+        <cve>CVE-2019-17267</cve>
+        <cve>CVE-2019-16335</cve>
+        <cve>CVE-2018-14721</cve>
+        <cve>CVE-2018-14720</cve>
+        <cve>CVE-2019-14893</cve>
+        <cve>CVE-2020-8840</cve>
+        <cve>CVE-2019-14892</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            Applies to an LDAP class that we do not use in the system.
+            - groovy-all-2.4.4.jar is only used in tests.
+            - rest-assured 2.9.0 uses groovy-2.4.4.jar and groovy-xml-2.4.4.jar
+        </notes>
+        <cve>CVE-2016-6814</cve>
+        <cve>CVE-2016-6497</cve>
     </suppress>
     <!-- ************************************************************************************* -->
     <!-- END DDF related suppression -->
