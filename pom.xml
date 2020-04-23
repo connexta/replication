@@ -20,7 +20,7 @@
     <name>Replication :: Service</name>
     <groupId>com.connexta.replication</groupId>
     <artifactId>replication-service</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <inceptionYear>2018</inceptionYear>
 
