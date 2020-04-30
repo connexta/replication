@@ -23,6 +23,9 @@ import org.slf4j.LoggerFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+/**
+ * Factory for creating {@link WebHdfsNodeAdapter} instances for the {@link org.codice.ditto.replication.api.Replicator}
+ */
 public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapterFactory.class);
