@@ -67,13 +67,37 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>25.0-jre</version>
+            <version>20.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>ddf.mime.tika</groupId>
             <artifactId>mime-tika-resolver</artifactId>
             <version>${tika.mime.resolver.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.sakserv</groupId>
+            <artifactId>hadoop-mini-clusters-common</artifactId>
+            <version>0.1.16</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.sakserv</groupId>
+            <artifactId>hadoop-mini-clusters-hdfs</artifactId>
+            <version>0.1.16</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>replication</groupId>
+            <artifactId>replication-api-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>replication-adapters</groupId>
+            <artifactId>ddf-adapter</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
