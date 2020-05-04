@@ -19,12 +19,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -111,8 +108,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return a {@code String} containing the location to write to; returns {@code null} if request
    *     for location was unsuccessful
    */
-  @VisibleForTesting
-  String getLocation() {
+  private String getLocation() {
     try (CloseableHttpClient client = HttpClients.createDefault()) {
       HttpPut httpPut = new HttpPut(webHdfsUrl.toString());
 
