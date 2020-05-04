@@ -13,8 +13,5 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
-/**
- * Unit tests for {@link WebHdfsNodeAdapter}
- */
-public class WebHdfsNodeAdapterTest {
-}
+/** Unit tests for {@link WebHdfsNodeAdapter} */
+public class WebHdfsNodeAdapterTest {}

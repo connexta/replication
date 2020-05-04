@@ -13,13 +13,12 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -43,7 +42,6 @@ import org.codice.ditto.replication.api.data.UpdateRequest;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.IOUtils;
 
 public class WebHdfsNodeAdapter implements NodeAdapter {
 
@@ -101,15 +99,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     String location = getLocation();
 
     return location != null && writeFileToLocation(createStorageRequest, location);
-
   }
 
   /**
-   * Sends a PUT request with no file data and without following redirects, in order to retrieve the location to write
-   * to
+   * Sends a PUT request with no file data and without following redirects, in order to retrieve the
+   * location to write to
    *
-   * @return a {@code String} containing the location to write to; returns {@code null} if request for location was
-   * unsuccessful
+   * @return a {@code String} containing the location to write to; returns {@code null} if request
+   *     for location was unsuccessful
    */
   private String getLocation() {
     try (CloseableHttpClient client = HttpClients.createDefault()) {
@@ -123,12 +120,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
       int status = response.getStatusLine().getStatusCode();
       if (status != 200) {
-        LOGGER.debug("Failed to successfully retrieve the location to write to.  Status code: {}", status);
+        LOGGER.debug(
+            "Failed to successfully retrieve the location to write to.  Status code: {}", status);
         return null;
       }
 
       ObjectMapper objectMapper = new ObjectMapper();
-      Map<String, String> jsonMap = objectMapper.readValue(response.getEntity().getContent(), Map.class);
+      Map<String, String> jsonMap =
+          objectMapper.readValue(response.getEntity().getContent(), Map.class);
 
       return jsonMap.get("Location");
 
@@ -140,9 +139,9 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   /**
    * Sends a PUT request with file data to the specified location
+   *
    * @param createStorageRequest - the request to create the resource
    * @param location - the location to write the resource to
-   *
    * @return {@code true} if successful, otherwise {@code false}
    */
   private boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
@@ -154,10 +153,10 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
       builder.addBinaryBody(
-              "file",
-              resource.getInputStream(),
-              ContentType.create(resource.getMimeType()),
-              "file.ext");
+          "file",
+          resource.getInputStream(),
+          ContentType.create(resource.getMimeType()),
+          "file.ext");
       HttpEntity multipart = builder.build();
       httpPost.setEntity(multipart);
 

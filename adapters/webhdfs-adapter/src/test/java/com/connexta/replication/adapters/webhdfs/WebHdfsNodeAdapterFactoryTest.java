@@ -13,9 +13,11 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
-import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterType;
 import org.junit.Before;
@@ -23,33 +25,27 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
-/**
- * Unit tests for {@link WebHdfsNodeAdapterFactory}
- */
+/** Unit tests for {@link WebHdfsNodeAdapterFactory} */
 @RunWith(JUnit4.class)
 public class WebHdfsNodeAdapterFactoryTest {
 
-    private WebHdfsNodeAdapterFactory webHdfsNodeAdapterFactory;
+  private WebHdfsNodeAdapterFactory webHdfsNodeAdapterFactory;
 
-    @Before
-    public void setup() {
-        webHdfsNodeAdapterFactory = new WebHdfsNodeAdapterFactory();
-    }
+  @Before
+  public void setup() {
+    webHdfsNodeAdapterFactory = new WebHdfsNodeAdapterFactory();
+  }
 
-    @Test
-    public void testCreate() throws MalformedURLException {
-        URL url = new URL("http://localhost:8993");
+  @Test
+  public void testCreate() throws MalformedURLException {
+    URL url = new URL("http://localhost:8993");
 
-        NodeAdapter webHdfsNodeAdapter = webHdfsNodeAdapterFactory.create(url);
-        assertThat(webHdfsNodeAdapter.getClass().isAssignableFrom(WebHdfsNodeAdapter.class), is(true));
-    }
+    NodeAdapter webHdfsNodeAdapter = webHdfsNodeAdapterFactory.create(url);
+    assertThat(webHdfsNodeAdapter.getClass().isAssignableFrom(WebHdfsNodeAdapter.class), is(true));
+  }
 
-    @Test
-    public void testGetType() {
-        assertThat(webHdfsNodeAdapterFactory.getType(), is(NodeAdapterType.WEBHDFS));
-    }
-
+  @Test
+  public void testGetType() {
+    assertThat(webHdfsNodeAdapterFactory.getType(), is(NodeAdapterType.WEBHDFS));
+  }
 }
