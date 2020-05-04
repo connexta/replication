@@ -13,6 +13,8 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
@@ -20,34 +22,31 @@ import org.codice.ditto.replication.api.NodeAdapterType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 /**
- * Factory for creating {@link WebHdfsNodeAdapter} instances for the {@link org.codice.ditto.replication.api.Replicator}
+ * Factory for creating {@link WebHdfsNodeAdapter} instances for the {@link
+ * org.codice.ditto.replication.api.Replicator}
  */
 public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapterFactory.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapterFactory.class);
 
-    public WebHdfsNodeAdapterFactory() {
-        LOGGER.debug("Created a WebHdfsNodeAdapterFactory");
+  public WebHdfsNodeAdapterFactory() {
+    LOGGER.debug("Created a WebHdfsNodeAdapterFactory");
+  }
+
+  @Override
+  public NodeAdapter create(URL url) {
+    String baseUrl = "http://" + url.getHost() + ":" + url.getPort();
+
+    try {
+      return new WebHdfsNodeAdapter(new URL(baseUrl));
+    } catch (MalformedURLException e) {
+      throw new AdapterException("Failed to create adapter", e);
     }
+  }
 
-    @Override
-    public NodeAdapter create(URL url) {
-        String baseUrl = "http://" + url.getHost() + ":" + url.getPort();
-
-        try {
-            return new WebHdfsNodeAdapter(new URL(baseUrl));
-        } catch (MalformedURLException e) {
-            throw new AdapterException("Failed to create adapter", e);
-        }
-    }
-
-    @Override
-    public NodeAdapterType getType() {
-        return NodeAdapterType.WEBHDFS;
-    }
-
+  @Override
+  public NodeAdapterType getType() {
+    return NodeAdapterType.WEBHDFS;
+  }
 }

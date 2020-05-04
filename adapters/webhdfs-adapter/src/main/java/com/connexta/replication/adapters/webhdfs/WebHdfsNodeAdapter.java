@@ -13,6 +13,9 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -35,98 +38,90 @@ import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-
 public class WebHdfsNodeAdapter implements NodeAdapter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapter.class);
 
-    private final URL webHdfsUrl;
+  private final URL webHdfsUrl;
 
-    public WebHdfsNodeAdapter(URL webHdfsUrl) {
-        this.webHdfsUrl = webHdfsUrl;
-    }
+  public WebHdfsNodeAdapter(URL webHdfsUrl) {
+    this.webHdfsUrl = webHdfsUrl;
+  }
 
-    @Override
-    public boolean isAvailable() {
+  @Override
+  public boolean isAvailable() {
+    return false;
+  }
+
+  @Override
+  public String getSystemName() {
+    return "webHDFS";
+  }
+
+  @Override
+  public QueryResponse query(QueryRequest queryRequest) {
+    return null;
+  }
+
+  @Override
+  public boolean exists(Metadata metadata) {
+    return false;
+  }
+
+  @Override
+  public boolean createRequest(CreateRequest createRequest) {
+    return false;
+  }
+
+  @Override
+  public boolean updateRequest(UpdateRequest updateRequest) {
+    return false;
+  }
+
+  @Override
+  public boolean deleteRequest(DeleteRequest deleteRequest) {
+    return false;
+  }
+
+  @Override
+  public ResourceResponse readResource(ResourceRequest resourceRequest) {
+    return null;
+  }
+
+  @Override
+  public boolean createResource(CreateStorageRequest createStorageRequest) {
+    List<Resource> resources = createStorageRequest.getResources();
+    try (CloseableHttpClient client = HttpClients.createDefault()) {
+      HttpPost httpPost = new HttpPost(webHdfsUrl.toString());
+
+      Resource resource = resources.get(0);
+
+      MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+      builder.addBinaryBody(
+          "file",
+          resource.getInputStream(),
+          ContentType.create(resource.getMimeType()),
+          "file.ext");
+      HttpEntity multipart = builder.build();
+      httpPost.setEntity(multipart);
+
+      CloseableHttpResponse response = client.execute(httpPost);
+      int status = response.getStatusLine().getStatusCode();
+      if (status >= 300) {
+        LOGGER.debug("Failed to replicate.  Status code: {}", status);
         return false;
+      }
+    } catch (IOException e) {
+      LOGGER.debug("Failed to create resource on remote system", e);
     }
+    return true;
+  }
 
-    @Override
-    public String getSystemName() {
-        return "webHDFS";
-    }
+  @Override
+  public boolean updateResource(UpdateStorageRequest updateStorageRequest) {
+    return false;
+  }
 
-    @Override
-    public QueryResponse query(QueryRequest queryRequest) {
-        return null;
-    }
-
-    @Override
-    public boolean exists(Metadata metadata) {
-        return false;
-    }
-
-    @Override
-    public boolean createRequest(CreateRequest createRequest) {
-        return false;
-    }
-
-    @Override
-    public boolean updateRequest(UpdateRequest updateRequest) {
-        return false;
-    }
-
-    @Override
-    public boolean deleteRequest(DeleteRequest deleteRequest) {
-        return false;
-    }
-
-    @Override
-    public ResourceResponse readResource(ResourceRequest resourceRequest) {
-        return null;
-    }
-
-    @Override
-    public boolean createResource(CreateStorageRequest createStorageRequest) {
-        List<Resource> resources = createStorageRequest.getResources();
-        try(CloseableHttpClient client = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(webHdfsUrl.toString());
-
-            Resource resource = resources.get(0);
-
-            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            builder.addBinaryBody(
-                    "file",
-                    resource.getInputStream(),
-                    ContentType.create(resource.getMimeType()),
-                    "file.ext"
-            );
-            HttpEntity multipart = builder.build();
-            httpPost.setEntity(multipart);
-
-            CloseableHttpResponse response = client.execute(httpPost);
-            int status = response.getStatusLine().getStatusCode();
-            if (status >= 300) {
-                LOGGER.debug("Failed to replicate.  Status code: {}", status);
-                return false;
-            }
-        } catch (IOException e) {
-            LOGGER.debug("Failed to create resource on remote system", e);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean updateResource(UpdateStorageRequest updateStorageRequest) {
-        return false;
-    }
-
-    @Override
-    public void close() throws IOException {
-
-    }
-
+  @Override
+  public void close() throws IOException {}
 }
