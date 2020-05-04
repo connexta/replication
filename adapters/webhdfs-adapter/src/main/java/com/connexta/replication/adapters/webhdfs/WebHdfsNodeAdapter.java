@@ -19,10 +19,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -108,15 +111,16 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return a {@code String} containing the location to write to; returns {@code null} if request
    *     for location was unsuccessful
    */
-  private String getLocation() {
+  @VisibleForTesting
+  String getLocation() {
     try (CloseableHttpClient client = HttpClients.createDefault()) {
-      HttpPost httpPost = new HttpPost(webHdfsUrl.toString());
+      HttpPut httpPut = new HttpPut(webHdfsUrl.toString());
 
       List<BasicNameValuePair> params = new ArrayList<>();
       params.add(new BasicNameValuePair("noredirect", "true"));
-      httpPost.setEntity(new UrlEncodedFormEntity(params));
+      httpPut.setEntity(new UrlEncodedFormEntity(params));
 
-      CloseableHttpResponse response = client.execute(httpPost);
+      CloseableHttpResponse response = client.execute(httpPut);
 
       int status = response.getStatusLine().getStatusCode();
       if (status != 200) {
@@ -147,7 +151,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   private boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
     List<Resource> resources = createStorageRequest.getResources();
     try (CloseableHttpClient client = HttpClients.createDefault()) {
-      HttpPost httpPost = new HttpPost(location);
+      HttpPut httpPut = new HttpPut(location);
 
       Resource resource = resources.get(0);
 
@@ -158,9 +162,9 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
           ContentType.create(resource.getMimeType()),
           "file.ext");
       HttpEntity multipart = builder.build();
-      httpPost.setEntity(multipart);
+      httpPut.setEntity(multipart);
 
-      CloseableHttpResponse response = client.execute(httpPost);
+      CloseableHttpResponse response = client.execute(httpPut);
       int status = response.getStatusLine().getStatusCode();
       if (status != 201) {
         LOGGER.debug("Failed to replicate.  Status code: {}", status);
