@@ -15,14 +15,20 @@ package com.connexta.replication.adapters.webhdfs;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.data.CreateRequest;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
@@ -37,6 +43,7 @@ import org.codice.ditto.replication.api.data.UpdateRequest;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.IOUtils;
 
 public class WebHdfsNodeAdapter implements NodeAdapter {
 
@@ -90,29 +97,79 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean createResource(CreateStorageRequest createStorageRequest) {
-    List<Resource> resources = createStorageRequest.getResources();
+
+    String location = getLocation();
+
+    return location != null && writeFileToLocation(createStorageRequest, location);
+
+  }
+
+  /**
+   * Sends a PUT request with no file data and without following redirects, in order to retrieve the location to write
+   * to
+   *
+   * @return a {@code String} containing the location to write to; returns {@code null} if request for location was
+   * unsuccessful
+   */
+  private String getLocation() {
     try (CloseableHttpClient client = HttpClients.createDefault()) {
       HttpPost httpPost = new HttpPost(webHdfsUrl.toString());
+
+      List<BasicNameValuePair> params = new ArrayList<>();
+      params.add(new BasicNameValuePair("noredirect", "true"));
+      httpPost.setEntity(new UrlEncodedFormEntity(params));
+
+      CloseableHttpResponse response = client.execute(httpPost);
+
+      int status = response.getStatusLine().getStatusCode();
+      if (status != 200) {
+        LOGGER.debug("Failed to successfully retrieve the location to write to.  Status code: {}", status);
+        return null;
+      }
+
+      ObjectMapper objectMapper = new ObjectMapper();
+      Map<String, String> jsonMap = objectMapper.readValue(response.getEntity().getContent(), Map.class);
+
+      return jsonMap.get("Location");
+
+    } catch (IOException e) {
+      LOGGER.debug("Failed to get location from remote system", e);
+      return null;
+    }
+  }
+
+  /**
+   * Sends a PUT request with file data to the specified location
+   * @param createStorageRequest - the request to create the resource
+   * @param location - the location to write the resource to
+   *
+   * @return {@code true} if successful, otherwise {@code false}
+   */
+  private boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
+    List<Resource> resources = createStorageRequest.getResources();
+    try (CloseableHttpClient client = HttpClients.createDefault()) {
+      HttpPost httpPost = new HttpPost(location);
 
       Resource resource = resources.get(0);
 
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
       builder.addBinaryBody(
-          "file",
-          resource.getInputStream(),
-          ContentType.create(resource.getMimeType()),
-          "file.ext");
+              "file",
+              resource.getInputStream(),
+              ContentType.create(resource.getMimeType()),
+              "file.ext");
       HttpEntity multipart = builder.build();
       httpPost.setEntity(multipart);
 
       CloseableHttpResponse response = client.execute(httpPost);
       int status = response.getStatusLine().getStatusCode();
-      if (status >= 300) {
+      if (status != 201) {
         LOGGER.debug("Failed to replicate.  Status code: {}", status);
         return false;
       }
     } catch (IOException e) {
       LOGGER.debug("Failed to create resource on remote system", e);
+      return false;
     }
     return true;
   }
