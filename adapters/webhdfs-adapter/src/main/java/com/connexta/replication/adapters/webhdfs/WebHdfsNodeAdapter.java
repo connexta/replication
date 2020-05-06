@@ -96,7 +96,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   @Override
   public boolean createResource(CreateStorageRequest createStorageRequest) {
 
-    String location = getLocation();
+    String location = getLocation(createStorageRequest);
 
     return location != null && writeFileToLocation(createStorageRequest, location);
   }
@@ -105,14 +105,19 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * Sends a PUT request with no file data and without following redirects, in order to retrieve the
    * location to write to
    *
+   * @param createStorageRequest request containing the {@link
+   *     org.codice.ditto.replication.api.data.Resource} to create
    * @return a {@code String} containing the location to write to; returns {@code null} if request
    *     for location was unsuccessful
    */
-  private String getLocation() {
+  private String getLocation(CreateStorageRequest createStorageRequest) {
+    String fileUrl = webHdfsUrl.toString() + createStorageRequest.getResources().get(0).getName();
+
     try (CloseableHttpClient client = HttpClients.createDefault()) {
-      HttpPut httpPut = new HttpPut(webHdfsUrl.toString());
+      HttpPut httpPut = new HttpPut(fileUrl);
 
       List<BasicNameValuePair> params = new ArrayList<>();
+      params.add(new BasicNameValuePair("op", "CREATE"));
       params.add(new BasicNameValuePair("noredirect", "true"));
       httpPut.setEntity(new UrlEncodedFormEntity(params));
 
