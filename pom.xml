@@ -67,7 +67,7 @@
         <codice-maven.version>0.2</codice-maven.version>
         <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
         <maven-jacoco-plugin.version>0.8.2</maven-jacoco-plugin.version>
-		<dependency-check-maven.version>5.3.1</dependency-check-maven.version>
+        <dependency-check-maven.version>5.3.1</dependency-check-maven.version>
         <mariadb.version>2.4.1</mariadb.version>
 
         <failsafe.version>1.1.0</failsafe.version>
