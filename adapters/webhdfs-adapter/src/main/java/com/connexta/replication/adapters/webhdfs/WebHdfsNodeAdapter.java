@@ -145,16 +145,16 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   /**
    * Sends a PUT request with file data to the specified location
    *
-   * @param createStorageRequest - the request to create the resource
-   * @param location - the location to write the resource to
+   * @param createStorageRequest request containing the {@link
+   *     org.codice.ditto.replication.api.data.Resource} to create
+   * @param location the full address of the location to write the resource to
    * @return {@code true} if successful, otherwise {@code false}
    */
   private boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
-    List<Resource> resources = createStorageRequest.getResources();
     try (CloseableHttpClient client = HttpClients.createDefault()) {
       HttpPut httpPut = new HttpPut(location);
 
-      Resource resource = resources.get(0);
+      Resource resource = createStorageRequest.getResources().get(0);
 
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
       builder.addBinaryBody(
