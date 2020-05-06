@@ -112,6 +112,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    */
   private String getLocation(CreateStorageRequest createStorageRequest) {
     String fileUrl = webHdfsUrl.toString() + createStorageRequest.getResources().get(0).getName();
+    LOGGER.debug("The complete URL is: {}", fileUrl);
 
     try (CloseableHttpClient client = HttpClients.createDefault()) {
       HttpPut httpPut = new HttpPut(fileUrl);
