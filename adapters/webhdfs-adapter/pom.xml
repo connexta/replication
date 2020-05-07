@@ -26,6 +26,7 @@
 
     <properties>
         <apache.httpcomponents.version>4.5.2</apache.httpcomponents.version>
+        <apache.httpclient.version>4.5.12</apache.httpclient.version>
     </properties>
 
     <dependencies>
@@ -50,6 +51,11 @@
             <artifactId>httpmime</artifactId>
             <version>${apache.httpcomponents.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${apache.httpclient.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

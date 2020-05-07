@@ -16,19 +16,18 @@ package com.connexta.replication.adapters.webhdfs;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
 import org.codice.ditto.replication.api.NodeAdapter;
+import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.data.CreateRequest;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.DeleteRequest;
@@ -46,6 +45,9 @@ import org.slf4j.LoggerFactory;
 public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapter.class);
+
+  private static final int HTTP_STATUS_SUCCESS_OK = 200;
+  private static final int HTTP_STATUS_SUCCESS_CREATED = 201;
 
   private final URL webHdfsUrl;
 
@@ -95,10 +97,15 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean createResource(CreateStorageRequest createStorageRequest) {
+    try {
+      String location = getLocation(createStorageRequest);
 
-    String location = getLocation(createStorageRequest);
+      return writeFileToLocation(createStorageRequest, location);
 
-    return location != null && writeFileToLocation(createStorageRequest, location);
+    } catch (ReplicationException e) {
+      LOGGER.error("Unable to create resource.", e);
+      return false;
+    }
   }
 
   /**
@@ -111,23 +118,24 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    *     for location was unsuccessful
    */
   private String getLocation(CreateStorageRequest createStorageRequest) {
-    String fileUrl = webHdfsUrl.toString() + createStorageRequest.getResources().get(0).getName();
-    LOGGER.debug("The complete URL is: {}", fileUrl);
 
-    try (CloseableHttpClient client = HttpClients.createDefault()) {
-      HttpPut httpPut = new HttpPut(fileUrl);
+    String fileUrl =
+        webHdfsUrl.toString() + "/" + createStorageRequest.getResources().get(0).getName();
+    LOGGER.debug("The complete file URL is: {}", fileUrl);
 
-      List<BasicNameValuePair> params = new ArrayList<>();
-      params.add(new BasicNameValuePair("op", "CREATE"));
-      params.add(new BasicNameValuePair("noredirect", "true"));
-      httpPut.setEntity(new UrlEncodedFormEntity(params));
+    HttpUriRequest request =
+        RequestBuilder.put()
+            .setUri(fileUrl)
+            .addParameter("op", "CREATE")
+            .addParameter("noredirect", "true")
+            .build();
 
-      CloseableHttpResponse response = client.execute(httpPut);
+    CloseableHttpResponse response = sendHttpRequest(request);
 
+    try {
       int status = response.getStatusLine().getStatusCode();
-      if (status != 200) {
-        LOGGER.debug(
-            "Failed to successfully retrieve the location to write to.  Status code: {}", status);
+      if (status != HTTP_STATUS_SUCCESS_OK) {
+        LOGGER.debug("Request failed with status code: {}", status);
         return null;
       }
 
@@ -136,10 +144,27 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
           objectMapper.readValue(response.getEntity().getContent(), Map.class);
 
       return jsonMap.get("Location");
+    } catch (NullPointerException | IOException e) {
+      throw new ReplicationException("Failed to get location from the remote system.", e);
+    }
+  }
+
+  /**
+   * Executes an HTTP request
+   *
+   * @param request the HTTP request to execute
+   * @return a {@code Map} containing the response content if the expected status code is received,
+   *     otherwise {@code null}
+   */
+  private CloseableHttpResponse sendHttpRequest(HttpUriRequest request) {
+
+    try (CloseableHttpClient client = HttpClients.createDefault()) {
+
+      return client.execute(request);
 
     } catch (IOException e) {
-      LOGGER.debug("Failed to get location from remote system", e);
-      return null;
+      throw new ReplicationException(
+          String.format("Failed to send %s to remote system", request.getMethod()), e);
     }
   }
 
@@ -168,13 +193,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
       CloseableHttpResponse response = client.execute(httpPut);
       int status = response.getStatusLine().getStatusCode();
-      if (status != 201) {
+      if (status != HTTP_STATUS_SUCCESS_CREATED) {
         LOGGER.debug("Failed to replicate.  Status code: {}", status);
         return false;
       }
     } catch (IOException e) {
-      LOGGER.debug("Failed to create resource on remote system", e);
-      return false;
+      throw new ReplicationException("Failed to create resource on remote system.", e);
     }
     return true;
   }
