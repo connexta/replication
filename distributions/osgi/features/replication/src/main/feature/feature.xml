@@ -16,7 +16,7 @@
           xmlns="http://karaf.apache.org/xmlns/features/v1.4.0"
           xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.4.0">
 
-    <repository>mvn:org.codice.ddf.admin.query/admin-query-app/${admin-query.version}/xml/features</repository>
+    <repository>mvn:ddf.features/admin-query/${admin-query.version}/xml/features</repository>
 
     <feature name="replication" version="${project.version}"
              description="Provides capabilities and console commands for replicating metadata and resources between DDF catalogs">
