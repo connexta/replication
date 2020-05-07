@@ -56,7 +56,7 @@
         <xstream.version>1.4.11.1</xstream.version>
         <xerces.version>2.10.0</xerces.version>
         <jsr305.version>3.0.2_1</jsr305.version>
-        <jetty.version>9.4.18.v20190429</jetty.version>
+        <jetty.version>9.4.20.v20190813</jetty.version>
         <osgi.version>5.0.0</osgi.version>
         <common.codec.version>1.13</common.codec.version>
         <rest-assured.version>3.3.0</rest-assured.version>
@@ -69,7 +69,8 @@
         <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
         <maven-jacoco-plugin.version>0.8.2</maven-jacoco-plugin.version>
         <failsafe.version>1.1.0</failsafe.version>
-
+        <spotless.maven.plugin.version>1.23.0</spotless.maven.plugin.version>
+        <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
         <project.report.output.directory>project-info</project.report.output.directory>
 
         <!-- documentation replacements -->
@@ -303,15 +304,19 @@
         </pluginManagement>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.gmavenplus</groupId>
-                <artifactId>gmavenplus-plugin</artifactId>
-                <version>1.5</version>
+                <groupId>org.commonjava.maven.plugins</groupId>
+                <artifactId>directory-maven-plugin</artifactId>
+                <version>${directory.maven.plugin.version}</version>
                 <executions>
                     <execution>
+                        <id>directories</id>
                         <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
+                            <goal>highest-basedir</goal>
                         </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <property>highest-basedir</property>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -447,7 +452,7 @@
                     <plugin>
                         <groupId>com.coveo</groupId>
                         <artifactId>fmt-maven-plugin</artifactId>
-                        <version>2.3.0</version>
+                        <version>2.9</version>
                         <executions>
                             <execution>
                                 <phase>validate</phase>
@@ -458,36 +463,27 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.commonjava.maven.plugins</groupId>
-                        <artifactId>directory-maven-plugin</artifactId>
-                        <version>0.3.1</version>
+                        <groupId>com.diffplug.spotless</groupId>
+                        <artifactId>spotless-maven-plugin</artifactId>
+                        <version>${spotless.maven.plugin.version}</version>
+                        <configuration>
+                            <java>
+                                <licenseHeader>
+                                    <file>${highest-basedir}/headerJava.txt</file>
+                                </licenseHeader>
+                                <googleJavaFormat>
+                                    <version>1.7</version>
+                                </googleJavaFormat>
+                                <trimTrailingWhitespace />
+                                <removeUnusedImports />
+                            </java>
+                        </configuration>
                         <executions>
                             <execution>
-                                <id>directories</id>
+                                <phase>verify</phase>
                                 <goals>
-                                    <goal>highest-basedir</goal>
+                                    <goal>check</goal>
                                 </goals>
-                                <phase>initialize</phase>
-                                <configuration>
-                                    <property>highest-basedir</property>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-checkstyle-plugin</artifactId>
-                        <!--  This skips the checkstyle check for this directory. -->
-                        <!--  We don't want inherit this *change* to the plugin configuration. -->
-                        <!--  Sub modules will still inherit the plugin and the configuration from pluginManagment -->
-                        <version>${maven-checkstyle-plugin.version}</version>
-                        <inherited>false</inherited>
-                        <executions>
-                            <execution>
-                                <!-- Match the execution defined in the pluginManagment and override it-->
-                                <!-- Prevents the check here. -->
-                                <id>checkstyle-check</id>
-                                <phase>none</phase>
                             </execution>
                         </executions>
                     </plugin>
@@ -513,21 +509,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <reporting>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-checkstyle-plugin</artifactId>
-                        <version>${maven-checkstyle-plugin.version}</version>
-                        <configuration>
-                            <!-- This configures the plugin for mvn site -->
-                            <consoleOutput>false</consoleOutput>
-                            <failsOnError>false</failsOnError>
-                            <linkXRef>true</linkXRef>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </reporting>
         </profile>
         <profile>
             <id>owasp</id>

@@ -97,11 +97,10 @@ public class MetacardMarshaller {
     }
     Map<String, MetacardAttribute> attributes = new HashMap<>();
     ((Map) metadata.getRawMetadata())
-        .values()
-        .stream()
-        .filter(MetacardAttribute.class::isInstance)
-        .map(MetacardAttribute.class::cast)
-        .forEach(e -> attributes.put(((MetacardAttribute) e).getName(), (MetacardAttribute) e));
+        .values().stream()
+            .filter(MetacardAttribute.class::isInstance)
+            .map(MetacardAttribute.class::cast)
+            .forEach(e -> attributes.put(((MetacardAttribute) e).getName(), (MetacardAttribute) e));
     return attributes;
   }
 

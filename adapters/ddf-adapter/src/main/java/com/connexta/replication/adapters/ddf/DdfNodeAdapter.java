@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
@@ -261,13 +262,13 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
+    // Failed items and new items are queried separately due to a bug in DDF that was only fixed
+    // recently
     Iterable<Metadata> results =
         ResultIterable.resultIterable(
             this::getRecords,
-            new QueryRequestImpl(
-                createQueryFilter(queryRequest),
-                queryRequest.getStartIndex(),
-                queryRequest.getPageSize()));
+            createDdfFailedItemQueryRequest(queryRequest),
+            createDdfQueryRequest(queryRequest));
     return new QueryResponseImpl(results);
   }
 
@@ -367,7 +368,24 @@ public class DdfNodeAdapter implements NodeAdapter {
   }
 
   @VisibleForTesting
-  String createQueryFilter(QueryRequest queryRequest) {
+  @Nullable
+  QueryRequest createDdfFailedItemQueryRequest(QueryRequest queryRequest) {
+    if (queryRequest.getFailedItemIds().isEmpty()) {
+      return null;
+    }
+
+    final List<String> failedItemFilters = new ArrayList<>();
+    for (String itemId : queryRequest.getFailedItemIds()) {
+      failedItemFilters.add(equalTo(METACARD_ID, itemId));
+    }
+
+    String filter = anyOf(failedItemFilters);
+    LOGGER.debug("Failed items filter: {}", filter);
+    return new QueryRequestImpl(filter, queryRequest.getStartIndex(), queryRequest.getPageSize());
+  }
+
+  @VisibleForTesting
+  QueryRequest createDdfQueryRequest(QueryRequest queryRequest) {
     String cql = queryRequest.getCql();
     if (!cql.trim().startsWith("[")) {
       cql = "[ " + cql + " ]";
@@ -380,12 +398,11 @@ public class DdfNodeAdapter implements NodeAdapter {
     }
     filters.add(equalTo(METACARD_TAGS, DEFAULT_TAG));
 
-    final List<String> failedItemFilters = new ArrayList<>();
+    final List<String> deletedFailedItemFilters = new ArrayList<>();
     for (String itemId : queryRequest.getFailedItemIds()) {
-      failedItemFilters.add(
-          anyOf(
-              equalTo(METACARD_ID, itemId),
-              allOf(equalTo(Constants.VERSION_OF_ID, itemId), like(ACTION, "Deleted*"))));
+      // filter for items that failed to replicate and were deleted since the last attempt
+      deletedFailedItemFilters.add(
+          allOf(equalTo(Constants.VERSION_OF_ID, itemId), like(ACTION, "Deleted*")));
     }
 
     String finalFilter;
@@ -406,11 +423,13 @@ public class DdfNodeAdapter implements NodeAdapter {
       finalFilter = allOf(filters);
     }
 
-    if (!failedItemFilters.isEmpty()) {
-      LOGGER.debug("Failed items filter: {}", anyOf(failedItemFilters));
-      finalFilter = anyOf(finalFilter, anyOf(failedItemFilters));
+    if (!deletedFailedItemFilters.isEmpty()) {
+      String deletedFailedItemsFilter = anyOf(deletedFailedItemFilters);
+      LOGGER.debug("Deleted failed items filter: {}", anyOf(deletedFailedItemFilters));
+      finalFilter = anyOf(finalFilter, deletedFailedItemsFilter);
     }
     LOGGER.debug("Final cql query filter: {}", finalFilter);
-    return finalFilter;
+    return new QueryRequestImpl(
+        finalFilter, queryRequest.getStartIndex(), queryRequest.getPageSize());
   }
 }

@@ -1,4 +1,3 @@
-package com.connexta.replication.adapters.ddf;
 /**
  * Copyright (c) Connexta
  *
@@ -12,6 +11,7 @@ package com.connexta.replication.adapters.ddf;
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
+package com.connexta.replication.adapters.ddf;
 
 import java.util.Date;
 import java.util.List;
