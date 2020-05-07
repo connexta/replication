@@ -13,28 +13,9 @@
  */
 package com.connexta.replication.adapters.ddf;
 
-import static com.connexta.replication.adapters.ddf.CqlBuilder.after;
-import static com.connexta.replication.adapters.ddf.CqlBuilder.allOf;
-import static com.connexta.replication.adapters.ddf.CqlBuilder.anyOf;
-import static com.connexta.replication.adapters.ddf.CqlBuilder.equalTo;
-import static com.connexta.replication.adapters.ddf.CqlBuilder.like;
-import static com.connexta.replication.adapters.ddf.CqlBuilder.negate;
-import static com.connexta.replication.adapters.ddf.csw.Constants.ACTION;
-import static com.connexta.replication.adapters.ddf.csw.Constants.DEFAULT_TAG;
-import static com.connexta.replication.adapters.ddf.csw.Constants.METACARD_ID;
-import static com.connexta.replication.adapters.ddf.csw.Constants.METACARD_MODIFIED;
-import static com.connexta.replication.adapters.ddf.csw.Constants.METACARD_TAGS;
-import static com.connexta.replication.adapters.ddf.csw.Constants.REGISTRY_IDENTITY_NODE;
-import static com.connexta.replication.adapters.ddf.csw.Constants.REGISTRY_TAG;
-import static com.connexta.replication.adapters.ddf.csw.Constants.VERSIONED_ON;
-import static com.connexta.replication.adapters.ddf.csw.Constants.VERSION_TAG;
-
 import com.connexta.replication.adapters.ddf.csw.Constants;
 import com.connexta.replication.adapters.ddf.csw.Csw;
-import com.connexta.replication.adapters.ddf.csw.CswJAXBElementProvider;
 import com.connexta.replication.adapters.ddf.csw.CswRecordCollection;
-import com.connexta.replication.adapters.ddf.csw.CswResponseExceptionMapper;
-import com.connexta.replication.adapters.ddf.csw.GetRecordsMessageBodyReader;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClient;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
 import com.connexta.replication.data.QueryRequestImpl;
@@ -48,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -58,12 +38,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.xml.namespace.QName;
-import net.opengis.cat.csw.v_2_0_2.AcknowledgementType;
 import net.opengis.cat.csw.v_2_0_2.CapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.ElementSetNameType;
 import net.opengis.cat.csw.v_2_0_2.ElementSetType;
 import net.opengis.cat.csw.v_2_0_2.GetCapabilitiesType;
-import net.opengis.cat.csw.v_2_0_2.GetRecordsResponseType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsType;
 import net.opengis.cat.csw.v_2_0_2.ObjectFactory;
 import net.opengis.cat.csw.v_2_0_2.QueryConstraintType;
@@ -73,7 +51,6 @@ import net.opengis.filter.v_1_1_0.PropertyNameType;
 import net.opengis.filter.v_1_1_0.SortByType;
 import net.opengis.filter.v_1_1_0.SortOrderType;
 import net.opengis.filter.v_1_1_0.SortPropertyType;
-import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
@@ -92,6 +69,7 @@ import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** An adapter used for communicating with a DDF node. */
 public class DdfNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DdfNodeAdapter.class);
@@ -104,65 +82,20 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   private SecureCxfClientFactory<Csw> factory;
 
-  private List<String> jaxbElementClassNames = new ArrayList<>();
-
-  private Map<String, String> jaxbElementClassMap = new HashMap<>();
-
+  /**
+   * Creates a DdfNodeAdapter.
+   *
+   * @param ddfRestClientFactory a factory for creating rest clients
+   * @param ddfCswClientFactory a factory for creating csw clients
+   * @param hostUrl the url of the DDF to create clients for
+   */
   public DdfNodeAdapter(
-      DdfRestClientFactory ddfRestClientFactory, ClientFactoryFactory clientFactory, URL hostUrl) {
+      DdfRestClientFactory ddfRestClientFactory,
+      SecureCxfClientFactory<Csw> ddfCswClientFactory,
+      URL hostUrl) {
     this.ddfRestClientFactory = ddfRestClientFactory;
     this.hostUrl = hostUrl;
-    factory =
-        clientFactory.getSecureCxfClientFactory(
-            hostUrl.toString() + "/csw",
-            Csw.class,
-            initProviders(),
-            null,
-            true,
-            false,
-            30000,
-            30000);
-  }
-
-  private List<Object> initProviders() {
-
-    CswJAXBElementProvider getRecordsTypeProvider = new CswJAXBElementProvider<>();
-    getRecordsTypeProvider.setMarshallAsJaxbElement(true);
-
-    // Adding class names that need to be marshalled/unmarshalled to
-    // jaxbElementClassNames list
-    jaxbElementClassNames.add(GetRecordsType.class.getName());
-    jaxbElementClassNames.add(CapabilitiesType.class.getName());
-    jaxbElementClassNames.add(GetCapabilitiesType.class.getName());
-    jaxbElementClassNames.add(GetRecordsResponseType.class.getName());
-    jaxbElementClassNames.add(AcknowledgementType.class.getName());
-
-    getRecordsTypeProvider.setJaxbElementClassNames(jaxbElementClassNames);
-
-    // Adding map entry of <Class Name>,<Qualified Name> to jaxbElementClassMap
-    String expandedName = new QName(Constants.CSW_OUTPUT_SCHEMA, Constants.GET_RECORDS).toString();
-    String message = "{} expanded name: {}";
-    LOGGER.debug(message, Constants.GET_RECORDS, expandedName);
-    jaxbElementClassMap.put(GetRecordsType.class.getName(), expandedName);
-
-    String getCapsExpandedName =
-        new QName(Constants.CSW_OUTPUT_SCHEMA, Constants.GET_CAPABILITIES).toString();
-    LOGGER.debug(message, Constants.GET_CAPABILITIES, expandedName);
-    jaxbElementClassMap.put(GetCapabilitiesType.class.getName(), getCapsExpandedName);
-
-    String capsExpandedName =
-        new QName(Constants.CSW_OUTPUT_SCHEMA, Constants.CAPABILITIES).toString();
-    LOGGER.debug(message, Constants.CAPABILITIES, capsExpandedName);
-    jaxbElementClassMap.put(CapabilitiesType.class.getName(), capsExpandedName);
-
-    String acknowledgmentName =
-        new QName(Constants.CSW_OUTPUT_SCHEMA, "Acknowledgement").toString();
-    jaxbElementClassMap.put(AcknowledgementType.class.getName(), acknowledgmentName);
-    getRecordsTypeProvider.setJaxbElementClassMap(jaxbElementClassMap);
-
-    GetRecordsMessageBodyReader grmbr = new GetRecordsMessageBodyReader();
-
-    return Arrays.asList(getRecordsTypeProvider, new CswResponseExceptionMapper(), grmbr);
+    this.factory = ddfCswClientFactory;
   }
 
   @Override
@@ -207,7 +140,7 @@ public class DdfNodeAdapter implements NodeAdapter {
       SortByType cswSortBy = new SortByType();
       SortPropertyType sortProperty = new SortPropertyType();
       PropertyNameType propertyName = new PropertyNameType();
-      propertyName.setContent(Arrays.asList(METACARD_MODIFIED));
+      propertyName.setContent(Arrays.asList(Constants.METACARD_MODIFIED));
       sortProperty.setPropertyName(propertyName);
       sortProperty.setSortOrder(SortOrderType.ASC);
       cswSortBy.getSortProperty().add(sortProperty);
@@ -235,8 +168,8 @@ public class DdfNodeAdapter implements NodeAdapter {
       return this.cachedSystemName;
     }
 
-    String tagFilter = CqlBuilder.equalTo(METACARD_TAGS, REGISTRY_TAG);
-    String identityFilter = CqlBuilder.negate(CqlBuilder.isNull(REGISTRY_IDENTITY_NODE));
+    String tagFilter = CqlBuilder.equalTo(Constants.METACARD_TAGS, Constants.REGISTRY_TAG);
+    String identityFilter = CqlBuilder.negate(CqlBuilder.isNull(Constants.REGISTRY_IDENTITY_NODE));
     String filter = CqlBuilder.allOf(tagFilter, identityFilter);
     List<Metadata> results;
 
@@ -269,13 +202,16 @@ public class DdfNodeAdapter implements NodeAdapter {
             this::getRecords,
             createDdfFailedItemQueryRequest(queryRequest),
             createDdfQueryRequest(queryRequest));
+
     return new QueryResponseImpl(results);
   }
 
   @Override
   public boolean exists(Metadata metadata) {
     try {
-      return !getRecords(new QueryRequestImpl(equalTo(METACARD_ID, metadata.getId()), 1, 1))
+      return !getRecords(
+              new QueryRequestImpl(
+                  CqlBuilder.equalTo(Constants.METACARD_ID, metadata.getId()), 1, 1))
           .isEmpty();
     } catch (Exception e) {
       throw new AdapterException(
@@ -289,7 +225,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean createRequest(CreateRequest createRequest) {
     List<Metadata> metadata = createRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
     metadata.forEach(this::prepareMetadata);
     return performRequestForEach(client::post, metadata);
   }
@@ -297,7 +233,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean updateRequest(UpdateRequest updateRequest) {
     List<Metadata> metadata = updateRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
     metadata.forEach(this::prepareMetadata);
     return performRequestForEach(client::put, metadata);
   }
@@ -306,14 +242,14 @@ public class DdfNodeAdapter implements NodeAdapter {
   public boolean deleteRequest(DeleteRequest deleteRequest) {
     List<String> ids =
         deleteRequest.getMetadata().stream().map(Metadata::getId).collect(Collectors.toList());
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
     return performRequestForEach(client::delete, ids);
   }
 
   @Override
   public ResourceResponse readResource(ResourceRequest resourceRequest) {
     Metadata metadata = resourceRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
     Resource resource = client.get(metadata);
     return new ResourceResponseImpl(resource);
   }
@@ -321,7 +257,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean createResource(CreateStorageRequest createStorageRequest) {
     List<Resource> resources = createStorageRequest.getResources();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     resources.forEach(e -> prepareMetadata(e.getMetadata()));
     return performRequestForEach(client::post, resources);
   }
@@ -329,7 +265,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean updateResource(UpdateStorageRequest updateStorageRequest) {
     List<Resource> resources = updateStorageRequest.getResources();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl.toString());
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     resources.forEach(e -> prepareMetadata(e.getMetadata()));
     return performRequestForEach(client::put, resources);
   }
@@ -342,9 +278,12 @@ public class DdfNodeAdapter implements NodeAdapter {
     }
     Map metadataMap = (Map) metadata.getRawMetadata();
     metadataMap.put(
-        METACARD_TAGS,
+        Constants.METACARD_TAGS,
         new MetacardAttribute(
-            METACARD_TAGS, "string", new ArrayList(metadata.getTags()), Collections.emptyList()));
+            Constants.METACARD_TAGS,
+            "string",
+            new ArrayList(metadata.getTags()),
+            Collections.emptyList()));
     metadataMap.put(
         Replication.ORIGINS,
         new MetacardAttribute(
@@ -359,7 +298,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   private <T> boolean performRequestForEach(Function<T, Response> request, List<T> requestBodies) {
     for (T body : requestBodies) {
       Response response = request.apply(body);
-      if (response != null && !response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+      if (response == null || !response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
         return false;
       }
     }
@@ -376,10 +315,10 @@ public class DdfNodeAdapter implements NodeAdapter {
 
     final List<String> failedItemFilters = new ArrayList<>();
     for (String itemId : queryRequest.getFailedItemIds()) {
-      failedItemFilters.add(equalTo(METACARD_ID, itemId));
+      failedItemFilters.add(CqlBuilder.equalTo(Constants.METACARD_ID, itemId));
     }
 
-    String filter = anyOf(failedItemFilters);
+    String filter = CqlBuilder.anyOf(failedItemFilters);
     LOGGER.debug("Failed items filter: {}", filter);
     return new QueryRequestImpl(filter, queryRequest.getStartIndex(), queryRequest.getPageSize());
   }
@@ -394,15 +333,17 @@ public class DdfNodeAdapter implements NodeAdapter {
     final List<String> filters = new ArrayList<>();
 
     for (String excludedNode : queryRequest.getExcludedNodes()) {
-      filters.add(negate(equalTo(Replication.ORIGINS, excludedNode)));
+      filters.add(CqlBuilder.negate(CqlBuilder.equalTo(Replication.ORIGINS, excludedNode)));
     }
-    filters.add(equalTo(METACARD_TAGS, DEFAULT_TAG));
+    filters.add(CqlBuilder.equalTo(Constants.METACARD_TAGS, Constants.DEFAULT_TAG));
 
     final List<String> deletedFailedItemFilters = new ArrayList<>();
     for (String itemId : queryRequest.getFailedItemIds()) {
       // filter for items that failed to replicate and were deleted since the last attempt
       deletedFailedItemFilters.add(
-          allOf(equalTo(Constants.VERSION_OF_ID, itemId), like(ACTION, "Deleted*")));
+          CqlBuilder.allOf(
+              CqlBuilder.equalTo(Constants.VERSION_OF_ID, itemId),
+              CqlBuilder.like(Constants.ACTION, "Deleted*")));
     }
 
     String finalFilter;
@@ -410,23 +351,26 @@ public class DdfNodeAdapter implements NodeAdapter {
     Date modifiedAfter = queryRequest.getModifiedAfter();
     List<String> deletedFilters = new ArrayList<>();
     if (modifiedAfter != null) {
-      filters.add(after(METACARD_MODIFIED, modifiedAfter));
+      filters.add(CqlBuilder.after(Constants.METACARD_MODIFIED, modifiedAfter));
 
-      deletedFilters.add(after(VERSIONED_ON, modifiedAfter));
-      deletedFilters.add(equalTo(METACARD_TAGS, VERSION_TAG));
-      deletedFilters.add(like(ACTION, "Deleted*"));
-      LOGGER.debug("Time and type filter: {}", allOf(filters));
-      LOGGER.debug("Deleted items filter: {}", allOf(deletedFilters));
-      finalFilter = allOf(cql, anyOf(allOf(filters), allOf(deletedFilters)));
+      deletedFilters.add(CqlBuilder.after(Constants.VERSIONED_ON, modifiedAfter));
+      deletedFilters.add(CqlBuilder.equalTo(Constants.METACARD_TAGS, Constants.VERSION_TAG));
+      deletedFilters.add(CqlBuilder.like(Constants.ACTION, "Deleted*"));
+
+      String timeTypeFilter = CqlBuilder.allOf(filters);
+      String deletedItemsFilter = CqlBuilder.allOf(deletedFilters);
+      LOGGER.debug("Time and type filter: {}", timeTypeFilter);
+      LOGGER.debug("Deleted items filter: {}", deletedItemsFilter);
+      finalFilter = CqlBuilder.allOf(cql, CqlBuilder.anyOf(timeTypeFilter, deletedItemsFilter));
     } else {
       filters.add(cql);
-      finalFilter = allOf(filters);
+      finalFilter = CqlBuilder.allOf(filters);
     }
 
     if (!deletedFailedItemFilters.isEmpty()) {
-      String deletedFailedItemsFilter = anyOf(deletedFailedItemFilters);
-      LOGGER.debug("Deleted failed items filter: {}", anyOf(deletedFailedItemFilters));
-      finalFilter = anyOf(finalFilter, deletedFailedItemsFilter);
+      String deletedFailedItemsFilter = CqlBuilder.anyOf(deletedFailedItemFilters);
+      LOGGER.debug("Deleted failed items filter: {}", CqlBuilder.anyOf(deletedFailedItemFilters));
+      finalFilter = CqlBuilder.anyOf(finalFilter, deletedFailedItemsFilter);
     }
     LOGGER.debug("Final cql query filter: {}", finalFilter);
     return new QueryRequestImpl(
