@@ -180,6 +180,13 @@
         <cve>CVE-2016-6814</cve>
         <cve>CVE-2016-6497</cve>
     </suppress>
+    <suppress>
+        <notes>
+            This CVE is inherited from DDF and can be removed when pac4j is upgraded
+            security core -> pac4j-oidc:jar:3.8.2 -> com.nimbusds:oauth2-oidc-sdk:jar:6.5
+        </notes>
+        <cve>CVE-2007-1652</cve>
+    </suppress>
     <!-- ************************************************************************************* -->
     <!-- END DDF related suppression -->
     <!-- ************************************************************************************* -->

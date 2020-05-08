@@ -272,9 +272,7 @@ public class ReplicationUtils {
       field.lastSuccess(lastStatus.getLastSuccess());
     }
 
-    replicator
-        .getActiveSyncRequests()
-        .stream()
+    replicator.getActiveSyncRequests().stream()
         .filter(sync -> sync.getConfig().getId().equals(config.getId()))
         .map(SyncRequest::getStatus)
         .forEach(status -> statusList.add(0, status));

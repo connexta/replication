@@ -11,25 +11,27 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ditto.replication.api;
+package com.connexta.replication.data;
 
-import java.net.URL;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-/**
- * Factories which enable the {@link Replicator} to create {@link NodeAdapter}s to perform
- * replication.
- */
-public interface NodeAdapterFactory {
+public class ReplicationConstants {
 
-  /**
-   * Creates a new {@link NodeAdapter}.
-   *
-   * @param url the base url of the system
-   * @return the adapter
-   * @throws AdapterException if the adapter couldn't be created from the url
-   */
-  NodeAdapter create(URL url);
+  public static final String TLS_PROTOCOL = "TLSv1.2";
 
-  /** @return the type of the node that will be created */
-  NodeAdapterType getType();
+  private ReplicationConstants() {}
+
+  public static String getCertAlias() {
+    try {
+      return System.getProperty(
+          "javax.net.ssl.certAlias", InetAddress.getLocalHost().getCanonicalHostName());
+    } catch (UnknownHostException e) {
+      return "localhost";
+    }
+  }
+
+  public static String getKeystore() {
+    return System.getProperty("javax.net.ssl.keyStore");
+  }
 }

@@ -32,10 +32,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.QueryRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -98,6 +100,63 @@ public class ResultIterableTest {
     ResultIterable resultIterable =
         ResultIterable.resultIterable(queryFunction, new QueryRequestImpl("title like '*'"));
     assertThat(resultIterable.stream().count(), is(1l));
+  }
+
+  @Test
+  public void multipleQueryRequests() {
+    String filter1 = "title like 'failed'";
+    String filter2 = "title like '*'";
+    QueryRequest request1 = new QueryRequestImpl(filter1);
+    QueryRequest request2 = new QueryRequestImpl(filter2);
+    when(queryFunction.apply(any(QueryRequest.class))).thenReturn(Collections.emptyList());
+    Iterator<Metadata> iter =
+        ResultIterable.resultIterable(queryFunction, request1, request2).iterator();
+    assertThat(iter.hasNext(), is(false));
+    ArgumentCaptor<QueryRequest> requestCaptor = ArgumentCaptor.forClass(QueryRequest.class);
+    verify(queryFunction, times(2)).apply(requestCaptor.capture());
+    List<String> queryFilters =
+        requestCaptor.getAllValues().stream()
+            .map(QueryRequest::getCql)
+            .collect(Collectors.toList());
+    assertTrue(queryFilters.contains(filter1));
+    assertTrue(queryFilters.contains(filter2));
+  }
+
+  @Test
+  public void multipleQueryRequestsMultiplePages() {
+    String filter1 = "title like 'failed'";
+    String filter2 = "title like '*'";
+    QueryRequest request1 = new QueryRequestImpl(filter1);
+    QueryRequest request2 = new QueryRequestImpl(filter2);
+    when(queryFunction.apply(any(QueryRequest.class)))
+        .thenReturn(
+            Arrays.asList(getMetadata(), getMetadata()),
+            Collections.emptyList(),
+            Collections.singletonList(getMetadata()),
+            Collections.emptyList());
+    Iterator<Metadata> iter =
+        ResultIterable.resultIterable(queryFunction, request1, request2).iterator();
+    assertThat(iter.next(), is(notNullValue()));
+    assertThat(iter.next(), is(notNullValue()));
+    assertThat(iter.next(), is(notNullValue()));
+    assertThat(iter.hasNext(), is(false));
+    verify(queryFunction, times(4)).apply(any(QueryRequest.class));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void allNullQueryRequestsThrowsException() {
+    ResultIterable.resultIterable(queryFunction, null);
+  }
+
+  @Test
+  public void nullQueryRequestIsRemoved() {
+    String filter1 = "title like '*'";
+    QueryRequest request1 = new QueryRequestImpl(filter1);
+    when(queryFunction.apply(any(QueryRequest.class))).thenReturn(Collections.emptyList());
+    Iterator<Metadata> iter =
+        ResultIterable.resultIterable(queryFunction, null, request1).iterator();
+    assertThat(iter.hasNext(), is(false));
+    verify(queryFunction, times(1)).apply(any(QueryRequest.class));
   }
 
   private Metadata getMetadata() {

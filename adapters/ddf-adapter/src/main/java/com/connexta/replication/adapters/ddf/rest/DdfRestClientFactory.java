@@ -13,9 +13,11 @@
  */
 package com.connexta.replication.adapters.ddf.rest;
 
+import com.connexta.replication.data.ReplicationConstants;
+import java.net.URL;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.client.WebClient;
-import org.apache.shiro.util.ThreadContext;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 
@@ -26,27 +28,81 @@ public class DdfRestClientFactory {
 
   private final ClientFactoryFactory clientFactoryFactory;
 
-  public DdfRestClientFactory(ClientFactoryFactory clientFactoryFactory) {
+  private final int connectionTimeout;
+
+  private final int receiveTimeout;
+
+  /**
+   * creates a DdfRestClientFactory
+   *
+   * @param clientFactoryFactory a factory for the {@link SecureCxfClientFactory}s which will create
+   *     the rest clients
+   * @param connectionTimeout the connection timeout for clients created by this factory
+   * @param receiveTimeout the receive timeout for clients created by this factory
+   */
+  public DdfRestClientFactory(
+      ClientFactoryFactory clientFactoryFactory, int connectionTimeout, int receiveTimeout) {
     this.clientFactoryFactory = clientFactoryFactory;
+    this.connectionTimeout = connectionTimeout;
+    this.receiveTimeout = receiveTimeout;
   }
 
   /**
    * Creates a limited functionality wrapper around a new {@link WebClient} created from a given
-   * host name. The created client can be used for multiple requests.
+   * url. The created client can be used for multiple requests.
    *
-   * @param host the host for the client to connect to
+   * @param url the url for the client to connect to
    * @return a wrapped {@link WebClient}
    */
-  public DdfRestClient create(String host) {
+  public DdfRestClient create(URL url) {
+    return new DdfRestClient(initializeClient(url));
+  }
+
+  public DdfRestClient createWithSubject(URL url) {
+    String pathlessUrl = url.getProtocol() + "://" + url.getHost() + ":" + url.getPort();
+    WebClient whoamiClient =
+        clientFactoryFactory
+            .getSecureCxfClientFactory(
+                pathlessUrl,
+                RESTService.class,
+                null,
+                null,
+                false,
+                false,
+                connectionTimeout,
+                receiveTimeout,
+                ReplicationConstants.getCertAlias(),
+                ReplicationConstants.getKeystore(),
+                ReplicationConstants.TLS_PROTOCOL)
+            .getWebClient();
+    whoamiClient.path("/whoami");
+    whoamiClient.accept(MediaType.APPLICATION_XML);
+    whoamiClient.accept(MediaType.APPLICATION_JSON);
+    Response sessionInfo = whoamiClient.get();
+
+    WebClient restClient = initializeClient(url);
+    restClient.cookie(sessionInfo.getCookies().get("JSESSIONID"));
+    return new DdfRestClient(restClient);
+  }
+
+  private WebClient initializeClient(URL url) {
     final SecureCxfClientFactory<RESTService> restClientFactory =
         clientFactoryFactory.getSecureCxfClientFactory(
-            host + DEFAULT_REST_ENDPOINT, RESTService.class);
+            url.toString() + DEFAULT_REST_ENDPOINT,
+            RESTService.class,
+            null,
+            null,
+            false,
+            false,
+            connectionTimeout,
+            receiveTimeout,
+            ReplicationConstants.getCertAlias(),
+            ReplicationConstants.getKeystore(),
+            ReplicationConstants.TLS_PROTOCOL);
 
-    WebClient webClient = restClientFactory.getWebClientForSubject(ThreadContext.getSubject());
-
+    WebClient webClient = restClientFactory.getWebClient();
     webClient.accept(MediaType.APPLICATION_XML);
     webClient.accept(MediaType.APPLICATION_JSON);
-
-    return new DdfRestClient(webClient);
+    return webClient;
   }
 }

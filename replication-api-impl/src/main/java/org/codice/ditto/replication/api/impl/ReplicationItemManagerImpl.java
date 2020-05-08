@@ -125,8 +125,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
       throw new ReplicationPersistenceException(e);
     }
 
-    return matchingPersistentItems
-        .stream()
+    return matchingPersistentItems.stream()
         .map(this::mapToReplicationItem)
         .collect(Collectors.toList());
   }

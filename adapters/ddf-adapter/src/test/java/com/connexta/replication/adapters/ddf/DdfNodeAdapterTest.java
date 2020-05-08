@@ -15,7 +15,8 @@ package com.connexta.replication.adapters.ddf;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -36,8 +37,8 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.ws.rs.core.MediaType;
@@ -47,7 +48,6 @@ import javax.ws.rs.core.Response.StatusType;
 import net.opengis.cat.csw.v_2_0_2.CapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetCapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsType;
-import org.apache.cxf.interceptor.Interceptor;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ditto.replication.api.AdapterException;
@@ -76,21 +76,12 @@ public class DdfNodeAdapterTest {
 
   @Before
   public void setUp() throws Exception {
-    when(ddfRestClientFactory.create(any(String.class))).thenReturn(restClient);
-    when(clientFactory.getSecureCxfClientFactory(
-            any(String.class),
-            any(Class.class),
-            any(List.class),
-            any(Interceptor.class),
-            any(Boolean.class),
-            any(Boolean.class),
-            any(Integer.class),
-            any(Integer.class)))
-        .thenReturn(secureFactory);
+    when(ddfRestClientFactory.create(any(URL.class))).thenReturn(restClient);
+    when(ddfRestClientFactory.createWithSubject(any(URL.class))).thenReturn(restClient);
     when(secureFactory.getClient()).thenReturn(csw);
     adapter =
         new DdfNodeAdapter(
-            ddfRestClientFactory, clientFactory, new URL("https://localhost:8994/searvice"));
+            ddfRestClientFactory, secureFactory, new URL("https://localhost:8994/searvice"));
   }
 
   @Test
@@ -233,6 +224,32 @@ public class DdfNodeAdapterTest {
   }
 
   @Test
+  public void createFailedItemsQueryRequest() {
+    Date modified = new Date();
+    QueryRequest request =
+        new QueryRequestImpl(
+            "title like '*'",
+            Collections.singletonList("node1"),
+            Collections.singletonList("123456789"),
+            modified);
+    assertThat(
+        adapter.createDdfFailedItemQueryRequest(request).getCql(),
+        is("[ [ \"id\" = '123456789' ] ]"));
+  }
+
+  @Test
+  public void createFailedItemsQueryRequestNoFailedIds() {
+    Date modified = new Date();
+    QueryRequest request =
+        new QueryRequestImpl(
+            "title like '*'",
+            Collections.singletonList("node1"),
+            Collections.emptyList(),
+            modified);
+    assertThat(adapter.createDdfFailedItemQueryRequest(request), is(nullValue()));
+  }
+
+  @Test
   public void createQueryFilter() {
     Date modified = new Date();
     String modifiedString = modified.toInstant().toString();
@@ -243,10 +260,10 @@ public class DdfNodeAdapterTest {
             Collections.singletonList("123456789"),
             modified);
     assertThat(
-        adapter.createQueryFilter(request),
+        adapter.createDdfQueryRequest(request).getCql(),
         is(
             String.format(
-                "[ [ [ title like '*' ] AND [ [ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ \"metacard.modified\" after %s ] ] OR [ [ \"metacard.version.versioned-on\" after %s ] AND [ \"metacard-tags\" = 'revision' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ] OR [ [ [ \"id\" = '123456789' ] OR [ [ \"metacard.version.id\" = '123456789' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ] ]",
+                "[ [ [ title like '*' ] AND [ [ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ \"metacard.modified\" after %s ] ] OR [ [ \"metacard.version.versioned-on\" after %s ] AND [ \"metacard-tags\" = 'revision' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ] OR [ [ [ \"metacard.version.id\" = '123456789' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ]",
                 modifiedString, modifiedString)));
   }
 
@@ -255,7 +272,17 @@ public class DdfNodeAdapterTest {
     QueryRequest request =
         new QueryRequestImpl("title like '*'", Collections.singletonList("node1"));
     assertThat(
-        adapter.createQueryFilter(request),
+        adapter.createDdfQueryRequest(request).getCql(),
+        is(
+            "[ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ title like '*' ] ]"));
+  }
+
+  @Test
+  public void createFilterAlreadyHasBrackets() {
+    QueryRequest request =
+        new QueryRequestImpl("[ title like '*' ]", Collections.singletonList("node1"));
+    assertThat(
+        adapter.createDdfQueryRequest(request).getCql(),
         is(
             "[ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ title like '*' ] ]"));
   }
@@ -269,7 +296,7 @@ public class DdfNodeAdapterTest {
         Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, "string", "tag"));
     map.put("title", new MetacardAttribute("title", null, "mytitle"));
 
-    return new MetadataImpl(map, Map.class, "123456789", new Date());
+    return new MetadataImpl(map, Map.class, UUID.randomUUID().toString(), new Date());
   }
 
   private Resource getResource() {
