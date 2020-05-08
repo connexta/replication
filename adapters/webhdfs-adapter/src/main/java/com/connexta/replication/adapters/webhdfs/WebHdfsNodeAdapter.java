@@ -15,13 +15,14 @@ package com.connexta.replication.adapters.webhdfs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -46,8 +47,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapter.class);
 
-  private static final int HTTP_STATUS_SUCCESS_OK = 200;
-  private static final int HTTP_STATUS_SUCCESS_CREATED = 201;
+  static final int HTTP_STATUS_SUCCESS_OK = 200;
+  static final int HTTP_STATUS_SUCCESS_CREATED = 201;
 
   private final URL webHdfsUrl;
 
@@ -123,16 +124,13 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         webHdfsUrl.toString() + "/" + createStorageRequest.getResources().get(0).getName();
     LOGGER.debug("The complete file URL is: {}", fileUrl);
 
-    HttpUriRequest request =
-        RequestBuilder.put()
-            .setUri(fileUrl)
-            .addParameter("op", "CREATE")
-            .addParameter("noredirect", "true")
-            .build();
-
-    CloseableHttpResponse response = sendHttpRequest(request);
-
     try {
+      URIBuilder builder = new URIBuilder(fileUrl);
+      builder.setParameter("op", "CREATE").setParameter("noredirect", "true");
+      HttpPut httpPut = new HttpPut(builder.build());
+
+      CloseableHttpResponse response = sendHttpRequest(httpPut);
+
       int status = response.getStatusLine().getStatusCode();
       if (status != HTTP_STATUS_SUCCESS_OK) {
         LOGGER.debug("Request failed with status code: {}", status);
@@ -144,7 +142,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
           objectMapper.readValue(response.getEntity().getContent(), Map.class);
 
       return jsonMap.get("Location");
-    } catch (NullPointerException | IOException e) {
+    } catch (URISyntaxException | NullPointerException | IOException e) {
       throw new ReplicationException("Failed to get location from the remote system.", e);
     }
   }
@@ -156,7 +154,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return a {@code Map} containing the response content if the expected status code is received,
    *     otherwise {@code null}
    */
-  private CloseableHttpResponse sendHttpRequest(HttpUriRequest request) {
+  private CloseableHttpResponse sendHttpRequest(HttpRequestBase request) {
 
     try (CloseableHttpClient client = HttpClients.createDefault()) {
 
