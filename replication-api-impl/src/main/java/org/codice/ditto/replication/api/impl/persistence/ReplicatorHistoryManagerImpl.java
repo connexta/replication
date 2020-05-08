@@ -79,4 +79,14 @@ public class ReplicatorHistoryManagerImpl implements ReplicatorHistoryManager {
   public void remove(String id) {
     persistentStore.delete(ReplicationStatusImpl.class, id);
   }
+
+  @Override
+  public boolean exists(String id) {
+    try {
+      persistentStore.get(ReplicationStatusImpl.class, id);
+    } catch (NotFoundException e) {
+      return false;
+    }
+    return true;
+  }
 }

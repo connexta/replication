@@ -1,3 +1,16 @@
+/**
+ * Copyright (c) Connexta
+ *
+ * <p>This is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * Lesser General Public License as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
+ *
+ * <p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details. A copy of the GNU Lesser General Public
+ * License is distributed along with this program and can be found at
+ * <http://www.gnu.org/licenses/lgpl.html>.
+ */
 import React from 'react'
 import {
   MenuItem,
@@ -83,6 +96,7 @@ const defaultFormState = {
   biDirectional: false,
   filterErrorText: '',
   nameErrorText: '',
+  disableSave: false,
 }
 
 class AddReplication extends React.Component {
@@ -141,6 +155,18 @@ class AddReplication extends React.Component {
     })
   }
 
+  disableSaveButton() {
+    this.setState({
+      disableSave: true,
+    })
+  }
+
+  enableSaveButton() {
+    this.setState({
+      disableSave: false,
+    })
+  }
+
   render() {
     const { Button: AddButton, classes } = this.props
     const {
@@ -152,6 +178,7 @@ class AddReplication extends React.Component {
       biDirectional,
       filterErrorText,
       nameErrorText,
+      disableSave = false,
     } = this.state
 
     return (
@@ -262,6 +289,7 @@ class AddReplication extends React.Component {
                     } else if (e.message === 'DUPLICATE_CONFIGURATION') {
                       this.handleInvalidName()
                     }
+                    this.enableSaveButton()
                   })
               }}
               onCompleted={() => {
@@ -271,9 +299,13 @@ class AddReplication extends React.Component {
               {(createReplication, { loading }) => (
                 <div>
                   <Button
-                    disabled={!(name && sourceId && destinationId && filter)}
+                    disabled={
+                      !(name && sourceId && destinationId && filter) ||
+                      disableSave
+                    }
                     color='primary'
                     onClick={() => {
+                      this.disableSaveButton()
                       createReplication({
                         variables: {
                           name: name,

@@ -15,7 +15,6 @@ package org.codice.ditto.replication.api.impl.persistence;
 
 import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
-import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
@@ -60,10 +59,10 @@ public class ReplicatorConfigManagerImpl implements ReplicatorConfigManager {
   }
 
   @Override
-  public boolean configExists(String configId) {
+  public boolean exists(String id) {
     try {
-      persistentStore.get(ReplicatorConfigImpl.class, configId);
-    } catch (NotFoundException | ReplicationPersistenceException e) {
+      persistentStore.get(ReplicatorConfigImpl.class, id);
+    } catch (NotFoundException e) {
       return false;
     }
     return true;

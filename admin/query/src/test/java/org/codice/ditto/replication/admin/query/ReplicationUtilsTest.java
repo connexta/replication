@@ -34,6 +34,7 @@ import org.codice.ddf.admin.common.fields.common.HostField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 import org.codice.ditto.replication.api.ReplicationException;
+import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.ReplicationSite;
@@ -371,18 +372,31 @@ public class ReplicationUtilsTest {
   }
 
   @Test
-  public void deleteConfig() {
+  public void testMarkConfigDeleted() {
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setId("id");
     config.setName("name");
-    assertThat(utils.deleteConfig("id"), is(true));
-    verify(configManager).remove(anyString());
+
+    when(configManager.get("id")).thenReturn(config);
+
+    assertThat(utils.markConfigDeleted("id", true), is(true));
+    assertThat(config.shouldDeleteData(), is(true));
+    assertThat(config.isDeleted(), is(true));
+    assertThat(config.isSuspended(), is(true));
+    verify(replicator).cancelSyncRequest("id");
+    verify(configManager).save(config);
   }
 
   @Test
-  public void deleteConfigFailed() {
-    doThrow(new NotFoundException()).when(configManager).remove(anyString());
-    assertThat(utils.deleteConfig("id"), is(false));
+  public void testMarkConfigDeletedNotFound() {
+    doThrow(new NotFoundException()).when(configManager).get("id");
+    assertThat(utils.markConfigDeleted("id", true), is(true));
+  }
+
+  @Test
+  public void testMarkConfigDeletedErrorRetrievingConfig() {
+    doThrow(new ReplicationPersistenceException("")).when(configManager).get("id");
+    assertThat(utils.markConfigDeleted("id", true), is(false));
   }
 
   @Test
@@ -416,7 +430,7 @@ public class ReplicationUtilsTest {
     config.setDestination("destId");
     config.setBidirectional(false);
     when(configManager.objects()).thenReturn(Stream.of(config));
-    ReplicationField field = utils.getReplications().getList().get(0);
+    ReplicationField field = utils.getReplications(false).getList().get(0);
     assertThat(field.name(), is("test"));
     assertThat(field.source().id(), is("srcId"));
     assertThat(field.destination().id(), is("destId"));
@@ -424,6 +438,15 @@ public class ReplicationUtilsTest {
     assertThat(field.biDirectional(), is(false));
     assertThat(field.itemsTransferred(), is(3));
     assertThat(field.dataTransferred(), is("15 MB"));
+  }
+
+  @Test
+  public void testGetReplicationsFilterDeleted() {
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setDeleted(true);
+
+    when(configManager.objects()).thenReturn(Stream.of(config));
+    assertThat(utils.getReplications(true).getList().size(), is(0));
   }
 
   @Test

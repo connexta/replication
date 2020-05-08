@@ -41,11 +41,28 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   private static final String SUSPENDED_KEY = "suspended";
 
+  private static final String DELETED_KEY = "deleted";
+
+  private static final String DELETE_DATA_KEY = "deleteData";
+
   /**
-   * 0/No Version - initial version of configs which were saved in the catalog framework. 1 - the
-   * first version of configs to be saved in the replication persistent store.
+   * Field specifying the version of the configuration. Possible versions include:
+   *
+   * <ol>
+   *   <li>0 (No version) - initial version of configs which were saved in the catalog framework
+   *   <li>1 - The first version of configs to be saved in the replication persistent store
+   *       <ul>
+   *         <li>Add <b>suspended</b> field of type boolean with default of false
+   *         <li>Add <b>deleted</b> field of type boolean with default of false
+   *         <li>Add <b>deleteData</b> field of type boolean with default of false
+   *       </ul>
+   * </ol>
    */
   public static final int CURRENT_VERSION = 1;
+
+  private boolean deleted = false;
+
+  private boolean deleteData = false;
 
   private String name;
 
@@ -78,6 +95,8 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     result.put(RETRY_COUNT_KEY, getFailureRetryCount());
     result.put(DESCRIPTION_KEY, getDescription());
     result.put(SUSPENDED_KEY, Boolean.toString(isSuspended()));
+    result.put(DELETED_KEY, Boolean.toString(isDeleted()));
+    result.put(DELETE_DATA_KEY, Boolean.toString(shouldDeleteData()));
     return result;
   }
 
@@ -92,6 +111,8 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     setFailureRetryCount((int) properties.get(RETRY_COUNT_KEY));
     setDescription((String) properties.get(DESCRIPTION_KEY));
     setSuspended(Boolean.valueOf((String) properties.get(SUSPENDED_KEY)));
+    setDeleted(Boolean.valueOf((String) properties.get(DELETED_KEY)));
+    setDeleteData(Boolean.valueOf((String) properties.get(DELETE_DATA_KEY)));
   }
 
   @Override
@@ -172,5 +193,25 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public void setSuspended(boolean suspended) {
     this.suspended = suspended;
+  }
+
+  @Override
+  public boolean isDeleted() {
+    return deleted;
+  }
+
+  @Override
+  public void setDeleted(boolean deleted) {
+    this.deleted = deleted;
+  }
+
+  @Override
+  public boolean shouldDeleteData() {
+    return deleteData;
+  }
+
+  @Override
+  public void setDeleteData(boolean deleteData) {
+    this.deleteData = deleteData;
   }
 }

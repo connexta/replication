@@ -67,4 +67,12 @@ public interface DataManager<T extends Persistable> {
    * @throws NotFoundException if an object with the given id cannot be found
    */
   void remove(String id);
+
+  /**
+   * @param id unique id of the {@link Persistable}
+   * @return {@code true} if the {@link Persistable} exists, otherwise {@code false}.
+   * @throws {@link org.codice.ditto.replication.api.ReplicationPersistenceException} if there is an
+   *     error accessing storage
+   */
+  boolean exists(String id);
 }

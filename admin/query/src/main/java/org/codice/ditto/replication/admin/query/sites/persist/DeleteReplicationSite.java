@@ -67,7 +67,7 @@ public class DeleteReplicationSite extends BaseFunctionField<BooleanField> {
       addErrorMessage(DefaultMessages.noExistingConfigError());
     }
 
-    ListField<ReplicationField> repFields = replicationUtils.getReplications();
+    ListField<ReplicationField> repFields = replicationUtils.getReplications(true);
     for (ReplicationField repField : repFields.getList()) {
       if (idToDelete.equals(repField.source().id())
           || idToDelete.equals(repField.destination().id())) {

@@ -17,6 +17,27 @@
            xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
 
     <reference id="persistentStore" interface="org.codice.ddf.persistence.PersistentStore"/>
+    <reference id="catalog" interface="ddf.catalog.CatalogFramework"/>
+    <reference id="filterBuilder" interface="ddf.catalog.filter.FilterBuilder"/>
+
+    <bean id="replicatorDeleterExecutorThreadFactory"
+      class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+      factory-method="newThreadFactory">
+        <argument value="replicatorDeleterThread"/>
+    </bean>
+    <bean id="replicatorDeleterExecutor" class="java.util.concurrent.Executors"
+      factory-method="newSingleThreadScheduledExecutor">
+        <argument ref="replicatorDeleterExecutorThreadFactory"/>
+    </bean>
+
+    <bean id="scheduleReplicatorDeleter"
+      class="org.codice.ditto.replication.api.impl.ScheduledReplicatorDeleter" destroy-method="destroy">
+        <argument ref="configManager"/>
+        <argument ref="replicatorDeleterExecutor"/>
+        <argument ref="replicationItemManager"/>
+        <argument ref="historyManager"/>
+        <argument ref="metacards"/>
+    </bean>
 
     <bean id="replicationItemManager"
           class="org.codice.ditto.replication.api.impl.ReplicationItemManagerImpl">
@@ -28,12 +49,17 @@
         <argument ref="persistentStore"/>
     </bean>
 
-    <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl">
+    <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl" init-method="init">
         <argument ref="replicationPersistentStore"/>
     </bean>
 
     <service ref="replicationItemManager" interface="org.codice.ditto.replication.api.persistence.ReplicationItemManager"/>
     <service ref="siteManager" interface="org.codice.ditto.replication.api.persistence.SiteManager"/>
+
+    <bean id="metacards" class="org.codice.ditto.replication.api.impl.Metacards">
+        <argument ref="catalog"/>
+        <argument ref="filterBuilder"/>
+    </bean>
 
     <bean id="configManager" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorConfigManagerImpl">
         <argument ref="replicationPersistentStore"/>

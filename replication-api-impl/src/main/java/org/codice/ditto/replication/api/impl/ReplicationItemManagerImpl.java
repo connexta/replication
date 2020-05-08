@@ -116,7 +116,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   @Override
   public List<ReplicationItem> getItemsForConfig(String configId, int startIndex, int pageSize) {
-    String cql = String.format("'config-id' = '%s'", configId);
+    String cql = String.format("'%s' = '%s'", CONFIGURATION_ID_KEY, configId);
     List<Map<String, Object>> matchingPersistentItems;
 
     try {
@@ -184,7 +184,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   @Override
   public void deleteItemsForConfig(String configId) {
-    String cql = String.format("'config-id' = '%s'", configId);
+    String cql = String.format("'%s' = '%s'", CONFIGURATION_ID_KEY, configId);
     int itemsDeleted;
 
     do {
