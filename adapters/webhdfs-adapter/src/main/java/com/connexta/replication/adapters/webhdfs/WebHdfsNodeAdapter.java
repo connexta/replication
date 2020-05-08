@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
@@ -118,9 +120,13 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return a {@code String} containing the location to write to; returns {@code null} if request
    *     for location was unsuccessful
    */
-  private String getLocation(CreateStorageRequest createStorageRequest) {
+  @VisibleForTesting
+  String getLocation(CreateStorageRequest createStorageRequest) {
 
-    String fileUrl = webHdfsUrl.toString() + createStorageRequest.getResources().get(0).getName();
+    Metadata metadata = createStorageRequest.getResources().get(0).getMetadata();
+    String filename = metadata.getId() + "_" + metadata.getResourceModified();
+
+    String fileUrl = webHdfsUrl.toString() + filename;
     LOGGER.debug("The complete file URL is: {}", fileUrl);
 
     try {
@@ -132,8 +138,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
       int status = response.getStatusLine().getStatusCode();
       if (status != HTTP_STATUS_SUCCESS_OK) {
-        LOGGER.debug("Request failed with status code: {}", status);
-        return null;
+        throw new ReplicationException(String.format("Request failed with status code: %d", status));
       }
 
       ObjectMapper objectMapper = new ObjectMapper();
