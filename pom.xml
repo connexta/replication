@@ -33,7 +33,6 @@
         <surefire.version>2.20.1</surefire.version>
         <karaf.version>4.2.6</karaf.version>
         <karaf.plugin.version>4.2.6</karaf.plugin.version>
-
         <jruby.version>9.0.4.0</jruby.version>
         <jbake.maven.plugin.version>0.0.9</jbake.maven.plugin.version>
         <asciidoctor.maven.plugin.version>1.5.6</asciidoctor.maven.plugin.version>
@@ -337,17 +336,17 @@
                     <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
                     <!--Always include root-level suppression file-->
                     <suppressionFiles>
-                    <suppressionFile>
-                    <!--IDE can show variable as undefined because a plugin dynamically creates the property-->
-                    ${highest-basedir}/dependency-check-maven-config.xml
-                    </suppressionFile>
+                        <suppressionFile>
+                            <!--IDE can show variable as undefined because a plugin dynamically creates the property-->
+                            ${highest-basedir}/dependency-check-maven-config.xml
+                        </suppressionFile>
                     </suppressionFiles>
-                        <!-- This prevents a build failure on jdk tools jar -->
-                        <skipSystemScope>true</skipSystemScope>
-                        <formats>
-                            <format>HTML</format>
-                            <format>JUNIT</format>
-                        </formats>
+                    <!-- This prevents a build failure on jdk tools jar -->
+                    <skipSystemScope>true</skipSystemScope>
+                    <formats>
+                        <format>HTML</format>
+                        <format>JUNIT</format>
+                    </formats>
                     </configuration>
                     <executions>
                         <execution>
