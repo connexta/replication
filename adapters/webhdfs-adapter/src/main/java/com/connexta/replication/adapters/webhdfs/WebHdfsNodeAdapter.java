@@ -120,8 +120,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    */
   private String getLocation(CreateStorageRequest createStorageRequest) {
 
-    String fileUrl =
-        webHdfsUrl.toString() + "/" + createStorageRequest.getResources().get(0).getName();
+    String fileUrl = webHdfsUrl.toString() + createStorageRequest.getResources().get(0).getName();
     LOGGER.debug("The complete file URL is: {}", fileUrl);
 
     try {
