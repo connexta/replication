@@ -13,6 +13,8 @@
  */
 package org.codice.ditto.replication.api.impl.persistence;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -21,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
+import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
 import org.junit.Before;
@@ -72,5 +75,16 @@ public class ReplicatorConfigManagerImplTest {
   public void removeConfig() {
     manager.remove("id");
     verify(persistentStore).delete(eq(ReplicatorConfigImpl.class), anyString());
+  }
+
+  @Test
+  public void testExistsNotFound() {
+    when(persistentStore.get(ReplicatorConfigImpl.class, "id")).thenThrow(NotFoundException.class);
+    assertThat(manager.exists("id"), is(false));
+  }
+
+  @Test
+  public void testExistsConfigFound() {
+    assertThat(manager.exists("id"), is(true));
   }
 }

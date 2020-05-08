@@ -29,11 +29,15 @@ public class DeleteReplication extends BaseFunctionField<BooleanField> {
 
   public static final String FIELD_NAME = "deleteReplication";
 
-  public static final String DESCRIPTION = "Deletes a replication.";
+  public static final String DESCRIPTION =
+      "Deletes a Replication and its history (statistics). Optionally delete the data of the Replication. Deleting data will delete "
+          + "any local resources and metadata that were replicated by this Replication, but not any resources replicated to a remote Node.";
 
   public static final BooleanField RETURN_TYPE = new BooleanField();
 
   private PidField id;
+
+  private BooleanField deleteData;
 
   private ReplicationUtils replicationUtils;
 
@@ -41,12 +45,16 @@ public class DeleteReplication extends BaseFunctionField<BooleanField> {
     super(FIELD_NAME, DESCRIPTION);
     this.replicationUtils = replicationUtils;
     id = new PidField("id");
+    deleteData = new BooleanField("deleteData");
+    deleteData.setValue(false);
+
+    id.isRequired();
   }
 
   @Override
   public BooleanField performFunction() {
     BooleanField successful = new BooleanField();
-    successful.setValue(replicationUtils.deleteConfig(id.getValue()));
+    successful.setValue(replicationUtils.markConfigDeleted(id.getValue(), deleteData.getValue()));
 
     return successful;
   }
@@ -70,7 +78,7 @@ public class DeleteReplication extends BaseFunctionField<BooleanField> {
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(id);
+    return ImmutableList.of(id, deleteData);
   }
 
   @Override

@@ -124,6 +124,8 @@ public class ReplicationItemManagerTest {
     map.put(RETRY_COUNT, num);
     map.put(BIDIRECTIONAL, "true");
     map.put(SUSPENDED, "false");
+    map.put(DELETE_DATA, "false");
+    map.put(DELETED, "false");
     map.put(DESCRIPTION, DESCRIPTION + num);
     map.put(VERSION, ReplicatorConfigImpl.CURRENT_VERSION);
     return map;

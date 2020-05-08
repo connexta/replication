@@ -60,6 +60,22 @@
             <artifactId>persistence-core-api</artifactId>
             <version>${ddf.version}</version>
         </dependency>
+        <dependency>
+            <groupId>ddf.catalog.core</groupId>
+            <artifactId>catalog-core-api</artifactId>
+            <version>${ddf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ddf.catalog.core</groupId>
+            <artifactId>catalog-core-api-impl</artifactId>
+            <version>${ddf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ddf.catalog.core</groupId>
+            <artifactId>filter-proxy</artifactId>
+            <version>${ddf.version}</version>
+            <scope>test</scope>
+        </dependency>
         <!-- End DDF Dependencies -->
 
         <dependency>
@@ -131,6 +147,7 @@
                         </Import-Package>
                         <Embed-Dependency>
                             commons-collections4,
+                            catalog-core-api-impl,
                             ddf-security-common,
                             platform-util,
                             platform-util-unavailableurls,

@@ -68,12 +68,6 @@
       <artifactId>platform-util</artifactId>
       <version>${ddf.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.cxf</groupId>
-      <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-      <version>${cxf.frontend.version}</version>
-    </dependency>
-
 
     <!-- XML dependencies -->
     <dependency>

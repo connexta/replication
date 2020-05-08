@@ -16,6 +16,7 @@ package org.codice.ditto.replication.admin.query.sites.persist;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,7 +67,8 @@ public class DeleteReplicationSiteTest {
     // setup
     when(replicationUtils.siteIdExists(SITE_ID)).thenReturn(true);
     when(replicationUtils.deleteSite(SITE_ID)).thenReturn(true);
-    when(replicationUtils.getReplications()).thenReturn(new ReplicationField.ListImpl());
+    when(replicationUtils.getReplications(anyBoolean()))
+        .thenReturn(new ReplicationField.ListImpl());
 
     // when
     FunctionReport<BooleanField> report = deleteReplicationSite.execute(input, null);
@@ -81,7 +83,8 @@ public class DeleteReplicationSiteTest {
   public void testNoExistingSite() {
     // setup
     when(replicationUtils.siteIdExists(SITE_ID)).thenReturn(false);
-    when(replicationUtils.getReplications()).thenReturn(new ReplicationField.ListImpl());
+    when(replicationUtils.getReplications(anyBoolean()))
+        .thenReturn(new ReplicationField.ListImpl());
 
     // when
     FunctionReport<BooleanField> report =
@@ -105,7 +108,7 @@ public class DeleteReplicationSiteTest {
     when(replicationField.source()).thenReturn(replicationSiteField);
     ListField<ReplicationField> replicationFieldList = mock(ListField.class);
     when(replicationFieldList.getList()).thenReturn(Collections.singletonList(replicationField));
-    when(replicationUtils.getReplications()).thenReturn(replicationFieldList);
+    when(replicationUtils.getReplications(anyBoolean())).thenReturn(replicationFieldList);
 
     // when
     FunctionReport<BooleanField> report =
@@ -133,7 +136,7 @@ public class DeleteReplicationSiteTest {
     when(replicationField.destination()).thenReturn(destinationSiteField);
     ListField<ReplicationField> replicationFieldList = mock(ListField.class);
     when(replicationFieldList.getList()).thenReturn(Collections.singletonList(replicationField));
-    when(replicationUtils.getReplications()).thenReturn(replicationFieldList);
+    when(replicationUtils.getReplications(anyBoolean())).thenReturn(replicationFieldList);
 
     // when
     FunctionReport<BooleanField> report =

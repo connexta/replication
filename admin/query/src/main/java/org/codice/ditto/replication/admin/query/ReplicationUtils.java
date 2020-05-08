@@ -199,7 +199,7 @@ public class ReplicationUtils {
   }
 
   public boolean configExists(String id) {
-    return configManager.configExists(id);
+    return configManager.exists(id);
   }
 
   public ReplicationField createReplication(
@@ -318,12 +318,21 @@ public class ReplicationUtils {
     return field;
   }
 
-  public boolean deleteConfig(String id) {
+  public boolean markConfigDeleted(String id, boolean deleteData) {
     try {
-      configManager.remove(id);
+      ReplicatorConfig config = configManager.get(id);
+      config.setDeleted(true);
+      config.setDeleteData(deleteData);
+      config.setSuspended(true);
+      configManager.save(config);
+      replicator.cancelSyncRequest(id);
       return true;
-    } catch (NotFoundException e) {
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.debug("Unable to delete replicator configuration with id {}", id, e);
       return false;
+    } catch (NotFoundException e) {
+      LOGGER.debug("Config with id {}", id, e);
+      return true;
     }
   }
 
@@ -356,9 +365,18 @@ public class ReplicationUtils {
     return siteFields;
   }
 
-  public ListField<ReplicationField> getReplications() {
+  public ListField<ReplicationField> getReplications(boolean filterDeleted) {
     ListField<ReplicationField> fields = new ReplicationField.ListImpl();
-    configManager.objects().map(this::getReplicationFieldForConfig).forEach(fields::add);
+
+    if (filterDeleted) {
+      configManager
+          .objects()
+          .filter(c -> !c.isDeleted())
+          .map(this::getReplicationFieldForConfig)
+          .forEach(fields::add);
+    } else {
+      configManager.objects().map(this::getReplicationFieldForConfig).forEach(fields::add);
+    }
     return fields;
   }
 }

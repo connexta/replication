@@ -15,12 +15,5 @@ package org.codice.ditto.replication.api.persistence;
 
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 
-/** Performs CRUD operations for {@link ReplicatorConfig}. */
-public interface ReplicatorConfigManager extends DataManager<ReplicatorConfig> {
-
-  /**
-   * @param configId unique id of {@link ReplicatorConfig}
-   * @return {@code true} if the config exists, otherwise {@code false}.
-   */
-  boolean configExists(String configId);
-}
+/** Performs CRUD operations for {@link ReplicatorConfig}s. */
+public interface ReplicatorConfigManager extends DataManager<ReplicatorConfig> {}
