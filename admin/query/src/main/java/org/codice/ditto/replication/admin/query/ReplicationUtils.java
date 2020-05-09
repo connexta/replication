@@ -15,23 +15,28 @@ package org.codice.ditto.replication.admin.query;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Optional;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.codice.ddf.admin.api.fields.ListField;
+import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.replications.fields.ReplicationField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
+import org.codice.ditto.replication.admin.query.status.fields.ReplicationStats;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.Replicator;
+import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
@@ -46,6 +51,8 @@ public class ReplicationUtils {
   private static final long BYTES_PER_MB = 1024L * 1024L;
 
   private static final String DEFAULT_CONTEXT = "services";
+
+  private static final String NOT_RUN = "NOT_RUN";
 
   private final SiteManager siteManager;
 
@@ -243,54 +250,98 @@ public class ReplicationUtils {
 
   private ReplicationField getReplicationFieldForConfig(ReplicatorConfig config) {
     ReplicationField field = new ReplicationField();
-    field.id(config.getId());
-    field.name(config.getName());
-    field.source(getSiteFieldForSite(siteManager.get(config.getSource())));
-    field.destination(getSiteFieldForSite(siteManager.get(config.getDestination())));
-    field.filter(config.getFilter());
-    field.biDirectional(config.isBidirectional());
-    field.suspended(config.isSuspended());
-    setStatusRelatedFields(field, config);
-
+    field
+        .id(config.getId())
+        .name(config.getName())
+        .source(getSiteFieldForSite(siteManager.get(config.getSource())))
+        .destination(getSiteFieldForSite(siteManager.get(config.getDestination())))
+        .filter(config.getFilter())
+        .biDirectional(config.isBidirectional())
+        .version(config.getVersion())
+        .suspended(config.isSuspended());
+    ReplicationStats stats = new ReplicationStats();
+    ReplicationStatus currentStatus = null;
+    if (history.exists(config.getId())) {
+      currentStatus = history.getByReplicatorId(config.getId());
+      stats.setLastRun(currentStatus.getLastRun());
+      stats.setStartTime(currentStatus.getStartTime());
+      stats.setLastSuccess(currentStatus.getLastSuccess());
+    }
+    Optional<ReplicationStatus> activeStatus =
+        replicator
+            .getActiveSyncRequests()
+            .stream()
+            .filter(sync -> sync.getConfig().getId().equals(config.getId()))
+            .map(SyncRequest::getStatus)
+            .findFirst();
+    currentStatus = activeStatus.orElse(currentStatus);
+    if (currentStatus == null) {
+      stats.setStatus(NOT_RUN);
+      stats.setPullBytes(0L);
+      stats.setPushBytes(0L);
+      stats.setPullCount(0L);
+      stats.setPushCount(0L);
+      stats.setPullFailCount(0L);
+      stats.setPushFailCount(0L);
+      stats.setDuration(0L);
+    } else {
+      stats.setPid(currentStatus.getId());
+      stats.setStatus(currentStatus.getStatus().name());
+      stats.setPullBytes(currentStatus.getPullBytes());
+      stats.setPushBytes(currentStatus.getPushBytes());
+      stats.setPullCount(currentStatus.getPullCount());
+      stats.setPushCount(currentStatus.getPushCount());
+      stats.setPullFailCount(currentStatus.getPullFailCount());
+      stats.setPushFailCount(currentStatus.getPushFailCount());
+      stats.setDuration(currentStatus.getDuration());
+    }
+    field.stats(stats);
     return field;
   }
 
-  private void setStatusRelatedFields(ReplicationField field, ReplicatorConfig config) {
-    List<ReplicationStatus> statusList = new ArrayList<>();
+  /**
+   * Saves stats for a replication identified by the replication's name. If there is an existing
+   * {@link ReplicationStatus} with the id {@link ReplicationStats#getPid()}, then it will first be
+   * deleted then re-saved with the new information.
+   *
+   * @param stats stats object to convert to {@link ReplicationStatus} to be saved
+   * @return {@code true} if the stats were successfully saved, otherwise false.
+   */
+  public boolean updateReplicationStats(StringField replicationName, ReplicationStats stats) {
+    final String repName = replicationName.getValue();
+    ReplicationStatus status = new ReplicationStatusImpl();
+    status.setId(stats.getPid());
+    status.setReplicatorId(repName);
+    status.setDuration(stats.getDuration());
+    status.setStartTime(getDate(stats.getStartTime()));
+    status.setLastSuccess(getDate(stats.getLastSuccess()));
+    status.setLastRun(getDate(stats.getLastRun()));
+    status.setStatus(Status.valueOf(stats.getStatus()));
+    status.setPullBytes(stats.getPullBytes());
+    status.setPullCount(stats.getPullCount());
+    status.setPullFailCount(stats.getPullFailCount());
+    status.setPushBytes(stats.getPushBytes());
+    status.setPushCount(stats.getPushCount());
+    status.setPushFailCount(stats.getPushFailCount());
+    LOGGER.warn("**** Update has occurred on status item for {} ****", repName);
+
     try {
-      statusList.add(history.getByReplicatorId(config.getId()));
-    } catch (NotFoundException e) {
-      LOGGER.trace(
-          "No history for replication config {} found. This config may not have completed a run yet.",
-          config.getId());
+      history.save(status);
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.debug(
+          "Failed to save replication stats for replication {}", replicationName.getValue(), e);
+      return false;
     }
 
-    if (!statusList.isEmpty()) {
-      ReplicationStatus lastStatus = statusList.get(0);
-      field.lastRun(lastStatus.getLastRun());
-      field.firstRun(lastStatus.getStartTime());
-      field.lastSuccess(lastStatus.getLastSuccess());
-    }
+    return true;
+  }
 
-    replicator.getActiveSyncRequests().stream()
-        .filter(sync -> sync.getConfig().getId().equals(config.getId()))
-        .map(SyncRequest::getStatus)
-        .forEach(status -> statusList.add(0, status));
-
-    long bytesTransferred = 0;
-    long itemsTransferred = 0;
-    for (ReplicationStatus status : statusList) {
-      bytesTransferred += status.getPullBytes() + status.getPushBytes();
-      itemsTransferred += status.getPullCount() + status.getPushCount();
+  @Nullable
+  private Date getDate(String iso8601) {
+    if (iso8601 != null) {
+      return Date.from(Instant.parse(iso8601));
     }
-    if (statusList.isEmpty()) {
-      field.status("NOT_RUN");
-    } else {
-      field.status(statusList.get(0).getStatus().name());
-    }
-
-    field.dataTransferred(String.format("%d MB", bytesTransferred / BYTES_PER_MB));
-    field.itemsTransferred((int) itemsTransferred);
+    return null;
   }
 
   public @Nullable ReplicationSiteField getSiteFieldForSite(ReplicationSite site) {

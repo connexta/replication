@@ -81,6 +81,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   private boolean suspended;
 
   public ReplicatorConfigImpl() {
+    super();
     super.setVersion(CURRENT_VERSION);
   }
 

@@ -33,15 +33,19 @@ export const allReplications = gql`
             url
           }
         }
-        lastRun
-        lastSuccess
-        firstRun
         biDirectional
-        replicationStatus
-        itemsTransferred
-        dataTransferred
         filter
         suspended
+        stats {
+          replicationStatus
+          pushCount
+          pullCount
+          pushBytes
+          pullBytes
+          lastRun
+          lastSuccess
+          startTime
+        }
       }
     }
   }

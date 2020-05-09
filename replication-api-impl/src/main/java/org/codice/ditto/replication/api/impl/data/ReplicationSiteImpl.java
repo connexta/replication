@@ -51,6 +51,7 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   private String url;
 
   public ReplicationSiteImpl() {
+    super();
     super.setVersion(CURRENT_VERSION);
   }
 

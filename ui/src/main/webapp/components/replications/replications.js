@@ -38,18 +38,18 @@ const statusDisplayNameMapping = {
 }
 
 function isInProgress(replication) {
-  const status = replication.replicationStatus
+  const status = replication.stats.replicationStatus
   return (
     status === Status.PULL_IN_PROGRESS || status === Status.PUSH_IN_PROGRESS
   )
 }
 
 function statusDisplayName(replication) {
-  return statusDisplayNameMapping[replication.replicationStatus]
+  return statusDisplayNameMapping[replication.stats.replicationStatus]
 }
 
 function cancelable(replication) {
-  const status = replication.replicationStatus
+  const status = replication.stats.replicationStatus
   return (
     status === Status.PUSH_IN_PROGRESS ||
     status === Status.PULL_IN_PROGRESS ||

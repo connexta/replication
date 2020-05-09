@@ -25,7 +25,7 @@ import org.codice.ddf.admin.common.fields.base.scalar.IntegerField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ddf.admin.common.fields.common.PidField;
-import org.codice.ditto.replication.admin.query.replications.fields.DateField;
+import org.codice.ditto.replication.admin.query.replications.fields.Iso8601Field;
 
 public class ReplicationSiteField extends BaseObjectField {
 
@@ -43,7 +43,7 @@ public class ReplicationSiteField extends BaseObjectField {
 
   private StringField rootContext;
 
-  private DateField modified;
+  private Iso8601Field modified;
 
   private IntegerField version;
 
@@ -59,7 +59,7 @@ public class ReplicationSiteField extends BaseObjectField {
     this.name = new StringField("name");
     this.address = new AddressField();
     this.rootContext = new StringField("rootContext");
-    this.modified = new DateField("modified");
+    this.modified = new Iso8601Field("modified");
     this.version = new IntegerField("version");
     this.remoteManaged = new RemoteManagedField();
   }
@@ -130,7 +130,7 @@ public class ReplicationSiteField extends BaseObjectField {
     return rootContext;
   }
 
-  public DateField modified() {
+  public Iso8601Field modified() {
     return modified;
   }
 

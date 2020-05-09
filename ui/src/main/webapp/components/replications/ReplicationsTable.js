@@ -49,8 +49,8 @@ const format = utc => {
 class ReplicationRow extends React.Component {
   state = {
     anchor: null,
-    lastRun: format(this.props.replication.lastRun),
-    lastSuccess: format(this.props.replication.lastSuccess),
+    lastRun: format(this.props.replication.stats.lastRun),
+    lastSuccess: format(this.props.replication.stats.lastSuccess),
   }
 
   handleClickOpen = replication => event => {
@@ -71,8 +71,8 @@ class ReplicationRow extends React.Component {
           timeout={60000}
           callback={() => {
             this.setState({
-              lastRun: format(replication.lastRun),
-              lastSuccess: format(replication.lastSuccess),
+              lastRun: format(replication.stats.lastRun),
+              lastSuccess: format(replication.stats.lastSuccess),
             })
           }}
         />
@@ -83,8 +83,12 @@ class ReplicationRow extends React.Component {
         <TableCell>{replication.destination.name}</TableCell>
         <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
         <TableCell>{replication.filter}</TableCell>
-        <TableCell>{replication.itemsTransferred}</TableCell>
-        <TableCell>{replication.dataTransferred}</TableCell>
+        <TableCell>
+          {replication.stats.pullCount + replication.stats.pushCount}
+        </TableCell>
+        <TableCell>
+          {replication.stats.pushBytes + replication.stats.pullBytes}
+        </TableCell>
         <TableCell>{this.state.lastRun}</TableCell>
         <TableCell>{this.state.lastSuccess}</TableCell>
         <TableCell>
