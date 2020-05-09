@@ -60,6 +60,9 @@
     <bean id="getUiConfig" class="org.codice.ditto.replication.admin.query.ui.GetUiConfig">
         <argument ref="uiConfigurationFactory"/>
     </bean>
+    <bean id="updateReplicationStats" class="org.codice.ditto.replication.admin.query.status.persist.UpdateReplicationStats">
+        <argument ref="replicationUtils"/>
+    </bean>
 
     <service id="replicationFieldProvider" interface="org.codice.ddf.admin.api.FieldProvider">
         <bean class="org.codice.ditto.replication.admin.query.ReplicationFieldProvider">
@@ -74,6 +77,7 @@
             <argument ref="updateReplicationSite"/>
             <argument ref="deleteReplicationSite"/>
             <argument ref="getUiConfig"/>
+            <argument ref="updateReplicationStats"/>
         </bean>
     </service>
 </blueprint>

@@ -79,6 +79,7 @@ public class ReplicationStatusImpl extends AbstractPersistable implements Replic
   private static final int CURRENT_VERSION = 1;
 
   public ReplicationStatusImpl() {
+    super();
     super.setVersion(CURRENT_VERSION);
   }
 

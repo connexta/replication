@@ -44,15 +44,19 @@ export const addReplication = gql`
           url
         }
       }
-      lastRun
-      lastSuccess
-      firstRun
       biDirectional
-      replicationStatus
       filter
-      itemsTransferred
-      dataTransferred
       suspended
+      stats {
+        replicationStatus
+        pushCount
+        pullCount
+        pushBytes
+        pullBytes
+        lastRun
+        lastSuccess
+        startTime
+      }
     }
   }
 `

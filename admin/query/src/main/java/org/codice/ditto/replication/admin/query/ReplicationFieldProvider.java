@@ -27,6 +27,7 @@ import org.codice.ditto.replication.admin.query.sites.discover.GetReplicationSit
 import org.codice.ditto.replication.admin.query.sites.persist.CreateReplicationSite;
 import org.codice.ditto.replication.admin.query.sites.persist.DeleteReplicationSite;
 import org.codice.ditto.replication.admin.query.sites.persist.UpdateReplicationSite;
+import org.codice.ditto.replication.admin.query.status.persist.UpdateReplicationStats;
 import org.codice.ditto.replication.admin.query.ui.GetUiConfig;
 
 public class ReplicationFieldProvider extends BaseFieldProvider {
@@ -60,6 +61,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
 
   private GetUiConfig getUiConfig;
 
+  private UpdateReplicationStats updateReplicationStats;
+
   public ReplicationFieldProvider(
       GetReplications getReplications,
       GetReplicationSites getReplicationSites,
@@ -71,7 +74,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
       CreateReplicationSite createReplicationSite,
       UpdateReplicationSite updateReplicationSite,
       DeleteReplicationSite deleteReplicationSite,
-      GetUiConfig getUiConfig) {
+      GetUiConfig getUiConfig,
+      UpdateReplicationStats updateReplicationStats) {
     super(DEFAULT_FIELD_NAME, TYPE_NAME, DESCRIPTION);
     this.getReplications = getReplications;
     this.getReplicationSites = getReplicationSites;
@@ -84,6 +88,7 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
     this.updateReplicationSite = updateReplicationSite;
     this.deleteReplicationSite = deleteReplicationSite;
     this.getUiConfig = getUiConfig;
+    this.updateReplicationStats = updateReplicationStats;
   }
 
   @Override
@@ -101,6 +106,7 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
         updateReplicationSite,
         deleteReplicationSite,
         cancelReplication,
-        suspendReplication);
+        suspendReplication,
+        updateReplicationStats);
   }
 }
