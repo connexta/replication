@@ -114,12 +114,17 @@ public class ReplicationUtils {
   }
 
   public boolean updateSite(
-      String id, @Nullable String name, AddressField address, @Nullable String rootContext) {
+      String id,
+      @Nullable String name,
+      AddressField address,
+      @Nullable String rootContext,
+      boolean remoteManaged) {
     ReplicationSite site = siteManager.get(id);
 
     String updatedUrl = updateUrl(site.getUrl(), address, rootContext);
     setIfPresent(site::setName, name);
     setIfPresent(site::setUrl, updatedUrl);
+    site.setRemoteManaged(remoteManaged);
 
     try {
       siteManager.save(site);
@@ -208,7 +213,12 @@ public class ReplicationUtils {
   }
 
   public ReplicationField createReplication(
-      String name, String sourceId, String destinationId, String filter, Boolean biDirectional) {
+      String name,
+      String sourceId,
+      String destinationId,
+      String filter,
+      Boolean biDirectional,
+      boolean suspended) {
     ReplicatorConfig config = configManager.create();
     config.setName(name);
     config.setSource(sourceId);
@@ -216,12 +226,13 @@ public class ReplicationUtils {
     config.setFilter(filter);
     config.setBidirectional(biDirectional);
     config.setFailureRetryCount(5);
+    config.setSuspended(suspended);
     configManager.save(config);
 
     return getReplicationFieldForConfig(config);
   }
 
-  public ReplicationField updateReplication(
+  public boolean updateReplication(
       String id,
       @Nullable String name,
       @Nullable String sourceId,
@@ -236,8 +247,13 @@ public class ReplicationUtils {
     setIfPresent(config::setFilter, filter);
     setIfPresent(config::setBidirectional, biDirectional);
 
-    configManager.save(config);
-    return getReplicationFieldForConfig(config);
+    try {
+      configManager.save(config);
+      return true;
+    } catch (ReplicationPersistenceException e) {
+      LOGGER.debug("Failed to update replication config with id {}", id);
+      return false;
+    }
   }
 
   private <T> void setIfPresent(Consumer<T> setter, @Nullable T o) {
@@ -321,7 +337,6 @@ public class ReplicationUtils {
     status.setPushBytes(stats.getPushBytes());
     status.setPushCount(stats.getPushCount());
     status.setPushFailCount(stats.getPushFailCount());
-    LOGGER.warn("**** Update has occurred on status item for {} ****", repName);
 
     try {
       history.save(status);
@@ -349,6 +364,7 @@ public class ReplicationUtils {
     ReplicationSiteField field = new ReplicationSiteField();
     field.id(site.getId());
     field.name(site.getName());
+    field.version(site.getVersion());
     AddressField address = new AddressField();
     URL url;
 

@@ -24,6 +24,7 @@ import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.AddressField;
 import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
+import org.codice.ditto.replication.admin.query.sites.fields.RemoteManagedField;
 import org.codice.ditto.replication.admin.query.sites.fields.ReplicationSiteField;
 
 public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteField> {
@@ -31,7 +32,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
   public static final String FIELD_NAME = "createReplicationSite";
 
   public static final String DESCRIPTION =
-      "Creates a replication site. If no rootContext is provided, it will default to 'services'";
+      "Creates a replication site. If no rootContext is provided, it will default to 'services'. If no remoteManaged is provided, it will default to false.";
 
   private static final ReplicationSiteField RETURN_TYPE = new ReplicationSiteField();
 
@@ -40,6 +41,8 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
   private AddressField address;
 
   private StringField rootContext;
+
+  private RemoteManagedField remoteManagedField;
 
   private ReplicationUtils replicationUtils;
 
@@ -50,6 +53,9 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
     this.name = new StringField("name");
     this.address = new AddressField();
     this.rootContext = new StringField("rootContext");
+    this.remoteManagedField = new RemoteManagedField();
+    this.remoteManagedField.setValue(false);
+
     this.name.isRequired(true);
     this.address.isRequired(true);
     this.rootContext.isRequired(true);
@@ -57,7 +63,8 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   @Override
   public ReplicationSiteField performFunction() {
-    return replicationUtils.createSite(name.getValue(), address, rootContext.getValue(), false);
+    return replicationUtils.createSite(
+        name.getValue(), address, rootContext.getValue(), remoteManagedField.getValue());
   }
 
   @Override
@@ -67,7 +74,7 @@ public class CreateReplicationSite extends BaseFunctionField<ReplicationSiteFiel
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(name, address, rootContext);
+    return ImmutableList.of(name, address, rootContext, remoteManagedField);
   }
 
   @Override
