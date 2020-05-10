@@ -66,8 +66,7 @@ public class Metacards {
                 filter, 1, ids.size(), new SortByImpl(Core.ID, SortOrder.ASCENDING), false, 0L));
 
     ResultIterable results = ResultIterable.resultIterable(framework::query, request);
-    return results
-        .stream()
+    return results.stream()
         .map(Result::getMetacard)
         .map(Metacard::getId)
         .collect(Collectors.toSet());

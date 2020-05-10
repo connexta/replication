@@ -282,9 +282,7 @@ public class ReplicationUtils {
       stats.setLastSuccess(currentStatus.getLastSuccess());
     }
     Optional<ReplicationStatus> activeStatus =
-        replicator
-            .getActiveSyncRequests()
-            .stream()
+        replicator.getActiveSyncRequests().stream()
             .filter(sync -> sync.getConfig().getId().equals(config.getId()))
             .map(SyncRequest::getStatus)
             .findFirst();
