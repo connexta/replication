@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.function.BaseFieldProvider;
+import org.codice.ditto.replication.admin.query.queries.GetQueries;
 import org.codice.ditto.replication.admin.query.replications.discover.GetReplications;
 import org.codice.ditto.replication.admin.query.replications.persist.CancelReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.CreateReplication;
@@ -30,39 +31,47 @@ import org.codice.ditto.replication.admin.query.sites.persist.UpdateReplicationS
 import org.codice.ditto.replication.admin.query.status.persist.UpdateReplicationStats;
 import org.codice.ditto.replication.admin.query.ui.GetUiConfig;
 
+/** Provides the graphql endpoint with the functionality we would like to expose. */
 public class ReplicationFieldProvider extends BaseFieldProvider {
 
-  public static final String DEFAULT_FIELD_NAME = "replication";
+  private static final String DEFAULT_FIELD_NAME = "replication";
 
-  public static final String TYPE_NAME = "Replication";
+  private static final String TYPE_NAME = "Replication";
 
-  public static final String DESCRIPTION =
+  private static final String DESCRIPTION =
       "Provides methods for querying and modifying replication configurations and sites.";
 
-  private GetReplications getReplications;
+  private final GetReplications getReplications;
 
-  private GetReplicationSites getReplicationSites;
+  private final GetReplicationSites getReplicationSites;
 
-  private CreateReplication createReplication;
+  private final CreateReplication createReplication;
 
-  private UpdateReplication updateReplication;
+  private final UpdateReplication updateReplication;
 
-  private DeleteReplication deleteReplication;
+  private final DeleteReplication deleteReplication;
 
-  private CreateReplicationSite createReplicationSite;
+  private final CreateReplicationSite createReplicationSite;
 
-  private UpdateReplicationSite updateReplicationSite;
+  private final UpdateReplicationSite updateReplicationSite;
 
-  private DeleteReplicationSite deleteReplicationSite;
+  private final DeleteReplicationSite deleteReplicationSite;
 
-  private CancelReplication cancelReplication;
+  private final CancelReplication cancelReplication;
 
-  private SuspendReplication suspendReplication;
+  private final SuspendReplication suspendReplication;
 
-  private GetUiConfig getUiConfig;
+  private final GetUiConfig getUiConfig;
 
-  private UpdateReplicationStats updateReplicationStats;
+  private final UpdateReplicationStats updateReplicationStats;
 
+  private final GetQueries getQueries;
+
+  /**
+   * Creates a new ReplicationFieldProvider. The parameters all extend {@link
+   * org.codice.ddf.admin.common.fields.base.BaseFunctionField} and will provide functionality which
+   * we will expose through the graphql endpoint.
+   */
   public ReplicationFieldProvider(
       GetReplications getReplications,
       GetReplicationSites getReplicationSites,
@@ -75,7 +84,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
       UpdateReplicationSite updateReplicationSite,
       DeleteReplicationSite deleteReplicationSite,
       GetUiConfig getUiConfig,
-      UpdateReplicationStats updateReplicationStats) {
+      UpdateReplicationStats updateReplicationStats,
+      GetQueries getQueries) {
     super(DEFAULT_FIELD_NAME, TYPE_NAME, DESCRIPTION);
     this.getReplications = getReplications;
     this.getReplicationSites = getReplicationSites;
@@ -89,13 +99,28 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
     this.deleteReplicationSite = deleteReplicationSite;
     this.getUiConfig = getUiConfig;
     this.updateReplicationStats = updateReplicationStats;
+    this.getQueries = getQueries;
   }
 
+  /**
+   * Returns a list of {@link FunctionField}s which, when accessed by the graphql endpoint, will
+   * allow their functionality to be triggered through the graphql endpoint.
+   *
+   * @return a list of {@link FunctionField}s that will allow retrieval of data through the graphql
+   *     endpoint.
+   */
   @Override
   public List<FunctionField> getDiscoveryFunctions() {
-    return ImmutableList.of(getReplications, getReplicationSites, getUiConfig);
+    return ImmutableList.of(getReplications, getReplicationSites, getUiConfig, getQueries);
   }
 
+  /**
+   * Returns a list of {@link FunctionField}s which, when accessed by the graphql endpoint, will
+   * allow their functionality to be triggered through the graphql endpoint.
+   *
+   * @return a list of {@link FunctionField}s that will allow mutation of data through the graphql
+   *     endpoint.
+   */
   @Override
   public List<FunctionField> getMutationFunctions() {
     return ImmutableList.of(
