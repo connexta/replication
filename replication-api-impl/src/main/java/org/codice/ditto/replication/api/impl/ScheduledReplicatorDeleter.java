@@ -148,23 +148,20 @@ public class ScheduledReplicatorDeleter {
         replicationItems = replicationItemManager.getItemsForConfig("", startIndex, pageSize);
 
         Set<ReplicationItem> configlessItems =
-            replicationItems
-                .stream()
+            replicationItems.stream()
                 .filter(item -> !replicatorConfigIds.contains(item.getConfigurationId()))
                 .collect(Collectors.toSet());
 
         if (!configlessItems.isEmpty()) {
           Set<String> itemMetacardIds =
-              configlessItems
-                  .stream()
+              configlessItems.stream()
                   .map(ReplicationItem::getMetadataId)
                   .collect(Collectors.toSet());
 
           Set<String> idsInTheCatalog = metacards.getIdsOfMetacardsInCatalog(itemMetacardIds);
 
           Set<ReplicationItem> orphanedItems =
-              configlessItems
-                  .stream()
+              configlessItems.stream()
                   .filter(item -> itemNotInCatalog(item, idsInTheCatalog))
                   .collect(Collectors.toSet());
 
@@ -256,8 +253,7 @@ public class ScheduledReplicatorDeleter {
       replicationItems = replicationItemManager.getItemsForConfig(configId, startIndex, pageSize);
 
       Set<String> idsToDelete =
-          replicationItems
-              .stream()
+          replicationItems.stream()
               .filter(item -> item.getDestination().equals(getSiteName()))
               .map(ReplicationItem::getMetadataId)
               .collect(Collectors.toSet());
