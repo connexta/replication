@@ -68,7 +68,7 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
         new DdfRestClientFactory(clientFactory, connectionTimeout, receiveTimeout);
     this.clientFactory = clientFactory;
     LOGGER.debug(
-        "Created a DdfNodeAdapterFactory with a connection timeout of {} seconds and a receive timeout of {} seconds",
+        "Created a DdfNodeAdapterFactory with a connection timeout of {} ms and a receive timeout of {} ms",
         connectionTimeout,
         receiveTimeout);
   }

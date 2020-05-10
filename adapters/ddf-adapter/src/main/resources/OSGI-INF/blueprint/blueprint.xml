@@ -18,15 +18,11 @@
 
   <reference id="clientFactoryFactory" interface="org.codice.ddf.cxf.client.ClientFactoryFactory"/>
 
-  <bean id="ddfRestClientFactory"
-    class="com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory">
-    <argument ref="clientFactoryFactory"/>
-  </bean>
-
   <bean id="ddfNodeAdapterFactory"
     class="com.connexta.replication.adapters.ddf.DdfNodeAdapterFactory">
-    <argument ref="ddfRestClientFactory"/>
     <argument ref="clientFactoryFactory"/>
+    <argument value="30000"/>
+    <argument value="60000"/>
   </bean>
 
   <service ref="ddfNodeAdapterFactory"

@@ -194,7 +194,6 @@ public class ReplicationUtilsTest {
     status.setPushFailCount(100L);
     status.setStatus(Status.SUCCESS);
     when(history.getByReplicatorId(anyString())).thenReturn(status);
-    when(history.exists(anyString())).thenReturn(true);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
@@ -237,7 +236,7 @@ public class ReplicationUtilsTest {
     when(siteManager.get("srcId")).thenReturn(src);
     when(siteManager.get("destId")).thenReturn(dest);
 
-    when(history.exists(anyString())).thenReturn(false);
+    when(history.getByReplicatorId(anyString())).thenThrow(new NotFoundException());
 
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
@@ -299,7 +298,6 @@ public class ReplicationUtilsTest {
     status.setPushFailCount(100L);
     status.setStatus(Status.SUCCESS);
     when(history.getByReplicatorId(REP_ID)).thenReturn(status);
-    when(history.exists(REP_ID)).thenReturn(true);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
@@ -427,7 +425,6 @@ public class ReplicationUtilsTest {
     ReplicationStatusImpl status = new ReplicationStatusImpl();
     status.setReplicatorId(REP_ID);
     status.setStatus(Status.PUSH_IN_PROGRESS);
-    when(history.exists(REP_ID)).thenReturn(false);
     when(history.getByReplicatorId(REP_ID)).thenThrow(new NotFoundException());
     SyncRequestImpl syncRequest = new SyncRequestImpl(config, status);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.singleton(syncRequest));
@@ -509,7 +506,6 @@ public class ReplicationUtilsTest {
     status.setPushFailCount(100L);
     status.setStatus(Status.SUCCESS);
     when(history.getByReplicatorId(REP_ID)).thenReturn(status);
-    when(history.exists(REP_ID)).thenReturn(true);
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
     ReplicatorConfigImpl config = new ReplicatorConfigImpl();
     config.setId(REP_ID);
@@ -773,7 +769,6 @@ public class ReplicationUtilsTest {
     when(status.getId()).thenReturn(statusId);
 
     when(history.getByReplicatorId(repName)).thenReturn(status);
-    when(history.exists(repName)).thenReturn(true);
 
     ArgumentCaptor<ReplicationStatus> repStatus = ArgumentCaptor.forClass(ReplicationStatus.class);
 
@@ -825,7 +820,6 @@ public class ReplicationUtilsTest {
     when(status.getId()).thenReturn(statusId);
 
     when(history.getByReplicatorId(repName)).thenReturn(status);
-    when(history.exists(repName)).thenReturn(true);
 
     doThrow(ReplicationPersistenceException.class).when(history).save(any(ReplicationStatus.class));
 
