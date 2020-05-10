@@ -275,18 +275,26 @@ public class ReplicationUtils {
         .suspended(config.isSuspended());
     ReplicationStats stats = new ReplicationStats();
     ReplicationStatus currentStatus = null;
-    if (history.exists(config.getId())) {
+    try {
       currentStatus = history.getByReplicatorId(config.getId());
       stats.setLastRun(currentStatus.getLastRun());
       stats.setStartTime(currentStatus.getStartTime());
       stats.setLastSuccess(currentStatus.getLastSuccess());
+    } catch (NotFoundException e) {
+      LOGGER.debug("No status item found for {}", config.getId());
     }
     Optional<ReplicationStatus> activeStatus =
         replicator.getActiveSyncRequests().stream()
             .filter(sync -> sync.getConfig().getId().equals(config.getId()))
             .map(SyncRequest::getStatus)
             .findFirst();
-    currentStatus = activeStatus.orElse(currentStatus);
+
+    if (currentStatus == null && activeStatus.isPresent()) {
+      currentStatus = activeStatus.get();
+    } else if (currentStatus != null && activeStatus.isPresent()) {
+      currentStatus.addStats(activeStatus.get());
+    }
+
     if (currentStatus == null) {
       stats.setStatus(NOT_RUN);
       stats.setPullBytes(0L);
