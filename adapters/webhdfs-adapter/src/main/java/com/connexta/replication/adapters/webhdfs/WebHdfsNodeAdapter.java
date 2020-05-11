@@ -14,13 +14,12 @@
 package com.connexta.replication.adapters.webhdfs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
@@ -139,15 +138,15 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
       int status = response.getStatusLine().getStatusCode();
       if (status != HTTP_STATUS_SUCCESS_OK) {
-        throw new ReplicationException(String.format("Request failed with status code: %d", status));
+        throw new ReplicationException(
+            String.format("Request failed with status code: %d", status));
       }
 
       InputStream content = response.getEntity().getContent();
       response.close();
-      
+
       ObjectMapper objectMapper = new ObjectMapper();
-      Map jsonMap =
-          objectMapper.readValue(content, Map.class);
+      Map jsonMap = objectMapper.readValue(content, Map.class);
 
       return jsonMap.get("Location").toString();
     } catch (URISyntaxException | NullPointerException | IOException e) {
