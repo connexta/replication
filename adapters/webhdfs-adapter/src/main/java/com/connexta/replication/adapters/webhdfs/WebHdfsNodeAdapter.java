@@ -15,6 +15,7 @@ package com.connexta.replication.adapters.webhdfs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
@@ -141,11 +142,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         throw new ReplicationException(String.format("Request failed with status code: %d", status));
       }
 
+      InputStream content = response.getEntity().getContent();
+      response.close();
+      
       ObjectMapper objectMapper = new ObjectMapper();
-      Map<String, String> jsonMap =
-          objectMapper.readValue(response.getEntity().getContent(), Map.class);
+      Map jsonMap =
+          objectMapper.readValue(content, Map.class);
 
-      return jsonMap.get("Location");
+      return jsonMap.get("Location").toString();
     } catch (URISyntaxException | NullPointerException | IOException e) {
       throw new ReplicationException("Failed to get location from the remote system.", e);
     }
