@@ -28,7 +28,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.data.CreateRequest;
@@ -51,11 +50,15 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   static final int HTTP_STATUS_SUCCESS_OK = 200;
   static final int HTTP_STATUS_SUCCESS_CREATED = 201;
+  static final int HTTP_STATUS_REDIRECT_TEMPORARY = 307;
 
   private final URL webHdfsUrl;
 
-  public WebHdfsNodeAdapter(URL webHdfsUrl) {
+  private final CloseableHttpClient client;
+
+  public WebHdfsNodeAdapter(URL webHdfsUrl, CloseableHttpClient client) {
     this.webHdfsUrl = webHdfsUrl;
+    this.client = client;
   }
 
   @Override
@@ -137,7 +140,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       CloseableHttpResponse response = sendHttpRequest(httpPut);
 
       int status = response.getStatusLine().getStatusCode();
-      if (status != HTTP_STATUS_SUCCESS_OK) {
+      if (status != HTTP_STATUS_SUCCESS_OK && status != HTTP_STATUS_REDIRECT_TEMPORARY) {
         throw new ReplicationException(
             String.format("Request failed with status code: %d", status));
       }
@@ -161,12 +164,10 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return a {@code Map} containing the response content if the expected status code is received,
    *     otherwise {@code null}
    */
-  private CloseableHttpResponse sendHttpRequest(HttpRequestBase request) {
-
-    try (CloseableHttpClient client = HttpClients.createDefault()) {
-
+  @VisibleForTesting
+  CloseableHttpResponse sendHttpRequest(HttpRequestBase request) {
+    try {
       return client.execute(request);
-
     } catch (IOException e) {
       throw new ReplicationException(
           String.format("Failed to send %s to remote system", request.getMethod()), e);
@@ -182,21 +183,18 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return {@code true} if successful, otherwise {@code false}
    */
   private boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
-    try (CloseableHttpClient client = HttpClients.createDefault()) {
-      HttpPut httpPut = new HttpPut(location);
 
-      Resource resource = createStorageRequest.getResources().get(0);
+    HttpPut httpPut = new HttpPut(location);
 
-      MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-      builder.addBinaryBody(
-          "file",
-          resource.getInputStream(),
-          ContentType.create(resource.getMimeType()),
-          "file.ext");
-      HttpEntity multipart = builder.build();
-      httpPut.setEntity(multipart);
+    Resource resource = createStorageRequest.getResources().get(0);
 
-      CloseableHttpResponse response = client.execute(httpPut);
+    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+    builder.addBinaryBody(
+        "file", resource.getInputStream(), ContentType.create(resource.getMimeType()), "file.ext");
+    HttpEntity multipart = builder.build();
+    httpPut.setEntity(multipart);
+
+    try (CloseableHttpResponse response = client.execute(httpPut)) {
       int status = response.getStatusLine().getStatusCode();
       if (status != HTTP_STATUS_SUCCESS_CREATED) {
         LOGGER.debug("Failed to replicate.  Status code: {}", status);
@@ -214,5 +212,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   }
 
   @Override
-  public void close() throws IOException {}
+  public void close() throws IOException {
+    client.close();
+  }
 }

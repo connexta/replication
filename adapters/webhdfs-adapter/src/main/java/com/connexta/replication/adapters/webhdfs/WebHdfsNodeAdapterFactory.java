@@ -15,6 +15,7 @@ package com.connexta.replication.adapters.webhdfs;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import org.apache.http.impl.client.HttpClients;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
@@ -40,7 +41,7 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
         "http://" + url.getHost() + ":" + url.getPort() + "/webhdfs/v1/" + url.getPath();
 
     try {
-      return new WebHdfsNodeAdapter(new URL(baseUrl));
+      return new WebHdfsNodeAdapter(new URL(baseUrl), HttpClients.createDefault());
     } catch (MalformedURLException e) {
       throw new AdapterException("Failed to create adapter", e);
     }
