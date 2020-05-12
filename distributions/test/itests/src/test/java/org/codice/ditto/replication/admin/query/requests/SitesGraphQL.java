@@ -27,6 +27,8 @@ public class SitesGraphQL {
 
   private GraphQLRequests requestFactory;
 
+  private static long WAIT_TIME = 30L;
+
   public SitesGraphQL(String graphqlEndpoint) {
     requestFactory =
         new GraphQLRequests(
@@ -35,7 +37,7 @@ public class SitesGraphQL {
 
   public void waitForSitesInSchema() {
     Awaitility.await("get sites in schema")
-        .atMost(30L, TimeUnit.SECONDS)
+        .atMost(WAIT_TIME, TimeUnit.SECONDS)
         .until(
             () -> {
               GraphQLRequest graphQLRequest = requestFactory.createRequest();
@@ -105,13 +107,13 @@ public class SitesGraphQL {
 
   public void waitForSite(Map<String, Object> expectedConfig) {
     Awaitility.await("failed to retrieve expected site")
-        .atMost(30L, TimeUnit.SECONDS)
+        .atMost(WAIT_TIME, TimeUnit.SECONDS)
         .until(() -> getAllSites().stream().anyMatch(expectedConfig::equals));
   }
 
   public void waitForSiteWithName(String name) {
     Awaitility.await(String.format("failed to retrieve expected site with name %s", name))
-        .atMost(30L, TimeUnit.SECONDS)
+        .atMost(WAIT_TIME, TimeUnit.SECONDS)
         .until(() -> getAllSites().stream().anyMatch(config -> config.get("name").equals(name)));
   }
 

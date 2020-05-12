@@ -144,7 +144,7 @@ public class Syncer {
         try {
           if (metadata.isDeleted() && replicationItem.isPresent()) {
             doDelete(metadata, replicationItem.get());
-          } else if (destination.exists(metadata) && replicationItem.isPresent()) {
+          } else if (replicationItem.isPresent() && destination.exists(metadata)) {
             doUpdate(metadata, replicationItem.get());
           } else {
             doCreate(metadata, replicationItem);

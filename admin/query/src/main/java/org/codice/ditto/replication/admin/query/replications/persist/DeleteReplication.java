@@ -48,7 +48,7 @@ public class DeleteReplication extends BaseFunctionField<BooleanField> {
     deleteData = new BooleanField("deleteData");
     deleteData.setValue(false);
 
-    id.isRequired();
+    id.isRequired(true);
   }
 
   @Override

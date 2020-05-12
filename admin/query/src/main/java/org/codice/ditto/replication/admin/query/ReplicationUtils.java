@@ -324,6 +324,7 @@ public class ReplicationUtils {
    * {@link ReplicationStatus} with the id {@link ReplicationStats#getPid()}, then it will first be
    * deleted then re-saved with the new information.
    *
+   * @param replicationName name/id of the replication configuration associated with the stats
    * @param stats stats object to convert to {@link ReplicationStatus} to be saved
    * @return {@code true} if the stats were successfully saved, otherwise false.
    */

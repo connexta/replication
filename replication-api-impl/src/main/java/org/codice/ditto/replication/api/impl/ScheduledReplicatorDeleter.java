@@ -135,6 +135,14 @@ public class ScheduledReplicatorDeleter {
    * ReplicatorConfig}. This occurs when a {@link ReplicatorConfig} was deleted without cleaning up
    * data, but the data was then deleted manually afterwards.
    */
+
+  /**
+   * Deletes {@link ReplicationItem}s which have no corresponding data store entry or {@link
+   * ReplicatorConfig}. This occurs when a {@link ReplicatorConfig} was deleted without cleaning up
+   * data, but the data was then deleted manually afterwards.
+   *
+   * @param replicatorConfigs List of replication configs to clean up after
+   */
   private void cleanupOrphanedReplicationItems(List<ReplicatorConfig> replicatorConfigs) {
     Set<String> replicatorConfigIds =
         replicatorConfigs.stream().map(ReplicatorConfig::getId).collect(Collectors.toSet());
