@@ -23,6 +23,8 @@ import org.codice.ditto.replication.admin.query.requests.GraphQLRequests.GraphQL
 
 public class ReplicationsGraphQL {
 
+  private static long WAIT_TIME = 30L;
+
   private GraphQLRequests requestFactory;
 
   public ReplicationsGraphQL(String graphqlEndpoint) {
@@ -48,7 +50,7 @@ public class ReplicationsGraphQL {
 
   public void waitForNoReplications() {
     Awaitility.await("wait for no replications")
-        .atMost(30L, TimeUnit.SECONDS)
+        .atMost(WAIT_TIME, TimeUnit.SECONDS)
         .until(() -> getAllReplications().size() == 0);
   }
 
@@ -110,7 +112,7 @@ public class ReplicationsGraphQL {
 
   public void waitForReplicationWithName(String name) {
     Awaitility.await(String.format("failed to retrieve expected replication with name %s", name))
-        .atMost(30L, TimeUnit.SECONDS)
+        .atMost(WAIT_TIME, TimeUnit.SECONDS)
         .until(
             () ->
                 getAllReplications().stream().anyMatch(config -> config.get("name").equals(name)));
@@ -134,7 +136,7 @@ public class ReplicationsGraphQL {
 
   public void waitForReplication(Map<String, Object> expectedConfig) {
     Awaitility.await("failed to retrieve expected replication")
-        .atMost(30L, TimeUnit.SECONDS)
+        .atMost(WAIT_TIME, TimeUnit.SECONDS)
         .until(() -> getAllReplications().stream().anyMatch(expectedConfig::equals));
   }
 }

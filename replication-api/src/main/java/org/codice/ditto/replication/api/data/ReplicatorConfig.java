@@ -157,8 +157,8 @@ public interface ReplicatorConfig extends Persistable {
    * <p>Only data that has been replicated to this {@link ReplicationSite} from a remote {@link
    * ReplicationSite} will be deleted.
    *
-   * @return if {@code true}, delete the associated data replicated by this {@code
-   *     ReplicatorConfig}, otherwise retain the data.
+   * @return {@code true} if the data associated with this {@code ReplicatorConfig} should be
+   *     deleted when the config is deleted, otherwise returns false.
    */
   boolean shouldDeleteData();
 

@@ -38,6 +38,10 @@ import org.opengis.filter.sort.SortOrder;
 /** A service which fetches query metacards from the catalog and returns them as {@link Query}s. */
 public class QueryServiceImpl implements QueryService {
 
+  private static final int START_INDEX = 1;
+
+  private static final int PAGE_SIZE = 100;
+
   private final CatalogFramework framework;
 
   private final FilterBuilder builder;
@@ -64,7 +68,7 @@ public class QueryServiceImpl implements QueryService {
     Filter filter = builder.attribute(Core.METACARD_TAGS).is().equalTo().text("query");
     PropertyName sortProperty = new PropertyNameImpl(Core.METACARD_MODIFIED);
     SortBy sortPolicy = new SortByImpl(sortProperty, SortOrder.DESCENDING);
-    QueryImpl query = new QueryImpl(filter, 1, 100, sortPolicy, false, 0L);
+    QueryImpl query = new QueryImpl(filter, START_INDEX, PAGE_SIZE, sortPolicy, false, 0L);
     QueryResponse queryTypeResponse;
     try {
       queryTypeResponse = framework.query(new QueryRequestImpl(query));

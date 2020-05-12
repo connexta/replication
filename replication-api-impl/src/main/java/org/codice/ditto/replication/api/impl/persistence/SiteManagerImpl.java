@@ -29,6 +29,10 @@ public class SiteManagerImpl implements SiteManager {
 
   private ReplicationPersistentStore persistentStore;
 
+  private static final int RETRY_DELAY_SEC = 5;
+
+  private static final int RETRY_DURATION_MIN = 5;
+
   private static final String LOCAL_SITE_ID = "local-site-id-1234567890";
 
   public SiteManagerImpl(ReplicationPersistentStore persistentStore) {
@@ -38,8 +42,8 @@ public class SiteManagerImpl implements SiteManager {
   public void init() {
     RetryPolicy retryPolicy =
         new RetryPolicy()
-            .withDelay(5, TimeUnit.SECONDS)
-            .withMaxDuration(5, TimeUnit.MINUTES)
+            .withDelay(RETRY_DELAY_SEC, TimeUnit.SECONDS)
+            .withMaxDuration(RETRY_DURATION_MIN, TimeUnit.MINUTES)
             .retryOn(ReplicationPersistenceException.class);
 
     Failsafe.with(retryPolicy).run(this::createLocalSite);

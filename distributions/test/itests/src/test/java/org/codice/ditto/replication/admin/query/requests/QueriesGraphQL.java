@@ -23,6 +23,8 @@ import org.codice.ditto.replication.admin.query.requests.GraphQLRequests.GraphQL
 
 public class QueriesGraphQL {
 
+  private static long WAIT_TIME = 30L;
+
   private GraphQLRequests requestFactory;
 
   public QueriesGraphQL(String graphqlEndpoint) {
@@ -48,7 +50,7 @@ public class QueriesGraphQL {
 
   public void waitForQuery(Map<String, Object> expectedConfig) {
     Awaitility.await("failed to retrieve expected query")
-        .atMost(30L, TimeUnit.SECONDS)
+        .atMost(WAIT_TIME, TimeUnit.SECONDS)
         .until(() -> getAllQueries().stream().anyMatch(expectedConfig::equals));
   }
 }
