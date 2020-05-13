@@ -13,5 +13,100 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.codice.ditto.replication.api.ReplicationException;
+import org.codice.ditto.replication.api.data.CreateStorageRequest;
+import org.codice.ditto.replication.api.data.Metadata;
+import org.codice.ditto.replication.api.data.Resource;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /** Unit tests for {@link WebHdfsNodeAdapter} */
-public class WebHdfsNodeAdapterTest {}
+@RunWith(JUnit4.class)
+public class WebHdfsNodeAdapterTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
+  WebHdfsNodeAdapter webHdfsNodeAdapter;
+
+  CloseableHttpClient client;
+
+  @Before
+  public void setup() throws MalformedURLException {
+
+    client = mock(CloseableHttpClient.class);
+    webHdfsNodeAdapter = new WebHdfsNodeAdapter(new URL("http://host:1234/some/path"), client);
+  }
+
+  @Ignore
+  @Test
+  public void testGetLocation() {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+    Metadata metadata = mock(Metadata.class);
+    Date date = new Date();
+
+    when(createStorageRequest.getResources()).thenReturn(resources);
+    when(resource.getMetadata()).thenReturn(metadata);
+    when(metadata.getId()).thenReturn("112358");
+    when(metadata.getResourceModified()).thenReturn(date);
+  }
+
+  @Test
+  public void testGetLocationNullResource() throws URISyntaxException {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    List<Resource> resources = Collections.singletonList(null);
+    when(createStorageRequest.getResources()).thenReturn(resources);
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("Null resource encountered.");
+
+    webHdfsNodeAdapter.getLocation(createStorageRequest);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testSendHttpRequestSuccess() throws IOException {
+    HttpRequestBase request = mock(HttpRequestBase.class);
+    ResponseHandler<String> responseHandler = (ResponseHandler<String>) mock(ResponseHandler.class);
+    when(client.execute(request, responseHandler)).thenReturn("12345");
+
+    assertThat(webHdfsNodeAdapter.sendHttpRequest(request, responseHandler), is("12345"));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testSendHttpRequestFailure() throws IOException {
+    HttpRequestBase request = mock(HttpRequestBase.class);
+    ResponseHandler<String> responseHandler = (ResponseHandler<String>) mock(ResponseHandler.class);
+
+    when(request.getMethod()).thenReturn("GET");
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("Failed to send GET to remote system.");
+
+    doThrow(new IOException()).when(client).execute(request, responseHandler);
+    webHdfsNodeAdapter.sendHttpRequest(request, responseHandler);
+  }
+}

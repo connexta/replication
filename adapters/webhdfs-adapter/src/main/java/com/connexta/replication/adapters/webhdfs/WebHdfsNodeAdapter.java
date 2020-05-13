@@ -130,6 +130,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   @VisibleForTesting
   String getLocation(CreateStorageRequest createStorageRequest) throws URISyntaxException {
 
+    if (createStorageRequest.getResources().get(0) == null) {
+      throw new ReplicationException("Null resource encountered.");
+    }
+
+    // only a single resource is supported at this time and is the reason for always retrieving from
+    // index zero
     Metadata metadata = createStorageRequest.getResources().get(0).getMetadata();
     String filename = metadata.getId() + "_" + metadata.getResourceModified();
 
@@ -179,7 +185,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       return client.execute(request, responseHandler);
     } catch (IOException e) {
       throw new ReplicationException(
-          String.format("Failed to send %s to remote system", request.getMethod()), e);
+          String.format("Failed to send %s to remote system.", request.getMethod()), e);
     }
   }
 
