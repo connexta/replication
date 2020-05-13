@@ -20,7 +20,9 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -108,10 +110,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
       return writeFileToLocation(createStorageRequest, location);
 
+    } catch (URISyntaxException e) {
+      LOGGER.error("Unable to get location, due to invalid URL.", e);
     } catch (ReplicationException e) {
       LOGGER.error("Unable to create resource.", e);
-      return false;
     }
+    return false;
   }
 
   /**
@@ -120,11 +124,11 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    *
    * @param createStorageRequest request containing the {@link
    *     org.codice.ditto.replication.api.data.Resource} to create
-   * @return a {@code String} containing the location to write to; returns {@code null} if request
-   *     for location was unsuccessful
+   * @return a {@code String} containing the location to write to
+   * @throws URISyntaxException when the fileUrl cannot be parsed as a URI reference
    */
   @VisibleForTesting
-  String getLocation(CreateStorageRequest createStorageRequest) {
+  String getLocation(CreateStorageRequest createStorageRequest) throws URISyntaxException {
 
     Metadata metadata = createStorageRequest.getResources().get(0).getMetadata();
     String filename = metadata.getId() + "_" + metadata.getResourceModified();
@@ -132,42 +136,47 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     String fileUrl = webHdfsUrl.toString() + filename;
     LOGGER.debug("The complete file URL is: {}", fileUrl);
 
-    try {
-      URIBuilder builder = new URIBuilder(fileUrl);
-      builder.setParameter("op", "CREATE").setParameter("noredirect", "true");
-      HttpPut httpPut = new HttpPut(builder.build());
+    URIBuilder builder = new URIBuilder(fileUrl);
+    builder.setParameter("op", "CREATE").setParameter("noredirect", "true");
+    HttpPut httpPut = new HttpPut(builder.build());
 
-      CloseableHttpResponse response = sendHttpRequest(httpPut);
+    ResponseHandler<String> responseHandler =
+        httpResponse -> {
+          int status = httpResponse.getStatusLine().getStatusCode();
 
-      int status = response.getStatusLine().getStatusCode();
-      if (status != HTTP_STATUS_SUCCESS_OK && status != HTTP_STATUS_REDIRECT_TEMPORARY) {
-        throw new ReplicationException(
-            String.format("Request failed with status code: %d", status));
-      }
+          switch (status) {
+            case HTTP_STATUS_SUCCESS_OK:
+              InputStream content = httpResponse.getEntity().getContent();
 
-      InputStream content = response.getEntity().getContent();
-      response.close();
+              ObjectMapper objectMapper = new ObjectMapper();
+              Map jsonMap = objectMapper.readValue(content, Map.class);
 
-      ObjectMapper objectMapper = new ObjectMapper();
-      Map jsonMap = objectMapper.readValue(content, Map.class);
+              return jsonMap.get("Location").toString();
+            case HTTP_STATUS_REDIRECT_TEMPORARY:
+              Header locationHeader = httpResponse.getFirstHeader("Location");
 
-      return jsonMap.get("Location").toString();
-    } catch (URISyntaxException | NullPointerException | IOException e) {
-      throw new ReplicationException("Failed to get location from the remote system.", e);
-    }
+              return locationHeader.getValue();
+            default:
+              throw new ReplicationException(
+                  String.format("Request failed with status code: %d", status));
+          }
+        };
+
+    return sendHttpRequest(httpPut, responseHandler);
   }
 
   /**
    * Executes an HTTP request
    *
    * @param request the HTTP request to execute
-   * @return a {@code Map} containing the response content if the expected status code is received,
-   *     otherwise {@code null}
+   * @param responseHandler a value based on the response
+   * @param <T> the type expected in the response
+   * @return the response body
    */
   @VisibleForTesting
-  CloseableHttpResponse sendHttpRequest(HttpRequestBase request) {
+  <T> T sendHttpRequest(HttpRequestBase request, ResponseHandler<T> responseHandler) {
     try {
-      return client.execute(request);
+      return client.execute(request, responseHandler);
     } catch (IOException e) {
       throw new ReplicationException(
           String.format("Failed to send %s to remote system", request.getMethod()), e);
