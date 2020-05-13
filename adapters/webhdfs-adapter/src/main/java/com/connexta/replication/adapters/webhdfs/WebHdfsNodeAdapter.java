@@ -197,7 +197,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @param location the full address of the location to write the resource to
    * @return {@code true} if successful, otherwise {@code false}
    */
-  private boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
+  @VisibleForTesting
+  boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
+
+    if (createStorageRequest.getResources().get(0) == null) {
+      throw new ReplicationException("Null resource encountered.");
+    }
 
     HttpPut httpPut = new HttpPut(location);
 
