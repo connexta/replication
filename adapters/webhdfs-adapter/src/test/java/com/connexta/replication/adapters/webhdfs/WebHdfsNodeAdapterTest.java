@@ -17,15 +17,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -34,12 +37,13 @@ import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.Resource;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 /** Unit tests for {@link WebHdfsNodeAdapter} */
 @RunWith(JUnit4.class)
@@ -55,22 +59,51 @@ public class WebHdfsNodeAdapterTest {
   public void setup() throws MalformedURLException {
 
     client = mock(CloseableHttpClient.class);
-    webHdfsNodeAdapter = new WebHdfsNodeAdapter(new URL("http://host:1234/some/path"), client);
+    webHdfsNodeAdapter = new WebHdfsNodeAdapter(new URL("http://host:1234/some/path/"), client);
   }
 
-  @Ignore
+  @SuppressWarnings("unchecked")
   @Test
-  public void testGetLocation() {
+  public void testGetLocation() throws URISyntaxException, IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     Resource resource = mock(Resource.class);
     List<Resource> resources = Collections.singletonList(resource);
+
     Metadata metadata = mock(Metadata.class);
     Date date = new Date();
 
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    String testJson = "{\"Location\":\"http://host2:5678/some/other/path/\"}";
+    InputStream content = new ByteArrayInputStream(testJson.getBytes());
+
     when(createStorageRequest.getResources()).thenReturn(resources);
     when(resource.getMetadata()).thenReturn(metadata);
+
     when(metadata.getId()).thenReturn("112358");
     when(metadata.getResourceModified()).thenReturn(date);
+
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(200);
+
+    when(httpResponse.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent()).thenReturn(content);
+
+    doAnswer(
+            new Answer<Object>() {
+              public Object answer(InvocationOnMock invocation) throws IOException {
+                ResponseHandler<String> responseHandler =
+                    (ResponseHandler<String>) invocation.getArguments()[1];
+                return responseHandler.handleResponse(httpResponse);
+              }
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    assertThat(
+        webHdfsNodeAdapter.getLocation(createStorageRequest),
+        is("http://host2:5678/some/other/path/"));
   }
 
   @Test
