@@ -137,7 +137,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     // only a single resource is supported at this time and is the reason for always retrieving from
     // index zero
     Metadata metadata = createStorageRequest.getResources().get(0).getMetadata();
-    String filename = metadata.getId() + "_" + metadata.getResourceModified();
+    String filename = metadata.getId() + "_" + metadata.getResourceModified().getTime();
 
     String fileUrl = webHdfsUrl.toString() + filename;
     LOGGER.debug("The complete file URL is: {}", fileUrl);
