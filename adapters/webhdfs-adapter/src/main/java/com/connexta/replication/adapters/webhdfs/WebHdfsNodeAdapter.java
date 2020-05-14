@@ -46,9 +46,7 @@ import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Interacts with a remote Hadoop instance through the webHDFS REST API
- */
+/** Interacts with a remote Hadoop instance through the webHDFS REST API */
 public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapter.class);
@@ -60,8 +58,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   /**
    * Adapter to interact with a Hadoop instance through the webHDFS REST API
    *
-   * @param webHdfsUrl  the address of the REST API for the
-   * @param client  performs the HTTP requests
+   * @param webHdfsUrl the address of the REST API for the
+   * @param client performs the HTTP requests
    */
   public WebHdfsNodeAdapter(URL webHdfsUrl, CloseableHttpClient client) {
     this.webHdfsUrl = webHdfsUrl;
