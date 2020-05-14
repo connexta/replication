@@ -111,6 +111,31 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
+  public void testCreateResourceUriException() {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+    Metadata metadata = mock(Metadata.class);
+    Date date = new Date();
+
+    when(createStorageRequest.getResources()).thenReturn(resources);
+    when(resource.getMetadata()).thenReturn(metadata);
+    when(metadata.getResourceModified()).thenReturn(date);
+    when(metadata.getId()).thenReturn("??* %!");
+
+    assertThat(webHdfsNodeAdapter.createResource(createStorageRequest), is(false));
+  }
+
+  @Test
+  public void testCreateResourceReplicationException() {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    List<Resource> resources = Collections.singletonList(null);
+    when(createStorageRequest.getResources()).thenReturn(resources);
+
+    assertThat(webHdfsNodeAdapter.createResource(createStorageRequest), is(false));
+  }
+
+  @Test
   public void testGetLocationNullResource() throws URISyntaxException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     List<Resource> resources = Collections.singletonList(null);
