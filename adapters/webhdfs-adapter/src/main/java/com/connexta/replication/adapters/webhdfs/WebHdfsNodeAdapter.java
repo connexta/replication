@@ -24,6 +24,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
@@ -68,7 +69,26 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean isAvailable() {
-    return false;
+    LOGGER.debug("Checking access to: {}", webHdfsUrl);
+
+    try {
+      URIBuilder builder = new URIBuilder(webHdfsUrl.toString());
+      builder.setParameter("op", "CHECKACCESS").setParameter("fsaction", "ALL");
+
+      HttpGet httpGet = new HttpGet(builder.build());
+
+      ResponseHandler<Boolean> responseHandler =
+          response -> {
+            int status = response.getStatusLine().getStatusCode();
+
+            return status == HttpStatus.SC_OK;
+          };
+
+      return sendHttpRequest(httpGet, responseHandler);
+    } catch (URISyntaxException e) {
+      LOGGER.error("Unable to check availability, due to invalid URL.", e);
+      return false;
+    }
   }
 
   @Override
