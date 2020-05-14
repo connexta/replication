@@ -26,8 +26,10 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -42,8 +44,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 /** Unit tests for {@link WebHdfsNodeAdapter} */
 @RunWith(JUnit4.class)
@@ -62,9 +62,96 @@ public class WebHdfsNodeAdapterTest {
     webHdfsNodeAdapter = new WebHdfsNodeAdapter(new URL("http://host:1234/some/path/"), client);
   }
 
+  @Test
+  public void testCreateResource() throws IOException {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+
+    Metadata metadata = mock(Metadata.class);
+    Date date = new Date();
+
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    String testJson = "{\"Location\":\"http://host2:5678/some/other/path/file.ext\"}";
+    InputStream content = new ByteArrayInputStream(testJson.getBytes());
+    InputStream resourceContent = mock(InputStream.class);
+
+    when(createStorageRequest.getResources()).thenReturn(resources);
+    when(resource.getMetadata()).thenReturn(metadata);
+    when(resource.getMimeType()).thenReturn("application/json");
+    when(resource.getInputStream()).thenReturn(resourceContent);
+
+    when(metadata.getId()).thenReturn("112358");
+    when(metadata.getResourceModified()).thenReturn(date);
+
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(200).thenReturn(201);
+
+    when(httpResponse.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent()).thenReturn(content);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    assertThat(webHdfsNodeAdapter.createResource(createStorageRequest), is(true));
+  }
+
+  @Test
+  public void testGetLocationNullResource() throws URISyntaxException {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    List<Resource> resources = Collections.singletonList(null);
+    when(createStorageRequest.getResources()).thenReturn(resources);
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("Null resource encountered.");
+
+    webHdfsNodeAdapter.getLocation(createStorageRequest);
+  }
+
   @SuppressWarnings("unchecked")
   @Test
-  public void testGetLocation() throws URISyntaxException, IOException {
+  public void testSendHttpRequestFailure() throws IOException {
+    HttpRequestBase request = mock(HttpRequestBase.class);
+    ResponseHandler<String> responseHandler = (ResponseHandler<String>) mock(ResponseHandler.class);
+
+    when(request.getMethod()).thenReturn("GET");
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("Failed to send GET to remote system.");
+
+    doThrow(new IOException()).when(client).execute(request, responseHandler);
+    webHdfsNodeAdapter.sendHttpRequest(request, responseHandler);
+  }
+
+  @Test
+  public void testWriteFileToLocationNullResource() {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    List<Resource> resources = Collections.singletonList(null);
+    when(createStorageRequest.getResources()).thenReturn(resources);
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("Null resource encountered.");
+
+    webHdfsNodeAdapter.writeFileToLocation(createStorageRequest, "http://host:1234/location/");
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testGetLocationSuccess() throws URISyntaxException, IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     Resource resource = mock(Resource.class);
     List<Resource> resources = Collections.singletonList(resource);
@@ -85,18 +172,16 @@ public class WebHdfsNodeAdapterTest {
     when(metadata.getResourceModified()).thenReturn(date);
 
     when(httpResponse.getStatusLine()).thenReturn(statusLine);
-    when(statusLine.getStatusCode()).thenReturn(200);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_OK);
 
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(content);
 
     doAnswer(
-            new Answer<Object>() {
-              public Object answer(InvocationOnMock invocation) throws IOException {
-                ResponseHandler<String> responseHandler =
-                    (ResponseHandler<String>) invocation.getArguments()[1];
-                return responseHandler.handleResponse(httpResponse);
-              }
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
             })
         .when(client)
         .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
@@ -106,40 +191,147 @@ public class WebHdfsNodeAdapterTest {
         is("http://host2:5678/some/other/path/"));
   }
 
+  @SuppressWarnings("unchecked")
   @Test
-  public void testGetLocationNullResource() throws URISyntaxException {
+  public void testGetLocationRedirect() throws URISyntaxException, IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
-    List<Resource> resources = Collections.singletonList(null);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+
+    Metadata metadata = mock(Metadata.class);
+    Date date = new Date();
+
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+
     when(createStorageRequest.getResources()).thenReturn(resources);
+    when(resource.getMetadata()).thenReturn(metadata);
+
+    when(metadata.getId()).thenReturn("112358");
+    when(metadata.getResourceModified()).thenReturn(date);
+
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_TEMPORARY_REDIRECT);
+
+    Header header = mock(Header.class);
+    when(httpResponse.getFirstHeader("Location")).thenReturn(header);
+    when(header.getValue()).thenReturn("http://host2:5678/some/other/path/file.ext");
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    assertThat(
+        webHdfsNodeAdapter.getLocation(createStorageRequest),
+        is("http://host2:5678/some/other/path/file.ext"));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testGetLocationUnexpectedCode() throws URISyntaxException, IOException {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+
+    Metadata metadata = mock(Metadata.class);
+    Date date = new Date();
+
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+
+    when(createStorageRequest.getResources()).thenReturn(resources);
+    when(resource.getMetadata()).thenReturn(metadata);
+
+    when(metadata.getId()).thenReturn("112358");
+    when(metadata.getResourceModified()).thenReturn(date);
+
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_BAD_REQUEST);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
 
     thrown.expect(ReplicationException.class);
-    thrown.expectMessage("Null resource encountered.");
+    thrown.expectMessage("Request failed with status code: 400");
 
     webHdfsNodeAdapter.getLocation(createStorageRequest);
   }
 
   @SuppressWarnings("unchecked")
   @Test
-  public void testSendHttpRequestSuccess() throws IOException {
-    HttpRequestBase request = mock(HttpRequestBase.class);
-    ResponseHandler<String> responseHandler = (ResponseHandler<String>) mock(ResponseHandler.class);
-    when(client.execute(request, responseHandler)).thenReturn("12345");
+  public void testWriteFileToLocationCreated() throws IOException {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+    when(createStorageRequest.getResources()).thenReturn(resources);
 
-    assertThat(webHdfsNodeAdapter.sendHttpRequest(request, responseHandler), is("12345"));
+    InputStream inputStream = mock(InputStream.class);
+    when(resource.getInputStream()).thenReturn(inputStream);
+    when(resource.getMimeType()).thenReturn("application/json");
+
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_CREATED);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    assertThat(
+        webHdfsNodeAdapter.writeFileToLocation(
+            createStorageRequest, "http://host:314/some/path/to/file.ext"),
+        is(true));
   }
 
   @SuppressWarnings("unchecked")
   @Test
-  public void testSendHttpRequestFailure() throws IOException {
-    HttpRequestBase request = mock(HttpRequestBase.class);
-    ResponseHandler<String> responseHandler = (ResponseHandler<String>) mock(ResponseHandler.class);
+  public void testWriteFileToLocationUnexpectedCode() throws IOException {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+    when(createStorageRequest.getResources()).thenReturn(resources);
 
-    when(request.getMethod()).thenReturn("GET");
+    InputStream inputStream = mock(InputStream.class);
+    when(resource.getInputStream()).thenReturn(inputStream);
+    when(resource.getMimeType()).thenReturn("application/json");
+
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_BAD_REQUEST);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
 
     thrown.expect(ReplicationException.class);
-    thrown.expectMessage("Failed to send GET to remote system.");
+    thrown.expectMessage("Request failed with status code: 400");
 
-    doThrow(new IOException()).when(client).execute(request, responseHandler);
-    webHdfsNodeAdapter.sendHttpRequest(request, responseHandler);
+    assertThat(
+        webHdfsNodeAdapter.writeFileToLocation(
+            createStorageRequest, "http://host:314/some/path/to/file.ext"),
+        is(false));
   }
 }

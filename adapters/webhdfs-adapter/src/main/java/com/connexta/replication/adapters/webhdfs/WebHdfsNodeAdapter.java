@@ -22,8 +22,8 @@ import java.net.URL;
 import java.util.Map;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
@@ -46,18 +46,23 @@ import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Interacts with a remote Hadoop instance through the webHDFS REST API
+ */
 public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapter.class);
-
-  static final int HTTP_STATUS_SUCCESS_OK = 200;
-  static final int HTTP_STATUS_SUCCESS_CREATED = 201;
-  static final int HTTP_STATUS_REDIRECT_TEMPORARY = 307;
 
   private final URL webHdfsUrl;
 
   private final CloseableHttpClient client;
 
+  /**
+   * Adapter to interact with a Hadoop instance through the webHDFS REST API
+   *
+   * @param webHdfsUrl  the address of the REST API for the
+   * @param client  performs the HTTP requests
+   */
   public WebHdfsNodeAdapter(URL webHdfsUrl, CloseableHttpClient client) {
     this.webHdfsUrl = webHdfsUrl;
     this.client = client;
@@ -147,19 +152,19 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     HttpPut httpPut = new HttpPut(builder.build());
 
     ResponseHandler<String> responseHandler =
-        httpResponse -> {
-          int status = httpResponse.getStatusLine().getStatusCode();
+        response -> {
+          int status = response.getStatusLine().getStatusCode();
 
           switch (status) {
-            case HTTP_STATUS_SUCCESS_OK:
-              InputStream content = httpResponse.getEntity().getContent();
+            case HttpStatus.SC_OK:
+              InputStream content = response.getEntity().getContent();
 
               ObjectMapper objectMapper = new ObjectMapper();
               Map jsonMap = objectMapper.readValue(content, Map.class);
 
               return jsonMap.get("Location").toString();
-            case HTTP_STATUS_REDIRECT_TEMPORARY:
-              Header locationHeader = httpResponse.getFirstHeader("Location");
+            case HttpStatus.SC_TEMPORARY_REDIRECT:
+              Header locationHeader = response.getFirstHeader("Location");
 
               return locationHeader.getValue();
             default:
@@ -204,8 +209,11 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       throw new ReplicationException("Null resource encountered.");
     }
 
+    LOGGER.debug("The location being written to is: {}", location);
     HttpPut httpPut = new HttpPut(location);
 
+    // only a single resource is supported at this time and is the reason for always retrieving from
+    // index zero
     Resource resource = createStorageRequest.getResources().get(0);
 
     MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -214,16 +222,19 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     HttpEntity multipart = builder.build();
     httpPut.setEntity(multipart);
 
-    try (CloseableHttpResponse response = client.execute(httpPut)) {
-      int status = response.getStatusLine().getStatusCode();
-      if (status != HTTP_STATUS_SUCCESS_CREATED) {
-        LOGGER.debug("Failed to replicate.  Status code: {}", status);
-        return false;
-      }
-    } catch (IOException e) {
-      throw new ReplicationException("Failed to create resource on remote system.", e);
-    }
-    return true;
+    ResponseHandler<Boolean> responseHandler =
+        response -> {
+          int status = response.getStatusLine().getStatusCode();
+
+          if (status == HttpStatus.SC_CREATED) {
+            return true;
+          } else {
+            throw new ReplicationException(
+                String.format("Request failed with status code: %d", status));
+          }
+        };
+
+    return sendHttpRequest(httpPut, responseHandler);
   }
 
   @Override
