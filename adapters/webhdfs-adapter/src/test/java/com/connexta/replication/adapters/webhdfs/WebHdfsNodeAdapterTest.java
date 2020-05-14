@@ -62,6 +62,46 @@ public class WebHdfsNodeAdapterTest {
     webHdfsNodeAdapter = new WebHdfsNodeAdapter(new URL("http://host:1234/some/path/"), client);
   }
 
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testIsAvailable() throws IOException {
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_OK);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    assertThat(webHdfsNodeAdapter.isAvailable(), is(true));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testIsNotAvailable() throws IOException {
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_FORBIDDEN);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    assertThat(webHdfsNodeAdapter.isAvailable(), is(false));
+  }
+
   @Test
   public void testCreateResource() throws IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
