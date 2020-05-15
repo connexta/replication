@@ -73,7 +73,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     try {
       URIBuilder builder = new URIBuilder(webHdfsUrl.toString());
-      builder.setParameter("op", "CHECKACCESS").setParameter("fsaction", "ALL");
+      builder.setParameter("op", "CHECKACCESS");
 
       HttpGet httpGet = new HttpGet(builder.build());
 
