@@ -18,6 +18,12 @@
 
     <repository>mvn:ddf.features/admin-query/${admin-query.version}/xml/features</repository>
 
+    <feature name="jackson" version="${project.version}">
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/${jackson.version}</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson.version}</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/${jackson.version}</bundle>
+    </feature>
+
     <feature name="replication" version="${project.version}"
              description="Provides capabilities and console commands for replicating metadata and resources between DDF catalogs">
         <configfile finalname="${ddf.etc}/definitions/replication-attributes-injector.json">
@@ -25,10 +31,12 @@
         </configfile>
         <feature>graphql-transformer-servlet</feature>
         <feature>admin-query-ui</feature>
+        <feature>jackson</feature>
         <bundle>mvn:replication/replication-api/${project.version}</bundle>
         <bundle>mvn:replication/replication-api-impl/${project.version}</bundle>
         <bundle>mvn:replication/replication-admin-query/${project.version}</bundle>
         <bundle>mvn:replication/replication-ui/${project.version}</bundle>
         <bundle>mvn:replication-adapters/ddf-adapter/${project.version}</bundle>
+        <bundle>mvn:replication-adapters/webhdfs-adapter/${project.version}</bundle>
     </feature>
 </features>

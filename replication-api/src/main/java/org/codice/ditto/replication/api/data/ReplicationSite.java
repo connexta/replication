@@ -13,6 +13,8 @@
  */
 package org.codice.ditto.replication.api.data;
 
+import org.codice.ditto.replication.api.NodeAdapterType;
+
 /** A ReplicationSite holds information about a system to be replicated to/from */
 public interface ReplicationSite extends Persistable {
 
@@ -63,4 +65,19 @@ public interface ReplicationSite extends Persistable {
    * @return {@code true} if replication should not run locally, otherwise {@link false}.
    */
   boolean isRemoteManaged();
+
+  /**
+   * Get the type of this site as defined in {@link NodeAdapterType}. This type can be used to
+   * determine how to interact with the site.
+   *
+   * @return {@link NodeAdapterType}
+   */
+  String getType();
+
+  /**
+   * Sets the {@link NodeAdapterType} of this site.
+   *
+   * @param type the {@link NodeAdapterType}
+   */
+  void setType(String type);
 }
