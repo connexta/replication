@@ -50,6 +50,8 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   private String url;
 
+  private String type;
+
   public ReplicationSiteImpl() {
     super();
     super.setVersion(CURRENT_VERSION);
@@ -83,6 +85,16 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
   @Override
   public boolean isRemoteManaged() {
     return isRemoteManaged;
+  }
+
+  @Override
+  public String getType() {
+    return type;
+  }
+
+  @Override
+  public void setType(String type) {
+    this.type = type;
   }
 
   @Override

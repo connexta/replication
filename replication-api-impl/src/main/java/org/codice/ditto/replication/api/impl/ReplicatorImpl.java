@@ -289,11 +289,17 @@ public class ReplicatorImpl implements Replicator {
     return Collections.unmodifiableSet(new HashSet<>(activeSyncRequests));
   }
 
-  private NodeAdapter getStoreForId(String siteId) {
+  NodeAdapter getStoreForId(String siteId) {
     NodeAdapter store;
     ReplicationSite site = siteManager.get(siteId);
+    if (site.getType() == null) {
+      determineType(site);
+    }
     try {
-      store = nodeAdapters.factoryFor(NodeAdapterType.DDF).create(new URL(site.getUrl()));
+      store =
+          nodeAdapters
+              .factoryFor(NodeAdapterType.valueOf(site.getType()))
+              .create(new URL(site.getUrl()));
     } catch (Exception e) {
       throw new ReplicationException("Error connecting to node at " + site.getUrl(), e);
     }
@@ -301,6 +307,23 @@ public class ReplicatorImpl implements Replicator {
       throw new ReplicationException("System at " + site.getUrl() + " is currently unavailable");
     }
     return store;
+  }
+
+  private void determineType(ReplicationSite site) {
+    for (NodeAdapterType type : NodeAdapterType.values()) {
+      LOGGER.debug("Checking if site {} is of type {}", site.getName(), type.name());
+      try (NodeAdapter adapter = nodeAdapters.factoryFor(type).create(new URL(site.getUrl()))) {
+        if (adapter.isAvailable()) {
+          LOGGER.debug("Site {} is type {}", site.getName(), type.name());
+          site.setType(type.name());
+          siteManager.save(site);
+          return;
+        }
+      } catch (Exception e) {
+        LOGGER.debug(
+            "Checking node type failed for type {}. Reason: {}", type.name(), e.getMessage());
+      }
+    }
   }
 
   @VisibleForTesting

@@ -13,6 +13,8 @@
  */
 package org.codice.ditto.replication.api.impl;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -35,6 +37,7 @@ import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.junit.Before;
@@ -101,8 +104,10 @@ public class ReplicatorImplTest {
 
     ReplicationSite sourceSite = mock(ReplicationSite.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
     ReplicationSite destinationSite = mock(ReplicationSite.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -150,8 +155,11 @@ public class ReplicatorImplTest {
 
     ReplicationSite sourceSite = mock(ReplicationSite.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
+
     ReplicationSite destinationSite = mock(ReplicationSite.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -177,7 +185,7 @@ public class ReplicatorImplTest {
     replicator.executeSyncRequest(syncRequest);
 
     // then
-    verify(replicationStatus, times(1)).setStatus(Status.FAILURE);
+    verify(replicationStatus, times(1)).setStatus(Status.CONNECTION_UNAVAILABLE);
     verify(replicatorHistoryManager, times(1)).save(replicationStatus);
     verify(sourceNode, times(1)).close();
     verify(destinationNode, times(1)).close();
@@ -195,8 +203,10 @@ public class ReplicatorImplTest {
 
     ReplicationSite sourceSite = mock(ReplicationSite.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
     ReplicationSite destinationSite = mock(ReplicationSite.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -258,8 +268,10 @@ public class ReplicatorImplTest {
 
     ReplicationSite sourceSite = mock(ReplicationSite.class);
     when(sourceSite.getUrl()).thenReturn(SOURCE_URL);
+    when(sourceSite.getType()).thenReturn(NodeAdapterType.DDF.name());
     ReplicationSite destinationSite = mock(ReplicationSite.class);
     when(destinationSite.getUrl()).thenReturn(DESTINATION_URL);
+    when(destinationSite.getType()).thenReturn(NodeAdapterType.DDF.name());
 
     when(siteManager.get(SOURCE_ID)).thenReturn(sourceSite);
     when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
@@ -295,6 +307,27 @@ public class ReplicatorImplTest {
 
     // then
     verify(job).cancel();
+  }
+
+  @Test
+  public void testGetStoreForIdNoType() throws Exception {
+    ReplicationSite destinationSite = new ReplicationSiteImpl();
+    destinationSite.setUrl(DESTINATION_URL);
+    when(siteManager.get(DESTINATION_ID)).thenReturn(destinationSite);
+
+    NodeAdapter destinationNode = mock(NodeAdapter.class);
+    when(destinationNode.isAvailable()).thenReturn(true);
+
+    when(nodeAdapterFactory.create(new URL(DESTINATION_URL))).thenReturn(destinationNode);
+
+    when(nodeAdapters.factoryFor(NodeAdapterType.WEBHDFS)).thenReturn(nodeAdapterFactory);
+    when(nodeAdapters.factoryFor(NodeAdapterType.DDF)).thenThrow(new RuntimeException("error"));
+
+    replicator.getStoreForId(DESTINATION_ID);
+
+    assertThat(destinationSite.getType(), is(NodeAdapterType.WEBHDFS.name()));
+    verify(siteManager).save(destinationSite);
+    verify(nodeAdapters, times(3)).factoryFor(any(NodeAdapterType.class));
   }
 
   private ReplicatorConfig mockConfig() {
