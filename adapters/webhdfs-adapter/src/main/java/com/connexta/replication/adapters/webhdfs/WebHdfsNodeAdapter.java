@@ -57,9 +57,10 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   private static final String HTTP_OPERATION_KEY = "op";
   private static final String HTTP_OPERATION_CHECK_ACCESS = "CHECKACCESS";
   private static final String HTTP_OPERATION_CREATE = "CREATE";
-  private static final String HTTP_OPERATION_FILE_SYSTEM_ACTION = "fsaction";
 
+  private static final String HTTP_FILE_SYSTEM_ACTION_KEY = "fsaction";
   private static final String HTTP_FILE_SYSTEM_ACTION_ALL = "rwx";
+  
   private static final String HTTP_NO_REDIRECT_KEY = "noredirect";
 
   private final URL webHdfsUrl;
@@ -85,7 +86,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       URIBuilder builder = new URIBuilder(webHdfsUrl.toString());
       builder
           .setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_CHECK_ACCESS)
-          .setParameter(HTTP_OPERATION_FILE_SYSTEM_ACTION, HTTP_FILE_SYSTEM_ACTION_ALL);
+          .setParameter(HTTP_FILE_SYSTEM_ACTION_KEY, HTTP_FILE_SYSTEM_ACTION_ALL);
 
       HttpGet httpGet = new HttpGet(builder.build());
 
