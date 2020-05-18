@@ -161,8 +161,9 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   @VisibleForTesting
   String getLocation(CreateStorageRequest createStorageRequest) throws URISyntaxException {
 
-    if (createStorageRequest.getResources().get(0) == null) {
-      throw new ReplicationException("Null resource encountered.");
+    if (createStorageRequest.getResources().isEmpty()
+        || createStorageRequest.getResources().get(0) == null) {
+      throw new ReplicationException("No compatible Resource was found.");
     }
 
     String fileUrl = webHdfsUrl.toString() + formatFilename(createStorageRequest);
@@ -243,8 +244,9 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   @VisibleForTesting
   boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
 
-    if (createStorageRequest.getResources().get(0) == null) {
-      throw new ReplicationException("Null resource encountered.");
+    if (createStorageRequest.getResources().isEmpty()
+        || createStorageRequest.getResources().get(0) == null) {
+      throw new ReplicationException("No compatible Resource was found.");
     }
 
     LOGGER.debug("The location being written to is: {}", location);
