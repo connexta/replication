@@ -60,7 +60,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final String HTTP_FILE_SYSTEM_ACTION_KEY = "fsaction";
   private static final String HTTP_FILE_SYSTEM_ACTION_ALL = "rwx";
-  
+
   private static final String HTTP_NO_REDIRECT_KEY = "noredirect";
 
   private final URL webHdfsUrl;
