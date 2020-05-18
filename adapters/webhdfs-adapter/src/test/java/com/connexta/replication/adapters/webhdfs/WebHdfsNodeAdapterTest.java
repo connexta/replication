@@ -177,13 +177,25 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
+  public void testGetLocationNoResource() throws URISyntaxException {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    List<Resource> resources = Collections.emptyList();
+    when(createStorageRequest.getResources()).thenReturn(resources);
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("No compatible Resource was found.");
+
+    webHdfsNodeAdapter.getLocation(createStorageRequest);
+  }
+
+  @Test
   public void testGetLocationNullResource() throws URISyntaxException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     List<Resource> resources = Collections.singletonList(null);
     when(createStorageRequest.getResources()).thenReturn(resources);
 
     thrown.expect(ReplicationException.class);
-    thrown.expectMessage("Null resource encountered.");
+    thrown.expectMessage("No compatible Resource was found.");
 
     webHdfsNodeAdapter.getLocation(createStorageRequest);
   }
@@ -204,13 +216,25 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
+  public void testWriteFileToLocationNoResource() {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    List<Resource> resources = Collections.emptyList();
+    when(createStorageRequest.getResources()).thenReturn(resources);
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("No compatible Resource was found.");
+
+    webHdfsNodeAdapter.writeFileToLocation(createStorageRequest, "http://host:1234/location/");
+  }
+
+  @Test
   public void testWriteFileToLocationNullResource() {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     List<Resource> resources = Collections.singletonList(null);
     when(createStorageRequest.getResources()).thenReturn(resources);
 
     thrown.expect(ReplicationException.class);
-    thrown.expectMessage("Null resource encountered.");
+    thrown.expectMessage("No compatible Resource was found.");
 
     webHdfsNodeAdapter.writeFileToLocation(createStorageRequest, "http://host:1234/location/");
   }
