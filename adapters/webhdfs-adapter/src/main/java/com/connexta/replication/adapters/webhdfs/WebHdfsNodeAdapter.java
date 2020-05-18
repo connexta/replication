@@ -13,8 +13,10 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import ddf.mime.tika.TikaMimeTypeResolver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -52,6 +54,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapter.class);
 
+  private static final String HTTP_OPERATION_KEY = "op";
+  private static final String HTTP_OPERATION_CHECK_ACCESS = "CHECKACCESS";
+  private static final String HTTP_OPERATION_CREATE = "CREATE";
+
+  private static final String HTTP_NO_REDIRECT_KEY = "noredirect";
+
   private final URL webHdfsUrl;
 
   private final CloseableHttpClient client;
@@ -73,7 +81,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     try {
       URIBuilder builder = new URIBuilder(webHdfsUrl.toString());
-      builder.setParameter("op", "CHECKACCESS");
+      builder.setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_CHECK_ACCESS);
 
       HttpGet httpGet = new HttpGet(builder.build());
 
@@ -157,16 +165,13 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       throw new ReplicationException("Null resource encountered.");
     }
 
-    // only a single resource is supported at this time and is the reason for always retrieving from
-    // index zero
-    Metadata metadata = createStorageRequest.getResources().get(0).getMetadata();
-    String filename = metadata.getId() + "_" + metadata.getResourceModified().getTime();
-
-    String fileUrl = webHdfsUrl.toString() + filename;
+    String fileUrl = webHdfsUrl.toString() + formatFilename(createStorageRequest);
     LOGGER.debug("The complete file URL is: {}", fileUrl);
 
     URIBuilder builder = new URIBuilder(fileUrl);
-    builder.setParameter("op", "CREATE").setParameter("noredirect", "true");
+    builder
+        .setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_CREATE)
+        .setParameter(HTTP_NO_REDIRECT_KEY, "true");
     HttpPut httpPut = new HttpPut(builder.build());
 
     ResponseHandler<String> responseHandler =
@@ -178,7 +183,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
               InputStream content = response.getEntity().getContent();
 
               ObjectMapper objectMapper = new ObjectMapper();
-              Map jsonMap = objectMapper.readValue(content, Map.class);
+              Map<String, Object> jsonMap =
+                  objectMapper.readValue(content, new TypeReference<Map<String, Object>>() {});
 
               return jsonMap.get("Location").toString();
             case HttpStatus.SC_TEMPORARY_REDIRECT:
@@ -192,6 +198,20 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         };
 
     return sendHttpRequest(httpPut, responseHandler);
+  }
+
+  private String formatFilename(CreateStorageRequest createStorageRequest) {
+
+    // only a single resource is supported at this time and is the reason for always retrieving from
+    // index zero
+    Resource resource = createStorageRequest.getResources().get(0);
+    Metadata metadata = resource.getMetadata();
+    TikaMimeTypeResolver tikaMimeTypeResolver = new TikaMimeTypeResolver();
+
+    return metadata.getId()
+        + "_"
+        + metadata.getResourceModified().getTime()
+        + tikaMimeTypeResolver.getFileExtensionForMimeType(resource.getMimeType());
   }
 
   /**
@@ -236,7 +256,10 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     MultipartEntityBuilder builder = MultipartEntityBuilder.create();
     builder.addBinaryBody(
-        "file", resource.getInputStream(), ContentType.create(resource.getMimeType()), "file.ext");
+        "file",
+        resource.getInputStream(),
+        ContentType.create(resource.getMimeType()),
+        formatFilename(createStorageRequest));
     HttpEntity multipart = builder.build();
     httpPut.setEntity(multipart);
 
