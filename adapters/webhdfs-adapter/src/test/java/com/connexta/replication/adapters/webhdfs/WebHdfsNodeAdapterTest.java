@@ -114,7 +114,7 @@ public class WebHdfsNodeAdapterTest {
     HttpResponse httpResponse = mock(HttpResponse.class);
     StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
-    String testJson = "{\"Location\":\"http://host2:5678/some/other/path/file.ext\"}";
+    String testJson = "{\"Location\":\"http://host2:5678/some/other/path/file123.json\"}";
     InputStream content = new ByteArrayInputStream(testJson.getBytes());
     InputStream resourceContent = mock(InputStream.class);
 
@@ -122,6 +122,7 @@ public class WebHdfsNodeAdapterTest {
     when(resource.getMetadata()).thenReturn(metadata);
     when(resource.getMimeType()).thenReturn("application/json");
     when(resource.getInputStream()).thenReturn(resourceContent);
+    when(resource.getName()).thenReturn("file123.json");
 
     when(metadata.getId()).thenReturn("112358");
     when(metadata.getResourceModified()).thenReturn(date);
@@ -280,7 +281,7 @@ public class WebHdfsNodeAdapterTest {
 
     Header header = mock(Header.class);
     when(httpResponse.getFirstHeader("Location")).thenReturn(header);
-    when(header.getValue()).thenReturn("http://host2:5678/some/other/path/file.ext");
+    when(header.getValue()).thenReturn("http://host2:5678/some/other/path/file123.json");
 
     doAnswer(
             invocationOnMock -> {
@@ -293,7 +294,7 @@ public class WebHdfsNodeAdapterTest {
 
     assertThat(
         webHdfsNodeAdapter.getLocation(createStorageRequest),
-        is("http://host2:5678/some/other/path/file.ext"));
+        is("http://host2:5678/some/other/path/file123.json"));
   }
 
   @SuppressWarnings("unchecked")
@@ -339,11 +340,18 @@ public class WebHdfsNodeAdapterTest {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     Resource resource = mock(Resource.class);
     List<Resource> resources = Collections.singletonList(resource);
+    Metadata metadata = mock(Metadata.class);
+    Date date = new Date();
+
     when(createStorageRequest.getResources()).thenReturn(resources);
+    when(resource.getMetadata()).thenReturn(metadata);
+    when(metadata.getId()).thenReturn("1234");
+    when(metadata.getResourceModified()).thenReturn(date);
 
     InputStream inputStream = mock(InputStream.class);
     when(resource.getInputStream()).thenReturn(inputStream);
     when(resource.getMimeType()).thenReturn("application/json");
+    when(resource.getName()).thenReturn("file123.json");
 
     HttpResponse httpResponse = mock(HttpResponse.class);
     StatusLine statusLine = mock(StatusLine.class);
@@ -361,7 +369,7 @@ public class WebHdfsNodeAdapterTest {
 
     assertThat(
         webHdfsNodeAdapter.writeFileToLocation(
-            createStorageRequest, "http://host:314/some/path/to/file.ext"),
+            createStorageRequest, "http://host:314/some/path/to/file123.json"),
         is(true));
   }
 
@@ -373,9 +381,16 @@ public class WebHdfsNodeAdapterTest {
     List<Resource> resources = Collections.singletonList(resource);
     when(createStorageRequest.getResources()).thenReturn(resources);
 
+    Metadata metadata = mock(Metadata.class);
+    Date date = new Date();
+    when(resource.getMetadata()).thenReturn(metadata);
+    when(metadata.getId()).thenReturn("1234");
+    when(metadata.getResourceModified()).thenReturn(date);
+
     InputStream inputStream = mock(InputStream.class);
     when(resource.getInputStream()).thenReturn(inputStream);
     when(resource.getMimeType()).thenReturn("application/json");
+    when(resource.getName()).thenReturn("file123.json");
 
     HttpResponse httpResponse = mock(HttpResponse.class);
     StatusLine statusLine = mock(StatusLine.class);
@@ -396,7 +411,7 @@ public class WebHdfsNodeAdapterTest {
 
     assertThat(
         webHdfsNodeAdapter.writeFileToLocation(
-            createStorageRequest, "http://host:314/some/path/to/file.ext"),
+            createStorageRequest, "http://host:314/some/path/to/file123.json"),
         is(false));
   }
 }
