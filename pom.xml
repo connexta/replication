@@ -27,7 +27,7 @@
         <releases.repository.url />
 
         <admin-query.version>1.3.2</admin-query.version>
-        <ddf.support.version>2.3.12</ddf.support.version>
+        <ddf.support.version>2.3.16</ddf.support.version>
         <ddf.version>2.21.4</ddf.version>
         <codice-maven.version>0.2</codice-maven.version>
         <codice-test.version>0.9</codice-test.version>
