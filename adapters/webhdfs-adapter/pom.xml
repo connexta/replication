@@ -30,6 +30,8 @@
     <properties>
         <apache.httpcomponents.version>4.5.2</apache.httpcomponents.version>
         <apache.httpclient.version>4.5.12</apache.httpclient.version>
+        <guava.version>20.0</guava.version>
+        <hadoop.mini.clusters.version>0.1.16</hadoop.mini.clusters.version>
     </properties>
 
     <dependencies>
@@ -69,7 +71,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>20.0</version>
+            <version>${guava.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -80,13 +82,13 @@
         <dependency>
             <groupId>com.github.sakserv</groupId>
             <artifactId>hadoop-mini-clusters-common</artifactId>
-            <version>0.1.16</version>
+            <version>${hadoop.mini.clusters.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.sakserv</groupId>
             <artifactId>hadoop-mini-clusters-hdfs</artifactId>
-            <version>0.1.16</version>
+            <version>${hadoop.mini.clusters.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
