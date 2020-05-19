@@ -87,11 +87,6 @@ public class WebHdfsClientTest {
     hdfsLocalCluster.stop();
   }
 
-  @Test
-  public void testDefaultIsAvailable() {
-    assertThat(adapter.isAvailable(), is(true));
-  }
-
   @Test(expected = ReplicationException.class)
   public void testInvalidUrlIsNotAvailable() throws MalformedURLException {
     adapter = (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://foobar:9999"));
@@ -102,6 +97,9 @@ public class WebHdfsClientTest {
   public void testStoppedClusterIsNotAvailable() throws Exception {
     hdfsLocalCluster.stop();
     adapter.isAvailable();
+    // Not necessary to restart the cluster here because it will automatically be started before the
+    // next test. Note: this is not expected behavior given the @BeforeClass annotation on
+    // setUpClass().
   }
 
   @Test
@@ -113,35 +111,6 @@ public class WebHdfsClientTest {
 
     adapter.createResource(createStorageRequest);
     verifyFileExists(filename);
-  }
-
-  @Test
-  public void testNullResourceNotCreated() {
-    List<Resource> resourceList = new ArrayList<>();
-    resourceList.add(null);
-    CreateStorageRequest createStorageRequest = new CreateStorageRequestImpl(resourceList);
-
-    boolean createResourceSuccessful = adapter.createResource(createStorageRequest);
-    assertThat(createResourceSuccessful, is(false));
-    // TODO - figure out a good way to track error messages in the logger
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void testNullResourceListNotCreated() {
-    CreateStorageRequest createStorageRequest = new CreateStorageRequestImpl(null);
-
-    boolean createResourceSuccessful = adapter.createResource(createStorageRequest);
-    // TODO - figure out a good way to track error messages in the logger
-  }
-
-  @Test
-  public void testEmptyResourceListNotCreated() {
-    List<Resource> resourceList = new ArrayList<>();
-    CreateStorageRequest createStorageRequest = new CreateStorageRequestImpl(resourceList);
-
-    boolean createResourceSuccessful = adapter.createResource(createStorageRequest);
-    assertThat(createResourceSuccessful, is(false));
-    // TODO - figure out a good way to track error messages in the logger
   }
 
   @Test
@@ -203,6 +172,13 @@ public class WebHdfsClientTest {
     assertThat(fileStatus.get("type"), is("FILE"));
   }
 
+  /**
+   * Helps create a basic {@link CreateStorageRequest} with a single {@link Resource} in its list.
+   *
+   * @param id - the id to assign to the {@link Resource}
+   * @param name - the name to assign to the {@link Resource}
+   * @return The newly created {@link CreateStorageRequestImpl}
+   */
   private CreateStorageRequest generateTestStorageRequest(String id, String name) {
     Resource testResource = getResource(id, name);
     List<Resource> resourceList = new ArrayList<>();
