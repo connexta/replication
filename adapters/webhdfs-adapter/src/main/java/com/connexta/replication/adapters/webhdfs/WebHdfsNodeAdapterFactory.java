@@ -40,6 +40,10 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
     String baseUrl =
         "http://" + url.getHost() + ":" + url.getPort() + "/webhdfs/v1" + url.getPath();
 
+    if (!baseUrl.endsWith("/")) {
+      baseUrl = baseUrl.concat("/");
+    }
+
     try {
       return new WebHdfsNodeAdapter(new URL(baseUrl), HttpClients.createDefault());
     } catch (MalformedURLException e) {
