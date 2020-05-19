@@ -12,22 +12,14 @@
  *
  **/
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <parent>
-    <artifactId>replication</artifactId>
-    <groupId>replication</groupId>
-    <version>0.3.0-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
+<blueprint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+  xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
 
-  <name>Replication :: Adapters</name>
-  <artifactId>adapters</artifactId>
-  <packaging>pom</packaging>
+  <bean id="webHdfsNodeAdapterFactory"
+        class="com.connexta.replication.adapters.webhdfs.WebHdfsNodeAdapterFactory">
+  </bean>
 
-  <modules>
-    <module>ddf-adapter</module>
-    <module>webhdfs-adapter</module>
-  </modules>
-</project>
+  <service ref="webHdfsNodeAdapterFactory"
+           interface="org.codice.ditto.replication.api.NodeAdapterFactory"/>
+</blueprint>
