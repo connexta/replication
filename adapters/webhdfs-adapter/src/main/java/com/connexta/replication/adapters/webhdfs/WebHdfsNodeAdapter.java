@@ -78,12 +78,17 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     this.client = client;
   }
 
+  @VisibleForTesting
+  URL getWebHdfsUrl() {
+    return webHdfsUrl;
+  }
+
   @Override
   public boolean isAvailable() {
-    LOGGER.debug("Checking access to: {}", webHdfsUrl);
+    LOGGER.debug("Checking access to: {}", getWebHdfsUrl());
 
     try {
-      URIBuilder builder = new URIBuilder(webHdfsUrl.toString());
+      URIBuilder builder = new URIBuilder(getWebHdfsUrl().toString());
       builder
           .setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_CHECK_ACCESS)
           .setParameter(HTTP_FILE_SYSTEM_ACTION_KEY, HTTP_FILE_SYSTEM_ACTION_ALL);
@@ -171,7 +176,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       throw new ReplicationException("No compatible Resource was found.");
     }
 
-    String fileUrl = webHdfsUrl.toString() + formatFilename(createStorageRequest);
+    String fileUrl = getWebHdfsUrl().toString() + formatFilename(createStorageRequest);
     LOGGER.debug("The complete file URL is: {}", fileUrl);
 
     URIBuilder builder = new URIBuilder(fileUrl);
