@@ -121,12 +121,13 @@ public class WebHdfsClientTest {
     // TODO - figure out a good way to track error messages in the logger
   }
 
-  @Test(expected = IndexOutOfBoundsException.class)
+  @Test
   public void testEmptyResourceListNotCreated() {
     List<Resource> resourceList = new ArrayList<>();
     CreateStorageRequest createStorageRequest = new CreateStorageRequestImpl(resourceList);
 
     boolean createResourceSuccessful = adapter.createResource(createStorageRequest);
+    assertThat(createResourceSuccessful, is(false));
     // TODO - figure out a good way to track error messages in the logger
   }
 
