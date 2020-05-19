@@ -132,26 +132,30 @@ public class WebHdfsClientTest {
   }
 
   @Test
-  public void testInvalidHostnameFails() throws MalformedURLException {
+  public void testInvalidHostnameFails() throws IOException {
     String testId = "123456789";
     String testName = "testresource";
     CreateStorageRequest createStorageRequest = generateTestStorageRequest(testId, testName);
 
-    adapter = (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://foobar:12341"));
-    boolean createResourceSuccessful = adapter.createResource(createStorageRequest);
+    WebHdfsNodeAdapter badAdapter =
+        (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://foobar:12341"));
+    boolean createResourceSuccessful = badAdapter.createResource(createStorageRequest);
     assertThat(createResourceSuccessful, is(false));
+    badAdapter.close();
     // TODO - figure out a good way to track error messages in the logger
   }
 
   @Test
-  public void testInvalidPortFails() throws MalformedURLException {
+  public void testInvalidPortFails() throws IOException {
     String testId = "123456789";
     String testName = "testresource";
     CreateStorageRequest createStorageRequest = generateTestStorageRequest(testId, testName);
 
-    adapter = (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://localhost:9999"));
-    boolean createResourceSuccessful = adapter.createResource(createStorageRequest);
+    WebHdfsNodeAdapter badAdapter =
+        (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://localhost:9999"));
+    boolean createResourceSuccessful = badAdapter.createResource(createStorageRequest);
     assertThat(createResourceSuccessful, is(false));
+    badAdapter.close();
     // TODO - figure out a good way to track error messages in the logger
   }
 
