@@ -30,6 +30,9 @@
     <properties>
         <apache.httpcomponents.version>4.5.2</apache.httpcomponents.version>
         <apache.httpclient.version>4.5.12</apache.httpclient.version>
+        <guava.version>20.0</guava.version>
+        <hadoop.version>2.7.3</hadoop.version>
+        <hadoop.mini.clusters.version>0.1.16</hadoop.mini.clusters.version>
     </properties>
 
     <dependencies>
@@ -69,13 +72,47 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>25.0-jre</version>
+            <version>${guava.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>ddf.mime.tika</groupId>
             <artifactId>mime-tika-resolver</artifactId>
             <version>${ddf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-minicluster</artifactId>
+            <version>${hadoop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.sakserv</groupId>
+            <artifactId>hadoop-mini-clusters-common</artifactId>
+            <version>${hadoop.mini.clusters.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.sakserv</groupId>
+            <artifactId>hadoop-mini-clusters-hdfs</artifactId>
+            <version>${hadoop.mini.clusters.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>replication</groupId>
+            <artifactId>replication-api-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>replication-adapters</groupId>
+            <artifactId>ddf-adapter</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
