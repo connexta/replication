@@ -268,7 +268,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       locationUri = uriBuilder.build().toString();
       LOGGER.debug("The location being written to is: {}", locationUri);
     } catch (URISyntaxException e) {
-      throw new ReplicationException("The location URI has syntax errors. {}", e);
+      throw new ReplicationException(
+          "Failed to write file. The location URI has syntax errors. {}", e);
     }
 
     HttpPut httpPut = new HttpPut(locationUri);
@@ -312,7 +313,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       UpdateStorageRequest updateStorageRequest) {
     if (updateStorageRequest.getResources().isEmpty()
         || updateStorageRequest.getResources().get(0) == null) {
-      throw new ReplicationException("No compatible Resource was found.");
+      throw new ReplicationException(
+          "Unable to convert storage request. No compatible Resource was found.");
     }
 
     return new CreateStorageRequestImpl(updateStorageRequest.getResources());
