@@ -46,6 +46,7 @@ import org.codice.ditto.replication.api.data.ResourceRequest;
 import org.codice.ditto.replication.api.data.ResourceResponse;
 import org.codice.ditto.replication.api.data.UpdateRequest;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
+import org.codice.ditto.replication.api.impl.data.CreateStorageRequestImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   private static final String HTTP_FILE_SYSTEM_ACTION_ALL = "rwx";
 
   private static final String HTTP_NO_REDIRECT_KEY = "noredirect";
+  private static final String HTTP_CREATE_OVERWRITE_KEY = "overwrite";
 
   private final URL webHdfsUrl;
 
@@ -126,16 +128,19 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean createRequest(CreateRequest createRequest) {
+    LOGGER.debug("The WebHDFS adapter doesn't support metadata only creation at this time.");
     return false;
   }
 
   @Override
   public boolean updateRequest(UpdateRequest updateRequest) {
+    LOGGER.debug("The WebHDFS adapter doesn't support metadata only updates at this time.");
     return false;
   }
 
   @Override
   public boolean deleteRequest(DeleteRequest deleteRequest) {
+    LOGGER.debug("The WebHDFS adapter doesn't support metadata only deletion at this time.");
     return false;
   }
 
@@ -259,8 +264,18 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       throw new ReplicationException("No compatible Resource was found.");
     }
 
-    LOGGER.debug("The location being written to is: {}", location);
-    HttpPut httpPut = new HttpPut(location);
+    String locationUri;
+    try {
+      URIBuilder uriBuilder = new URIBuilder(location);
+      uriBuilder.setParameter(HTTP_CREATE_OVERWRITE_KEY, "false");
+      locationUri = uriBuilder.build().toString();
+      LOGGER.debug("The location being written to is: {}", locationUri);
+    } catch (URISyntaxException e) {
+      throw new ReplicationException(
+          "Failed to write file. The location URI has syntax errors. {}", e);
+    }
+
+    HttpPut httpPut = new HttpPut(locationUri);
 
     // only a single resource is supported at this time and is the reason for always retrieving from
     // index zero
@@ -290,8 +305,33 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     return sendHttpRequest(httpPut, responseHandler);
   }
 
+  /**
+   * Converts an {@link UpdateStorageRequest} to a {@link CreateStorageRequest} by simply extracting
+   * the contained list of {@link Resource} and creating a new object from it.
+   *
+   * @param updateStorageRequest - the {@link UpdateStorageRequest} to convert
+   * @return The new {@link CreateStorageRequest} with the same {@link Resource}s
+   */
+  private CreateStorageRequest convertToCreateStorageRequest(
+      UpdateStorageRequest updateStorageRequest) {
+    if (updateStorageRequest.getResources().isEmpty()
+        || updateStorageRequest.getResources().get(0) == null) {
+      throw new ReplicationException(
+          "Unable to convert storage request. No compatible Resource was found.");
+    }
+
+    return new CreateStorageRequestImpl(updateStorageRequest.getResources());
+  }
+
   @Override
   public boolean updateResource(UpdateStorageRequest updateStorageRequest) {
+    try {
+      CreateStorageRequest createStorageRequest =
+          convertToCreateStorageRequest(updateStorageRequest);
+      return createResource(createStorageRequest);
+    } catch (ReplicationException e) {
+      LOGGER.error("Unable to update resource.", e);
+    }
     return false;
   }
 

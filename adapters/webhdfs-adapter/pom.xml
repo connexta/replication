@@ -106,7 +106,6 @@
             <groupId>replication</groupId>
             <artifactId>replication-api-impl</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>replication-adapters</groupId>

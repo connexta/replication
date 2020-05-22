@@ -38,6 +38,7 @@ import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.Resource;
+import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -437,5 +438,89 @@ public class WebHdfsNodeAdapterTest {
         webHdfsNodeAdapter.writeFileToLocation(
             createStorageRequest, "http://host:314/some/path/to/file123.json"),
         is(false));
+  }
+
+  @Test
+  public void testWriteFileLocationBadUri() {
+    CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+    String badUri = "^^^^";
+
+    when(createStorageRequest.getResources()).thenReturn(resources);
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("Failed to write file. The location URI has syntax errors.");
+
+    webHdfsNodeAdapter.writeFileToLocation(createStorageRequest, badUri);
+  }
+
+  @Test
+  public void testUpdateResource() throws IOException {
+    UpdateStorageRequest updateStorageRequest = mock(UpdateStorageRequest.class);
+    Resource resource = mock(Resource.class);
+    List<Resource> resources = Collections.singletonList(resource);
+
+    Metadata metadata = mock(Metadata.class);
+    Date date = new Date();
+
+    String resourceName = "updateTestFile.txt";
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    String testJson =
+        String.format("{\"Location\":\"http://host2:5678/some/other/path/%s\"}", resourceName);
+    InputStream content = new ByteArrayInputStream(testJson.getBytes());
+    InputStream resourceContent = mock(InputStream.class);
+
+    when(updateStorageRequest.getResources()).thenReturn(resources);
+    when(resource.getMetadata()).thenReturn(metadata);
+    when(resource.getMimeType()).thenReturn("text/plain");
+    when(resource.getInputStream()).thenReturn(resourceContent);
+    when(resource.getName()).thenReturn(resourceName);
+
+    when(metadata.getId()).thenReturn("123456789");
+    when(metadata.getResourceModified()).thenReturn(date);
+
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(200).thenReturn(201);
+
+    when(httpResponse.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent()).thenReturn(content);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    assertThat(webHdfsNodeAdapter.updateResource(updateStorageRequest), is(true));
+  }
+
+  @Test
+  public void testUpdateResourceNoResource() {
+    UpdateStorageRequest updateStorageRequest = mock(UpdateStorageRequest.class);
+    List<Resource> resources = Collections.emptyList();
+    when(updateStorageRequest.getResources()).thenReturn(resources);
+
+    assertThat(webHdfsNodeAdapter.updateResource(updateStorageRequest), is(false));
+  }
+
+  @Test
+  public void testUpdateResourceNullResource() {
+    UpdateStorageRequest updateStorageRequest = mock(UpdateStorageRequest.class);
+    List<Resource> resources = Collections.singletonList(null);
+    when(updateStorageRequest.getResources()).thenReturn(resources);
+
+    assertThat(webHdfsNodeAdapter.updateResource(updateStorageRequest), is(false));
   }
 }
