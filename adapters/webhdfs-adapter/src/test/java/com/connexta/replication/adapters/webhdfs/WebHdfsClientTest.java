@@ -33,6 +33,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -47,8 +48,11 @@ import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.Resource;
+import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.codice.ditto.replication.api.impl.data.CreateStorageRequestImpl;
-import org.junit.AfterClass;
+import org.codice.ditto.replication.api.impl.data.UpdateStorageRequestImpl;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -58,14 +62,12 @@ public class WebHdfsClientTest {
   private static final String HDFS_PORT = "12341";
   private static final String BASE_URL = "http://localhost:" + HDFS_PORT;
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsClientTest.class);
-  private static WebHdfsNodeAdapterFactory adapterFactory = new WebHdfsNodeAdapterFactory();
+  private static final WebHdfsNodeAdapterFactory adapterFactory = new WebHdfsNodeAdapterFactory();
   private static HdfsLocalCluster hdfsLocalCluster;
-  private static WebHdfsNodeAdapter adapter;
+  private WebHdfsNodeAdapter adapter;
 
   @BeforeClass
-  public static void setUpClass() throws Exception {
-    LOGGER.info("HDFS instance starting up!");
-    adapter = (WebHdfsNodeAdapter) adapterFactory.create(new URL(BASE_URL));
+  public static void setUpClass() {
     hdfsLocalCluster =
         new HdfsLocalCluster.Builder()
             .setHdfsNamenodePort(12345)
@@ -77,14 +79,22 @@ public class WebHdfsClientTest {
             .setHdfsEnableRunningUserAsProxyUser(true)
             .setHdfsConfig(new Configuration())
             .build();
+  }
+
+  @Before
+  public void setupTest() throws Exception {
+    adapter = (WebHdfsNodeAdapter) adapterFactory.create(new URL(BASE_URL));
+
+    LOGGER.info("HDFS instance starting up!");
     hdfsLocalCluster.start();
   }
 
-  @AfterClass
-  public static void tearDownClass() throws Exception {
+  @After
+  public void tearDownTest() throws Exception {
     LOGGER.info("HDFS instance shutting down!");
-    adapter.close();
     hdfsLocalCluster.stop();
+
+    adapter.close();
   }
 
   @Test(expected = ReplicationException.class)
@@ -97,27 +107,159 @@ public class WebHdfsClientTest {
   public void testStoppedClusterIsNotAvailable() throws Exception {
     hdfsLocalCluster.stop();
     adapter.isAvailable();
-    // Not necessary to restart the cluster here because it will automatically be started before the
-    // next test. Note: this is not expected behavior given the @BeforeClass annotation on
-    // setUpClass().
   }
 
   @Test
-  public void testResourceFileIsCreated() throws Exception {
+  public void testResourceFileIsCreated() throws URISyntaxException {
     String testId = "123456789";
     String testName = "testresource";
-    String filename = String.format("%s_%s.txt", testId, "946684800000");
-    CreateStorageRequest createStorageRequest = generateTestStorageRequest(testId, testName);
+    Date testDate = new Date();
+    String filename = String.format("%s_%s.txt", testId, testDate.getTime());
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(testId, testName, testDate);
 
     adapter.createResource(createStorageRequest);
     verifyFileExists(filename);
   }
 
   @Test
+  public void testUpdateResource() throws URISyntaxException {
+    String fileId = "123456789";
+    String testName = "testresource";
+
+    Calendar calendar = Calendar.getInstance();
+    long creationTime = calendar.getTimeInMillis();
+
+    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
+
+    // when a file is created with ID fileId
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(fileId, testName, new Date(creationTime));
+
+    adapter.createResource(createStorageRequest);
+
+    // then it will exist on the file system
+    verifyFileExists(originalFilename);
+
+    // when the resource is updated one day later, but metadata is unmodified
+    calendar.add(Calendar.DATE, 1);
+    long updateTime = calendar.getTimeInMillis();
+
+    String updatedFilename = String.format("%s_%s.txt", fileId, updateTime);
+
+    UpdateStorageRequest updateStorageRequest =
+        generateUpdateStorageRequest(
+            fileId, testName, new Date(creationTime), new Date(updateTime));
+
+    adapter.updateResource(updateStorageRequest);
+
+    // then both the original file and updated file will exist on the file system
+    verifyFileExists(originalFilename);
+    verifyFileExists(updatedFilename);
+  }
+
+  @Test
+  public void testUpdateResourceWithMetadataOnlyUpdate() throws URISyntaxException {
+    String fileId = "123456789";
+    String testName = "testresource";
+
+    Calendar calendar = Calendar.getInstance();
+    long creationTime = calendar.getTimeInMillis();
+
+    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
+
+    // when a file is created with ID fileId
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(fileId, testName, new Date(creationTime));
+
+    adapter.createResource(createStorageRequest);
+
+    // then it will exist on the file system
+    verifyFileExists(originalFilename);
+
+    // when the metadata is updated one day later, but the resource is unmodified
+    calendar.add(Calendar.DATE, 1);
+    long updateTime = calendar.getTimeInMillis();
+
+    UpdateStorageRequest updateStorageRequest =
+        generateUpdateStorageRequest(
+            fileId, testName, new Date(updateTime), new Date(creationTime));
+
+    // then no update is made and the original file still exists
+    assertThat(adapter.updateResource(updateStorageRequest), is(false));
+    verifyFileExists(originalFilename);
+  }
+
+  @Test
+  public void testUpdateResourceWithMetadataUpdate() throws URISyntaxException {
+    String fileId = "123456789";
+    String testName = "testresource";
+
+    Calendar calendar = Calendar.getInstance();
+    long creationTime = calendar.getTimeInMillis();
+
+    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
+
+    // when a file is created with ID fileId
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(fileId, testName, new Date(creationTime));
+
+    adapter.createResource(createStorageRequest);
+
+    // then it will exist on the file system
+    verifyFileExists(originalFilename);
+
+    // when the resource and metadata are updated one day later
+    calendar.add(Calendar.DATE, 1);
+    long updateTime = calendar.getTimeInMillis();
+
+    String updatedFilename = String.format("%s_%s.txt", fileId, updateTime);
+
+    UpdateStorageRequest updateStorageRequest =
+        generateUpdateStorageRequest(fileId, testName, new Date(updateTime));
+
+    adapter.updateResource(updateStorageRequest);
+
+    // then both the original file and updated file will exist on the file system
+    verifyFileExists(originalFilename);
+    verifyFileExists(updatedFilename);
+  }
+
+  @Test
+  public void testUpdateResourceWithNoUpdates() throws URISyntaxException {
+    String fileId = "123456789";
+    String testName = "testresource";
+
+    Calendar calendar = Calendar.getInstance();
+    long creationTime = calendar.getTimeInMillis();
+
+    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
+
+    // when a file is created with ID fileId
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(fileId, testName, new Date(creationTime));
+
+    adapter.createResource(createStorageRequest);
+
+    // then it will exist on the file system
+    verifyFileExists(originalFilename);
+
+    // when an attempt to update the resource is made with neither a metadata update nor resource
+    // update
+    UpdateStorageRequest updateStorageRequest =
+        generateUpdateStorageRequest(fileId, testName, new Date(creationTime));
+
+    // then the original file still exists, but the update did not take place
+    verifyFileExists(originalFilename);
+    assertThat(adapter.updateResource(updateStorageRequest), is(false));
+  }
+
+  @Test
   public void testInvalidHostnameFails() throws IOException {
     String testId = "123456789";
     String testName = "testresource";
-    CreateStorageRequest createStorageRequest = generateTestStorageRequest(testId, testName);
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(testId, testName, new Date());
 
     WebHdfsNodeAdapter badAdapter =
         (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://foobar:12341"));
@@ -131,7 +273,8 @@ public class WebHdfsClientTest {
   public void testInvalidPortFails() throws IOException {
     String testId = "123456789";
     String testName = "testresource";
-    CreateStorageRequest createStorageRequest = generateTestStorageRequest(testId, testName);
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(testId, testName, new Date());
 
     WebHdfsNodeAdapter badAdapter =
         (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://localhost:9999"));
@@ -177,14 +320,61 @@ public class WebHdfsClientTest {
    *
    * @param id - the id to assign to the {@link Resource}
    * @param name - the name to assign to the {@link Resource}
+   * @param date representing when the associated metadata and resource were last modified
    * @return The newly created {@link CreateStorageRequestImpl}
    */
-  private CreateStorageRequest generateTestStorageRequest(String id, String name) {
-    Resource testResource = getResource(id, name);
+  private CreateStorageRequest generateTestStorageRequest(String id, String name, Date date) {
+    return generateTestStorageRequest(id, name, date, date);
+  }
+
+  /**
+   * Helps create a basic {@link CreateStorageRequest} with a single {@link Resource} in its list.
+   *
+   * @param id - the id to assign to the {@link Resource}
+   * @param name - the name to assign to the {@link Resource}
+   * @param metadataModified representing when the associated metadata was last modified
+   * @param resourceModified representing when the associated resource was last modified
+   * @return The newly created {@link CreateStorageRequestImpl}
+   */
+  private CreateStorageRequest generateTestStorageRequest(
+      String id, String name, Date metadataModified, Date resourceModified) {
+    Resource testResource = getResource(id, name, metadataModified, resourceModified);
     List<Resource> resourceList = new ArrayList<>();
     resourceList.add(testResource);
 
     return new CreateStorageRequestImpl(resourceList);
+  }
+
+  /**
+   * Helps create a basic {@link UpdateStorageRequest} with a single {@link Resource} in its list.
+   *
+   * @param id - the id to assign to the {@link Resource}
+   * @param name - the name to assign to the {@link Resource}
+   * @param date representing when the associated metadata and resource were last modified
+   * @return The newly created {@link UpdateStorageRequestImpl}
+   */
+  private UpdateStorageRequest generateUpdateStorageRequest(String id, String name, Date date) {
+    return generateUpdateStorageRequest(id, name, date, date);
+  }
+
+  /**
+   * Helps create a basic {@link UpdateStorageRequest} with a single {@link Resource} in its list.
+   *
+   * @param id - the id to assign to the {@link Resource}
+   * @param name - the name to assign to the {@link Resource}
+   * @param metadataModified a {@code Date} object representing when the associated metadata was
+   *     last modified
+   * @param resourceModified a {@code Date} object representing when the associated resource was
+   *     last modified
+   * @return The newly created {@link UpdateStorageRequestImpl}
+   */
+  private UpdateStorageRequest generateUpdateStorageRequest(
+      String id, String name, Date metadataModified, Date resourceModified) {
+    Resource resource = getResource(id, name, metadataModified, resourceModified);
+    List<Resource> resources = new ArrayList<>();
+    resources.add(resource);
+
+    return new UpdateStorageRequestImpl(resources);
   }
 
   /**
@@ -220,31 +410,38 @@ public class WebHdfsClientTest {
   }
 
   /**
-   * Generates a {@link Metadata} from the given <code>id</code>.
+   * Generates a {@link Metadata} from the given {@code id}, {@code metadataModified} date, and
+   * {@code resourceModified} date.
    *
    * @param id - the id of the {@link Resource}
+   * @param metadataModified a {@link Date} object representing when the metadata was last modified
+   * @param resourceModified a {@link Date} object representing when the resource was last modified
    * @return The newly created {@link MetadataImpl}
    */
-  private Metadata getMetadata(String id) {
+  private Metadata getMetadata(String id, Date metadataModified, Date resourceModified) {
     Map<String, MetacardAttribute> map = new HashMap<>();
     map.put(Constants.METACARD_ID, new MetacardAttribute(Constants.METACARD_ID, null, id));
     map.put("type", new MetacardAttribute("type", null, "hdfs.metacard"));
     map.put(Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, null, "tag"));
 
-    Metadata metadata = new MetadataImpl(map, Map.class, id, new Date());
-    metadata.setResourceModified(new Date(946684800000L));
+    Metadata metadata = new MetadataImpl(map, Map.class, id, metadataModified);
+    metadata.setResourceModified(resourceModified);
 
     return metadata;
   }
 
   /**
-   * Generates a {@link Resource} from the given <code>id</code> and <code>name</code>.
+   * Generates a {@link Resource} from the given {@code id}, {@code name}, {@code metadataModified}
+   * date, and {@code resourceModified} date.
    *
    * @param id - the id to assign to the {@link Resource}
    * @param name - the name to assign to the {@link Resource}
+   * @param metadataModified representing when the metadata was last modified
+   * @param resourceModified representing when the resource was last modified
    * @return The newly created {@link ResourceImpl}
    */
-  private Resource getResource(String id, String name) {
+  private Resource getResource(
+      String id, String name, Date metadataModified, Date resourceModified) {
     return new ResourceImpl(
         id,
         name,
@@ -253,6 +450,6 @@ public class WebHdfsClientTest {
         new ByteArrayInputStream("my-data".getBytes()),
         MediaType.TEXT_PLAIN,
         10,
-        getMetadata(id));
+        getMetadata(id, metadataModified, resourceModified));
   }
 }
