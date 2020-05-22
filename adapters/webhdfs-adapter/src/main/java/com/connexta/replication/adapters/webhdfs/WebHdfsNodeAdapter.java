@@ -128,16 +128,19 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean createRequest(CreateRequest createRequest) {
+    LOGGER.debug("The WebHDFS adapter doesn't support metadata only creation at this time.");
     return false;
   }
 
   @Override
   public boolean updateRequest(UpdateRequest updateRequest) {
+    LOGGER.debug("The WebHDFS adapter doesn't support metadata only updates at this time.");
     return false;
   }
 
   @Override
   public boolean deleteRequest(DeleteRequest deleteRequest) {
+    LOGGER.debug("The WebHDFS adapter doesn't support metadata only deletion at this time.");
     return false;
   }
 
