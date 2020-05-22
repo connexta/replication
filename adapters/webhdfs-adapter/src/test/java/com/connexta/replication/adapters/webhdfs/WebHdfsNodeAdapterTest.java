@@ -512,10 +512,7 @@ public class WebHdfsNodeAdapterTest {
     List<Resource> resources = Collections.emptyList();
     when(updateStorageRequest.getResources()).thenReturn(resources);
 
-    thrown.expect(ReplicationException.class);
-    thrown.expectMessage("Unable to convert storage request. No compatible Resource was found.");
-
-    webHdfsNodeAdapter.updateResource(updateStorageRequest);
+    assertThat(webHdfsNodeAdapter.updateResource(updateStorageRequest), is(false));
   }
 
   @Test
@@ -524,9 +521,6 @@ public class WebHdfsNodeAdapterTest {
     List<Resource> resources = Collections.singletonList(null);
     when(updateStorageRequest.getResources()).thenReturn(resources);
 
-    thrown.expect(ReplicationException.class);
-    thrown.expectMessage("Unable to convert storage request. No compatible Resource was found.");
-
-    webHdfsNodeAdapter.updateResource(updateStorageRequest);
+    assertThat(webHdfsNodeAdapter.updateResource(updateStorageRequest), is(false));
   }
 }

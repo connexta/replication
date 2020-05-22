@@ -322,8 +322,13 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean updateResource(UpdateStorageRequest updateStorageRequest) {
-    CreateStorageRequest createStorageRequest = convertToCreateStorageRequest(updateStorageRequest);
-    return createResource(createStorageRequest);
+    try {
+      CreateStorageRequest createStorageRequest = convertToCreateStorageRequest(updateStorageRequest);
+      return createResource(createStorageRequest);
+    } catch (ReplicationException e) {
+      LOGGER.error("Unable to update resource.", e);
+    }
+    return false;
   }
 
   @Override
