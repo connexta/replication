@@ -462,7 +462,7 @@
                         <plugin>
                             <groupId>org.owasp</groupId>
                             <artifactId>dependency-check-maven</artifactId>
-                            <version>5.2.2</version>
+                            <version>${dependency-check-maven.version}</version>
                             <configuration>
                                 <!-- The following properties enable using a mirror for nist NVD data -->
                                 <cveUrl12Modified>${owasp.cveUrl12Modified}</cveUrl12Modified>
