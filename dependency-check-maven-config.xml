@@ -259,7 +259,101 @@
         </notes>
         <cve>CVE-2008-0660</cve>
     </suppress>
+    <suppress>
+        <notes>
+            This CVE comes from Spring, resolved in 5.1.13. Once we upgrade to that version this block can be removed.
+            This is being excluded and not upgraded at present for two reasons
+            1) There is no current upgrade path for 5.1.13 - Spring has no native feature, we use the one provided by
+            Karaf. Karaf has no version that uses newer Spring, and without ServiceMix having updated versions we can
+            not create our own feature without forking their repo and updating Spring versions.
+            2) Because we do input validation on filenames, this CVE is not applicable to us and our usages.
+        </notes>
+        <cve>CVE-2020-5398</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This CVE is related to hash collisions at the Java level. This is mitigated by newer
+            versions of Java (8+).
+            See http://openjdk.java.net/jeps/180 for more information.
+            xercesImpl-2.11.0.jar
+        </notes>
+        <cve>CVE-2012-0881</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            A CVE against slf4j for the class "EventData", which is not used in DDF or pax-logging.
+        </notes>
+        <cve>CVE-2018-8088</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            A CVE against Shiro inherited from DDF regarding use with Spring dynamic controllers,
+            which are not applicable to this repository.
+        </notes>
+        <cve>CVE-2020-1957</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This CVE is coming from artemis. Suppressing the CVE until Artemis is removed from DDF.
+            https://github.com/codice/ddf/issues/5315
+        </notes>
+        <cve>CVE-2019-10086</cve>
+    </suppress>
     <!-- ************************************************************************************* -->
     <!-- END DDF related suppression -->
     <!-- ************************************************************************************* -->
+    <suppress>
+        <notes>
+            The following CVEs are inherited from Hadoop, which we currently have no control over.
+            The versions used are both static - governed by CDF and by the dependency used for integration tests.
+            In the future, upgrading to a different version may remove the need for these suppressions.
+            These should be removed and reassessed when Hadoop versions have been bumped.
+        </notes>
+        <cve>CVE-2012-6708</cve>
+        <cve>CVE-2015-9251</cve>
+        <cve>CVE-2019-11358</cve>
+        <cve>CVE-2018-14040</cve>
+        <cve>CVE-2018-14041</cve>
+        <cve>CVE-2018-14042</cve>
+        <cve>CVE-2019-8331</cve>
+        <cve>CVE-2010-5312</cve>
+        <cve>CVE-2016-7103</cve>
+        <cve>CVE-2015-9251</cve>
+        <cve>CVE-2019-11358</cve>
+        <cve>CVE-2017-15095</cve>
+        <cve>CVE-2017-17485</cve>
+        <cve>CVE-2017-7525</cve>
+        <cve>CVE-2018-10008</cve>
+        <cve>CVE-2020-10672</cve>
+        <cve>CVE-2020-10673</cve>
+        <cve>CVE-2020-10968</cve>
+        <cve>CVE-2020-10969</cve>
+        <cve>CVE-2020-11111</cve>
+        <cve>CVE-2020-11112</cve>
+        <cve>CVE-2020-11113</cve>
+        <cve>CVE-2020-11619</cve>
+        <cve>CVE-2020-11620</cve>
+        <cve>CVE-2020-9546</cve>
+        <cve>CVE-2020-9547</cve>
+        <cve>CVE-2020-9548</cve>
+        <cve>CVE-2016-5017</cve>
+        <cve>CVE-2019-0201</cve>
+        <cve>CVE-2017-15718</cve>
+        <cve>CVE-2017-3166</cve>
+        <cve>CVE-2018-11768</cve>
+        <cve>CVE-2018-1296</cve>
+        <cve>CVE-2018-8009</cve>
+        <cve>CVE-2018-8029</cve>
+        <!-- The following suppressions are not from the Hadoop dependencies themselves,
+             but rather from the libraries that Hadoop uses as dependencies which are transitively included -->
+        <cve>CVE-2017-7656</cve>
+        <cve>CVE-2017-9735</cve>
+        <cve>CVE-2015-2156</cve>
+        <cve>CVE-2016-4970</cve>
+        <cve>CVE-2015-5237</cve>
+        <cve>CVE-2019-17571</cve>
+        <cve>CVE-2014-0114</cve>
+        <cve>CVE-2018-1337</cve>
+        <cve>CVE-2014-0114</cve>
+    </suppress>
 </suppressions>
