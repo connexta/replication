@@ -11,13 +11,13 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.replication.adapters.ddf;
+package com.connexta.replication.data;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class MetacardAttribute {
+public class MetadataAttribute {
 
   private String name;
 
@@ -27,14 +27,14 @@ public class MetacardAttribute {
 
   private List<String> xmlns;
 
-  public MetacardAttribute(String name, String type, List<String> values, List<String> xmlns) {
+  public MetadataAttribute(String name, String type, List<String> values, List<String> xmlns) {
     this.name = name;
     this.type = type;
     this.values = values;
     this.xmlns = xmlns;
   }
 
-  public MetacardAttribute(String name, String type, String value) {
+  public MetadataAttribute(String name, String type, String value) {
     this.name = name;
     this.type = type;
     this.values = Collections.singletonList(value);

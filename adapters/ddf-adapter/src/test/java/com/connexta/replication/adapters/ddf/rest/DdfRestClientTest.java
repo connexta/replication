@@ -20,9 +20,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.connexta.replication.adapters.ddf.MetacardAttribute;
 import com.connexta.replication.adapters.ddf.csw.Constants;
 import com.connexta.replication.adapters.ddf.csw.MetacardMarshaller;
+import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.MetadataImpl;
 import com.connexta.replication.data.ResourceImpl;
 import java.io.ByteArrayInputStream;
@@ -182,11 +182,11 @@ public class DdfRestClientTest {
   }
 
   private Metadata getMetadata(String id) {
-    Map<String, MetacardAttribute> map = new HashMap<>();
+    Map<String, MetadataAttribute> map = new HashMap<>();
 
-    map.put(Constants.METACARD_ID, new MetacardAttribute(Constants.METACARD_ID, null, id));
-    map.put("type", new MetacardAttribute("type", null, "ddf.metacard"));
-    map.put(Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, null, "tag"));
+    map.put(Constants.METACARD_ID, new MetadataAttribute(Constants.METACARD_ID, null, id));
+    map.put("type", new MetadataAttribute("type", null, "ddf.metacard"));
+    map.put(Constants.METACARD_TAGS, new MetadataAttribute(Constants.METACARD_TAGS, null, "tag"));
 
     return new MetadataImpl(map, Map.class, id, new Date());
   }

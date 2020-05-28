@@ -17,8 +17,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-import com.connexta.replication.adapters.ddf.MetacardAttribute;
 import com.connexta.replication.adapters.ddf.csw.Constants;
+import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.MetadataImpl;
 import com.connexta.replication.data.ResourceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -419,10 +419,10 @@ public class WebHdfsClientTest {
    * @return The newly created {@link MetadataImpl}
    */
   private Metadata getMetadata(String id, Date metadataModified, Date resourceModified) {
-    Map<String, MetacardAttribute> map = new HashMap<>();
-    map.put(Constants.METACARD_ID, new MetacardAttribute(Constants.METACARD_ID, null, id));
-    map.put("type", new MetacardAttribute("type", null, "hdfs.metacard"));
-    map.put(Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, null, "tag"));
+    Map<String, MetadataAttribute> map = new HashMap<>();
+    map.put(Constants.METACARD_ID, new MetadataAttribute(Constants.METACARD_ID, null, id));
+    map.put("type", new MetadataAttribute("type", null, "hdfs.metacard"));
+    map.put(Constants.METACARD_TAGS, new MetadataAttribute(Constants.METACARD_TAGS, null, "tag"));
 
     Metadata metadata = new MetadataImpl(map, Map.class, id, metadataModified);
     metadata.setResourceModified(resourceModified);

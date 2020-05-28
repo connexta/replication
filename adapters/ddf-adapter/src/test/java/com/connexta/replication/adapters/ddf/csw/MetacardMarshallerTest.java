@@ -16,7 +16,7 @@ package com.connexta.replication.adapters.ddf.csw;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-import com.connexta.replication.adapters.ddf.MetacardAttribute;
+import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.MetadataImpl;
 import java.util.Collections;
 import java.util.Date;
@@ -35,24 +35,24 @@ public class MetacardMarshallerTest {
 
   @Test
   public void marshal() {
-    Map<String, MetacardAttribute> map = new HashMap<>();
+    Map<String, MetadataAttribute> map = new HashMap<>();
 
-    map.put(Constants.METACARD_ID, new MetacardAttribute(Constants.METACARD_ID, null, "123456789"));
-    map.put("type", new MetacardAttribute("type", null, "my-type"));
-    map.put("source", new MetacardAttribute("source", null, "source-id"));
+    map.put(Constants.METACARD_ID, new MetadataAttribute(Constants.METACARD_ID, null, "123456789"));
+    map.put("type", new MetadataAttribute("type", null, "my-type"));
+    map.put("source", new MetadataAttribute("source", null, "source-id"));
     map.put(
-        Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, "string", "tag"));
+        Constants.METACARD_TAGS, new MetadataAttribute(Constants.METACARD_TAGS, "string", "tag"));
     map.put(
         "location",
-        new MetacardAttribute(
+        new MetadataAttribute(
             "location",
             "geometry",
             Collections.singletonList("<ns2:point>123,456</ns2:point>"),
             Collections.singletonList("xmlns:ns2=http://some/namespace")));
     map.put(
         "metadata",
-        new MetacardAttribute("metadata", "stringxml", "<test><data>testing</data></test>"));
-    map.put("not-marshaled", new MetacardAttribute("not-marshaled", null, "not-marshaled-value"));
+        new MetadataAttribute("metadata", "stringxml", "<test><data>testing</data></test>"));
+    map.put("not-marshaled", new MetadataAttribute("not-marshaled", null, "not-marshaled-value"));
 
     String metacardxml =
         MetacardMarshaller.marshal(new MetadataImpl(map, Map.class, "123456789", new Date(1)));
@@ -61,23 +61,23 @@ public class MetacardMarshallerTest {
 
   @Test
   public void marshalNoType() {
-    Map<String, MetacardAttribute> map = new HashMap<>();
+    Map<String, MetadataAttribute> map = new HashMap<>();
 
-    map.put(Constants.METACARD_ID, new MetacardAttribute(Constants.METACARD_ID, null, "123456789"));
-    map.put("source", new MetacardAttribute("source", null, "source-id"));
+    map.put(Constants.METACARD_ID, new MetadataAttribute(Constants.METACARD_ID, null, "123456789"));
+    map.put("source", new MetadataAttribute("source", null, "source-id"));
     map.put(
-        Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, "string", "tag"));
+        Constants.METACARD_TAGS, new MetadataAttribute(Constants.METACARD_TAGS, "string", "tag"));
     map.put(
         "location",
-        new MetacardAttribute(
+        new MetadataAttribute(
             "location",
             "geometry",
             Collections.singletonList("<ns2:point>123,456</ns2:point>"),
             Collections.singletonList("xmlns:ns2=http://some/namespace")));
     map.put(
         "metadata",
-        new MetacardAttribute("metadata", "stringxml", "<test><data>testing</data></test>"));
-    map.put("not-marshaled", new MetacardAttribute("not-marshaled", null, "not-marshaled-value"));
+        new MetadataAttribute("metadata", "stringxml", "<test><data>testing</data></test>"));
+    map.put("not-marshaled", new MetadataAttribute("not-marshaled", null, "not-marshaled-value"));
 
     String metacardxml =
         MetacardMarshaller.marshal(new MetadataImpl(map, Map.class, "123456789", new Date(1)));
@@ -95,7 +95,7 @@ public class MetacardMarshallerTest {
     String metacardxml =
         MetacardMarshaller.marshal(
             new MetadataImpl(
-                new HashMap<String, MetacardAttribute>(), Map.class, "123456789", new Date(1)));
+                new HashMap<String, MetadataAttribute>(), Map.class, "123456789", new Date(1)));
     assertThat(metacardxml, is(minimalMetacardXml));
   }
 }

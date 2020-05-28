@@ -28,6 +28,7 @@ import com.connexta.replication.adapters.ddf.csw.Csw;
 import com.connexta.replication.adapters.ddf.csw.CswRecordCollection;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClient;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
+import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.MetadataImpl;
 import com.connexta.replication.data.QueryRequestImpl;
 import com.connexta.replication.data.ResourceImpl;
@@ -288,13 +289,13 @@ public class DdfNodeAdapterTest {
   }
 
   private Metadata getMetadata() {
-    Map<String, MetacardAttribute> map = new HashMap<>();
+    Map<String, MetadataAttribute> map = new HashMap<>();
 
-    map.put(Constants.METACARD_ID, new MetacardAttribute(Constants.METACARD_ID, null, "123456789"));
-    map.put("type", new MetacardAttribute("type", null, "ddf.metacard"));
+    map.put(Constants.METACARD_ID, new MetadataAttribute(Constants.METACARD_ID, null, "123456789"));
+    map.put("type", new MetadataAttribute("type", null, "ddf.metacard"));
     map.put(
-        Constants.METACARD_TAGS, new MetacardAttribute(Constants.METACARD_TAGS, "string", "tag"));
-    map.put("title", new MetacardAttribute("title", null, "mytitle"));
+        Constants.METACARD_TAGS, new MetadataAttribute(Constants.METACARD_TAGS, "string", "tag"));
+    map.put("title", new MetadataAttribute("title", null, "mytitle"));
 
     return new MetadataImpl(map, Map.class, UUID.randomUUID().toString(), new Date());
   }

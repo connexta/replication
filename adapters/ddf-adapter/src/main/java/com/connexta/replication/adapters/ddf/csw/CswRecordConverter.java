@@ -25,7 +25,7 @@ import static com.connexta.replication.adapters.ddf.csw.Constants.RESOURCE_URI;
 import static com.connexta.replication.adapters.ddf.csw.Constants.VERSIONED_ON;
 import static com.connexta.replication.adapters.ddf.csw.Constants.VERSION_OF_ID;
 
-import com.connexta.replication.adapters.ddf.MetacardAttribute;
+import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.MetadataImpl;
 import com.thoughtworks.xstream.converters.ConversionException;
 import com.thoughtworks.xstream.converters.Converter;
@@ -170,7 +170,7 @@ public class CswRecordConverter implements Converter {
     }
   }
 
-  public static @Nullable Date convertToDate(@Nullable MetacardAttribute value) {
+  public static @Nullable Date convertToDate(@Nullable MetadataAttribute value) {
     if (value == null) {
       return null;
     }
@@ -201,12 +201,12 @@ public class CswRecordConverter implements Converter {
     StringWriter metadataWriter = new StringWriter();
     HierarchicalStreamReader reader = copyXml(hreader, metadataWriter, namespaceMap);
 
-    Map<String, MetacardAttribute> metadataMap = new HashMap<>();
+    Map<String, MetadataAttribute> metadataMap = new HashMap<>();
     metadataMap.put(
         Constants.RAW_METADATA_KEY,
-        new MetacardAttribute(Constants.RAW_METADATA_KEY, null, metadataWriter.toString()));
+        new MetadataAttribute(Constants.RAW_METADATA_KEY, null, metadataWriter.toString()));
     String id = reader.getAttribute("gml:id");
-    metadataMap.put(METACARD_ID, new MetacardAttribute(METACARD_ID, null, id));
+    metadataMap.put(METACARD_ID, new MetadataAttribute(METACARD_ID, null, id));
     // If we want to grab the type we will have to do so below. As you move through the child nodes
     // check if the node name is type and save the value.
 
@@ -239,11 +239,11 @@ public class CswRecordConverter implements Converter {
     }
 
     metadataMap.get(METACARD_TAGS).getValues().forEach(metadata::addTag);
-    MetacardAttribute origin = metadataMap.get(Replication.ORIGINS);
+    MetadataAttribute origin = metadataMap.get(Replication.ORIGINS);
     if (origin != null) {
       origin.getValues().forEach(metadata::addLineage);
     }
-    MetacardAttribute versionAction = metadataMap.get(ACTION);
+    MetadataAttribute versionAction = metadataMap.get(ACTION);
     if (versionAction != null) {
       metadata.setIsDeleted(versionAction.getValue().startsWith("Deleted"));
     }
@@ -254,7 +254,7 @@ public class CswRecordConverter implements Converter {
   }
 
   private static void parseToMap(
-      HierarchicalStreamReader reader, Map<String, MetacardAttribute> metadataMap) {
+      HierarchicalStreamReader reader, Map<String, MetadataAttribute> metadataMap) {
     while (reader.hasMoreChildren()) {
       reader.moveDown();
 
@@ -268,7 +268,7 @@ public class CswRecordConverter implements Converter {
         }
       }
       if (!reader.hasMoreChildren()) {
-        metadataMap.put(entryType, new MetacardAttribute(entryType, null, reader.getValue()));
+        metadataMap.put(entryType, new MetadataAttribute(entryType, null, reader.getValue()));
         reader.moveUp();
         continue;
       }
@@ -280,7 +280,7 @@ public class CswRecordConverter implements Converter {
         copyXml(reader, xmlWriter, null);
         metadataMap.put(
             attributeName,
-            new MetacardAttribute(
+            new MetadataAttribute(
                 attributeName, entryType, Collections.singletonList(xmlWriter.toString()), xmlns));
         reader.moveUp();
         reader.moveUp();
@@ -297,7 +297,7 @@ public class CswRecordConverter implements Converter {
       LOGGER.trace("attribute name: {} value: {}.", attributeName, values);
       if (StringUtils.isNotEmpty(attributeName) && !values.isEmpty()) {
         metadataMap.put(
-            attributeName, new MetacardAttribute(attributeName, entryType, values, xmlns));
+            attributeName, new MetadataAttribute(attributeName, entryType, values, xmlns));
       }
 
       reader.moveUp();

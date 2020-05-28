@@ -18,6 +18,7 @@ import com.connexta.replication.adapters.ddf.csw.Csw;
 import com.connexta.replication.adapters.ddf.csw.CswRecordCollection;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClient;
 import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
+import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.QueryRequestImpl;
 import com.connexta.replication.data.QueryResponseImpl;
 import com.connexta.replication.data.ResourceResponseImpl;
@@ -182,7 +183,7 @@ public class DdfNodeAdapter implements NodeAdapter {
     String systemName;
     if (!results.isEmpty()) {
       systemName =
-          ((MetacardAttribute) ((Map) results.get(0).getRawMetadata()).get("title")).getValue();
+          ((MetadataAttribute) ((Map) results.get(0).getRawMetadata()).get("title")).getValue();
     } else {
       throw new AdapterException(
           String.format(
@@ -279,14 +280,14 @@ public class DdfNodeAdapter implements NodeAdapter {
     Map metadataMap = (Map) metadata.getRawMetadata();
     metadataMap.put(
         Constants.METACARD_TAGS,
-        new MetacardAttribute(
+        new MetadataAttribute(
             Constants.METACARD_TAGS,
             "string",
             new ArrayList(metadata.getTags()),
             Collections.emptyList()));
     metadataMap.put(
         Replication.ORIGINS,
-        new MetacardAttribute(
+        new MetadataAttribute(
             Replication.ORIGINS, "string", metadata.getLineage(), Collections.emptyList()));
   }
 
