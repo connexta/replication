@@ -181,6 +181,10 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @VisibleForTesting
   String getLocation(ResourceRequest resourceRequest) throws URISyntaxException {
+    if (resourceRequest.getMetadata() == null) {
+      throw new ReplicationException("No accessible metadata was found for the request.");
+    }
+
     Metadata metadata = resourceRequest.getMetadata();
     URI resourceUri = metadata.getResourceUri();
 
@@ -289,17 +293,18 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
           int status = response.getStatusLine().getStatusCode();
 
           if (status == HttpStatus.SC_OK) {
-            String id = resourceRequest.getMetadata().getId();
-            // TODO - find the name!!!
-            String name = "";
-            URI uri = resourceRequest.getMetadata().getResourceUri();
             InputStream contentStream = response.getEntity().getContent();
             String mimeType = response.getEntity().getContentType().getValue();
             long size = response.getEntity().getContentLength();
+
             Metadata metadata = resourceRequest.getMetadata();
+            String id = metadata.getId();
+            String name = String.format("%s_%s", id, metadata.getResourceModified().getTime());
+            URI uri = resourceRequest.getMetadata().getResourceUri();
 
             Resource resource =
                 new ResourceImpl(id, name, uri, null, contentStream, mimeType, size, metadata);
+
             return new ResourceResponseImpl(resource);
           } else {
             throw new ReplicationException(
