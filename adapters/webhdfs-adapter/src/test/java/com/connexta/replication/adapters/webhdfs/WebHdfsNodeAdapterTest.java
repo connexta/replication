@@ -217,7 +217,7 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
-  public void testWriteFileToLocationNoResource() {
+  public void testWriteFileToLocationNoResource() throws IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     List<Resource> resources = Collections.emptyList();
     when(createStorageRequest.getResources()).thenReturn(resources);
@@ -229,7 +229,7 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
-  public void testWriteFileToLocationNullResource() {
+  public void testWriteFileToLocationNullResource() throws IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     List<Resource> resources = Collections.singletonList(null);
     when(createStorageRequest.getResources()).thenReturn(resources);
@@ -441,7 +441,7 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
-  public void testWriteFileLocationBadUri() {
+  public void testWriteFileLocationBadUri() throws IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     Resource resource = mock(Resource.class);
     List<Resource> resources = Collections.singletonList(resource);

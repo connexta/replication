@@ -17,13 +17,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.mime.tika.TikaMimeTypeResolver;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -31,7 +33,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.ReplicationException;
@@ -158,7 +160,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     } catch (URISyntaxException e) {
       LOGGER.error("Unable to get location, due to invalid URL.", e);
-    } catch (ReplicationException e) {
+    } catch (IOException | ReplicationException e) {
       LOGGER.error("Unable to create resource.", e);
     }
     return false;
@@ -257,7 +259,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return {@code true} if successful, otherwise {@code false}
    */
   @VisibleForTesting
-  boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location) {
+  boolean writeFileToLocation(CreateStorageRequest createStorageRequest, String location)
+      throws IOException {
 
     if (createStorageRequest.getResources().isEmpty()
         || createStorageRequest.getResources().get(0) == null) {
@@ -281,14 +284,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     // index zero
     Resource resource = createStorageRequest.getResources().get(0);
 
-    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-    builder.addBinaryBody(
-        "file",
-        resource.getInputStream(),
-        ContentType.create(resource.getMimeType()),
-        formatFilename(createStorageRequest));
-    HttpEntity multipart = builder.build();
-    httpPut.setEntity(multipart);
+    final File tempFile = File.createTempFile(formatFilename(createStorageRequest), ".tmp");
+    tempFile.deleteOnExit();
+
+    try (FileOutputStream out = new FileOutputStream(tempFile)) {
+      IOUtils.copy(resource.getInputStream(), out);
+      FileEntity entity = new FileEntity(tempFile, ContentType.create(resource.getMimeType()));
+      httpPut.setEntity(entity);
+    }
 
     ResponseHandler<Boolean> responseHandler =
         response -> {
@@ -302,7 +305,10 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
           }
         };
 
-    return sendHttpRequest(httpPut, responseHandler);
+    boolean successful = sendHttpRequest(httpPut, responseHandler);
+    tempFile.delete();
+
+    return successful;
   }
 
   /**
