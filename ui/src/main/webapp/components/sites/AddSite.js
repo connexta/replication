@@ -158,7 +158,7 @@ const AddSite = class extends React.Component {
               type='text'
               onChange={this.handleChange('rootContext')}
               fullWidth
-              helperText='The path under which the replication services can be found. Typically this is under `services`'
+              helperText='The path under which the replication services can be found. Typically this is under `services` for DDF based nodes, and `/webhdfs/v1/` for webHDFS based nodes.'
               value={rootContext}
             />
           </DialogContent>

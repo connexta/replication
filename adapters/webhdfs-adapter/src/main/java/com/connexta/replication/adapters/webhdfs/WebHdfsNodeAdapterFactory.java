@@ -37,8 +37,7 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
-    String baseUrl =
-        "http://" + url.getHost() + ":" + url.getPort() + "/webhdfs/v1" + url.getPath();
+    String baseUrl = "http://" + url.getHost() + ":" + url.getPort() + url.getPath();
 
     if (!baseUrl.endsWith("/")) {
       baseUrl = baseUrl.concat("/");

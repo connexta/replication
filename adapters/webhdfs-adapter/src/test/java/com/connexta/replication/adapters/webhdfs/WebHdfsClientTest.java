@@ -59,8 +59,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebHdfsClientTest {
+  private static final String HDFS_PATH = "/webhdfs/v1";
   private static final String HDFS_PORT = "12341";
-  private static final String BASE_URL = "http://localhost:" + HDFS_PORT;
+  private static final String BASE_URL = "http://localhost:" + HDFS_PORT + HDFS_PATH;
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsClientTest.class);
   private static final WebHdfsNodeAdapterFactory adapterFactory = new WebHdfsNodeAdapterFactory();
   private static HdfsLocalCluster hdfsLocalCluster;
@@ -292,8 +293,7 @@ public class WebHdfsClientTest {
    * @throws URISyntaxException If the URL string does not have valid syntax
    */
   private void verifyFileExists(String filename) throws URISyntaxException {
-    String filePath = "webhdfs/v1/" + filename;
-    String url = String.format("%s/%s", BASE_URL, filePath);
+    String url = String.format("%s/%s", BASE_URL, filename);
     URIBuilder builder = new URIBuilder(url);
     builder.addParameter("op", "GETFILESTATUS");
     URI uri = builder.build();

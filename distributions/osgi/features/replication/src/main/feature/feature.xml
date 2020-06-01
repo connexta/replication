@@ -34,6 +34,7 @@
         <feature>jackson</feature>
         <bundle>mvn:replication/replication-api/${project.version}</bundle>
         <bundle>mvn:replication/replication-api-impl/${project.version}</bundle>
+        <bundle>mvn:replication/replication-commands/${project.version}</bundle>
         <bundle>mvn:replication/replication-admin-query/${project.version}</bundle>
         <bundle>mvn:replication/replication-ui/${project.version}</bundle>
         <bundle>mvn:replication-adapters/ddf-adapter/${project.version}</bundle>
