@@ -35,11 +35,6 @@
         </dependency>
         <dependency>
             <groupId>replication</groupId>
-            <artifactId>replication-commands</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>replication</groupId>
             <artifactId>replication-ui</artifactId>
             <version>${project.version}</version>
         </dependency>
