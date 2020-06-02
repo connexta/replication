@@ -280,19 +280,6 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     HttpPut httpPut = new HttpPut(locationUri);
 
-    // only a single resource is supported at this time and is the reason for always retrieving from
-    // index zero
-    Resource resource = createStorageRequest.getResources().get(0);
-
-    final File tempFile = File.createTempFile(formatFilename(createStorageRequest), ".tmp");
-    tempFile.deleteOnExit();
-
-    try (FileOutputStream out = new FileOutputStream(tempFile)) {
-      IOUtils.copy(resource.getInputStream(), out);
-      FileEntity entity = new FileEntity(tempFile, ContentType.create(resource.getMimeType()));
-      httpPut.setEntity(entity);
-    }
-
     ResponseHandler<Boolean> responseHandler =
         response -> {
           int status = response.getStatusLine().getStatusCode();
@@ -305,8 +292,23 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
           }
         };
 
-    boolean successful = sendHttpRequest(httpPut, responseHandler);
-    tempFile.delete();
+    // only a single resource is supported at this time and is the reason for always retrieving from
+    // index zero
+    Resource resource = createStorageRequest.getResources().get(0);
+
+    final File tempFile = File.createTempFile(formatFilename(createStorageRequest), ".tmp");
+    tempFile.deleteOnExit();
+
+    boolean successful;
+    try (FileOutputStream out = new FileOutputStream(tempFile)) {
+      IOUtils.copy(resource.getInputStream(), out);
+      FileEntity entity = new FileEntity(tempFile, ContentType.create(resource.getMimeType()));
+      httpPut.setEntity(entity);
+
+      successful = sendHttpRequest(httpPut, responseHandler);
+    } finally {
+      tempFile.delete();
+    }
 
     return successful;
   }
