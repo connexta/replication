@@ -87,7 +87,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean isAvailable() {
-    LOGGER.debug("Checking access to: {}", getWebHdfsUrl());
+    LOGGER.info("Checking access to: {}", getWebHdfsUrl());
 
     try {
       URIBuilder builder = new URIBuilder(getWebHdfsUrl().toString());
@@ -182,7 +182,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     }
 
     String fileUrl = getWebHdfsUrl().toString() + formatFilename(createStorageRequest);
-    LOGGER.debug("The complete file URL is: {}", fileUrl);
+    LOGGER.info("The complete file URL is: {}", fileUrl);
 
     URIBuilder builder = new URIBuilder(fileUrl);
     builder

@@ -311,16 +311,16 @@ public class ReplicatorImpl implements Replicator {
 
   private void determineType(ReplicationSite site) {
     for (NodeAdapterType type : NodeAdapterType.values()) {
-      LOGGER.debug("Checking if site {} is of type {}", site.getName(), type.name());
+      LOGGER.info("Checking if site {} is of type {}", site.getName(), type.name());
       try (NodeAdapter adapter = nodeAdapters.factoryFor(type).create(new URL(site.getUrl()))) {
         if (adapter.isAvailable()) {
-          LOGGER.debug("Site {} is type {}", site.getName(), type.name());
+          LOGGER.info("Site {} is type {}", site.getName(), type.name());
           site.setType(type.name());
           siteManager.save(site);
           return;
         }
       } catch (Exception e) {
-        LOGGER.debug(
+        LOGGER.info(
             "Checking node type failed for type {}. Reason: {}", type.name(), e.getMessage());
       }
     }
