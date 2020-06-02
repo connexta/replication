@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -130,14 +132,7 @@ public class WebHdfsClientTest {
 
     Calendar calendar = Calendar.getInstance();
     long creationTime = calendar.getTimeInMillis();
-
-    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
-
-    // when a file is created with ID fileId
-    CreateStorageRequest createStorageRequest =
-        generateTestStorageRequest(fileId, testName, new Date(creationTime));
-
-    adapter.createResource(createStorageRequest);
+    String originalFilename = createResource(fileId, testName, creationTime);
 
     // then it will exist on the file system
     verifyFileExists(originalFilename);
@@ -166,14 +161,7 @@ public class WebHdfsClientTest {
 
     Calendar calendar = Calendar.getInstance();
     long creationTime = calendar.getTimeInMillis();
-
-    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
-
-    // when a file is created with ID fileId
-    CreateStorageRequest createStorageRequest =
-        generateTestStorageRequest(fileId, testName, new Date(creationTime));
-
-    adapter.createResource(createStorageRequest);
+    String originalFilename = createResource(fileId, testName, creationTime);
 
     // then it will exist on the file system
     verifyFileExists(originalFilename);
@@ -198,14 +186,7 @@ public class WebHdfsClientTest {
 
     Calendar calendar = Calendar.getInstance();
     long creationTime = calendar.getTimeInMillis();
-
-    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
-
-    // when a file is created with ID fileId
-    CreateStorageRequest createStorageRequest =
-        generateTestStorageRequest(fileId, testName, new Date(creationTime));
-
-    adapter.createResource(createStorageRequest);
+    String originalFilename = createResource(fileId, testName, creationTime);
 
     // then it will exist on the file system
     verifyFileExists(originalFilename);
@@ -233,14 +214,7 @@ public class WebHdfsClientTest {
 
     Calendar calendar = Calendar.getInstance();
     long creationTime = calendar.getTimeInMillis();
-
-    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
-
-    // when a file is created with ID fileId
-    CreateStorageRequest createStorageRequest =
-        generateTestStorageRequest(fileId, testName, new Date(creationTime));
-
-    adapter.createResource(createStorageRequest);
+    String originalFilename = createResource(fileId, testName, creationTime);
 
     // then it will exist on the file system
     verifyFileExists(originalFilename);
@@ -253,6 +227,18 @@ public class WebHdfsClientTest {
     // then the original file still exists, but the update did not take place
     verifyFileExists(originalFilename);
     assertThat(adapter.updateResource(updateStorageRequest), is(false));
+  }
+
+  @Test
+  public void testUploadedResourceMatchesOriginalResource() throws IOException, URISyntaxException {
+    String fileId = "123456789";
+    String testName = "testresource";
+
+    Calendar calendar = Calendar.getInstance();
+    long creationTime = calendar.getTimeInMillis();
+    String originalFilename = createResource(fileId, testName, creationTime);
+
+    verifyFileContents(originalFilename, "");
   }
 
   @Test
@@ -313,6 +299,44 @@ public class WebHdfsClientTest {
                 "http://localhost:%s/webhdfs/v1/%s?op=GETFILESTATUS", HDFS_PORT, filename)));
     assertThat(fileStatus, notNullValue());
     assertThat(fileStatus.get("type"), is("FILE"));
+  }
+
+  /**
+   * Utilizes the "Status of a File/Directory" WebHDFS operation to verify that the content within
+   * the given <code>filename</code> is what is expected.
+   *
+   * @param filename - the name of the file to verify
+   * @param expected - the {@link String} value of a file's content
+   * @throws URISyntaxException If the URL string does not have valid syntax
+   */
+  private void verifyFileContents(String filename, String expected)
+      throws IOException, URISyntaxException {
+    String filePath = "webhdfs/v1/" + filename;
+    String url = String.format("%s/%s", BASE_URL, filePath);
+    URIBuilder builder = new URIBuilder(url);
+    builder.addParameter("op", "OPEN");
+    URI uri = builder.build();
+    HttpGet getRequest = new HttpGet(uri);
+    InputStream responseContent = sendGetRequestForInputStream(getRequest);
+    String contentStr = IOUtils.toString(responseContent, UTF_8.name());
+
+    assertThat(hdfsLocalCluster.getHdfsFormat(), is(true));
+    assertThat(
+        uri.toString(),
+        is(String.format("http://localhost:%s/webhdfs/v1/%s?op=OPEN", HDFS_PORT, filename)));
+    assertThat(contentStr, is(expected));
+  }
+
+  private String createResource(String fileId, String testName, long creationTime) {
+    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
+
+    // when a file is created with ID fileId
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(fileId, testName, new Date(creationTime));
+
+    adapter.createResource(createStorageRequest);
+
+    return originalFilename;
   }
 
   /**
@@ -388,6 +412,20 @@ public class WebHdfsClientTest {
         httpResponse -> {
           InputStream contentStream = httpResponse.getEntity().getContent();
           return parseHttpResponseContent(contentStream);
+        };
+    return adapter.sendHttpRequest(request, responseHandler);
+  }
+
+  /**
+   * Sends a GET request and returns a {@link InputStream} of the response entity.
+   *
+   * @param request - the request to send
+   * @return The {@link InputStream} containing the content
+   */
+  private InputStream sendGetRequestForInputStream(HttpRequestBase request) {
+    ResponseHandler<InputStream> responseHandler =
+        httpResponse -> {
+          return httpResponse.getEntity().getContent();
         };
     return adapter.sendHttpRequest(request, responseHandler);
   }
