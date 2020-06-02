@@ -32,13 +32,20 @@ public class WebHdfsNodeAdapterFactoryTest {
   private WebHdfsNodeAdapterFactory webHdfsNodeAdapterFactory;
 
   private static URL urlWithPath;
+  private static URL urlWithPathNoTrailingSlash;
+
   private static URL urlWithNoPath;
+  private static URL urlWithNoPathNoTrailingSlash;
 
   @Before
   public void setup() throws MalformedURLException {
     webHdfsNodeAdapterFactory = new WebHdfsNodeAdapterFactory();
+
     urlWithPath = new URL("http://localhost:8993/webhdfs/v1/some/path/");
+    urlWithPathNoTrailingSlash = new URL("http://localhost:8993/webhdfs/v1/some/path");
+
     urlWithNoPath = new URL("http://localhost:8993/webhdfs/v1/");
+    urlWithNoPathNoTrailingSlash = new URL("http://localhost:8993/webhdfs/v1");
   }
 
   @Test
@@ -51,8 +58,26 @@ public class WebHdfsNodeAdapterFactoryTest {
   }
 
   @Test
+  public void testCreateNoTrailingSlash() {
+    NodeAdapter webHdfsNodeAdapter = webHdfsNodeAdapterFactory.create(urlWithPathNoTrailingSlash);
+    assertThat(webHdfsNodeAdapter.getClass().isAssignableFrom(WebHdfsNodeAdapter.class), is(true));
+    assertThat(
+        ((WebHdfsNodeAdapter) webHdfsNodeAdapter).getWebHdfsUrl().toString(),
+        is(urlWithPath.toString()));
+  }
+
+  @Test
   public void testCreateNoPath() {
     NodeAdapter webHdfsNodeAdapter = webHdfsNodeAdapterFactory.create(urlWithNoPath);
+    assertThat(webHdfsNodeAdapter.getClass().isAssignableFrom(WebHdfsNodeAdapter.class), is(true));
+    assertThat(
+        ((WebHdfsNodeAdapter) webHdfsNodeAdapter).getWebHdfsUrl().toString(),
+        is(urlWithNoPath.toString()));
+  }
+
+  @Test
+  public void testCreateNoPathNoSlash() {
+    NodeAdapter webHdfsNodeAdapter = webHdfsNodeAdapterFactory.create(urlWithNoPathNoTrailingSlash);
     assertThat(webHdfsNodeAdapter.getClass().isAssignableFrom(WebHdfsNodeAdapter.class), is(true));
     assertThat(
         ((WebHdfsNodeAdapter) webHdfsNodeAdapter).getWebHdfsUrl().toString(),
