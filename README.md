@@ -1,7 +1,7 @@
 # Replication [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=replication&metric=alert_status)](https://sonarcloud.io/dashboard?id=replication) [![Known Vulnerabilities](https://snyk.io/test/github/connexta/replication/badge.svg)](https://snyk.io/test/github/connexta/replication)
 
 ## Overview
-Replication is the process of creating a copy of a subset of data and storing it on another DDF or HDFS based system. Data can be pulled from a remote DDF and saved to another DDF or HDFS system. Metacards produced by replication are marked with a "Replication Origins" attribute and a tag of "replicated". Replication will automatically start transferring data once an admin creates a replication configuration.
+Replication is the process of creating a copy of a subset of data and storing it on another DDF- or HDFS-based system. Data can be pulled from a remote DDF and saved to another DDF or HDFS system. Metacards produced by replication are marked with a "Replication Origins" attribute and a tag of "replicated." Replication will automatically start transferring data once an admin creates a replication configuration.
 
 ## Installing Replication
 Replication is not installed by default with a standard installation. There are several installation options available.
@@ -22,7 +22,7 @@ An administrator can install the replication feature by following the following 
 * Confirm the feature is running in the Admin Console or the Karaf command line interface.
 
 ## Configuring Replication Nodes
-This version of Replication supports nodes created for DDF based applications as well as webHDFS based systems.
+This version of Replication supports nodes created for DDF-based applications as well as HDFS-based systems.
 
 #### Configuring DDF Nodes
 To configure replication to/from a DDF node, a node must first be created. This can be done in a few steps:
@@ -33,7 +33,9 @@ To configure replication to/from a DDF node, a node must first be created. This 
   * Port: The port where the service can be found. This is `8993` by default in DDF.
   * Root Context: The path under which replication services can be found. This is `services` by default in DDF.
   
-#### Configuring WebHDFS Nodes
+#### Configuring HDFS Nodes
+Support for HDFS replication is only available if webHDFS REST endpoints are enabled on the remote HDFS cluster.
+
 To configure replication to/from a HDFS node, a node must first be created. This can be done in a few steps:
 * Navigate to https://<host>:<port>/admin/replication/#/nodes and click the + 
 * On the Create new Node screen, fill out the following fields:
@@ -42,15 +44,15 @@ To configure replication to/from a HDFS node, a node must first be created. This
   * Port: The port where the service can be found. This is `9870` by default for HDFS Namenodes.
   * Root Context: This is the full path after the port for any webHDFS URL.
 
-* localhost webHDFS example configuration : 
+* localhost HDFS example configuration : 
 ```
-To write to directory /user/tonystark on a local webHDFS instance
+To write to directory /user/tonystark on a local HDFS instance
 - The webHDFS URL for that directory might look like: http://localhost:9870/webhdfs/v1/user/tonystark
 - The hostname would be: localhost
 - The port would be: 9870
 - The root context would be /webhdfs/v1/user/tonystark/
 ```  
-* remote webHDFS example configuration:  
+* remote HDFS example configuration:  
 ```
 To write to directory /user/tonystark on a remote AWS HDFS installation
 - The webHDFS URL for that directory might look like: https://testnode1.us-gov-west-1.compute.amazonaws.com:8443/gateway/default/webhdfs/v1/user/tonystark
@@ -67,10 +69,10 @@ After the nodes are created, a replication can be configured. This can be done i
   * Source Node: The node in the dropdown to use as the source (replicating FROM this source).
   * Destination Node: The node in the dropdown to use as the destination (replicating TO this node).
   * Bidirectional: Select this checkbox if replication should synchronize the contents of source and destination nodes.
-  * Filter: A previously used Intrigue query can be selected from the dropdown, otherwise enter CQL into the Filter field.
+  * Filter: A previously saved Intrigue query can be selected from the dropdown, otherwise enter CQL into the Filter text field.
   
-Note: At present, filters on files stored in HDFS are not applied. In a bidirectional replication with a webHDFS node, 
-or any replication that uses a webHDFS node as the source, the contents of the directory on HDFS will be replicated in full.
+Note: At present, filters on files stored in HDFS are not applied. In a bidirectional replication with a HDFS node, 
+or any replication that uses a HDFS node as the source, the contents of the directory on HDFS will be replicated in full.
 In the future CQL applied to filenames will be possible, but that is not available as of this writing.
 
 
