@@ -326,11 +326,7 @@ public class WebHdfsClientTest {
     }
 
     assertThat(hdfsLocalCluster.getHdfsFormat(), is(true));
-    assertThat(
-        uri.toString(),
-        is(
-            String.format(
-                "http://localhost:%s/webhdfs/v1/%s?op=GETFILESTATUS", HDFS_PORT, filename)));
+    assertThat(uri.toString(), is(String.format("%s%s?op=GETFILESTATUS", BASE_URL, filename)));
     assertThat(fileStatus, notNullValue());
     assertThat(fileStatus.get("type"), is("FILE"));
   }
@@ -344,8 +340,7 @@ public class WebHdfsClientTest {
    * @throws URISyntaxException If the URL string does not have valid syntax
    */
   private void verifyFileContents(String filename, String expected) throws URISyntaxException {
-    String filePath = "webhdfs/v1/" + filename;
-    String url = String.format("%s/%s", BASE_URL, filePath);
+    String url = String.format("%s/%s", BASE_URL, filename);
     URIBuilder builder = new URIBuilder(url);
     builder.addParameter("op", "OPEN");
     URI uri = builder.build();
@@ -353,9 +348,7 @@ public class WebHdfsClientTest {
     String responseContent = sendGetRequestToString(getRequest);
 
     assertThat(hdfsLocalCluster.getHdfsFormat(), is(true));
-    assertThat(
-        uri.toString(),
-        is(String.format("http://localhost:%s/webhdfs/v1/%s?op=OPEN", HDFS_PORT, filename)));
+    assertThat(uri.toString(), is(String.format("%s/%s?op=OPEN", BASE_URL, filename)));
     assertThat(responseContent, is(expected));
   }
 
