@@ -39,7 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -67,8 +66,6 @@ public class WebHdfsClientTest {
   private static final WebHdfsNodeAdapterFactory adapterFactory = new WebHdfsNodeAdapterFactory();
   private static HdfsLocalCluster hdfsLocalCluster;
   private WebHdfsNodeAdapter adapter;
-
-  private static final String RESOURCE_CONTENT = "my-data";
 
   @BeforeClass
   public static void setUpClass() {
@@ -259,25 +256,6 @@ public class WebHdfsClientTest {
   }
 
   @Test
-  public void testUploadedResourceMatchesOriginalResource() throws IOException, URISyntaxException {
-    String fileId = "123456789";
-    String testName = "testresource";
-
-    Calendar calendar = Calendar.getInstance();
-    long creationTime = calendar.getTimeInMillis();
-
-    String originalFilename = String.format("%s_%s.txt", fileId, creationTime);
-
-    // when a file is created with ID fileId
-    CreateStorageRequest createStorageRequest =
-        generateTestStorageRequest(fileId, testName, new Date(creationTime));
-
-    adapter.createResource(createStorageRequest);
-
-    verifyFileContents(originalFilename, RESOURCE_CONTENT);
-  }
-
-  @Test
   public void testInvalidHostnameFails() throws IOException {
     String testId = "123456789";
     String testName = "testresource";
@@ -328,30 +306,13 @@ public class WebHdfsClientTest {
     }
 
     assertThat(hdfsLocalCluster.getHdfsFormat(), is(true));
-    assertThat(uri.toString(), is(url));
+    assertThat(
+        uri.toString(),
+        is(
+            String.format(
+                "http://localhost:%s/webhdfs/v1/%s?op=GETFILESTATUS", HDFS_PORT, filename)));
     assertThat(fileStatus, notNullValue());
     assertThat(fileStatus.get("type"), is("FILE"));
-  }
-
-  /**
-   * Utilizes the "Open and Read a File" WebHDFS operation to verify that the content within the
-   * given <code>filename</code> is what is expected.
-   *
-   * @param filename - the name of the file to verify
-   * @param expected - the {@link String} value of a file's content
-   * @throws URISyntaxException If the URL string does not have valid syntax
-   */
-  private void verifyFileContents(String filename, String expected) throws URISyntaxException {
-    String url = String.format("%s/%s", BASE_URL, filename);
-    URIBuilder builder = new URIBuilder(url);
-    builder.addParameter("op", "OPEN");
-    URI uri = builder.build();
-    HttpGet getRequest = new HttpGet(uri);
-    String responseContent = sendGetRequestToString(getRequest);
-
-    assertThat(hdfsLocalCluster.getHdfsFormat(), is(true));
-    assertThat(url, is(url));
-    assertThat(responseContent, is(expected));
   }
 
   /**
@@ -426,22 +387,7 @@ public class WebHdfsClientTest {
     ResponseHandler<Map> responseHandler =
         httpResponse -> {
           InputStream contentStream = httpResponse.getEntity().getContent();
-          return parseHttpResponseContentToMap(contentStream);
-        };
-    return adapter.sendHttpRequest(request, responseHandler);
-  }
-
-  /**
-   * Sends a GET request and returns a {@link String} representing the parsed response content.
-   *
-   * @param request - the request to send
-   * @return The {@link String} containing the parsed content
-   */
-  private String sendGetRequestToString(HttpRequestBase request) {
-    ResponseHandler<String> responseHandler =
-        httpResponse -> {
-          InputStream contentStream = httpResponse.getEntity().getContent();
-          return parseHttpResponseContentToString(contentStream);
+          return parseHttpResponseContent(contentStream);
         };
     return adapter.sendHttpRequest(request, responseHandler);
   }
@@ -453,26 +399,10 @@ public class WebHdfsClientTest {
    * @param contentStream - the input stream representing the content from the HTTP response
    * @return The {@link Map} containing the parsed content
    */
-  private Map parseHttpResponseContentToMap(InputStream contentStream) {
+  private Map parseHttpResponseContent(InputStream contentStream) {
     try (final Reader reader = new InputStreamReader(contentStream)) {
       ObjectMapper objectMapper = new ObjectMapper();
       return objectMapper.readValue(reader, Map.class);
-    } catch (IOException e) {
-      LOGGER.error("Failed to parse the HTTP content stream.", e);
-      return null;
-    }
-  }
-
-  /**
-   * Parses the <code>contentStream</code> into a {@link String}. The stream should be in JSON
-   * format for it to be cleanly mapped, otherwise a <code>null</code> value will be returned.
-   *
-   * @param contentStream - the input stream representing the content from the HTTP response
-   * @return The {@link String} containing the parsed content
-   */
-  private String parseHttpResponseContentToString(InputStream contentStream) {
-    try (final Reader reader = new InputStreamReader(contentStream)) {
-      return IOUtils.toString(reader);
     } catch (IOException e) {
       LOGGER.error("Failed to parse the HTTP content stream.", e);
       return null;
@@ -517,7 +447,7 @@ public class WebHdfsClientTest {
         name,
         URI.create("my:uri"),
         null,
-        new ByteArrayInputStream(RESOURCE_CONTENT.getBytes()),
+        new ByteArrayInputStream("my-data".getBytes()),
         MediaType.TEXT_PLAIN,
         10,
         getMetadata(id, metadataModified, resourceModified));
