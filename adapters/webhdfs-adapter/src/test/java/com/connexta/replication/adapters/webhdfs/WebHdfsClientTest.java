@@ -334,8 +334,8 @@ public class WebHdfsClientTest {
   }
 
   /**
-   * Utilizes the "Open and Read a File" WebHDFS operation to verify that the content within
-   * the given <code>filename</code> is what is expected.
+   * Utilizes the "Open and Read a File" WebHDFS operation to verify that the content within the
+   * given <code>filename</code> is what is expected.
    *
    * @param filename - the name of the file to verify
    * @param expected - the {@link String} value of a file's content
