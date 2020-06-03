@@ -15,40 +15,6 @@ package com.connexta.replication.adapters.webhdfs.filesystem;
 
 public class DirectoryListing {
 
-  //    private static final String PARTIAL_LISTING_KEY = "partialListing";
-  //    private static final String REMAINING_ENTRIES_KEY = "remainingEntries";
-  //    private static final String FILE_STATUSES_KEY = "FileStatuses";
-  //    private static final String FILE_STATUS_KEY = "FileStatus";
-
-  //    private List<FileStatus> partialListing;
-  //    private int remainingEntries = 0;
-
-  //    public DirectoryListing(Map<String, Object> directoryListing) {
-
-  //        this.partialListing = getPartialListing((Map)
-  // directoryListing.get(PARTIAL_LISTING_KEY));
-  //
-  //        this.remainingEntries = (Integer) directoryListing.get(REMAINING_ENTRIES_KEY);
-  //    }
-
-  //    private List<FileStatus> getPartialListing(Map<String, Object> partialListing) {
-  //
-  //        return getFileStatuses((Map) partialListing.get(FILE_STATUSES_KEY));
-  //
-  //    }
-  //
-  //    private List<FileStatus> getFileStatuses(Map<String, Object> fileStatuses) {
-  //
-  //        List<FileStatus> files = new ArrayList<>();
-  //
-  //        for(Map<String, Object> file : (ArrayList<Map<String, Object>>)
-  // fileStatuses.get(FILE_STATUS_KEY)) {
-  //            files.add(new FileStatus(file));
-  //        }
-  //        return files;
-  //
-  //    }
-
   PartialListing partialListing;
   int remainingEntries;
 
