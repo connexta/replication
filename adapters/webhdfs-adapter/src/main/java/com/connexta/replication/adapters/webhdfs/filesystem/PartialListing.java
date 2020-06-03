@@ -13,8 +13,11 @@
  */
 package com.connexta.replication.adapters.webhdfs.filesystem;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class PartialListing {
 
+  @JsonProperty("FileStatuses")
   FileStatuses fileStatuses;
 
   public FileStatuses getFileStatuses() {

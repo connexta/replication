@@ -15,9 +15,9 @@ package com.connexta.replication.adapters.webhdfs;
 
 import com.connexta.replication.adapters.webhdfs.filesystem.DirectoryListing;
 import com.connexta.replication.adapters.webhdfs.filesystem.FileStatus;
+import com.connexta.replication.adapters.webhdfs.filesystem.Result;
 import com.connexta.replication.data.QueryRequestImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.mime.tika.TikaMimeTypeResolver;
@@ -25,10 +25,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -156,12 +159,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
             if (statusCode == HttpStatus.SC_OK) {
               InputStream content = response.getEntity().getContent();
 
-              ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+              String text = IOUtils.toString(content, StandardCharsets.UTF_8.name());
 
-              DirectoryListing directoryListing = objectMapper.readValue(content, DirectoryListing.class);
+              ObjectMapper objectMapper = new ObjectMapper();
+
+              Result result = objectMapper.readValue(text, Result.class);
+              DirectoryListing directoryListing = result.getDirectoryListing();
 
               int remainingEntries = directoryListing.getRemainingEntries();
-
               List<FileStatus> filesToReplicate = getRelevantFiles(directoryListing.getPartialListing().getFileStatuses().getFileStatusList());
 
 
