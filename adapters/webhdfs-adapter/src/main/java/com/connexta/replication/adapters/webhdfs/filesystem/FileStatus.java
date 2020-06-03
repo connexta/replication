@@ -14,90 +14,124 @@
 package com.connexta.replication.adapters.webhdfs.filesystem;
 
 import java.util.Date;
-import java.util.Map;
 
 public class FileStatus {
 
-    private final Date accessTime;
-    private final int blockSize;
-    private final int childrenNum;
-    private final int fileId;
-    private final String group;
-    private final int length;
-    private final Date modificationTime;
-    private final String owner;
-    private final String pathSuffix;
-    private final String permission;
-    private final int replication;
-    private final int storagePolicy;
-    private final String type;
+  private Date accessTime;
+  private int blockSize;
+  private int childrenNum;
+  private int fileId;
+  private String group;
+  private int length;
+  private Date modificationTime;
+  private String owner;
+  private String pathSuffix;
+  private String permission;
+  private int replication;
+  private int storagePolicy;
+  private String type;
 
-    public FileStatus(Map<String, Object> file) {
+  public Date getAccessTime() {
+    return accessTime;
+  }
 
-        this.accessTime = (Date) file.get("accessTime");
-        this.blockSize = (int) file.get("blockSize");
-        this.childrenNum = (int) file.get("childrenNum");
-        this.fileId = (int) file.get("fileId");
-        this.group = (String) file.get("group");
-        this.length = (int) file.get("length");
-        this.modificationTime = (Date) file.get("modificationTime");
-        this.owner = (String) file.get("owner");
-        this.pathSuffix = (String) file.get("pathSuffix");
-        this.permission = (String) file.get("permission");
-        this.replication = (int) file.get("replication");
-        this.storagePolicy = (int) file.get("storagePolicy");
-        this.type = (String) file.get("type");
-    }
+  public void setAccessTime(Date accessTime) {
+    this.accessTime = accessTime;
+  }
 
-    public Date getAccessTime() {
-        return accessTime;
-    }
+  public int getBlockSize() {
+    return blockSize;
+  }
 
-    public int getBlockSize() {
-        return blockSize;
-    }
+  public void setBlockSize(int blockSize) {
+    this.blockSize = blockSize;
+  }
 
-    public int getChildrenNum() {
-        return childrenNum;
-    }
+  public int getChildrenNum() {
+    return childrenNum;
+  }
 
-    public int getFileId() {
-        return fileId;
-    }
+  public void setChildrenNum(int childrenNum) {
+    this.childrenNum = childrenNum;
+  }
 
-    public String getGroup() {
-        return group;
-    }
+  public int getFileId() {
+    return fileId;
+  }
 
-    public int getLength() {
-        return length;
-    }
+  public void setFileId(int fileId) {
+    this.fileId = fileId;
+  }
 
-    public Date getModificationTime() {
-        return modificationTime;
-    }
+  public String getGroup() {
+    return group;
+  }
 
-    public String getOwner() {
-        return owner;
-    }
+  public void setGroup(String group) {
+    this.group = group;
+  }
 
-    public String getPathSuffix() {
-        return pathSuffix;
-    }
+  public int getLength() {
+    return length;
+  }
 
-    public String getPermission() {
-        return permission;
-    }
+  public void setLength(int length) {
+    this.length = length;
+  }
 
-    public int getReplication() {
-        return replication;
-    }
+  public Date getModificationTime() {
+    return modificationTime;
+  }
 
-    public int getStoragePolicy() {
-        return storagePolicy;
-    }
+  public void setModificationTime(Date modificationTime) {
+    this.modificationTime = modificationTime;
+  }
 
-    public String getType() {
-        return type;
-    }
+  public String getOwner() {
+    return owner;
+  }
+
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
+
+  public String getPathSuffix() {
+    return pathSuffix;
+  }
+
+  public void setPathSuffix(String pathSuffix) {
+    this.pathSuffix = pathSuffix;
+  }
+
+  public String getPermission() {
+    return permission;
+  }
+
+  public void setPermission(String permission) {
+    this.permission = permission;
+  }
+
+  public int getReplication() {
+    return replication;
+  }
+
+  public void setReplication(int replication) {
+    this.replication = replication;
+  }
+
+  public int getStoragePolicy() {
+    return storagePolicy;
+  }
+
+  public void setStoragePolicy(int storagePolicy) {
+    this.storagePolicy = storagePolicy;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
 }
