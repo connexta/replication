@@ -13,7 +13,11 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import com.connexta.replication.adapters.webhdfs.filesystem.DirectoryListing;
+import com.connexta.replication.adapters.webhdfs.filesystem.FileStatus;
+import com.connexta.replication.data.QueryRequestImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.mime.tika.TikaMimeTypeResolver;
@@ -21,6 +25,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -57,10 +64,13 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final String HTTP_OPERATION_KEY = "op";
   private static final String HTTP_OPERATION_CHECK_ACCESS = "CHECKACCESS";
+  private static final String HTTP_OPERATION_LIST_STATUS_BATCH = "LISTSTATUS_BATCH";
   private static final String HTTP_OPERATION_CREATE = "CREATE";
 
   private static final String HTTP_FILE_SYSTEM_ACTION_KEY = "fsaction";
   private static final String HTTP_FILE_SYSTEM_ACTION_ALL = "rwx";
+
+  private static final String HTTP_START_AFTER_KEY = "startAfter";
 
   private static final String HTTP_NO_REDIRECT_KEY = "noredirect";
   private static final String HTTP_CREATE_OVERWRITE_KEY = "overwrite";
@@ -116,9 +126,63 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     return "webHDFS";
   }
 
+  /**
+   * TEMPORARY METHOD FOR IMPLEMENTATION TESTING
+   */
+  public QueryResponse testQuery() {
+    Date modifiedAfter = new Date(22222222L);
+
+    QueryRequest queryRequest =
+        new QueryRequestImpl("", Collections.emptyList(), Collections.emptyList(), modifiedAfter);
+    QueryResponse queryResponse = query(queryRequest);
+    return queryResponse;
+  }
+
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
-    return null;
+    Date modifiedAfter = queryRequest.getModifiedAfter();
+
+    try {
+      URIBuilder builder = new URIBuilder(getWebHdfsUrl().toString());
+      builder.setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_LIST_STATUS_BATCH);
+      //              .setParameter(HTTP_START_AFTER_KEY, "pathSuffix of the last entry");
+
+      HttpGet httpGet = new HttpGet(builder.build());
+
+      ResponseHandler<Map<String, Object>> responseHandler =
+          response -> {
+            int statusCode = response.getStatusLine().getStatusCode();
+
+            if (statusCode == HttpStatus.SC_OK) {
+              InputStream content = response.getEntity().getContent();
+
+              ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+              DirectoryListing directoryListing = objectMapper.readValue(content, DirectoryListing.class);
+
+              int remainingEntries = directoryListing.getRemainingEntries();
+
+              List<FileStatus> filesToReplicate = getRelevantFiles(directoryListing.getPartialListing().getFileStatuses().getFileStatusList());
+
+
+              return null;
+            } else {
+              return null;
+            }
+          };
+
+      Map<String, Object> map = sendHttpRequest(httpGet, responseHandler);
+      return null;
+
+    } catch (URISyntaxException e) {
+      LOGGER.error("Unable to query, due to invalid URL.", e);
+      return null;
+    }
+  }
+
+  private List<FileStatus> getRelevantFiles(List<FileStatus> fileStatusList) {
+    // TODO: 6/3/20 add filtering on modified after value
+    return fileStatusList;
   }
 
   @Override

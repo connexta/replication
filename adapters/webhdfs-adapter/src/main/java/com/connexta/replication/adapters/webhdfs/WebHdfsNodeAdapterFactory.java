@@ -51,6 +51,17 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
     }
   }
 
+  public static void main(String[] args) {
+    try {
+      WebHdfsNodeAdapter adapter =
+          new WebHdfsNodeAdapter(
+              new URL("http://localhost:9870/webhdfs/v1/user/chris"), HttpClients.createDefault());
+      adapter.testQuery();
+    } catch (MalformedURLException e) {
+      System.exit(0);
+    }
+  }
+
   @Override
   public NodeAdapterType getType() {
     return NodeAdapterType.WEBHDFS;
