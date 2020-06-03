@@ -68,6 +68,8 @@ public class WebHdfsClientTest {
   private static HdfsLocalCluster hdfsLocalCluster;
   private WebHdfsNodeAdapter adapter;
 
+  private static final String RESOURCE_CONTENT = "my-data";
+
   @BeforeClass
   public static void setUpClass() {
     hdfsLocalCluster =
@@ -272,7 +274,7 @@ public class WebHdfsClientTest {
 
     adapter.createResource(createStorageRequest);
 
-    verifyFileContents(originalFilename, "my-data");
+    verifyFileContents(originalFilename, RESOURCE_CONTENT);
   }
 
   @Test
@@ -326,7 +328,7 @@ public class WebHdfsClientTest {
     }
 
     assertThat(hdfsLocalCluster.getHdfsFormat(), is(true));
-    assertThat(uri.toString(), is(String.format("%s%s?op=GETFILESTATUS", BASE_URL, filename)));
+    assertThat(uri.toString(), is(url));
     assertThat(fileStatus, notNullValue());
     assertThat(fileStatus.get("type"), is("FILE"));
   }
@@ -348,7 +350,7 @@ public class WebHdfsClientTest {
     String responseContent = sendGetRequestToString(getRequest);
 
     assertThat(hdfsLocalCluster.getHdfsFormat(), is(true));
-    assertThat(uri.toString(), is(String.format("%s/%s?op=OPEN", BASE_URL, filename)));
+    assertThat(url, is(url));
     assertThat(responseContent, is(expected));
   }
 
@@ -515,7 +517,7 @@ public class WebHdfsClientTest {
         name,
         URI.create("my:uri"),
         null,
-        new ByteArrayInputStream("my-data".getBytes()),
+        new ByteArrayInputStream(RESOURCE_CONTENT.getBytes()),
         MediaType.TEXT_PLAIN,
         10,
         getMetadata(id, metadataModified, resourceModified));
