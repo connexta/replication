@@ -15,7 +15,7 @@ package com.connexta.replication.adapters.webhdfs;
 
 import com.connexta.replication.adapters.webhdfs.filesystem.DirectoryListing;
 import com.connexta.replication.adapters.webhdfs.filesystem.FileStatus;
-import com.connexta.replication.adapters.webhdfs.filesystem.Result;
+import com.connexta.replication.adapters.webhdfs.filesystem.IterativeDirectoryListing;
 import com.connexta.replication.data.QueryRequestImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,13 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -133,7 +131,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * TEMPORARY METHOD FOR IMPLEMENTATION TESTING
    */
   public QueryResponse testQuery() {
-    Date modifiedAfter = new Date(22222222L);
+    Date modifiedAfter = new Date(33333333L);
 
     QueryRequest queryRequest =
         new QueryRequestImpl("", Collections.emptyList(), Collections.emptyList(), modifiedAfter);
@@ -159,15 +157,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
             if (statusCode == HttpStatus.SC_OK) {
               InputStream content = response.getEntity().getContent();
 
-              String text = IOUtils.toString(content, StandardCharsets.UTF_8.name());
-
               ObjectMapper objectMapper = new ObjectMapper();
 
-              Result result = objectMapper.readValue(text, Result.class);
-              DirectoryListing directoryListing = result.getDirectoryListing();
+              IterativeDirectoryListing iterativeDirectoryListing = objectMapper.readValue(content, IterativeDirectoryListing.class);
+              DirectoryListing directoryListing = iterativeDirectoryListing.getDirectoryListing();
 
               int remainingEntries = directoryListing.getRemainingEntries();
-              List<FileStatus> filesToReplicate = getRelevantFiles(directoryListing.getPartialListing().getFileStatuses().getFileStatusList());
+
+              List<FileStatus> filesToReplicate = getRelevantFiles(directoryListing.getPartialListing().getFileStatuses().getFileStatusList(), modifiedAfter);
 
 
               return null;
@@ -185,9 +182,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     }
   }
 
-  private List<FileStatus> getRelevantFiles(List<FileStatus> fileStatusList) {
-    // TODO: 6/3/20 add filtering on modified after value
-    return fileStatusList;
+  private List<FileStatus> getRelevantFiles(List<FileStatus> files, Date modifiedAfter) {
+//    files.removeIf(FileStatus::isDirectory);
+//    files.removeIf(file -> file.isOlderThan(modifiedAfter));
+    files.removeIf(file -> file.isDirectory() || file.isOlderThan(modifiedAfter));
+
+    return files;
   }
 
   @Override

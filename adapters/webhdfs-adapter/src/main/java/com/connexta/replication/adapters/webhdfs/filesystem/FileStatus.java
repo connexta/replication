@@ -13,6 +13,8 @@
  */
 package com.connexta.replication.adapters.webhdfs.filesystem;
 
+import org.apache.commons.io.FilenameUtils;
+
 import java.util.Date;
 
 public class FileStatus {
@@ -133,5 +135,19 @@ public class FileStatus {
 
   public void setType(String type) {
     this.type = type;
+  }
+
+  public boolean isDirectory() {
+    return getType().equals("DIRECTORY");
+  }
+
+  public boolean isOlderThan(Date date) {
+    String filename = FilenameUtils.removeExtension(getPathSuffix());
+
+    // get time portion of the filename
+    long fileTime = Long.parseLong(filename.substring(filename.lastIndexOf('_') + 1));
+
+    Date fileDate = new Date(fileTime);
+    return fileDate.before(date);
   }
 }
