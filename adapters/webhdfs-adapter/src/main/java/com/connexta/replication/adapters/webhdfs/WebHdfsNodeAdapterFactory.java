@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapterFactory.class);
+  private static final int HTTPS_PORT = 443;
 
   public WebHdfsNodeAdapterFactory() {
     LOGGER.debug("Created a WebHdfsNodeAdapterFactory");
@@ -37,7 +38,8 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
-    String baseUrl = "http://" + url.getHost() + ":" + url.getPort() + url.getPath();
+    String protocol = url.getPort() == HTTPS_PORT ? "https://" : "http://";
+    String baseUrl = protocol + url.getHost() + ":" + url.getPort() + url.getPath();
 
     if (!baseUrl.endsWith("/")) {
       baseUrl = baseUrl.concat("/");
