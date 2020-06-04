@@ -22,10 +22,14 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.connexta.replication.data.ResourceImpl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
@@ -44,6 +48,8 @@ import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.Resource;
+import org.codice.ditto.replication.api.data.ResourceRequest;
+import org.codice.ditto.replication.api.data.ResourceResponse;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.junit.Before;
 import org.junit.Rule;
@@ -107,6 +113,166 @@ public class WebHdfsNodeAdapterTest {
         .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
 
     assertThat(webHdfsNodeAdapter.isAvailable(), is(false));
+  }
+
+  @SuppressWarnings({"Duplicates", "unchecked"})
+  @Test
+  public void testReadResource() throws URISyntaxException, IOException {
+    String testResourceId = "123456789";
+    Date testDate = new Date();
+    String testResourceName = String.format("%s_%s", testResourceId, testDate.getTime());
+    Long testResourceSize = 256L;
+    URI testResourceUri =
+        new URI(String.format("http://host1:8000/test/resource/%s.txt", testResourceName));
+    String testFileLocation = String.format("{\"Location\":\"%s\"}", testResourceUri.toString());
+
+    ResourceRequest mockResourceRequest = mock(ResourceRequest.class);
+    Metadata mockMetadata = mock(Metadata.class);
+
+    when(mockResourceRequest.getMetadata()).thenReturn(mockMetadata);
+    when(mockMetadata.getId()).thenReturn(testResourceId);
+    when(mockMetadata.getResourceUri()).thenReturn(testResourceUri);
+    when(mockMetadata.getResourceModified()).thenReturn(testDate);
+
+    /* Location response mocks */
+    HttpResponse mockLocationHttpResponse = mock(HttpResponse.class);
+    StatusLine mockLocationStatusLine = mock(StatusLine.class);
+    HttpEntity mockLocationHttpEntity = mock(HttpEntity.class);
+    Header mockLocationHeader = mock(Header.class);
+    InputStream locationContent = new ByteArrayInputStream(testFileLocation.getBytes());
+
+    when(mockLocationHttpResponse.getStatusLine()).thenReturn(mockLocationStatusLine);
+    when(mockLocationHttpResponse.getEntity()).thenReturn(mockLocationHttpEntity);
+    when(mockLocationStatusLine.getStatusCode()).thenReturn(200);
+    when(mockLocationHttpEntity.getContent()).thenReturn(locationContent);
+    when(mockLocationHttpEntity.getContentType()).thenReturn(mockLocationHeader);
+    when(mockLocationHeader.getValue()).thenReturn("application/json");
+    /* End */
+
+    /* Resource content mocks */
+    HttpResponse mockResourceHttpResponse = mock(HttpResponse.class);
+    StatusLine mockResourceStatusLine = mock(StatusLine.class);
+    HttpEntity mockResourceHttpEntity = mock(HttpEntity.class);
+    Header mockResourceHeader = mock(Header.class);
+    InputStream resourceContent = new ByteArrayInputStream("my-data".getBytes());
+
+    when(mockResourceHttpResponse.getStatusLine()).thenReturn(mockResourceStatusLine);
+    when(mockResourceHttpResponse.getEntity()).thenReturn(mockResourceHttpEntity);
+    when(mockResourceStatusLine.getStatusCode()).thenReturn(200);
+    when(mockResourceHttpEntity.getContent()).thenReturn(resourceContent);
+    when(mockResourceHttpEntity.getContentLength()).thenReturn(testResourceSize);
+    when(mockResourceHttpEntity.getContentType()).thenReturn(mockResourceHeader);
+    when(mockResourceHeader.getValue()).thenReturn("text/plain");
+    /* End */
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(mockLocationHttpResponse);
+            })
+        .doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(mockResourceHttpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    Resource expectedResource =
+        new ResourceImpl(
+            testResourceId,
+            testResourceName,
+            testResourceUri,
+            null,
+            new ByteArrayInputStream("my-data".getBytes()),
+            "text/plain",
+            testResourceSize,
+            mockMetadata);
+    ResourceResponse actualResponse = webHdfsNodeAdapter.readResource(mockResourceRequest);
+    Resource actualResource = actualResponse.getResource();
+
+    assertThat(actualResource.getId(), is(expectedResource.getId()));
+    assertThat(actualResource.getName(), is(expectedResource.getName()));
+    assertThat(
+        actualResource.getMetadata().getResourceUri(), is(expectedResource.getResourceUri()));
+    assertThat(
+        readInputStreamToString(actualResource.getInputStream()),
+        is(readInputStreamToString(expectedResource.getInputStream())));
+  }
+
+  @SuppressWarnings({"Duplicates", "unchecked"})
+  @Test
+  public void testGetLocationReadSuccess() throws URISyntaxException, IOException {
+    URI testResourceUri = new URI("http://host1:8000/test/resource/file.txt");
+    String testFileLocation = String.format("{\"Location\":\"%s\"}", testResourceUri.toString());
+    ResourceRequest mockResourceRequest = mock(ResourceRequest.class);
+    Metadata mockMetadata = mock(Metadata.class);
+
+    HttpResponse mockHttpResponse = mock(HttpResponse.class);
+    StatusLine mockStatusLine = mock(StatusLine.class);
+    HttpEntity mockHttpEntity = mock(HttpEntity.class);
+    InputStream content = new ByteArrayInputStream(testFileLocation.getBytes());
+
+    when(mockResourceRequest.getMetadata()).thenReturn(mockMetadata);
+    when(mockMetadata.getId()).thenReturn("123456789");
+    when(mockMetadata.getResourceUri()).thenReturn(testResourceUri);
+
+    when(mockHttpResponse.getStatusLine()).thenReturn(mockStatusLine);
+    when(mockStatusLine.getStatusCode()).thenReturn(200).thenReturn(201);
+    when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
+    when(mockHttpEntity.getContent()).thenReturn(content);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(mockHttpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    assertThat(webHdfsNodeAdapter.getLocation(mockResourceRequest), is(testResourceUri.toString()));
+  }
+
+  @Test
+  public void testGetLocationNullMetadata() throws URISyntaxException {
+    ResourceRequest mockResourceRequest = mock(ResourceRequest.class);
+    when(mockResourceRequest.getMetadata()).thenReturn(null);
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("No accessible metadata was found for the request.");
+
+    webHdfsNodeAdapter.getLocation(mockResourceRequest);
+  }
+
+  @Test
+  public void testReadFileAtLocationBadStatus() throws IOException {
+    ResourceRequest mockResourceRequest = mock(ResourceRequest.class);
+    Metadata mockMetadata = mock(Metadata.class);
+
+    when(mockMetadata.getId()).thenReturn("404");
+    when(mockResourceRequest.getMetadata()).thenReturn(mockMetadata);
+
+    HttpResponse httpResponse = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(httpResponse.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_BAD_REQUEST);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<String> responseHandler =
+                  (ResponseHandler<String>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(httpResponse);
+            })
+        .when(client)
+        .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
+
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("Request failed with status code: 400");
+
+    webHdfsNodeAdapter.readFileAtLocation(mockResourceRequest, "");
   }
 
   @Test
@@ -524,5 +690,19 @@ public class WebHdfsNodeAdapterTest {
     when(updateStorageRequest.getResources()).thenReturn(resources);
 
     assertThat(webHdfsNodeAdapter.updateResource(updateStorageRequest), is(false));
+  }
+
+  /**
+   * Reads an {@link InputStream} into a readable {@link String}.
+   *
+   * @param contentStream - the {@link InputStream} to read
+   * @return The resulting {@link String} read
+   */
+  private String readInputStreamToString(InputStream contentStream) {
+    try (final Reader reader = new InputStreamReader(contentStream)) {
+      return IOUtils.toString(reader);
+    } catch (IOException e) {
+      throw new ReplicationException("Failed to read the input stream.", e);
+    }
   }
 }

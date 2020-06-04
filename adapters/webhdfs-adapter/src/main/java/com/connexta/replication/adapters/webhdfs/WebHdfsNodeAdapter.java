@@ -13,14 +13,19 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import com.connexta.replication.data.ResourceImpl;
+import com.connexta.replication.data.ResourceResponseImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.mime.tika.TikaMimeTypeResolver;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
@@ -60,6 +65,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   private static final String HTTP_OPERATION_KEY = "op";
   private static final String HTTP_OPERATION_CHECK_ACCESS = "CHECKACCESS";
   private static final String HTTP_OPERATION_CREATE = "CREATE";
+  private static final String HTTP_OPERATION_OPEN = "OPEN";
 
   private static final String HTTP_FILE_SYSTEM_ACTION_KEY = "fsaction";
   private static final String HTTP_FILE_SYSTEM_ACTION_ALL = "rwx";
@@ -148,7 +154,18 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public ResourceResponse readResource(ResourceRequest resourceRequest) {
-    return null;
+    ResourceResponse resourceResponse = null;
+
+    try {
+      String location = getLocation(resourceRequest);
+      resourceResponse = readFileAtLocation(resourceRequest, location);
+    } catch (URISyntaxException e) {
+      LOGGER.error("Unable to get location, due to invalid URL.", e);
+    } catch (ReplicationException e) {
+      LOGGER.error("Unable to read resource.", e);
+    }
+
+    return resourceResponse;
   }
 
   @Override
@@ -164,6 +181,33 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       LOGGER.error("Unable to create resource.", e);
     }
     return false;
+  }
+
+  /**
+   * Sends a GET request to retrieve the location to read from. The <code>resourceRequest</code>
+   * provides the URL to send the request as the resource URI in its metadata.
+   *
+   * @param resourceRequest - the {@link ResourceRequest} containing the resource URI to send the
+   *     request to
+   * @return The {@link String} of the location URL
+   * @throws URISyntaxException When the resulting URI built from the resource URI has syntax issues
+   */
+  @VisibleForTesting
+  String getLocation(ResourceRequest resourceRequest) throws URISyntaxException {
+    if (resourceRequest.getMetadata() == null) {
+      throw new ReplicationException("No accessible metadata was found for the request.");
+    }
+
+    Metadata metadata = resourceRequest.getMetadata();
+    URI resourceUri = metadata.getResourceUri();
+
+    URIBuilder uriBuilder = new URIBuilder(resourceUri);
+    uriBuilder
+        .setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_OPEN)
+        .setParameter(HTTP_NO_REDIRECT_KEY, "true");
+    HttpGet httpGet = new HttpGet(uriBuilder.build());
+
+    return handleLocationRequest(httpGet);
   }
 
   /**
@@ -192,6 +236,17 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         .setParameter(HTTP_NO_REDIRECT_KEY, "true");
     HttpPut httpPut = new HttpPut(builder.build());
 
+    return handleLocationRequest(httpPut);
+  }
+
+  /**
+   * Provides a {@link ResponseHandler} for handling HTTP requests for location URL strings and
+   * calls {@link WebHdfsNodeAdapter#sendHttpRequest(HttpRequestBase, ResponseHandler)}.
+   *
+   * @param httpRequest - the {@link HttpRequestBase} to send with the {@link ResponseHandler}
+   * @return The {@link String} of the location URL
+   */
+  private String handleLocationRequest(HttpRequestBase httpRequest) {
     ResponseHandler<String> responseHandler =
         response -> {
           int status = response.getStatusLine().getStatusCode();
@@ -215,7 +270,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
           }
         };
 
-    return sendHttpRequest(httpPut, responseHandler);
+    return sendHttpRequest(httpRequest, responseHandler);
   }
 
   private String formatFilename(CreateStorageRequest createStorageRequest) {
@@ -230,6 +285,27 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         + "_"
         + metadata.getResourceModified().getTime()
         + tikaMimeTypeResolver.getFileExtensionForMimeType(resource.getMimeType());
+  }
+
+  /**
+   * Clones an {@link InputStream} to a more reusable input stream object.
+   *
+   * @param inputStream - the {@link InputStream} to clone
+   * @return The cloned {@link InputStream}
+   * @throws IOException When the read or flush operation fails
+   */
+  private InputStream cloneInputStream(InputStream inputStream) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    byte[] buffer = new byte[1024];
+    int len;
+
+    while ((len = inputStream.read(buffer)) > -1) {
+      baos.write(buffer, 0, len);
+    }
+
+    baos.flush();
+
+    return new ByteArrayInputStream(baos.toByteArray());
   }
 
   /**
@@ -248,6 +324,38 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       throw new ReplicationException(
           String.format("Failed to send %s to remote system.", request.getMethod()), e);
     }
+  }
+
+  @VisibleForTesting
+  ResourceResponse readFileAtLocation(ResourceRequest resourceRequest, String location) {
+    HttpGet httpGet = new HttpGet(location);
+    ResponseHandler<ResourceResponse> responseHandler =
+        response -> {
+          int status = response.getStatusLine().getStatusCode();
+
+          if (status == HttpStatus.SC_OK) {
+            InputStream content = response.getEntity().getContent();
+            String mimeType = response.getEntity().getContentType().getValue();
+            long size = response.getEntity().getContentLength();
+
+            Metadata metadata = resourceRequest.getMetadata();
+            String id = metadata.getId();
+            String name = String.format("%s_%s", id, metadata.getResourceModified().getTime());
+            URI uri = resourceRequest.getMetadata().getResourceUri();
+            InputStream resourceContentStream = cloneInputStream(content);
+
+            Resource resource =
+                new ResourceImpl(
+                    id, name, uri, null, resourceContentStream, mimeType, size, metadata);
+
+            return new ResourceResponseImpl(resource);
+          } else {
+            throw new ReplicationException(
+                String.format("Request failed with status code: %d", status));
+          }
+        };
+
+    return sendHttpRequest(httpGet, responseHandler);
   }
 
   /**
