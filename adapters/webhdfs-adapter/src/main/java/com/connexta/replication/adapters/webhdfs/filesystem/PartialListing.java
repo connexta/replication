@@ -15,6 +15,7 @@ package com.connexta.replication.adapters.webhdfs.filesystem;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/** Represents a PartialListing JSON object received through an HTTP GET request */
 public class PartialListing {
 
   @JsonProperty("FileStatuses")

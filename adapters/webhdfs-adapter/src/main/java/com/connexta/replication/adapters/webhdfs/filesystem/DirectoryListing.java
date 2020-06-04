@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.adapters.webhdfs.filesystem;
 
+/** Represents a DirectoryListing JSON object received through an HTTP GET request */
 public class DirectoryListing {
 
   PartialListing partialListing;

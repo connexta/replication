@@ -13,10 +13,10 @@
  */
 package com.connexta.replication.adapters.webhdfs.filesystem;
 
+import java.util.Date;
 import org.apache.commons.io.FilenameUtils;
 
-import java.util.Date;
-
+/** Represents a FileStatus JSON object received through an HTTP GET request */
 public class FileStatus {
 
   private Date accessTime;
