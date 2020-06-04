@@ -24,7 +24,6 @@ import com.connexta.replication.data.MetadataImpl;
 import com.connexta.replication.data.ResourceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sakserv.minicluster.impl.HdfsLocalCluster;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +39,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -120,8 +119,8 @@ public class WebHdfsClientTest {
   public void testResourceFileIsRead() throws URISyntaxException {
     String testId = "order-66-clones-memo";
     Date testDate = new Date();
-    String testName = String.format("%s_%s", testId, testDate.getTime());
-    String url = String.format("%s/webhdfs/v1/%s.txt", BASE_URL, testName);
+    String testName = formatResourceName(testId, testDate);
+    String url = String.format("%s/%s.txt", BASE_URL, testName);
 
     // creates the resource in the HDFS instance to be read and verifies the resource exists
     CreateStorageRequest createStorageRequest =
@@ -137,8 +136,7 @@ public class WebHdfsClientTest {
 
     assertThat(readResource.getId(), is(testId));
     assertThat(readResource.getName(), is(String.format("%s_%s", testId, testDate.getTime())));
-    // TODO - uncomment below line when file content issue is fixed
-    // assertThat(readInputStreamToString(readResource.getInputStream()), is("my-data"));
+//    assertThat(readInputStreamToString(readResource.getInputStream()), is("my-data"));
   }
 
   @Test
@@ -146,7 +144,7 @@ public class WebHdfsClientTest {
     String testId = "404";
     String testName = "404-not-found";
     Date testDate = new Date();
-    String filename = String.format("%s_%s.txt", testId, testDate.getTime());
+    String filename = formatResourceName(testId, testDate) + ".txt";
     String badHostnameUri = String.format("http://foobar:%s/webhdfs/v1/%s", HDFS_PORT, filename);
 
     // creates the resource with the bad hostname
@@ -167,7 +165,7 @@ public class WebHdfsClientTest {
     String testId = "404";
     String testName = "404-not-found";
     Date testDate = new Date();
-    String filename = String.format("%s_%s.txt", testId, testDate.getTime());
+    String filename = formatResourceName(testId, testDate) + ".txt";
     String badPortUri = "http://localhost:9999/webhdfs/v1/" + filename;
 
     // creates the resource with the bad port
@@ -188,9 +186,8 @@ public class WebHdfsClientTest {
     String testId = "404";
     String testName = "404-not-found";
     Date testDate = new Date();
-    String filename = String.format("%s_%s.txt", testId, testDate.getTime());
-    String filePath = "webhdfs/v1/" + filename;
-    String url = String.format("%s/%s", BASE_URL, filePath);
+    String filename = formatResourceName(testId, testDate) + ".txt";
+    String url = String.format("%s/%s", BASE_URL, filename);
 
     // creates the resource but doesn't write it to HDFS
     CreateStorageRequest createStorageRequest =
@@ -209,7 +206,7 @@ public class WebHdfsClientTest {
     String testId = "123456789";
     String testName = "testresource";
     Date testDate = new Date();
-    String filename = String.format("%s_%s.txt", testId, testDate.getTime());
+    String filename = formatResourceName(testId, testDate) + ".txt";
     CreateStorageRequest createStorageRequest =
         generateTestStorageRequest(testId, testName, testDate);
 
@@ -380,6 +377,17 @@ public class WebHdfsClientTest {
   }
 
   /**
+   * Formats a resource name in the way it's stored in HDFS.
+   *
+   * @param id - the ID of the {@link Resource}
+   * @param date - the resource modified {@link Date} of the {@link Resource}
+   * @return The formatted resource name {@link String}
+   */
+  private static String formatResourceName(String id, Date date) {
+    return String.format("%s_%s", id, date.getTime());
+  }
+
+  /**
    * Utilizes the "Status of a File/Directory" WebHDFS operation to verify that the file with the
    * given <code>filename</code> exists in the expected location.
    *
@@ -514,9 +522,15 @@ public class WebHdfsClientTest {
     }
   }
 
+  /**
+   * Reads an {@link InputStream} into a readable {@link String}.
+   *
+   * @param contentStream - the {@link InputStream} to read
+   * @return The resulting {@link String} read
+   */
   private String readInputStreamToString(InputStream contentStream) {
-    try (final BufferedReader reader = new BufferedReader(new InputStreamReader(contentStream))) {
-      return reader.lines().collect(Collectors.joining("\n"));
+    try (final Reader reader = new InputStreamReader(contentStream)) {
+      return IOUtils.toString(reader);
     } catch (IOException e) {
       LOGGER.error("Failed to read the input stream.", e);
       return null;

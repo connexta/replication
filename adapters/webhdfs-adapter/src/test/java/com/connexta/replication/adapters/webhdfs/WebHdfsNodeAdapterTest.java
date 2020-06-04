@@ -23,11 +23,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.connexta.replication.data.ResourceImpl;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
-import java.util.stream.Collectors;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -693,12 +692,17 @@ public class WebHdfsNodeAdapterTest {
     assertThat(webHdfsNodeAdapter.updateResource(updateStorageRequest), is(false));
   }
 
-  private String readInputStreamToString(InputStream contentStream) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(contentStream));
-    try {
-      return reader.lines().collect(Collectors.joining("\n"));
-    } finally {
-      reader.close();
+  /**
+   * Reads an {@link InputStream} into a readable {@link String}.
+   *
+   * @param contentStream - the {@link InputStream} to read
+   * @return The resulting {@link String} read
+   */
+  private String readInputStreamToString(InputStream contentStream) {
+    try (final Reader reader = new InputStreamReader(contentStream)) {
+      return IOUtils.toString(reader);
+    } catch (IOException e) {
+      throw new ReplicationException("Failed to read the input stream.", e);
     }
   }
 }

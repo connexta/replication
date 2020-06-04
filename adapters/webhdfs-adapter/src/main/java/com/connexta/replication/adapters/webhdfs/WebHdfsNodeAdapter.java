@@ -152,16 +152,18 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public ResourceResponse readResource(ResourceRequest resourceRequest) {
+    ResourceResponse resourceResponse = null;
+
     try {
       String location = getLocation(resourceRequest);
-
-      return readFileAtLocation(resourceRequest, location);
+      resourceResponse = readFileAtLocation(resourceRequest, location);
     } catch (URISyntaxException e) {
       LOGGER.error("Unable to get location, due to invalid URL.", e);
     } catch (ReplicationException e) {
       LOGGER.error("Unable to read resource.", e);
     }
-    return null;
+
+    return resourceResponse;
   }
 
   @Override
@@ -179,6 +181,15 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     return false;
   }
 
+  /**
+   * Sends a GET request to retrieve the location to read from. The <code>resourceRequest</code>
+   * provides the URL to send the request as the resource URI in its metadata.
+   *
+   * @param resourceRequest - the {@link ResourceRequest} containing the resource URI to send the
+   *     request to
+   * @return The {@link String} of the location URL
+   * @throws URISyntaxException When the resulting URI built from the resource URI has syntax issues
+   */
   @VisibleForTesting
   String getLocation(ResourceRequest resourceRequest) throws URISyntaxException {
     if (resourceRequest.getMetadata() == null) {
@@ -194,7 +205,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         .setParameter(HTTP_NO_REDIRECT_KEY, "true");
     HttpGet httpGet = new HttpGet(uriBuilder.build());
 
-    return handleLocationResponse(httpGet);
+    return handleLocationRequest(httpGet);
   }
 
   /**
@@ -223,10 +234,17 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         .setParameter(HTTP_NO_REDIRECT_KEY, "true");
     HttpPut httpPut = new HttpPut(builder.build());
 
-    return handleLocationResponse(httpPut);
+    return handleLocationRequest(httpPut);
   }
 
-  private String handleLocationResponse(HttpRequestBase httpRequest) {
+  /**
+   * Provides a {@link ResponseHandler} for handling HTTP requests for location URL strings and
+   * calls {@link WebHdfsNodeAdapter#sendHttpRequest(HttpRequestBase, ResponseHandler)}.
+   *
+   * @param httpRequest - the {@link HttpRequestBase} to send with the {@link ResponseHandler}
+   * @return The {@link String} of the location URL
+   */
+  private String handleLocationRequest(HttpRequestBase httpRequest) {
     ResponseHandler<String> responseHandler =
         response -> {
           int status = response.getStatusLine().getStatusCode();
