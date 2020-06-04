@@ -25,11 +25,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -127,11 +129,9 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     return "webHDFS";
   }
 
-  /**
-   * TEMPORARY METHOD FOR IMPLEMENTATION TESTING
-   */
+  /** TEMPORARY METHOD FOR IMPLEMENTATION TESTING */
   public QueryResponse testQuery() {
-    Date modifiedAfter = new Date(33333333L);
+    Date modifiedAfter = new Date(22222222L);
 
     QueryRequest queryRequest =
         new QueryRequestImpl("", Collections.emptyList(), Collections.emptyList(), modifiedAfter);
@@ -141,51 +141,88 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
-    Date modifiedAfter = queryRequest.getModifiedAfter();
 
-    try {
-      URIBuilder builder = new URIBuilder(getWebHdfsUrl().toString());
-      builder.setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_LIST_STATUS_BATCH);
-      //              .setParameter(HTTP_START_AFTER_KEY, "pathSuffix of the last entry");
+    List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
 
-      HttpGet httpGet = new HttpGet(builder.build());
-
-      ResponseHandler<Map<String, Object>> responseHandler =
-          response -> {
-            int statusCode = response.getStatusLine().getStatusCode();
-
-            if (statusCode == HttpStatus.SC_OK) {
-              InputStream content = response.getEntity().getContent();
-
-              ObjectMapper objectMapper = new ObjectMapper();
-
-              IterativeDirectoryListing iterativeDirectoryListing = objectMapper.readValue(content, IterativeDirectoryListing.class);
-              DirectoryListing directoryListing = iterativeDirectoryListing.getDirectoryListing();
-
-              int remainingEntries = directoryListing.getRemainingEntries();
-
-              List<FileStatus> filesToReplicate = getRelevantFiles(directoryListing.getPartialListing().getFileStatuses().getFileStatusList(), modifiedAfter);
-
-
-              return null;
-            } else {
-              return null;
-            }
-          };
-
-      Map<String, Object> map = sendHttpRequest(httpGet, responseHandler);
-      return null;
-
-    } catch (URISyntaxException e) {
-      LOGGER.error("Unable to query, due to invalid URL.", e);
-      return null;
-    }
+    return null;
   }
 
-  private List<FileStatus> getRelevantFiles(List<FileStatus> files, Date modifiedAfter) {
-//    files.removeIf(FileStatus::isDirectory);
-//    files.removeIf(file -> file.isOlderThan(modifiedAfter));
-    files.removeIf(file -> file.isDirectory() || file.isOlderThan(modifiedAfter));
+  /**
+   * Formulates a GET request to send to the HDFS instance. Repeats the request to retrieve
+   * additional results if the file system contains additional results to retrieve.
+   *
+   * @param filterDate specifies a point in time such that older files are excluded
+   * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
+   */
+  private List<FileStatus> getFilesToReplicate(Date filterDate) {
+
+    List<FileStatus> filesToReplicate = new ArrayList<>();
+    AtomicInteger remainingEntries = new AtomicInteger();
+    AtomicReference<String> pathSuffix = new AtomicReference<>();
+
+    do {
+      try {
+        URIBuilder builder = new URIBuilder(getWebHdfsUrl().toString());
+        builder.setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_LIST_STATUS_BATCH);
+
+        if (pathSuffix.get() != null) {
+          builder.setParameter(HTTP_START_AFTER_KEY, pathSuffix.get());
+        }
+
+        HttpGet httpGet = new HttpGet(builder.build());
+
+        ResponseHandler<List<FileStatus>> responseHandler =
+            response -> {
+              int statusCode = response.getStatusLine().getStatusCode();
+
+              if (statusCode == HttpStatus.SC_OK) {
+                InputStream content = response.getEntity().getContent();
+
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                IterativeDirectoryListing iterativeDirectoryListing =
+                    objectMapper.readValue(content, IterativeDirectoryListing.class);
+                DirectoryListing directoryListing = iterativeDirectoryListing.getDirectoryListing();
+
+                remainingEntries.set(directoryListing.getRemainingEntries());
+
+                List<FileStatus> results =
+                    directoryListing.getPartialListing().getFileStatuses().getFileStatusList();
+
+                if (remainingEntries.intValue() > 0) {
+                  // start after pathSuffix of the last item for the next request
+                  pathSuffix.set(results.get(results.size() - 1).getPathSuffix());
+                }
+
+                return getRelevantFiles(results, filterDate);
+
+              } else {
+                throw new ReplicationException(
+                    String.format(
+                        "List Status Batch request failed with status code: %d", statusCode));
+              }
+            };
+
+        filesToReplicate.addAll(sendHttpRequest(httpGet, responseHandler));
+
+      } catch (URISyntaxException e) {
+        LOGGER.error("Unable to query, due to invalid URL.", e);
+        return filesToReplicate;
+      }
+    } while (remainingEntries.intValue() > 0);
+
+    return filesToReplicate;
+  }
+
+  /**
+   * Returns the files relevant for this replication
+   *
+   * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
+   * @param filterDate specifies a point in time such that older files are excluded
+   * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
+   */
+  private List<FileStatus> getRelevantFiles(List<FileStatus> files, Date filterDate) {
+    files.removeIf(file -> file.isDirectory() || file.isOlderThan(filterDate));
 
     return files;
   }
