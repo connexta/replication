@@ -16,18 +16,27 @@ package com.connexta.replication.adapters.webhdfs;
 import com.connexta.replication.adapters.webhdfs.filesystem.DirectoryListing;
 import com.connexta.replication.adapters.webhdfs.filesystem.FileStatus;
 import com.connexta.replication.adapters.webhdfs.filesystem.IterativeDirectoryListing;
+import com.connexta.replication.data.MetadataAttribute;
+import com.connexta.replication.data.MetadataImpl;
 import com.connexta.replication.data.QueryRequestImpl;
+import com.connexta.replication.data.QueryResponseImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import ddf.catalog.data.types.Core;
 import ddf.mime.tika.TikaMimeTypeResolver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,7 +94,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   /**
    * Adapter to interact with a Hadoop instance through the webHDFS REST API
    *
-   * @param webHdfsUrl the address of the REST API for the
+   * @param webHdfsUrl the address of the REST API for the Hadoop instance
    * @param client performs the HTTP requests
    */
   public WebHdfsNodeAdapter(URL webHdfsUrl, CloseableHttpClient client) {
@@ -142,8 +151,52 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
 
-    List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
+    try {
+      MessageDigest messageDigest = MessageDigest.getInstance("MD5");
 
+      List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
+
+      filesToReplicate.sort(Comparator.comparing(FileStatus::getModificationTime));
+
+      List<Metadata> results = new ArrayList<>();
+
+      for (FileStatus file : filesToReplicate) {
+        Map<String, MetadataAttribute> metadataAttributes = new HashMap<>();
+
+        String id = Arrays.toString(messageDigest.digest(file.getPathSuffix().getBytes()));
+        MetadataAttribute idAttribute = new MetadataAttribute(Core.ID, "string", Collections.singletonList(id), Collections.emptyList());
+        metadataAttributes.put(Core.ID, idAttribute);
+
+        // metadataAttributes.put(Core.METACARD_TAGS, null);
+
+        MetadataAttribute titleAttribute = new MetadataAttribute(Core.TITLE, "string", Collections.singletonList(file.getPathSuffix()), Collections.emptyList());
+        metadataAttributes.put(Core.TITLE, titleAttribute);
+
+        MetadataAttribute createdAttribute = new MetadataAttribute(Core.CREATED, "date", Collections.singletonList(file.getModificationTime().toString()), Collections.emptyList());
+        metadataAttributes.put(Core.CREATED, createdAttribute);
+
+        MetadataAttribute modifiedAttribute = new MetadataAttribute(Core.MODIFIED, "date", Collections.singletonList(file.getModificationTime().toString()), Collections.emptyList());
+        metadataAttributes.put(Core.MODIFIED, modifiedAttribute);
+
+        MetadataAttribute resourceUriAttribute = new MetadataAttribute(Core.RESOURCE_URI, "string", Collections.singletonList(String.format("%s/%s", getWebHdfsUrl(), file.getPathSuffix())), Collections.emptyList());
+        metadataAttributes.put(Core.RESOURCE_URI, resourceUriAttribute);
+
+        // metadataAttributes.put(Core.RESOURCE_SIZE, null);
+
+        Metadata metadata =
+                new MetadataImpl(
+                        metadataAttributes,
+                        Map.class,
+                        id,
+                        file.getModificationTime());
+
+        results.add(metadata);
+      }
+
+      return new QueryResponseImpl(results);
+    } catch (NoSuchAlgorithmException e) {
+
+    }
     return null;
   }
 
