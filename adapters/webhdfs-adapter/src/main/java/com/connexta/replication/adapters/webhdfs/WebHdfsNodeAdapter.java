@@ -19,6 +19,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.mime.tika.TikaMimeTypeResolver;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -286,6 +288,27 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   }
 
   /**
+   * Clones an {@link InputStream} to a more reusable input stream object.
+   *
+   * @param inputStream - the {@link InputStream} to clone
+   * @return The cloned {@link InputStream}
+   * @throws IOException When the read or flush operation fails
+   */
+  private InputStream cloneInputStream(InputStream inputStream) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    byte[] buffer = new byte[1024];
+    int len;
+
+    while ((len = inputStream.read(buffer)) > -1) {
+      baos.write(buffer, 0, len);
+    }
+
+    baos.flush();
+
+    return new ByteArrayInputStream(baos.toByteArray());
+  }
+
+  /**
    * Executes an HTTP request
    *
    * @param request the HTTP request to execute
@@ -311,7 +334,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
           int status = response.getStatusLine().getStatusCode();
 
           if (status == HttpStatus.SC_OK) {
-            InputStream contentStream = response.getEntity().getContent();
+            InputStream content = response.getEntity().getContent();
             String mimeType = response.getEntity().getContentType().getValue();
             long size = response.getEntity().getContentLength();
 
@@ -319,9 +342,11 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
             String id = metadata.getId();
             String name = String.format("%s_%s", id, metadata.getResourceModified().getTime());
             URI uri = resourceRequest.getMetadata().getResourceUri();
+            InputStream resourceContentStream = cloneInputStream(content);
 
             Resource resource =
-                new ResourceImpl(id, name, uri, null, contentStream, mimeType, size, metadata);
+                new ResourceImpl(
+                    id, name, uri, null, resourceContentStream, mimeType, size, metadata);
 
             return new ResourceResponseImpl(resource);
           } else {

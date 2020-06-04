@@ -67,6 +67,8 @@ public class WebHdfsClientTest {
   private static final String HDFS_PATH = "/webhdfs/v1";
   private static final String HDFS_PORT = "12341";
   private static final String BASE_URL = "http://localhost:" + HDFS_PORT + HDFS_PATH;
+  private static final String TEST_DATA_STRING =
+      "Grumpy wizards make toxic brew for the evil queen and jack.";
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsClientTest.class);
   private static final WebHdfsNodeAdapterFactory adapterFactory = new WebHdfsNodeAdapterFactory();
   private static HdfsLocalCluster hdfsLocalCluster;
@@ -136,7 +138,7 @@ public class WebHdfsClientTest {
 
     assertThat(readResource.getId(), is(testId));
     assertThat(readResource.getName(), is(String.format("%s_%s", testId, testDate.getTime())));
-//    assertThat(readInputStreamToString(readResource.getInputStream()), is("my-data"));
+    assertThat(readInputStreamToString(readResource.getInputStream()), is(TEST_DATA_STRING));
   }
 
   @Test
@@ -577,7 +579,7 @@ public class WebHdfsClientTest {
         name,
         resourceUri,
         null,
-        new ByteArrayInputStream("my-data".getBytes()),
+        new ByteArrayInputStream(TEST_DATA_STRING.getBytes()),
         MediaType.TEXT_PLAIN,
         10,
         getMetadata(id, metadataModified, resourceModified, resourceUri));
