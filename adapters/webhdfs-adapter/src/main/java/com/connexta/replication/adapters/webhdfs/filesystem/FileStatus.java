@@ -142,6 +142,7 @@ public class FileStatus {
   }
 
   public boolean isOlderThan(Date date) {
+    // TODO: 6/4/20 remove this and use modificationTime directly?
     String filename = FilenameUtils.removeExtension(getPathSuffix());
 
     // get time portion of the filename
