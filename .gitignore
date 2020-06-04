@@ -13,6 +13,9 @@ bin/
 atlassian-ide-plugin.xml
 *.sonar-ide.properties
 
+# Generated file ignores
+adapters/webhdfs-adapter/embedded_hdfs/
+
 # Node/Yarn ignores
 yarn-error.log*
 npm-debug.log*

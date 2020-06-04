@@ -13,9 +13,14 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -26,6 +31,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -117,12 +123,11 @@ public class WebHdfsNodeAdapterTest {
     HttpEntity httpEntity = mock(HttpEntity.class);
     String testJson = "{\"Location\":\"http://host2:5678/some/other/path/file123.json\"}";
     InputStream content = new ByteArrayInputStream(testJson.getBytes());
-    InputStream resourceContent = mock(InputStream.class);
 
     when(createStorageRequest.getResources()).thenReturn(resources);
     when(resource.getMetadata()).thenReturn(metadata);
     when(resource.getMimeType()).thenReturn("application/json");
-    when(resource.getInputStream()).thenReturn(resourceContent);
+    when(resource.getInputStream()).thenReturn(IOUtils.toInputStream("my-data", UTF_8));
     when(resource.getName()).thenReturn("file123.json");
 
     when(metadata.getId()).thenReturn("112358");
@@ -217,7 +222,7 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
-  public void testWriteFileToLocationNoResource() {
+  public void testWriteFileToLocationNoResource() throws IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     List<Resource> resources = Collections.emptyList();
     when(createStorageRequest.getResources()).thenReturn(resources);
@@ -229,7 +234,7 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
-  public void testWriteFileToLocationNullResource() {
+  public void testWriteFileToLocationNullResource() throws IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     List<Resource> resources = Collections.singletonList(null);
     when(createStorageRequest.getResources()).thenReturn(resources);
@@ -373,8 +378,7 @@ public class WebHdfsNodeAdapterTest {
     when(metadata.getId()).thenReturn("1234");
     when(metadata.getResourceModified()).thenReturn(date);
 
-    InputStream inputStream = mock(InputStream.class);
-    when(resource.getInputStream()).thenReturn(inputStream);
+    when(resource.getInputStream()).thenReturn(IOUtils.toInputStream("my-data", UTF_8));
     when(resource.getMimeType()).thenReturn("application/json");
     when(resource.getName()).thenReturn("file123.json");
 
@@ -412,8 +416,7 @@ public class WebHdfsNodeAdapterTest {
     when(metadata.getId()).thenReturn("1234");
     when(metadata.getResourceModified()).thenReturn(date);
 
-    InputStream inputStream = mock(InputStream.class);
-    when(resource.getInputStream()).thenReturn(inputStream);
+    when(resource.getInputStream()).thenReturn(IOUtils.toInputStream("my-data", UTF_8));
     when(resource.getMimeType()).thenReturn("application/json");
     when(resource.getName()).thenReturn("file123.json");
 
@@ -441,7 +444,7 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
-  public void testWriteFileLocationBadUri() {
+  public void testWriteFileLocationBadUri() throws IOException {
     CreateStorageRequest createStorageRequest = mock(CreateStorageRequest.class);
     Resource resource = mock(Resource.class);
     List<Resource> resources = Collections.singletonList(resource);
@@ -471,12 +474,11 @@ public class WebHdfsNodeAdapterTest {
     String testJson =
         String.format("{\"Location\":\"http://host2:5678/some/other/path/%s\"}", resourceName);
     InputStream content = new ByteArrayInputStream(testJson.getBytes());
-    InputStream resourceContent = mock(InputStream.class);
 
     when(updateStorageRequest.getResources()).thenReturn(resources);
     when(resource.getMetadata()).thenReturn(metadata);
     when(resource.getMimeType()).thenReturn("text/plain");
-    when(resource.getInputStream()).thenReturn(resourceContent);
+    when(resource.getInputStream()).thenReturn(IOUtils.toInputStream("my-data", UTF_8));
     when(resource.getName()).thenReturn(resourceName);
 
     when(metadata.getId()).thenReturn("123456789");
