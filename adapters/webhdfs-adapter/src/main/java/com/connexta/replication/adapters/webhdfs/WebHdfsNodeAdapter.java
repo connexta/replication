@@ -27,6 +27,7 @@ import ddf.catalog.data.types.Core;
 import ddf.mime.tika.TikaMimeTypeResolver;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.MessageDigest;
@@ -86,6 +87,9 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final String HTTP_NO_REDIRECT_KEY = "noredirect";
   private static final String HTTP_CREATE_OVERWRITE_KEY = "overwrite";
+
+  private static final String METADATA_ATTRIBUTE_TYPE_STRING = "string";
+  private static final String METADATA_ATTRIBUTE_TYPE_DATE = "date";
 
   private final URL webHdfsUrl;
 
@@ -151,53 +155,79 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
 
+    List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
+
+    filesToReplicate.sort(Comparator.comparing(FileStatus::getModificationTime));
+
+    List<Metadata> results = new ArrayList<>();
+
     try {
       MessageDigest messageDigest = MessageDigest.getInstance("MD5");
 
-      List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
-
-      filesToReplicate.sort(Comparator.comparing(FileStatus::getModificationTime));
-
-      List<Metadata> results = new ArrayList<>();
-
       for (FileStatus file : filesToReplicate) {
-        Map<String, MetadataAttribute> metadataAttributes = new HashMap<>();
-
-        String id = Arrays.toString(messageDigest.digest(file.getPathSuffix().getBytes()));
-        MetadataAttribute idAttribute = new MetadataAttribute(Core.ID, "string", Collections.singletonList(id), Collections.emptyList());
-        metadataAttributes.put(Core.ID, idAttribute);
-
-        // metadataAttributes.put(Core.METACARD_TAGS, null);
-
-        MetadataAttribute titleAttribute = new MetadataAttribute(Core.TITLE, "string", Collections.singletonList(file.getPathSuffix()), Collections.emptyList());
-        metadataAttributes.put(Core.TITLE, titleAttribute);
-
-        MetadataAttribute createdAttribute = new MetadataAttribute(Core.CREATED, "date", Collections.singletonList(file.getModificationTime().toString()), Collections.emptyList());
-        metadataAttributes.put(Core.CREATED, createdAttribute);
-
-        MetadataAttribute modifiedAttribute = new MetadataAttribute(Core.MODIFIED, "date", Collections.singletonList(file.getModificationTime().toString()), Collections.emptyList());
-        metadataAttributes.put(Core.MODIFIED, modifiedAttribute);
-
-        MetadataAttribute resourceUriAttribute = new MetadataAttribute(Core.RESOURCE_URI, "string", Collections.singletonList(String.format("%s/%s", getWebHdfsUrl(), file.getPathSuffix())), Collections.emptyList());
-        metadataAttributes.put(Core.RESOURCE_URI, resourceUriAttribute);
-
-        // metadataAttributes.put(Core.RESOURCE_SIZE, null);
-
-        Metadata metadata =
-                new MetadataImpl(
-                        metadataAttributes,
-                        Map.class,
-                        id,
-                        file.getModificationTime());
-
-        results.add(metadata);
+        results.add(createMetadata(file, messageDigest));
       }
-
-      return new QueryResponseImpl(results);
     } catch (NoSuchAlgorithmException e) {
-
+      LOGGER.error("Unable to create unique ID, due to invalid algorithm.", e);
     }
-    return null;
+    return new QueryResponseImpl(results);
+  }
+
+  private Metadata createMetadata(FileStatus file, MessageDigest messageDigest) {
+
+    Map<String, MetadataAttribute> metadataAttributes = new HashMap<>();
+
+    String fileUrl = String.format("%s/%s", getWebHdfsUrl(), file.getPathSuffix());
+
+    String id = Arrays.toString(messageDigest.digest(file.getPathSuffix().getBytes()));
+    MetadataAttribute idAttribute =
+        new MetadataAttribute(
+            Core.ID,
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList(id),
+            Collections.emptyList());
+    metadataAttributes.put(Core.ID, idAttribute);
+
+    MetadataAttribute titleAttribute =
+        new MetadataAttribute(
+            Core.TITLE,
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList(file.getPathSuffix()),
+            Collections.emptyList());
+    metadataAttributes.put(Core.TITLE, titleAttribute);
+
+    MetadataAttribute createdAttribute =
+        new MetadataAttribute(
+            Core.CREATED,
+            METADATA_ATTRIBUTE_TYPE_DATE,
+            Collections.singletonList(file.getModificationTime().toString()),
+            Collections.emptyList());
+    metadataAttributes.put(Core.CREATED, createdAttribute);
+
+    MetadataAttribute modifiedAttribute =
+        new MetadataAttribute(
+            Core.MODIFIED,
+            METADATA_ATTRIBUTE_TYPE_DATE,
+            Collections.singletonList(file.getModificationTime().toString()),
+            Collections.emptyList());
+    metadataAttributes.put(Core.MODIFIED, modifiedAttribute);
+
+    MetadataAttribute resourceUriAttribute =
+        new MetadataAttribute(
+            Core.RESOURCE_URI,
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList(fileUrl),
+            Collections.emptyList());
+    metadataAttributes.put(Core.RESOURCE_URI, resourceUriAttribute);
+
+    Metadata metadata =
+        new MetadataImpl(metadataAttributes, Map.class, id, file.getModificationTime());
+    try {
+      metadata.setResourceUri(new URI(fileUrl));
+      return metadata;
+    } catch (URISyntaxException e) {
+      return null; // ?
+    }
   }
 
   /**
