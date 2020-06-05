@@ -142,6 +142,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     return "webHDFS";
   }
 
+  // TODO: 6/5/20 remove this method after done testing implementation
   /** TEMPORARY METHOD FOR IMPLEMENTATION TESTING */
   public QueryResponse testQuery() {
     Date modifiedAfter = new Date(22222222L);
@@ -157,13 +158,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
 
+    // TODO: 6/4/20 evaluate whether to sort here or after populating metadata iterable
     filesToReplicate.sort(Comparator.comparing(FileStatus::getModificationTime));
 
     List<Metadata> results = new ArrayList<>();
 
     try {
       MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-
+      // TODO: 6/4/20 evaluate whether to use foreach (as written) or a stream?
       for (FileStatus file : filesToReplicate) {
         results.add(createMetadata(file, messageDigest));
       }

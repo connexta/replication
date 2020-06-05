@@ -41,7 +41,10 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
         "http://" + url.getHost() + ":" + url.getPort() + "/webhdfs/v1" + url.getPath();
 
     if (!baseUrl.endsWith("/")) {
-      baseUrl = baseUrl.concat("/");
+      baseUrl =
+          baseUrl.concat(
+              "/"); // TODO: 6/5/20 the trailing slash is removed when the URL is created again so
+      // this may not be beneficial
     }
 
     try {
@@ -51,16 +54,18 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
     }
   }
 
-  public static void main(String[] args) {
-    try {
-      WebHdfsNodeAdapter adapter =
-          new WebHdfsNodeAdapter(
-              new URL("http://localhost:9870/webhdfs/v1/user/chris"), HttpClients.createDefault());
-      adapter.testQuery();
-    } catch (MalformedURLException e) {
-      System.exit(0);
-    }
-  }
+  // TODO: 6/5/20 remove this after testing complete
+  //  public static void main(String[] args) {
+  //    try {
+  //      WebHdfsNodeAdapter adapter =
+  //          new WebHdfsNodeAdapter(
+  //              new URL("http://localhost:9870/webhdfs/v1/user/chris"),
+  // HttpClients.createDefault());
+  //      adapter.testQuery();
+  //    } catch (MalformedURLException e) {
+  //      System.exit(0);
+  //    }
+  //  }
 
   @Override
   public NodeAdapterType getType() {
