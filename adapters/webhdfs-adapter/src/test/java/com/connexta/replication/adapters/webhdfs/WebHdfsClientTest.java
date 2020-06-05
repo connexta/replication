@@ -16,6 +16,7 @@ package com.connexta.replication.adapters.webhdfs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import com.connexta.replication.adapters.ddf.csw.Constants;
 import com.connexta.replication.data.MetadataAttribute;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -48,8 +50,11 @@ import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.Metadata;
 import org.codice.ditto.replication.api.data.Resource;
+import org.codice.ditto.replication.api.data.ResourceRequest;
+import org.codice.ditto.replication.api.data.ResourceResponse;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.codice.ditto.replication.api.impl.data.CreateStorageRequestImpl;
+import org.codice.ditto.replication.api.impl.data.ResourceRequestImpl;
 import org.codice.ditto.replication.api.impl.data.UpdateStorageRequestImpl;
 import org.junit.After;
 import org.junit.Before;
@@ -59,8 +64,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebHdfsClientTest {
+  private static final String HDFS_PATH = "/webhdfs/v1";
   private static final String HDFS_PORT = "12341";
-  private static final String BASE_URL = "http://localhost:" + HDFS_PORT;
+  private static final String BASE_URL = "http://localhost:" + HDFS_PORT + HDFS_PATH;
+  private static final String TEST_DATA_STRING =
+      "Grumpy wizards make toxic brew for the evil queen and jack.";
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsClientTest.class);
   private static final WebHdfsNodeAdapterFactory adapterFactory = new WebHdfsNodeAdapterFactory();
   private static HdfsLocalCluster hdfsLocalCluster;
@@ -110,11 +118,97 @@ public class WebHdfsClientTest {
   }
 
   @Test
+  public void testResourceFileIsRead() throws URISyntaxException {
+    String testId = "order-66-clones-memo";
+    Date testDate = new Date();
+    String testName = formatResourceName(testId, testDate);
+    String url = String.format("%s/%s.txt", BASE_URL, testName);
+
+    // creates the resource in the HDFS instance to be read and verifies the resource exists
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(testId, testName, testDate, testDate, new URI(url));
+    adapter.createResource(createStorageRequest);
+    verifyFileExists(testName + ".txt");
+
+    // gets the resource metadata to create a read request
+    Metadata resourceMetadata = createStorageRequest.getResources().get(0).getMetadata();
+    ResourceRequest readRequest = new ResourceRequestImpl(resourceMetadata);
+    ResourceResponse readResponse = adapter.readResource(readRequest);
+    Resource readResource = readResponse.getResource();
+
+    assertThat(readResource.getId(), is(testId));
+    assertThat(readResource.getName(), is(String.format("%s_%s", testId, testDate.getTime())));
+    assertThat(readInputStreamToString(readResource.getInputStream()), is(TEST_DATA_STRING));
+  }
+
+  @Test
+  public void testInvalidHostnameResourceUriNotRead() throws URISyntaxException {
+    String testId = "404";
+    String testName = "404-not-found";
+    Date testDate = new Date();
+    String filename = formatResourceName(testId, testDate) + ".txt";
+    String badHostnameUri = String.format("http://foobar:%s/webhdfs/v1/%s", HDFS_PORT, filename);
+
+    // creates the resource with the bad hostname
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(testId, testName, testDate, testDate, new URI(badHostnameUri));
+    // Note: it's not necessary to actually write the file in HDFS
+
+    // gets the resource metadata to create a read request
+    Metadata resourceMetadata = createStorageRequest.getResources().get(0).getMetadata();
+    ResourceRequest readRequest = new ResourceRequestImpl(resourceMetadata);
+    ResourceResponse readResponse = adapter.readResource(readRequest);
+
+    assertThat(readResponse, is(nullValue()));
+  }
+
+  @Test
+  public void testInvalidPortResourceUriNotRead() throws URISyntaxException {
+    String testId = "404";
+    String testName = "404-not-found";
+    Date testDate = new Date();
+    String filename = formatResourceName(testId, testDate) + ".txt";
+    String badPortUri = "http://localhost:9999/webhdfs/v1/" + filename;
+
+    // creates the resource with the bad port
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(testId, testName, testDate, testDate, new URI(badPortUri));
+    // Note: it's not necessary to actually write the file in HDFS
+
+    // gets the resource metadata to create a read request
+    Metadata resourceMetadata = createStorageRequest.getResources().get(0).getMetadata();
+    ResourceRequest readRequest = new ResourceRequestImpl(resourceMetadata);
+    ResourceResponse readResponse = adapter.readResource(readRequest);
+
+    assertThat(readResponse, is(nullValue()));
+  }
+
+  @Test
+  public void testNonExistentFileNotRead() throws URISyntaxException {
+    String testId = "404";
+    String testName = "404-not-found";
+    Date testDate = new Date();
+    String filename = formatResourceName(testId, testDate) + ".txt";
+    String url = String.format("%s/%s", BASE_URL, filename);
+
+    // creates the resource but doesn't write it to HDFS
+    CreateStorageRequest createStorageRequest =
+        generateTestStorageRequest(testId, testName, testDate, testDate, new URI(url));
+
+    // gets the resource metadata to create a read request
+    Metadata resourceMetadata = createStorageRequest.getResources().get(0).getMetadata();
+    ResourceRequest readRequest = new ResourceRequestImpl(resourceMetadata);
+    ResourceResponse readResponse = adapter.readResource(readRequest);
+
+    assertThat(readResponse, is(nullValue()));
+  }
+
+  @Test
   public void testResourceFileIsCreated() throws URISyntaxException {
     String testId = "123456789";
     String testName = "testresource";
     Date testDate = new Date();
-    String filename = String.format("%s_%s.txt", testId, testDate.getTime());
+    String filename = formatResourceName(testId, testDate) + ".txt";
     CreateStorageRequest createStorageRequest =
         generateTestStorageRequest(testId, testName, testDate);
 
@@ -285,6 +379,17 @@ public class WebHdfsClientTest {
   }
 
   /**
+   * Formats a resource name in the way it's stored in HDFS.
+   *
+   * @param id - the ID of the {@link Resource}
+   * @param date - the resource modified {@link Date} of the {@link Resource}
+   * @return The formatted resource name {@link String}
+   */
+  private static String formatResourceName(String id, Date date) {
+    return String.format("%s_%s", id, date.getTime());
+  }
+
+  /**
    * Utilizes the "Status of a File/Directory" WebHDFS operation to verify that the file with the
    * given <code>filename</code> exists in the expected location.
    *
@@ -292,8 +397,7 @@ public class WebHdfsClientTest {
    * @throws URISyntaxException If the URL string does not have valid syntax
    */
   private void verifyFileExists(String filename) throws URISyntaxException {
-    String filePath = "webhdfs/v1/" + filename;
-    String url = String.format("%s/%s", BASE_URL, filePath);
+    String url = String.format("%s/%s", BASE_URL, filename);
     URIBuilder builder = new URIBuilder(url);
     builder.addParameter("op", "GETFILESTATUS");
     URI uri = builder.build();
@@ -338,7 +442,17 @@ public class WebHdfsClientTest {
    */
   private CreateStorageRequest generateTestStorageRequest(
       String id, String name, Date metadataModified, Date resourceModified) {
-    Resource testResource = getResource(id, name, metadataModified, resourceModified);
+    Resource testResource =
+        getResource(id, name, metadataModified, resourceModified, URI.create("my:uri"));
+    List<Resource> resourceList = new ArrayList<>();
+    resourceList.add(testResource);
+
+    return new CreateStorageRequestImpl(resourceList);
+  }
+
+  private CreateStorageRequest generateTestStorageRequest(
+      String id, String name, Date metadataModified, Date resourceModified, URI resourceUri) {
+    Resource testResource = getResource(id, name, metadataModified, resourceModified, resourceUri);
     List<Resource> resourceList = new ArrayList<>();
     resourceList.add(testResource);
 
@@ -370,7 +484,8 @@ public class WebHdfsClientTest {
    */
   private UpdateStorageRequest generateUpdateStorageRequest(
       String id, String name, Date metadataModified, Date resourceModified) {
-    Resource resource = getResource(id, name, metadataModified, resourceModified);
+    Resource resource =
+        getResource(id, name, metadataModified, resourceModified, URI.create("my:uri"));
     List<Resource> resources = new ArrayList<>();
     resources.add(resource);
 
@@ -410,15 +525,32 @@ public class WebHdfsClientTest {
   }
 
   /**
+   * Reads an {@link InputStream} into a readable {@link String}.
+   *
+   * @param contentStream - the {@link InputStream} to read
+   * @return The resulting {@link String} read
+   */
+  private String readInputStreamToString(InputStream contentStream) {
+    try (final Reader reader = new InputStreamReader(contentStream)) {
+      return IOUtils.toString(reader);
+    } catch (IOException e) {
+      LOGGER.error("Failed to read the input stream.", e);
+      return null;
+    }
+  }
+
+  /**
    * Generates a {@link Metadata} from the given {@code id}, {@code metadataModified} date, and
    * {@code resourceModified} date.
    *
    * @param id - the id of the {@link Resource}
    * @param metadataModified a {@link Date} object representing when the metadata was last modified
    * @param resourceModified a {@link Date} object representing when the resource was last modified
+   * @param resourceUri the URI of the {@link Resource}
    * @return The newly created {@link MetadataImpl}
    */
-  private Metadata getMetadata(String id, Date metadataModified, Date resourceModified) {
+  private Metadata getMetadata(
+      String id, Date metadataModified, Date resourceModified, URI resourceUri) {
     Map<String, MetadataAttribute> map = new HashMap<>();
     map.put(Constants.METACARD_ID, new MetadataAttribute(Constants.METACARD_ID, null, id));
     map.put("type", new MetadataAttribute("type", null, "hdfs.metacard"));
@@ -426,6 +558,7 @@ public class WebHdfsClientTest {
 
     Metadata metadata = new MetadataImpl(map, Map.class, id, metadataModified);
     metadata.setResourceModified(resourceModified);
+    metadata.setResourceUri(resourceUri);
 
     return metadata;
   }
@@ -438,18 +571,19 @@ public class WebHdfsClientTest {
    * @param name - the name to assign to the {@link Resource}
    * @param metadataModified representing when the metadata was last modified
    * @param resourceModified representing when the resource was last modified
+   * @param resourceUri the URI of the resource
    * @return The newly created {@link ResourceImpl}
    */
   private Resource getResource(
-      String id, String name, Date metadataModified, Date resourceModified) {
+      String id, String name, Date metadataModified, Date resourceModified, URI resourceUri) {
     return new ResourceImpl(
         id,
         name,
-        URI.create("my:uri"),
+        resourceUri,
         null,
-        new ByteArrayInputStream("my-data".getBytes()),
+        new ByteArrayInputStream(TEST_DATA_STRING.getBytes()),
         MediaType.TEXT_PLAIN,
         10,
-        getMetadata(id, metadataModified, resourceModified));
+        getMetadata(id, metadataModified, resourceModified, resourceUri));
   }
 }

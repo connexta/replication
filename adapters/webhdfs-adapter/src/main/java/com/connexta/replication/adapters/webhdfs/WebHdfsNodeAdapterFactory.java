@@ -15,7 +15,7 @@ package com.connexta.replication.adapters.webhdfs;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapterFactory.class);
+  private static final int HTTPS_PORT = 443;
 
   public WebHdfsNodeAdapterFactory() {
     LOGGER.debug("Created a WebHdfsNodeAdapterFactory");
@@ -37,8 +38,8 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
-    String baseUrl =
-        "http://" + url.getHost() + ":" + url.getPort() + "/webhdfs/v1" + url.getPath();
+    String protocol = url.getPort() == HTTPS_PORT ? "https://" : "http://";
+    String baseUrl = protocol + url.getHost() + ":" + url.getPort() + url.getPath();
 
     if (!baseUrl.endsWith("/")) {
       baseUrl =
@@ -48,7 +49,8 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
     }
 
     try {
-      return new WebHdfsNodeAdapter(new URL(baseUrl), HttpClients.createDefault());
+      return new WebHdfsNodeAdapter(
+          new URL(baseUrl), HttpClientBuilder.create().disableRedirectHandling().build());
     } catch (MalformedURLException e) {
       throw new AdapterException("Failed to create adapter", e);
     }
