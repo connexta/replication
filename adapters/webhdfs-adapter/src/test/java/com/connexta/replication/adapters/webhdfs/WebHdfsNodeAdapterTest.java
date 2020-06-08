@@ -33,6 +33,7 @@ import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.ResourceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Iterables;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +44,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -63,6 +65,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.Metadata;
+import org.codice.ditto.replication.api.data.QueryRequest;
+import org.codice.ditto.replication.api.data.QueryResponse;
 import org.codice.ditto.replication.api.data.Resource;
 import org.codice.ditto.replication.api.data.ResourceRequest;
 import org.codice.ditto.replication.api.data.ResourceResponse;
@@ -129,6 +133,80 @@ public class WebHdfsNodeAdapterTest {
         .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
 
     assertThat(webHdfsNodeAdapter.isAvailable(), is(false));
+  }
+
+  @Test
+  public void testQuery() throws IOException, NoSuchAlgorithmException {
+    Calendar cal = Calendar.getInstance();
+    cal.clear();
+    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    // the filter date
+    cal.set(Calendar.MONTH, 4);
+    cal.set(Calendar.DAY_OF_MONTH, 1);
+    cal.set(Calendar.YEAR, 2010);
+    Date filter = cal.getTime();
+
+    QueryRequest queryRequest = mock(QueryRequest.class);
+    when(queryRequest.getModifiedAfter()).thenReturn(filter);
+
+    // one day after the filter date
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date fileDate = cal.getTime();
+
+    // given a file with a date after the filter date exists on the system being queried
+    FileStatus file = getFileStatus(fileDate, "file1.ext", "FILE");
+    List<FileStatus> files = Collections.singletonList(file);
+
+    // and there are no additional entries to retrieve
+    String idl = getIterativeDirectoryListingAsString(files, 0);
+    InputStream inputStream = new ByteArrayInputStream(idl.getBytes(UTF_8));
+
+    HttpResponse response = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(response.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(200);
+
+    // and the response contains the expected single file
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    when(response.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent()).thenReturn(inputStream);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<List<FileStatus>> responseHandler =
+                  (ResponseHandler<List<FileStatus>>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(response);
+            })
+        .when(client)
+        .execute(any(HttpGet.class), any(ResponseHandler.class));
+
+    // when the file system is queried
+    QueryResponse queryResponse = webHdfsNodeAdapter.query(queryRequest);
+
+    // then a query response is returned
+    Iterable<Metadata> metadataIterable = queryResponse.getMetadata();
+    Metadata metadata = Iterables.get(metadataIterable, 0);
+
+    // and the query response contains the metadata with the expected values
+    // object
+    MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+    String hashedId = new String(messageDigest.digest("file1.ext".getBytes(UTF_8)));
+
+    assertThat(metadata.getId(), is(hashedId));
+    assertThat(metadata.getMetadataModified(), is(fileDate));
+    assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/file1.ext"));
+
+    // and the metadata object's attributes will have values corresponding to the FileStatus object
+    Map<String, MetadataAttribute> metadataAttributes =
+        (Map<String, MetadataAttribute>) metadata.getRawMetadata();
+    assertThat(metadataAttributes.get("id").getValue(), is(hashedId));
+    assertThat(metadataAttributes.get("title").getValue(), is("file1.ext"));
+    assertThat(metadataAttributes.get("created").getValue(), is(fileDate.toString()));
+    assertThat(metadataAttributes.get("modified").getValue(), is(fileDate.toString()));
+    assertThat(
+        metadataAttributes.get("resource-uri").getValue(),
+        is("http://host:1234/some/path/file1.ext"));
   }
 
   @SuppressWarnings("unchecked")
@@ -200,7 +278,6 @@ public class WebHdfsNodeAdapterTest {
   @SuppressWarnings("unchecked")
   @Test
   public void testGetFilesToReplicate() throws IOException {
-
     Calendar cal = Calendar.getInstance();
     cal.clear();
     cal.setTimeZone(TimeZone.getTimeZone("UTC"));
