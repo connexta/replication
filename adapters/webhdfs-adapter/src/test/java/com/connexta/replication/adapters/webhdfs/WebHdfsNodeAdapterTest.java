@@ -20,9 +20,18 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.connexta.replication.adapters.webhdfs.filesystem.DirectoryListing;
+import com.connexta.replication.adapters.webhdfs.filesystem.FileStatus;
+import com.connexta.replication.adapters.webhdfs.filesystem.FileStatuses;
+import com.connexta.replication.adapters.webhdfs.filesystem.IterativeDirectoryListing;
+import com.connexta.replication.adapters.webhdfs.filesystem.PartialListing;
 import com.connexta.replication.data.ResourceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,9 +41,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -42,6 +54,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.codice.ditto.replication.api.ReplicationException;
@@ -113,6 +126,124 @@ public class WebHdfsNodeAdapterTest {
         .execute(any(HttpRequestBase.class), any(ResponseHandler.class));
 
     assertThat(webHdfsNodeAdapter.isAvailable(), is(false));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testGetFilesToReplicate() throws IOException {
+
+    Calendar cal = Calendar.getInstance();
+    cal.clear();
+    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    // a date occuring before the filter date
+    cal.set(Calendar.MONTH, 4);
+    cal.set(Calendar.DAY_OF_MONTH, 1);
+    cal.set(Calendar.YEAR, 2010);
+    Date beforeFilter = cal.getTime();
+
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date filter = cal.getTime();
+
+    // four dates more recent than the filter date
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date afterFilter1 = cal.getTime();
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date afterFilter2 = cal.getTime();
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date afterFilter3 = cal.getTime();
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date afterFilter4 = cal.getTime();
+
+    // given a set of three files, one before the filter date and two after (one of which is a
+    // directory)
+    FileStatus file1 = getFileStatus(beforeFilter, "file1.ext", "FILE");
+    FileStatus file2 = getFileStatus(afterFilter1, "file2.ext", "FILE");
+    FileStatus file3 = getFileStatus(afterFilter2, "someDirectory", "DIRECTORY");
+
+    List<FileStatus> files1 = Arrays.asList(file1, file2, file3);
+
+    // and there are two additional entries to retrieve
+    String idl1 = getIterativeDirectoryListingAsString(files1, 2);
+    InputStream inputStream1 = new ByteArrayInputStream(idl1.getBytes(UTF_8));
+
+    // and the second set of files contains two files, both after the filter date and of type FILE
+    FileStatus file4 = getFileStatus(afterFilter3, "file4.ext", "FILE");
+    FileStatus file5 = getFileStatus(afterFilter4, "file5.ext", "FILE");
+
+    List<FileStatus> files2 = Arrays.asList(file4, file5);
+    String idl2 = getIterativeDirectoryListingAsString(files2, 0);
+    InputStream inputStream2 = new ByteArrayInputStream(idl2.getBytes(UTF_8));
+
+    HttpResponse response = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(response.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(200);
+
+    // and the first response contains the first set of files and the second response contains the
+    // second set
+    // of files
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    when(response.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent()).thenReturn(inputStream1).thenReturn(inputStream2);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<List<FileStatus>> responseHandler =
+                  (ResponseHandler<List<FileStatus>>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(response);
+            })
+        .when(client)
+        .execute(any(HttpGet.class), any(ResponseHandler.class));
+
+    // when the adapter retrieves the files to replicate
+    List<FileStatus> filesToReplicate = webHdfsNodeAdapter.getFilesToReplicate(filter);
+
+    // then there are three files that fit the criteria
+    assertThat(filesToReplicate.size() == 3, is(true));
+
+    // and the modification dates on the files are those meeting the filter criteria
+    assertThat(filesToReplicate.get(0).getModificationTime().compareTo(filter), is(1));
+    assertThat(filesToReplicate.get(1).getModificationTime().compareTo(filter), is(1));
+    assertThat(filesToReplicate.get(2).getModificationTime().compareTo(filter), is(1));
+
+    // and the file names of the results are those meeting the filter criteria
+    assertThat(filesToReplicate.get(0).getPathSuffix(), is("file2.ext"));
+    assertThat(filesToReplicate.get(1).getPathSuffix(), is("file4.ext"));
+    assertThat(filesToReplicate.get(2).getPathSuffix(), is("file5.ext"));
+
+    // and all files identified to be replicated are of type FILE
+    for (FileStatus file : filesToReplicate) {
+      assertThat(file.getType(), is("FILE"));
+    }
+
+    // and this was determined through two HTTP requests to the remote
+    verify(client, times(2)).execute(any(HttpGet.class), any(ResponseHandler.class));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testGetFilesToReplicateBadStatusCode() throws IOException {
+    HttpResponse response = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(response.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(400);
+
+    // when a bad request status code is returned
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<List<FileStatus>> responseHandler =
+                  (ResponseHandler<List<FileStatus>>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(response);
+            })
+        .when(client)
+        .execute(any(HttpGet.class), any(ResponseHandler.class));
+
+    // then a replication exception is thrown and
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("List Status Batch request failed with status code: 400");
+
+    webHdfsNodeAdapter.getFilesToReplicate(new Date());
   }
 
   @SuppressWarnings({"Duplicates", "unchecked"})
@@ -704,5 +835,91 @@ public class WebHdfsNodeAdapterTest {
     } catch (IOException e) {
       throw new ReplicationException("Failed to read the input stream.", e);
     }
+  }
+
+  /**
+   * Uses {@link ObjectMapper} to generate a {@code String} representation of an {@link
+   * IterativeDirectoryListing} object equivalent in format to what is returned by the HTTP
+   * LISTSTATUS_BATCH command.
+   *
+   * @param fileStatuses a {@code List} containing {@link FileStatus} objects
+   * @param remainingEntries the number of remaining entries that exist, but were not returned by a
+   *     given command
+   * @return a {@code String} representation of an {@link IterativeDirectoryListing} object
+   * @throws JsonProcessingException if {@link ObjectMapper} is unable to convert the {@link
+   *     IterativeDirectoryListing} object into a {@code String}
+   */
+  private String getIterativeDirectoryListingAsString(
+      List<FileStatus> fileStatuses, int remainingEntries) throws JsonProcessingException {
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    IterativeDirectoryListing iterativeDirectoryListing = new IterativeDirectoryListing();
+    iterativeDirectoryListing.setDirectoryListing(
+        getDirectoryListing(fileStatuses, remainingEntries));
+    return objectMapper.writeValueAsString(iterativeDirectoryListing);
+  }
+
+  /**
+   * Returns a {@link DirectoryListing} object containing a {@link PartialListing} object and the
+   * specified number of remaining entries
+   *
+   * @param fileStatuses a {@code List} containing {@link FileStatus} objects
+   * @param remainingEntries the number of remaining entries that exist, but were not returned by a
+   *     given command
+   * @return a {@link DirectoryListing} object containing a {@link PartialListing} object and the
+   *     specified number of remaining entries
+   */
+  private DirectoryListing getDirectoryListing(
+      List<FileStatus> fileStatuses, int remainingEntries) {
+    DirectoryListing directoryListing = new DirectoryListing();
+    directoryListing.setPartialListing(getPartialListing(fileStatuses));
+    directoryListing.setRemainingEntries(remainingEntries);
+
+    return directoryListing;
+  }
+
+  /**
+   * Returns a {@link PartialListing} object containing a {@link FileStatuses} object
+   *
+   * @param fileStatuses a {@code List} containing {@link FileStatus} objects
+   * @return a {@link PartialListing} object containing a {@link FileStatuses} object
+   */
+  private PartialListing getPartialListing(List<FileStatus> fileStatuses) {
+    PartialListing partialListing = new PartialListing();
+    partialListing.setFileStatuses(getFileStatuses(fileStatuses));
+
+    return partialListing;
+  }
+
+  /**
+   * Returns a {@link FileStatuses} object containing the provided {@code List} of {@link
+   * FileStatus} objects
+   *
+   * @param fileStatuses a {@code List} containing {@link FileStatus} objects
+   * @return a {@link FileStatuses} object containing the provided {@code List} of {@link
+   *     FileStatus} objects
+   */
+  private FileStatuses getFileStatuses(List<FileStatus> fileStatuses) {
+    FileStatuses fileStatusesObj = new FileStatuses();
+    fileStatusesObj.setFileStatusList(fileStatuses);
+
+    return fileStatusesObj;
+  }
+
+  /**
+   * Returns a {@link FileStatus} object
+   *
+   * @param modificationTime the timestamp on the file or directory
+   * @param pathSuffix designates the name of the file or directory
+   * @param type specifies whether a FILE or DIRECTORY
+   * @return a {@link FileStatus} object
+   */
+  private FileStatus getFileStatus(Date modificationTime, String pathSuffix, String type) {
+    FileStatus fileStatus = new FileStatus();
+    fileStatus.setModificationTime(modificationTime);
+    fileStatus.setPathSuffix(pathSuffix);
+    fileStatus.setType(type);
+
+    return fileStatus;
   }
 }
