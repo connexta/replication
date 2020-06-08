@@ -169,7 +169,6 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
 
-    // TODO: 6/4/20 evaluate whether to sort here or after populating metadata iterable
     filesToReplicate.sort(Comparator.comparing(FileStatus::getModificationTime));
 
     List<Metadata> results = new ArrayList<>();
@@ -177,12 +176,11 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     try {
       MessageDigest messageDigest = MessageDigest.getInstance("MD5");
 
-      // TODO: 6/4/20 evaluate whether to use foreach (as written) or a stream
       for (FileStatus file : filesToReplicate) {
         results.add(createMetadata(file, messageDigest));
       }
     } catch (NoSuchAlgorithmException e) {
-      LOGGER.error("Unable to create unique ID, due to invalid algorithm.", e);
+      LOGGER.error("Unable to create unique ID, due to invalid hashing algorithm.", e);
     }
     return new QueryResponseImpl(results);
   }
@@ -195,11 +193,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @param messageDigest a secure one-way hash function for the generation of an identifier
    * @return a {@link MetadataImpl} object for the file being replicated
    */
-  private Metadata createMetadata(FileStatus fileStatus, MessageDigest messageDigest) {
+  @VisibleForTesting
+  Metadata createMetadata(FileStatus fileStatus, MessageDigest messageDigest) {
 
     Map<String, MetadataAttribute> metadataAttributes = new HashMap<>();
 
-    String fileUrl = String.format("%s/%s", getWebHdfsUrl(), fileStatus.getPathSuffix());
+    String fileUrl = getWebHdfsUrl().toString() + fileStatus.getPathSuffix();
 
     // TODO: 6/5/20 determine how best to generate the ID
     //    String id =
