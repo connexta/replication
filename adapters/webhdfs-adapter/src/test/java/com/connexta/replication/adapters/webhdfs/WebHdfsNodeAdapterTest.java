@@ -29,6 +29,7 @@ import com.connexta.replication.adapters.webhdfs.filesystem.FileStatus;
 import com.connexta.replication.adapters.webhdfs.filesystem.FileStatuses;
 import com.connexta.replication.adapters.webhdfs.filesystem.IterativeDirectoryListing;
 import com.connexta.replication.adapters.webhdfs.filesystem.PartialListing;
+import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.ResourceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,11 +42,13 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -130,13 +133,79 @@ public class WebHdfsNodeAdapterTest {
 
   @SuppressWarnings("unchecked")
   @Test
+  public void testCreateMetadata() {
+    FileStatus fileStatus = mock(FileStatus.class);
+    MessageDigest messageDigest = mock(MessageDigest.class);
+
+    Calendar cal = Calendar.getInstance();
+    cal.clear();
+    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    cal.set(Calendar.MONTH, 4);
+    cal.set(Calendar.DAY_OF_MONTH, 1);
+    cal.set(Calendar.YEAR, 2010);
+    Date date = cal.getTime();
+
+    // when a FileStatus object has the following attributes
+    when(fileStatus.getModificationTime()).thenReturn(date);
+    String filename = "test.txt";
+    when(fileStatus.getPathSuffix()).thenReturn(filename);
+    when(fileStatus.getType()).thenReturn("FILE");
+
+    String hashedId = "hashedId";
+    when(messageDigest.digest(filename.getBytes(UTF_8))).thenReturn(hashedId.getBytes());
+
+    // and createMetadata is called
+    Metadata metadata = webHdfsNodeAdapter.createMetadata(fileStatus, messageDigest);
+
+    // then the resulting metadata object will have values corresponding to the FileStatus object
+    assertThat(metadata.getId(), is(hashedId));
+    assertThat(metadata.getMetadataModified(), is(date));
+    assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/test.txt"));
+
+    // and the metadata object's attributes will have values corresponding to the FileStatus object
+    Map<String, MetadataAttribute> metadataAttributes =
+        (Map<String, MetadataAttribute>) metadata.getRawMetadata();
+    assertThat(metadataAttributes.get("id").getValue(), is(hashedId));
+    assertThat(metadataAttributes.get("title").getValue(), is(filename));
+    assertThat(metadataAttributes.get("created").getValue(), is(date.toString()));
+    assertThat(metadataAttributes.get("modified").getValue(), is(date.toString()));
+    assertThat(
+        metadataAttributes.get("resource-uri").getValue(),
+        is("http://host:1234/some/path/test.txt"));
+  }
+
+  @Test
+  public void testCreateMetadataBadUri() {
+    FileStatus fileStatus = mock(FileStatus.class);
+    MessageDigest messageDigest = mock(MessageDigest.class);
+
+    // when a bad filename is utilized to generate a URI
+    Date date = new Date();
+    when(fileStatus.getModificationTime()).thenReturn(date);
+    String badFilename = "?* !";
+    when(fileStatus.getPathSuffix()).thenReturn(badFilename);
+    when(fileStatus.getType()).thenReturn("FILE");
+
+    String hashedId = "hashedId";
+    when(messageDigest.digest(badFilename.getBytes(UTF_8))).thenReturn(hashedId.getBytes());
+
+    // then a ReplicationException is thrown
+    thrown.expect(ReplicationException.class);
+    thrown.expectMessage("Unable to create a URI from the file's URL.");
+
+    webHdfsNodeAdapter.createMetadata(fileStatus, messageDigest);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
   public void testGetFilesToReplicate() throws IOException {
 
     Calendar cal = Calendar.getInstance();
     cal.clear();
     cal.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-    // a date occuring before the filter date
+    // a date occurring before the filter date
     cal.set(Calendar.MONTH, 4);
     cal.set(Calendar.DAY_OF_MONTH, 1);
     cal.set(Calendar.YEAR, 2010);
