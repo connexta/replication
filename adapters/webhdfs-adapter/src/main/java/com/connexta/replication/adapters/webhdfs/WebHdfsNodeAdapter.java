@@ -36,10 +36,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -152,7 +152,11 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   // TODO: 6/5/20 remove this method after done testing implementation
   /** TEMPORARY METHOD FOR IMPLEMENTATION TESTING */
   public QueryResponse testQuery() {
-    Date modifiedAfter = new Date(22222222L);
+    Date modifiedAfter = new Date(1591032104863L); // 2_22222222.txt
+    //        Date modifiedAfter = new Date(1591032448019L); // 3_33333333.txt
+    //    Date modifiedAfter = new Date(1591033242588L); // emptyDir
+    //    Date modifiedAfter = new Date(1591033317819L); // nonemptyDir
+    //    Date modifiedAfter = new Date(1591291130357L); // 3_33333334 (directory)
 
     QueryRequest queryRequest =
         new QueryRequestImpl("", Collections.emptyList(), Collections.emptyList(), modifiedAfter);
@@ -172,7 +176,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     try {
       MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-      // TODO: 6/4/20 evaluate whether to use foreach (as written) or a stream?
+
+      // TODO: 6/4/20 evaluate whether to use foreach (as written) or a stream
       for (FileStatus file : filesToReplicate) {
         results.add(createMetadata(file, messageDigest));
       }
@@ -182,13 +187,30 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     return new QueryResponseImpl(results);
   }
 
-  private Metadata createMetadata(FileStatus file, MessageDigest messageDigest) {
+  /**
+   * Creates {@link MetadataAttribute}s to use in creating a {@link MetadataImpl} object for a file
+   * being replicated.
+   *
+   * @param fileStatus information about the file being replicated
+   * @param messageDigest a secure one-way hash function for the generation of an identifier
+   * @return a {@link MetadataImpl} object for the file being replicated
+   */
+  private Metadata createMetadata(FileStatus fileStatus, MessageDigest messageDigest) {
 
     Map<String, MetadataAttribute> metadataAttributes = new HashMap<>();
 
-    String fileUrl = String.format("%s/%s", getWebHdfsUrl(), file.getPathSuffix());
+    String fileUrl = String.format("%s/%s", getWebHdfsUrl(), fileStatus.getPathSuffix());
 
-    String id = Arrays.toString(messageDigest.digest(file.getPathSuffix().getBytes()));
+    // TODO: 6/5/20 determine how best to generate the ID
+    //    String id =
+    // Arrays.toString(messageDigest.digest(file.getPathSuffix().getBytes(StandardCharsets.UTF_8)));
+    // // makes String look like an array of bytes
+    String id =
+        new String(
+            messageDigest.digest(
+                fileStatus
+                    .getPathSuffix()
+                    .getBytes(StandardCharsets.UTF_8))); // makes a String with atypical characters
     MetadataAttribute idAttribute =
         new MetadataAttribute(
             Core.ID,
@@ -201,7 +223,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         new MetadataAttribute(
             Core.TITLE,
             METADATA_ATTRIBUTE_TYPE_STRING,
-            Collections.singletonList(file.getPathSuffix()),
+            Collections.singletonList(fileStatus.getPathSuffix()),
             Collections.emptyList());
     metadataAttributes.put(Core.TITLE, titleAttribute);
 
@@ -209,7 +231,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         new MetadataAttribute(
             Core.CREATED,
             METADATA_ATTRIBUTE_TYPE_DATE,
-            Collections.singletonList(file.getModificationTime().toString()),
+            Collections.singletonList(fileStatus.getModificationTime().toString()),
             Collections.emptyList());
     metadataAttributes.put(Core.CREATED, createdAttribute);
 
@@ -217,7 +239,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         new MetadataAttribute(
             Core.MODIFIED,
             METADATA_ATTRIBUTE_TYPE_DATE,
-            Collections.singletonList(file.getModificationTime().toString()),
+            Collections.singletonList(fileStatus.getModificationTime().toString()),
             Collections.emptyList());
     metadataAttributes.put(Core.MODIFIED, modifiedAttribute);
 
@@ -230,12 +252,13 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     metadataAttributes.put(Core.RESOURCE_URI, resourceUriAttribute);
 
     Metadata metadata =
-        new MetadataImpl(metadataAttributes, Map.class, id, file.getModificationTime());
+        new MetadataImpl(metadataAttributes, Map.class, id, fileStatus.getModificationTime());
+
     try {
       metadata.setResourceUri(new URI(fileUrl));
       return metadata;
     } catch (URISyntaxException e) {
-      return null; // ?
+      throw new ReplicationException("Unable to create a URI from the file's URL.", e);
     }
   }
 
@@ -246,7 +269,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @param filterDate specifies a point in time such that older files are excluded
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
-  private List<FileStatus> getFilesToReplicate(Date filterDate) {
+  @VisibleForTesting
+  List<FileStatus> getFilesToReplicate(Date filterDate) {
 
     List<FileStatus> filesToReplicate = new ArrayList<>();
     AtomicInteger remainingEntries = new AtomicInteger();
@@ -314,7 +338,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
   private List<FileStatus> getRelevantFiles(List<FileStatus> files, Date filterDate) {
-    files.removeIf(file -> file.isDirectory() || file.isOlderThan(filterDate));
+    files.removeIf(file -> file.isDirectory() || file.getModificationTime().before(filterDate));
 
     return files;
   }
