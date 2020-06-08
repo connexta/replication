@@ -13,8 +13,8 @@
  */
 package com.connexta.replication.adapters.webhdfs.filesystem;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
-import org.apache.commons.io.FilenameUtils;
 
 /** Represents a FileStatus JSON object received through an HTTP GET request */
 public class FileStatus {
@@ -137,18 +137,8 @@ public class FileStatus {
     this.type = type;
   }
 
+  @JsonIgnore
   public boolean isDirectory() {
     return getType().equals("DIRECTORY");
-  }
-
-  public boolean isOlderThan(Date date) {
-    // TODO: 6/4/20 remove this and use modificationTime directly?
-    String filename = FilenameUtils.removeExtension(getPathSuffix());
-
-    // get time portion of the filename
-    long fileTime = Long.parseLong(filename.substring(filename.lastIndexOf('_') + 1));
-
-    Date fileDate = new Date(fileTime);
-    return fileDate.before(date);
   }
 }
