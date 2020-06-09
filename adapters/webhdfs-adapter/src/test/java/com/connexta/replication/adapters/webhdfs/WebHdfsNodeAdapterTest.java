@@ -43,8 +43,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -52,6 +50,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -136,7 +135,13 @@ public class WebHdfsNodeAdapterTest {
   }
 
   @Test
-  public void testQuery() throws IOException, NoSuchAlgorithmException {
+  public void testGetSystemName() {
+    assertThat(webHdfsNodeAdapter.getSystemName(), is("webHDFS"));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testQuery() throws IOException {
     Calendar cal = Calendar.getInstance();
     cal.clear();
     cal.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -190,8 +195,8 @@ public class WebHdfsNodeAdapterTest {
 
     // and the query response contains the metadata with the expected values
     // object
-    MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-    String hashedId = new String(messageDigest.digest("file1.ext".getBytes(UTF_8)));
+    String hashedId = DigestUtils.md5Hex("file1.ext").toUpperCase();
+    ;
 
     assertThat(metadata.getId(), is(hashedId));
     assertThat(metadata.getMetadataModified(), is(fileDate));
@@ -200,6 +205,7 @@ public class WebHdfsNodeAdapterTest {
     // and the metadata object's attributes will have values corresponding to the FileStatus object
     Map<String, MetadataAttribute> metadataAttributes =
         (Map<String, MetadataAttribute>) metadata.getRawMetadata();
+
     assertThat(metadataAttributes.get("id").getValue(), is(hashedId));
     assertThat(metadataAttributes.get("title").getValue(), is("file1.ext"));
     assertThat(metadataAttributes.get("created").getValue(), is(fileDate.toString()));
@@ -213,7 +219,6 @@ public class WebHdfsNodeAdapterTest {
   @Test
   public void testCreateMetadata() {
     FileStatus fileStatus = mock(FileStatus.class);
-    MessageDigest messageDigest = mock(MessageDigest.class);
 
     Calendar cal = Calendar.getInstance();
     cal.clear();
@@ -230,11 +235,11 @@ public class WebHdfsNodeAdapterTest {
     when(fileStatus.getPathSuffix()).thenReturn(filename);
     when(fileStatus.getType()).thenReturn("FILE");
 
-    String hashedId = "hashedId";
-    when(messageDigest.digest(filename.getBytes(UTF_8))).thenReturn(hashedId.getBytes());
+    String hashedId = DigestUtils.md5Hex(filename).toUpperCase();
+    ;
 
     // and createMetadata is called
-    Metadata metadata = webHdfsNodeAdapter.createMetadata(fileStatus, messageDigest);
+    Metadata metadata = webHdfsNodeAdapter.createMetadata(fileStatus);
 
     // then the resulting metadata object will have values corresponding to the FileStatus object
     assertThat(metadata.getId(), is(hashedId));
@@ -256,7 +261,6 @@ public class WebHdfsNodeAdapterTest {
   @Test
   public void testCreateMetadataBadUri() {
     FileStatus fileStatus = mock(FileStatus.class);
-    MessageDigest messageDigest = mock(MessageDigest.class);
 
     // when a bad filename is utilized to generate a URI
     Date date = new Date();
@@ -265,14 +269,11 @@ public class WebHdfsNodeAdapterTest {
     when(fileStatus.getPathSuffix()).thenReturn(badFilename);
     when(fileStatus.getType()).thenReturn("FILE");
 
-    String hashedId = "hashedId";
-    when(messageDigest.digest(badFilename.getBytes(UTF_8))).thenReturn(hashedId.getBytes());
-
     // then a ReplicationException is thrown
     thrown.expect(ReplicationException.class);
     thrown.expectMessage("Unable to create a URI from the file's URL.");
 
-    webHdfsNodeAdapter.createMetadata(fileStatus, messageDigest);
+    webHdfsNodeAdapter.createMetadata(fileStatus);
   }
 
   @SuppressWarnings("unchecked")
@@ -398,7 +399,7 @@ public class WebHdfsNodeAdapterTest {
     String testResourceId = "123456789";
     Date testDate = new Date();
     String testResourceName = String.format("%s_%s", testResourceId, testDate.getTime());
-    Long testResourceSize = 256L;
+    long testResourceSize = 256L;
     URI testResourceUri =
         new URI(String.format("http://host1:8000/test/resource/%s.txt", testResourceName));
     String testFileLocation = String.format("{\"Location\":\"%s\"}", testResourceUri.toString());

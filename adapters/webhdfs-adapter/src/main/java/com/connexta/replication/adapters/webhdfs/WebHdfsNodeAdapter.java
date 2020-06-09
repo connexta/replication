@@ -18,7 +18,6 @@ import com.connexta.replication.adapters.webhdfs.filesystem.FileStatus;
 import com.connexta.replication.adapters.webhdfs.filesystem.IterativeDirectoryListing;
 import com.connexta.replication.data.MetadataAttribute;
 import com.connexta.replication.data.MetadataImpl;
-import com.connexta.replication.data.QueryRequestImpl;
 import com.connexta.replication.data.QueryResponseImpl;
 import com.connexta.replication.data.ResourceImpl;
 import com.connexta.replication.data.ResourceResponseImpl;
@@ -36,9 +35,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -48,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
@@ -149,21 +146,6 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     return "webHDFS";
   }
 
-  // TODO: 6/5/20 remove this method after done testing implementation
-  /** TEMPORARY METHOD FOR IMPLEMENTATION TESTING */
-  public QueryResponse testQuery() {
-    Date modifiedAfter = new Date(1591032104863L); // 2_22222222.txt
-    //        Date modifiedAfter = new Date(1591032448019L); // 3_33333333.txt
-    //    Date modifiedAfter = new Date(1591033242588L); // emptyDir
-    //    Date modifiedAfter = new Date(1591033317819L); // nonemptyDir
-    //    Date modifiedAfter = new Date(1591291130357L); // 3_33333334 (directory)
-
-    QueryRequest queryRequest =
-        new QueryRequestImpl("", Collections.emptyList(), Collections.emptyList(), modifiedAfter);
-    QueryResponse queryResponse = query(queryRequest);
-    return queryResponse;
-  }
-
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
 
@@ -173,15 +155,10 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     List<Metadata> results = new ArrayList<>();
 
-    try {
-      MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-
-      for (FileStatus file : filesToReplicate) {
-        results.add(createMetadata(file, messageDigest));
-      }
-    } catch (NoSuchAlgorithmException e) {
-      LOGGER.error("Unable to create unique ID, due to invalid hashing algorithm.", e);
+    for (FileStatus file : filesToReplicate) {
+      results.add(createMetadata(file));
     }
+
     return new QueryResponseImpl(results);
   }
 
@@ -190,26 +167,17 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * being replicated.
    *
    * @param fileStatus information about the file being replicated
-   * @param messageDigest a secure one-way hash function for the generation of an identifier
    * @return a {@link MetadataImpl} object for the file being replicated
    */
   @VisibleForTesting
-  Metadata createMetadata(FileStatus fileStatus, MessageDigest messageDigest) {
+  Metadata createMetadata(FileStatus fileStatus) {
 
     Map<String, MetadataAttribute> metadataAttributes = new HashMap<>();
 
     String fileUrl = getWebHdfsUrl().toString() + fileStatus.getPathSuffix();
 
-    // TODO: 6/5/20 determine how best to generate the ID
-    //    String id =
-    // Arrays.toString(messageDigest.digest(file.getPathSuffix().getBytes(StandardCharsets.UTF_8)));
-    // // makes String look like an array of bytes
-    String id =
-        new String(
-            messageDigest.digest(
-                fileStatus
-                    .getPathSuffix()
-                    .getBytes(StandardCharsets.UTF_8))); // makes a String with atypical characters
+    String id = DigestUtils.md5Hex(fileStatus.getPathSuffix()).toUpperCase();
+
     MetadataAttribute idAttribute =
         new MetadataAttribute(
             Core.ID,
