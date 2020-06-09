@@ -50,6 +50,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -282,6 +284,27 @@ public class WebHdfsNodeAdapterTest {
     webHdfsNodeAdapter.createMetadata(fileStatus);
   }
 
+  @Test
+  public void testGetRelevantFilesNullFilterDate() {
+
+    FileStatus file1 = new FileStatus();
+    file1.setType("FILE");
+    FileStatus file2 = new FileStatus();
+    file2.setType("DIRECTORY");
+    FileStatus file3 = new FileStatus();
+    file3.setType("FILE");
+
+    List<FileStatus> files = Stream.of(file1, file2, file3).collect(Collectors.toList());
+
+    // when getting a list of relevant files with no specified filter date
+    List<FileStatus> result = webHdfsNodeAdapter.getRelevantFiles(files, null);
+
+    // then all items of type FILE are returned
+    assertThat(result.get(0), is(file1));
+    assertThat(result.get(1), is(file3));
+    assertThat(result.size(), is(2));
+  }
+
   @SuppressWarnings("unchecked")
   @Test
   public void testGetFilesToReplicate() throws IOException {
@@ -314,7 +337,7 @@ public class WebHdfsNodeAdapterTest {
     FileStatus file2 = getFileStatus(afterFilter1, "file2.ext", "FILE", 222);
     FileStatus file3 = getFileStatus(afterFilter2, "someDirectory", "DIRECTORY", 0);
 
-    List<FileStatus> files1 = Arrays.asList(file1, file2, file3);
+    List<FileStatus> files1 = Stream.of(file1, file2, file3).collect(Collectors.toList());
 
     // and there are two additional entries to retrieve
     String idl1 = getIterativeDirectoryListingAsString(files1, 2);

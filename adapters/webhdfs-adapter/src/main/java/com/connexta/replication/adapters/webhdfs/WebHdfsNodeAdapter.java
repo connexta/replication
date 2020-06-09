@@ -310,18 +310,21 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   }
 
   /**
-   * Returns the files relevant for this replication
+   * Returns the files meeting the criteria for replication by removing elements that: 1) are of
+   * type DIRECTORY or 2) have a modification time before or equal to the filter date, when the
+   * filter date is specified
    *
    * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
-   * @param filterDate specifies a point in time such that older files are excluded; this value will
-   *     be set to {@code null} during the first execution of replication
+   * @param filterDate specifies a point in time such that only files more-recent are included; this
+   *     value will be set to {@code null} during the first execution of replication
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
-  private List<FileStatus> getRelevantFiles(List<FileStatus> files, @Nullable Date filterDate) {
+  @VisibleForTesting
+  List<FileStatus> getRelevantFiles(List<FileStatus> files, @Nullable Date filterDate) {
     files.removeIf(
         file ->
             file.isDirectory()
-                || (filterDate != null && file.getModificationTime().before(filterDate)));
+                || (filterDate != null && !file.getModificationTime().after(filterDate)));
 
     return files;
   }
