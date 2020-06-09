@@ -245,6 +245,7 @@ public class WebHdfsNodeAdapterTest {
     assertThat(metadata.getId(), is(hashedId));
     assertThat(metadata.getMetadataModified(), is(date));
     assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/test.txt"));
+    assertThat(metadata.getResourceModified(), is(date));
 
     // and the metadata object's attributes will have values corresponding to the FileStatus object
     Map<String, MetadataAttribute> metadataAttributes =

@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -72,8 +73,6 @@ import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.codice.ditto.replication.api.impl.data.CreateStorageRequestImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
 
 /** Interacts with a remote Hadoop instance through the webHDFS REST API */
 public class WebHdfsNodeAdapter implements NodeAdapter {
@@ -179,6 +178,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     String fileUrl = getWebHdfsUrl().toString() + fileStatus.getPathSuffix();
 
     String id = DigestUtils.md5Hex(fileStatus.getPathSuffix()).toUpperCase();
+    Date modificationTime = fileStatus.getModificationTime();
 
     MetadataAttribute idAttribute =
         new MetadataAttribute(
@@ -200,7 +200,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         new MetadataAttribute(
             Core.CREATED,
             METADATA_ATTRIBUTE_TYPE_DATE,
-            Collections.singletonList(fileStatus.getModificationTime().toString()),
+            Collections.singletonList(modificationTime.toString()),
             Collections.emptyList());
     metadataAttributes.put(Core.CREATED, createdAttribute);
 
@@ -208,7 +208,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         new MetadataAttribute(
             Core.MODIFIED,
             METADATA_ATTRIBUTE_TYPE_DATE,
-            Collections.singletonList(fileStatus.getModificationTime().toString()),
+            Collections.singletonList(modificationTime.toString()),
             Collections.emptyList());
     metadataAttributes.put(Core.MODIFIED, modifiedAttribute);
 
@@ -220,11 +220,20 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
             Collections.emptyList());
     metadataAttributes.put(Core.RESOURCE_URI, resourceUriAttribute);
 
-    Metadata metadata =
-        new MetadataImpl(metadataAttributes, Map.class, id, fileStatus.getModificationTime());
+    MetadataAttribute lengthAttribute =
+        new MetadataAttribute(
+            Core.RESOURCE_SIZE,
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList(String.valueOf(fileStatus.getLength())),
+            Collections.emptyList());
+    metadataAttributes.put(Core.RESOURCE_SIZE, lengthAttribute);
+
+    Metadata metadata = new MetadataImpl(metadataAttributes, Map.class, id, modificationTime);
 
     try {
       metadata.setResourceUri(new URI(fileUrl));
+      metadata.setResourceModified(modificationTime);
+
       return metadata;
     } catch (URISyntaxException e) {
       throw new ReplicationException("Unable to create a URI from the file's URL.", e);
