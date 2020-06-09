@@ -91,6 +91,17 @@
             <version>${hadoop.version}</version>
         </dependency>
         <dependency>
+            <groupId>replication</groupId>
+            <artifactId>commons</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>replication</groupId>
+            <artifactId>replication-api-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.sakserv</groupId>
             <artifactId>hadoop-mini-clusters-common</artifactId>
             <version>${hadoop.mini.clusters.version}</version>
@@ -101,11 +112,6 @@
             <artifactId>hadoop-mini-clusters-hdfs</artifactId>
             <version>${hadoop.mini.clusters.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>replication</groupId>
-            <artifactId>replication-api-impl</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>replication-adapters</groupId>
