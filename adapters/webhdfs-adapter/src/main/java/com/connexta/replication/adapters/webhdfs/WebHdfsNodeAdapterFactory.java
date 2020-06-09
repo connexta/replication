@@ -42,10 +42,7 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
     String baseUrl = protocol + url.getHost() + ":" + url.getPort() + url.getPath();
 
     if (!baseUrl.endsWith("/")) {
-      baseUrl =
-          baseUrl.concat(
-              "/"); // TODO: 6/5/20 the trailing slash is removed when the URL is created again so
-      // this may not be beneficial
+      baseUrl = baseUrl.concat("/");
     }
 
     try {
@@ -55,19 +52,6 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
       throw new AdapterException("Failed to create adapter", e);
     }
   }
-
-  // TODO: 6/5/20 remove this after testing complete
-  //  public static void main(String[] args) {
-  //    try {
-  //      WebHdfsNodeAdapter adapter =
-  //          new WebHdfsNodeAdapter(
-  //              new URL("http://localhost:9870/webhdfs/v1/user/chris"),
-  // HttpClients.createDefault());
-  //      adapter.testQuery();
-  //    } catch (MalformedURLException e) {
-  //      System.exit(0);
-  //    }
-  //  }
 
   @Override
   public NodeAdapterType getType() {
