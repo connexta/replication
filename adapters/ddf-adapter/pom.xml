@@ -160,8 +160,8 @@
           <instructions>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Import-Package>
+              !com.google.common.cache,
               !org.jvnet.staxex,
-              ddf.security.permission,
               ddf.security.encryption;version="[1.0.0, 3.0.0]",
               *
             </Import-Package>
@@ -169,6 +169,7 @@
               commons-collections4,
               ogc-tools-gml-jts,
               ddf-security-common,
+              ddf.security.permission,
               platform-util,
               jaxb-core,
               commons-lang3,

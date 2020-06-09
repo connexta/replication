@@ -140,22 +140,30 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Import-Package>
                             !org.jvnet.staxex,
-                            ddf.security.permission,
                             ddf.security.encryption;version="[1.0.0, 3.0.0]",
                             *
                         </Import-Package>
                         <Export-Package>
-                            org.codice.ditto.replication.api.impl.data
+                            org.codice.ditto.replication.api.impl.data,
+                            org.codice.ddf.admin.configurator.*,
+                            com.google.api.client.*,
+                            com.google.common.*,
+                            com.google.errorprone.annotations.*,
+                            com.google.thirdparty.publicsuffix,
                         </Export-Package>
                         <Embed-Dependency>
                             commons-collections4,
                             catalog-core-api-impl,
                             ddf-security-common,
+                            ddf.security.permission,
+                            com.google.common.*,
                             platform-util,
                             platform-util-unavailableurls,
                             commons-lang3,
+                            security-core-api,
                             security-core-impl,
-                            commons
+                            commons,
+                            guava
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
