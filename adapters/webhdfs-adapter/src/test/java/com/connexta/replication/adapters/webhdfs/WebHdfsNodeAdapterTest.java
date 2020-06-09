@@ -160,7 +160,7 @@ public class WebHdfsNodeAdapterTest {
     Date fileDate = cal.getTime();
 
     // given a file with a date after the filter date exists on the system being queried
-    FileStatus file = getFileStatus(fileDate, "file1.ext", "FILE");
+    FileStatus file = getFileStatus(fileDate, "file1.ext", "FILE", 251);
     List<FileStatus> files = Collections.singletonList(file);
 
     // and there are no additional entries to retrieve
@@ -201,6 +201,8 @@ public class WebHdfsNodeAdapterTest {
     assertThat(metadata.getId(), is(hashedId));
     assertThat(metadata.getMetadataModified(), is(fileDate));
     assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/file1.ext"));
+    assertThat(metadata.getResourceModified(), is(fileDate));
+    assertThat(metadata.getResourceSize(), is(251L));
 
     // and the metadata object's attributes will have values corresponding to the FileStatus object
     Map<String, MetadataAttribute> metadataAttributes =
@@ -213,6 +215,7 @@ public class WebHdfsNodeAdapterTest {
     assertThat(
         metadataAttributes.get("resource-uri").getValue(),
         is("http://host:1234/some/path/file1.ext"));
+    assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
   }
 
   @SuppressWarnings("unchecked")
@@ -234,9 +237,9 @@ public class WebHdfsNodeAdapterTest {
     String filename = "test.txt";
     when(fileStatus.getPathSuffix()).thenReturn(filename);
     when(fileStatus.getType()).thenReturn("FILE");
+    when(fileStatus.getLength()).thenReturn(251);
 
     String hashedId = DigestUtils.md5Hex(filename).toUpperCase();
-    ;
 
     // and createMetadata is called
     Metadata metadata = webHdfsNodeAdapter.createMetadata(fileStatus);
@@ -246,6 +249,7 @@ public class WebHdfsNodeAdapterTest {
     assertThat(metadata.getMetadataModified(), is(date));
     assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/test.txt"));
     assertThat(metadata.getResourceModified(), is(date));
+    assertThat(metadata.getResourceSize(), is(251L));
 
     // and the metadata object's attributes will have values corresponding to the FileStatus object
     Map<String, MetadataAttribute> metadataAttributes =
@@ -257,6 +261,7 @@ public class WebHdfsNodeAdapterTest {
     assertThat(
         metadataAttributes.get("resource-uri").getValue(),
         is("http://host:1234/some/path/test.txt"));
+    assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
   }
 
   @Test
@@ -305,9 +310,9 @@ public class WebHdfsNodeAdapterTest {
 
     // given a set of three files, one before the filter date and two after (one of which is a
     // directory)
-    FileStatus file1 = getFileStatus(beforeFilter, "file1.ext", "FILE");
-    FileStatus file2 = getFileStatus(afterFilter1, "file2.ext", "FILE");
-    FileStatus file3 = getFileStatus(afterFilter2, "someDirectory", "DIRECTORY");
+    FileStatus file1 = getFileStatus(beforeFilter, "file1.ext", "FILE", 111);
+    FileStatus file2 = getFileStatus(afterFilter1, "file2.ext", "FILE", 222);
+    FileStatus file3 = getFileStatus(afterFilter2, "someDirectory", "DIRECTORY", 0);
 
     List<FileStatus> files1 = Arrays.asList(file1, file2, file3);
 
@@ -316,8 +321,8 @@ public class WebHdfsNodeAdapterTest {
     InputStream inputStream1 = new ByteArrayInputStream(idl1.getBytes(UTF_8));
 
     // and the second set of files contains two files, both after the filter date and of type FILE
-    FileStatus file4 = getFileStatus(afterFilter3, "file4.ext", "FILE");
-    FileStatus file5 = getFileStatus(afterFilter4, "file5.ext", "FILE");
+    FileStatus file4 = getFileStatus(afterFilter3, "file4.ext", "FILE", 444);
+    FileStatus file5 = getFileStatus(afterFilter4, "file5.ext", "FILE", 555);
 
     List<FileStatus> files2 = Arrays.asList(file4, file5);
     String idl2 = getIterativeDirectoryListingAsString(files2, 0);
@@ -329,8 +334,7 @@ public class WebHdfsNodeAdapterTest {
     when(statusLine.getStatusCode()).thenReturn(200);
 
     // and the first response contains the first set of files and the second response contains the
-    // second set
-    // of files
+    // second set of files
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(response.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(inputStream1).thenReturn(inputStream2);
@@ -364,6 +368,10 @@ public class WebHdfsNodeAdapterTest {
     for (FileStatus file : filesToReplicate) {
       assertThat(file.getType(), is("FILE"));
     }
+
+    assertThat(filesToReplicate.get(0).getLength(), is(222));
+    assertThat(filesToReplicate.get(1).getLength(), is(444));
+    assertThat(filesToReplicate.get(2).getLength(), is(555));
 
     // and this was determined through two HTTP requests to the remote
     verify(client, times(2)).execute(any(HttpGet.class), any(ResponseHandler.class));
@@ -1060,13 +1068,16 @@ public class WebHdfsNodeAdapterTest {
    * @param modificationTime the timestamp on the file or directory
    * @param pathSuffix designates the name of the file or directory
    * @param type specifies whether a FILE or DIRECTORY
+   * @param length the size of the file
    * @return a {@link FileStatus} object
    */
-  private FileStatus getFileStatus(Date modificationTime, String pathSuffix, String type) {
+  private FileStatus getFileStatus(
+      Date modificationTime, String pathSuffix, String type, int length) {
     FileStatus fileStatus = new FileStatus();
     fileStatus.setModificationTime(modificationTime);
     fileStatus.setPathSuffix(pathSuffix);
     fileStatus.setType(type);
+    fileStatus.setLength(length);
 
     return fileStatus;
   }

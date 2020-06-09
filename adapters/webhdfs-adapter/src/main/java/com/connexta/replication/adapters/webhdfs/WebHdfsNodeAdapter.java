@@ -233,6 +233,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     try {
       metadata.setResourceUri(new URI(fileUrl));
       metadata.setResourceModified(modificationTime);
+      metadata.setResourceSize(fileStatus.getLength());
 
       return metadata;
     } catch (URISyntaxException e) {
