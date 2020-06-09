@@ -73,6 +73,8 @@ import org.codice.ditto.replication.api.impl.data.CreateStorageRequestImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 /** Interacts with a remote Hadoop instance through the webHDFS REST API */
 public class WebHdfsNodeAdapter implements NodeAdapter {
 
@@ -237,7 +239,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
   @VisibleForTesting
-  List<FileStatus> getFilesToReplicate(Date filterDate) {
+  List<FileStatus> getFilesToReplicate(@Nullable Date filterDate) {
 
     List<FileStatus> filesToReplicate = new ArrayList<>();
     AtomicInteger remainingEntries = new AtomicInteger();
@@ -301,11 +303,15 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * Returns the files relevant for this replication
    *
    * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
-   * @param filterDate specifies a point in time such that older files are excluded
+   * @param filterDate specifies a point in time such that older files are excluded; this value will
+   *     be set to {@code null} during the first execution of replication
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
-  private List<FileStatus> getRelevantFiles(List<FileStatus> files, Date filterDate) {
-    files.removeIf(file -> file.isDirectory() || file.getModificationTime().before(filterDate));
+  private List<FileStatus> getRelevantFiles(List<FileStatus> files, @Nullable Date filterDate) {
+    files.removeIf(
+        file ->
+            file.isDirectory()
+                || (filterDate != null && file.getModificationTime().before(filterDate)));
 
     return files;
   }
