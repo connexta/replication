@@ -171,8 +171,7 @@
               ddf-security-common,
               platform-util,
               jaxb-core,
-              commons-lang3,
-              commons
+              commons-lang3
             </Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
           </instructions>
