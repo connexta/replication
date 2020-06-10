@@ -218,6 +218,7 @@ public class WebHdfsNodeAdapterTest {
         metadataAttributes.get("resource-uri").getValue(),
         is("http://host:1234/some/path/file1.ext"));
     assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
+    assertThat(metadataAttributes.get("replication.origins").getValue(), is("HDFS"));
   }
 
   @SuppressWarnings("unchecked")
@@ -264,6 +265,7 @@ public class WebHdfsNodeAdapterTest {
         metadataAttributes.get("resource-uri").getValue(),
         is("http://host:1234/some/path/test.txt"));
     assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
+    assertThat(metadataAttributes.get("replication.origins").getValue(), is("HDFS"));
   }
 
   @Test
