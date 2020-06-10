@@ -42,10 +42,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
@@ -98,6 +98,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   private static final String METADATA_ATTRIBUTE_TYPE_DATE = "date";
 
   private static final String REPLICATION_ORIGINS = "HDFS";
+
+  private static final int UUID_VERSION_INDEX = 14;
 
   private final URL webHdfsUrl;
 
@@ -180,7 +182,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     String fileUrl = getWebHdfsUrl().toString() + fileStatus.getPathSuffix();
 
-    String id = DigestUtils.md5Hex(fileStatus.getPathSuffix()).toUpperCase();
+    String id = getVersion4Uuid(fileUrl);
     Date modificationTime = fileStatus.getModificationTime();
 
     MetadataAttribute idAttribute =
@@ -239,6 +241,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
             Collections.emptyList());
     metadataAttributes.put(Replication.ORIGINS, replicationOriginsAttribute);
 
+    MetadataAttribute typeAttribute =
+        new MetadataAttribute(
+            "type",
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList("ddf.metacard"),
+            Collections.emptyList());
+    metadataAttributes.put("type", typeAttribute);
+
     Metadata metadata = new MetadataImpl(metadataAttributes, Map.class, id, modificationTime);
 
     try {
@@ -250,6 +260,20 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     } catch (URISyntaxException e) {
       throw new ReplicationException("Unable to create a URI from the file's URL.", e);
     }
+  }
+
+  /**
+   * Using the file URL as input, a version-3 UUID is generated, which is then modified to appear as
+   * a version-4 UUID by changing the version number in the UUID from 3 to 4.
+   *
+   * @param fileUrl the full URL of the file
+   * @return a {@code String} representing a version-4 UUID
+   */
+  private String getVersion4Uuid(String fileUrl) {
+    String version3Uuid = UUID.nameUUIDFromBytes(fileUrl.getBytes()).toString();
+    StringBuilder version4Uuid = new StringBuilder(version3Uuid);
+    version4Uuid.setCharAt(UUID_VERSION_INDEX, '4');
+    return version4Uuid.toString();
   }
 
   /**
