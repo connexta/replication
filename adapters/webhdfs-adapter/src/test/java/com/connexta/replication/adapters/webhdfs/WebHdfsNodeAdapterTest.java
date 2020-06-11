@@ -72,7 +72,6 @@ import org.codice.ditto.replication.api.data.ResourceRequest;
 import org.codice.ditto.replication.api.data.ResourceResponse;
 import org.codice.ditto.replication.api.data.UpdateStorageRequest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -141,7 +140,6 @@ public class WebHdfsNodeAdapterTest {
     assertThat(webHdfsNodeAdapter.getSystemName(), is("webHDFS"));
   }
 
-  @Ignore
   @SuppressWarnings("unchecked")
   @Test
   public void testQuery() throws IOException {
@@ -198,9 +196,8 @@ public class WebHdfsNodeAdapterTest {
 
     // and the query response contains the metadata with the expected values
     // object
-    String id = "9705ed4a-607d-4746-b368-45222b217327";
-
-    assertThat(metadata.getId(), is(id));
+    assertThat(metadata.getId().charAt(14), is('4')); // indicating version-4 UUID
+    assertThat(metadata.getId().length(), is(36)); // 32 digits, plus 4 -'s
     assertThat(metadata.getMetadataModified(), is(fileDate));
     assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/file1.ext"));
     assertThat(metadata.getResourceModified(), is(fileDate));
@@ -210,7 +207,7 @@ public class WebHdfsNodeAdapterTest {
     Map<String, MetadataAttribute> metadataAttributes =
         (Map<String, MetadataAttribute>) metadata.getRawMetadata();
 
-    assertThat(metadataAttributes.get("id").getValue(), is(id));
+    assertThat(metadataAttributes.get("id").getValue(), is(metadata.getId()));
     assertThat(metadataAttributes.get("title").getValue(), is("file1.ext"));
     assertThat(metadataAttributes.get("created").getValue(), is(fileDate.toString()));
     assertThat(metadataAttributes.get("modified").getValue(), is(fileDate.toString()));
@@ -218,10 +215,8 @@ public class WebHdfsNodeAdapterTest {
         metadataAttributes.get("resource-uri").getValue(),
         is("http://host:1234/some/path/file1.ext"));
     assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
-    assertThat(metadataAttributes.get("replication.origins").getValue(), is("HDFS"));
   }
 
-  @Ignore
   @SuppressWarnings("unchecked")
   @Test
   public void testCreateMetadata() {
@@ -243,14 +238,14 @@ public class WebHdfsNodeAdapterTest {
     when(fileStatus.getType()).thenReturn("FILE");
     when(fileStatus.getLength()).thenReturn(251);
 
-    //    String hashedId = DigestUtils.md5Hex(filename).toUpperCase();
-
     // and createMetadata is called
     Metadata metadata = webHdfsNodeAdapter.createMetadata(fileStatus);
 
     // then the resulting metadata object will have values corresponding to the FileStatus object
-    //    assertThat(metadata.getId(), is(hashedId));
-    assertThat(metadata.getMetadataModified(), is(date));
+    assertThat(metadata.getId().charAt(14), is('4')); // indicating version-4 UUID
+    assertThat(
+        metadata.getId().length(),
+        is(36)); // 32 digits, plus 4 -'s    assertThat(metadata.getMetadataModified(), is(date));
     assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/test.txt"));
     assertThat(metadata.getResourceModified(), is(date));
     assertThat(metadata.getResourceSize(), is(251L));
@@ -258,7 +253,7 @@ public class WebHdfsNodeAdapterTest {
     // and the metadata object's attributes will have values corresponding to the FileStatus object
     Map<String, MetadataAttribute> metadataAttributes =
         (Map<String, MetadataAttribute>) metadata.getRawMetadata();
-    //    assertThat(metadataAttributes.get("id").getValue(), is(hashedId));
+    assertThat(metadataAttributes.get("id").getValue(), is(metadata.getId()));
     assertThat(metadataAttributes.get("title").getValue(), is(filename));
     assertThat(metadataAttributes.get("created").getValue(), is(date.toString()));
     assertThat(metadataAttributes.get("modified").getValue(), is(date.toString()));
@@ -266,10 +261,8 @@ public class WebHdfsNodeAdapterTest {
         metadataAttributes.get("resource-uri").getValue(),
         is("http://host:1234/some/path/test.txt"));
     assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
-    assertThat(metadataAttributes.get("replication.origins").getValue(), is("HDFS"));
   }
 
-  @Ignore
   @Test
   public void testCreateMetadataBadUri() {
     FileStatus fileStatus = mock(FileStatus.class);
