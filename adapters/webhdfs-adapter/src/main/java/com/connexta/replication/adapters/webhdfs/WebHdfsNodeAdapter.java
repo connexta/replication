@@ -244,8 +244,11 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   }
 
   /**
-   * Using the file URL as input, a version-3 UUID is generated, which is then modified to appear as
-   * a version-4 UUID by changing the version number in the UUID from 3 to 4.
+   * Using the file URL and modification time as input, a version-3 UUID is generated which is then
+   * modified to appear as a version-4 UUID by changing the version number in the UUID from 3 to 4.
+   * The URL is not guaranteed to be unique if a file is removed and replaced by another file with
+   * the same URL. Because of this, the URL is combined with the modification time to serve as input
+   * for UUID generation.
    *
    * @param fileUrl the full URL of the file
    * @param modificationTime modification time of the file
@@ -256,14 +259,16 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     String version3Uuid = UUID.nameUUIDFromBytes(input.getBytes()).toString();
     StringBuilder version4Uuid = new StringBuilder(version3Uuid);
     version4Uuid.setCharAt(UUID_VERSION_INDEX, '4');
+
     return version4Uuid.toString();
   }
 
   /**
    * Formulates a GET request to send to the HDFS instance. Repeats the request to retrieve
-   * additional results if the file system contains additional results to retrieve.
+   * additional results if the file system contains more results than can be returned in a single
+   * response.
    *
-   * @param filterDate specifies a point in time such that older files are excluded
+   * @param filterDate specifies a point in time such that only files more recent are returned
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
   @VisibleForTesting
@@ -333,7 +338,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * filter date is specified
    *
    * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
-   * @param filterDate specifies a point in time such that only files more-recent are included; this
+   * @param filterDate specifies a point in time such that only files more recent are included; this
    *     value will be set to {@code null} during the first execution of replication
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */

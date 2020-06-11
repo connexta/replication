@@ -195,9 +195,8 @@ public class WebHdfsNodeAdapterTest {
     Metadata metadata = Iterables.get(metadataIterable, 0);
 
     // and the query response contains the metadata with the expected values
-    // object
-    assertThat(metadata.getId().charAt(14), is('4')); // indicating version-4 UUID
-    assertThat(metadata.getId().length(), is(36)); // 32 digits, plus 4 -'s
+    assertThat(metadata.getId().charAt(14), is('4')); // indicates version-4 UUID
+    assertThat(metadata.getId().length(), is(36)); // 32 digits, plus 4 hyphens
     assertThat(metadata.getMetadataModified(), is(fileDate));
     assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/file1.ext"));
     assertThat(metadata.getResourceModified(), is(fileDate));
@@ -243,9 +242,8 @@ public class WebHdfsNodeAdapterTest {
 
     // then the resulting metadata object will have values corresponding to the FileStatus object
     assertThat(metadata.getId().charAt(14), is('4')); // indicating version-4 UUID
-    assertThat(
-        metadata.getId().length(),
-        is(36)); // 32 digits, plus 4 -'s    assertThat(metadata.getMetadataModified(), is(date));
+    assertThat(metadata.getId().length(), is(36)); // 32 digits, plus 4 hyphens
+    assertThat(metadata.getMetadataModified(), is(date));
     assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/test.txt"));
     assertThat(metadata.getResourceModified(), is(date));
     assertThat(metadata.getResourceSize(), is(251L));
@@ -353,8 +351,8 @@ public class WebHdfsNodeAdapterTest {
     when(response.getStatusLine()).thenReturn(statusLine);
     when(statusLine.getStatusCode()).thenReturn(200);
 
-    // and the first response contains the first set of files and the second response contains the
-    // second set of files
+    // and the first response contains the first set of files
+    // and the second response contains the second set of files
     HttpEntity httpEntity = mock(HttpEntity.class);
     when(response.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(inputStream1).thenReturn(inputStream2);
@@ -374,7 +372,7 @@ public class WebHdfsNodeAdapterTest {
     // then there are three files that fit the criteria
     assertThat(filesToReplicate.size() == 3, is(true));
 
-    // and the modification dates on the files are those meeting the filter criteria
+    // and the modification dates on the results are more recent than the filter date
     assertThat(filesToReplicate.get(0).getModificationTime().compareTo(filter), is(1));
     assertThat(filesToReplicate.get(1).getModificationTime().compareTo(filter), is(1));
     assertThat(filesToReplicate.get(2).getModificationTime().compareTo(filter), is(1));
@@ -415,7 +413,7 @@ public class WebHdfsNodeAdapterTest {
         .when(client)
         .execute(any(HttpGet.class), any(ResponseHandler.class));
 
-    // then a replication exception is thrown and
+    // then a replication exception is thrown
     thrown.expect(ReplicationException.class);
     thrown.expectMessage("List Status Batch request failed with status code: 400");
 

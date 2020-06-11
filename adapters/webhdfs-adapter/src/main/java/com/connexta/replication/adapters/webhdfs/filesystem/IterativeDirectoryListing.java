@@ -15,7 +15,7 @@ package com.connexta.replication.adapters.webhdfs.filesystem;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/** Represents the data returned by the HTTP GET request to iteratively list a directory */
+/** Represents the data returned by an HTTP GET request to iteratively list a directory */
 public class IterativeDirectoryListing {
 
   @JsonProperty("DirectoryListing")
