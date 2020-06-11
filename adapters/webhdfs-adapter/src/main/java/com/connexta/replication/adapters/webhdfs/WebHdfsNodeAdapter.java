@@ -182,8 +182,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     String fileUrl = getWebHdfsUrl().toString() + fileStatus.getPathSuffix();
 
-    String id = getVersion4Uuid(fileUrl);
     Date modificationTime = fileStatus.getModificationTime();
+    String id = getVersion4Uuid(fileUrl, modificationTime);
 
     MetadataAttribute idAttribute =
         new MetadataAttribute(
@@ -267,10 +267,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * a version-4 UUID by changing the version number in the UUID from 3 to 4.
    *
    * @param fileUrl the full URL of the file
+   * @param modificationTime modification time of the file
    * @return a {@code String} representing a version-4 UUID
    */
-  private String getVersion4Uuid(String fileUrl) {
-    String version3Uuid = UUID.nameUUIDFromBytes(fileUrl.getBytes()).toString();
+  private String getVersion4Uuid(String fileUrl, Date modificationTime) {
+    String input = String.format("%s_%d", fileUrl, modificationTime.getTime());
+    String version3Uuid = UUID.nameUUIDFromBytes(input.getBytes()).toString();
     StringBuilder version4Uuid = new StringBuilder(version3Uuid);
     version4Uuid.setCharAt(UUID_VERSION_INDEX, '4');
     return version4Uuid.toString();
