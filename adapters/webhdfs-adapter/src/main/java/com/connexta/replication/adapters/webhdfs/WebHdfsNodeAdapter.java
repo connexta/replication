@@ -58,7 +58,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.codice.ditto.replication.api.NodeAdapter;
-import org.codice.ditto.replication.api.Replication;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.data.CreateRequest;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
@@ -96,8 +95,6 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final String METADATA_ATTRIBUTE_TYPE_STRING = "string";
   private static final String METADATA_ATTRIBUTE_TYPE_DATE = "date";
-
-  private static final String REPLICATION_ORIGINS = "HDFS";
 
   private static final int UUID_VERSION_INDEX = 14;
 
@@ -232,22 +229,6 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
             Collections.singletonList(String.valueOf(fileStatus.getLength())),
             Collections.emptyList());
     metadataAttributes.put(Core.RESOURCE_SIZE, lengthAttribute);
-
-    MetadataAttribute replicationOriginsAttribute =
-        new MetadataAttribute(
-            Replication.ORIGINS,
-            METADATA_ATTRIBUTE_TYPE_STRING,
-            Collections.singletonList(REPLICATION_ORIGINS),
-            Collections.emptyList());
-    metadataAttributes.put(Replication.ORIGINS, replicationOriginsAttribute);
-
-    MetadataAttribute typeAttribute =
-        new MetadataAttribute(
-            "type",
-            METADATA_ATTRIBUTE_TYPE_STRING,
-            Collections.singletonList("ddf.metacard"),
-            Collections.emptyList());
-    metadataAttributes.put("type", typeAttribute);
 
     Metadata metadata = new MetadataImpl(metadataAttributes, Map.class, id, modificationTime);
 
