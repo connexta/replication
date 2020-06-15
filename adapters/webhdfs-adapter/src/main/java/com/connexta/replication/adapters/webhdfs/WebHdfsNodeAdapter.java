@@ -261,7 +261,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     StringBuilder version4Uuid = new StringBuilder(version3Uuid);
     version4Uuid.setCharAt(UUID_VERSION_INDEX, '4');
 
-    LOGGER.info("UUID for {} is {}", fileUrl, version4Uuid);
+    LOGGER.debug("UUID for {} is {}", fileUrl, version4Uuid);
     return version4Uuid.toString();
   }
 
