@@ -178,6 +178,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     Map<String, MetadataAttribute> metadataAttributes = new HashMap<>();
 
     String fileUrl = getWebHdfsUrl().toString() + fileStatus.getPathSuffix();
+    LOGGER.debug("Creating Metadata object from file at: {}", fileUrl);
 
     Date modificationTime = fileStatus.getModificationTime();
     String id = getVersion4Uuid(fileUrl, modificationTime);
@@ -260,6 +261,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     StringBuilder version4Uuid = new StringBuilder(version3Uuid);
     version4Uuid.setCharAt(UUID_VERSION_INDEX, '4');
 
+    LOGGER.info("UUID for {} is {}", fileUrl, version4Uuid);
     return version4Uuid.toString();
   }
 
@@ -292,6 +294,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
         ResponseHandler<List<FileStatus>> responseHandler =
             response -> {
               int statusCode = response.getStatusLine().getStatusCode();
+              LOGGER.debug("Response contains status code: {}", statusCode);
 
               if (statusCode == HttpStatus.SC_OK) {
                 InputStream content = response.getEntity().getContent();
@@ -329,6 +332,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       }
     } while (remainingEntries.intValue() > 0);
 
+    LOGGER.info("Identified {} files to replicate.", filesToReplicate.size());
     return filesToReplicate;
   }
 
