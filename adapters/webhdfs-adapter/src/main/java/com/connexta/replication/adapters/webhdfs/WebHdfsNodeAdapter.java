@@ -13,11 +13,18 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import com.connexta.replication.adapters.webhdfs.filesystem.DirectoryListing;
+import com.connexta.replication.adapters.webhdfs.filesystem.FileStatus;
+import com.connexta.replication.adapters.webhdfs.filesystem.IterativeDirectoryListing;
+import com.connexta.replication.data.MetadataAttribute;
+import com.connexta.replication.data.MetadataImpl;
+import com.connexta.replication.data.QueryResponseImpl;
 import com.connexta.replication.data.ResourceImpl;
 import com.connexta.replication.data.ResourceResponseImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import ddf.catalog.data.types.Core;
 import ddf.mime.tika.TikaMimeTypeResolver;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +35,17 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
@@ -64,14 +81,22 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final String HTTP_OPERATION_KEY = "op";
   private static final String HTTP_OPERATION_CHECK_ACCESS = "CHECKACCESS";
+  private static final String HTTP_OPERATION_LIST_STATUS_BATCH = "LISTSTATUS_BATCH";
   private static final String HTTP_OPERATION_CREATE = "CREATE";
   private static final String HTTP_OPERATION_OPEN = "OPEN";
 
   private static final String HTTP_FILE_SYSTEM_ACTION_KEY = "fsaction";
   private static final String HTTP_FILE_SYSTEM_ACTION_ALL = "rwx";
 
+  private static final String HTTP_START_AFTER_KEY = "startAfter";
+
   private static final String HTTP_NO_REDIRECT_KEY = "noredirect";
   private static final String HTTP_CREATE_OVERWRITE_KEY = "overwrite";
+
+  private static final String METADATA_ATTRIBUTE_TYPE_STRING = "string";
+  private static final String METADATA_ATTRIBUTE_TYPE_DATE = "date";
+
+  private static final int UUID_VERSION_INDEX = 14;
 
   private final URL webHdfsUrl;
 
@@ -80,7 +105,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   /**
    * Adapter to interact with a Hadoop instance through the webHDFS REST API
    *
-   * @param webHdfsUrl the address of the REST API for the
+   * @param webHdfsUrl the address of the REST API for the Hadoop instance
    * @param client performs the HTTP requests
    */
   public WebHdfsNodeAdapter(URL webHdfsUrl, CloseableHttpClient client) {
@@ -126,7 +151,209 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
-    return null;
+
+    List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
+
+    filesToReplicate.sort(Comparator.comparing(FileStatus::getModificationTime));
+
+    List<Metadata> results = new ArrayList<>();
+
+    for (FileStatus file : filesToReplicate) {
+      results.add(createMetadata(file));
+    }
+
+    return new QueryResponseImpl(results);
+  }
+
+  /**
+   * Creates {@link MetadataAttribute}s to use in creating a {@link MetadataImpl} object for a file
+   * being replicated.
+   *
+   * @param fileStatus information about the file being replicated
+   * @return a {@link MetadataImpl} object for the file being replicated
+   */
+  @VisibleForTesting
+  Metadata createMetadata(FileStatus fileStatus) {
+
+    Map<String, MetadataAttribute> metadataAttributes = new HashMap<>();
+
+    String fileUrl = getWebHdfsUrl().toString() + fileStatus.getPathSuffix();
+    LOGGER.debug("Creating Metadata object from file at: {}", fileUrl);
+
+    Date modificationTime = fileStatus.getModificationTime();
+    String id = getVersion4Uuid(fileUrl, modificationTime);
+
+    MetadataAttribute idAttribute =
+        new MetadataAttribute(
+            Core.ID,
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList(id),
+            Collections.emptyList());
+    metadataAttributes.put(Core.ID, idAttribute);
+
+    MetadataAttribute titleAttribute =
+        new MetadataAttribute(
+            Core.TITLE,
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList(fileStatus.getPathSuffix()),
+            Collections.emptyList());
+    metadataAttributes.put(Core.TITLE, titleAttribute);
+
+    MetadataAttribute createdAttribute =
+        new MetadataAttribute(
+            Core.CREATED,
+            METADATA_ATTRIBUTE_TYPE_DATE,
+            Collections.singletonList(modificationTime.toString()),
+            Collections.emptyList());
+    metadataAttributes.put(Core.CREATED, createdAttribute);
+
+    MetadataAttribute modifiedAttribute =
+        new MetadataAttribute(
+            Core.MODIFIED,
+            METADATA_ATTRIBUTE_TYPE_DATE,
+            Collections.singletonList(modificationTime.toString()),
+            Collections.emptyList());
+    metadataAttributes.put(Core.MODIFIED, modifiedAttribute);
+
+    MetadataAttribute resourceUriAttribute =
+        new MetadataAttribute(
+            Core.RESOURCE_URI,
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList(fileUrl),
+            Collections.emptyList());
+    metadataAttributes.put(Core.RESOURCE_URI, resourceUriAttribute);
+
+    MetadataAttribute lengthAttribute =
+        new MetadataAttribute(
+            Core.RESOURCE_SIZE,
+            METADATA_ATTRIBUTE_TYPE_STRING,
+            Collections.singletonList(String.valueOf(fileStatus.getLength())),
+            Collections.emptyList());
+    metadataAttributes.put(Core.RESOURCE_SIZE, lengthAttribute);
+
+    Metadata metadata = new MetadataImpl(metadataAttributes, Map.class, id, modificationTime);
+
+    try {
+      metadata.setResourceUri(new URI(fileUrl));
+      metadata.setResourceModified(modificationTime);
+      metadata.setResourceSize(fileStatus.getLength());
+
+      return metadata;
+    } catch (URISyntaxException e) {
+      throw new ReplicationException("Unable to create a URI from the file's URL.", e);
+    }
+  }
+
+  /**
+   * Using the file URL and modification time as input, a version-3 UUID is generated which is then
+   * modified to appear as a version-4 UUID by changing the version number in the UUID from 3 to 4.
+   * The URL is not guaranteed to be unique if a file is removed and replaced by another file with
+   * the same URL. Because of this, the URL is combined with the modification time to serve as input
+   * for UUID generation.
+   *
+   * @param fileUrl the full URL of the file
+   * @param modificationTime modification time of the file
+   * @return a {@code String} representing a version-4 UUID
+   */
+  private String getVersion4Uuid(String fileUrl, Date modificationTime) {
+    String input = String.format("%s_%d", fileUrl, modificationTime.getTime());
+    String version3Uuid = UUID.nameUUIDFromBytes(input.getBytes()).toString();
+    StringBuilder version4Uuid = new StringBuilder(version3Uuid);
+    version4Uuid.setCharAt(UUID_VERSION_INDEX, '4');
+
+    LOGGER.debug("UUID for {} is {}", fileUrl, version4Uuid);
+    return version4Uuid.toString();
+  }
+
+  /**
+   * Formulates a GET request to send to the HDFS instance. Repeats the request to retrieve
+   * additional results if the file system contains more results than can be returned in a single
+   * response.
+   *
+   * @param filterDate specifies a point in time such that only files more recent are returned
+   * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
+   */
+  @VisibleForTesting
+  List<FileStatus> getFilesToReplicate(@Nullable Date filterDate) {
+
+    List<FileStatus> filesToReplicate = new ArrayList<>();
+    AtomicInteger remainingEntries = new AtomicInteger();
+    AtomicReference<String> pathSuffix = new AtomicReference<>();
+
+    do {
+      try {
+        URIBuilder builder = new URIBuilder(getWebHdfsUrl().toString());
+        builder.setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_LIST_STATUS_BATCH);
+
+        if (pathSuffix.get() != null) {
+          builder.setParameter(HTTP_START_AFTER_KEY, pathSuffix.get());
+        }
+
+        HttpGet httpGet = new HttpGet(builder.build());
+
+        ResponseHandler<List<FileStatus>> responseHandler =
+            response -> {
+              int statusCode = response.getStatusLine().getStatusCode();
+              LOGGER.debug("Response contains status code: {}", statusCode);
+
+              if (statusCode == HttpStatus.SC_OK) {
+                InputStream content = response.getEntity().getContent();
+
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                IterativeDirectoryListing iterativeDirectoryListing =
+                    objectMapper.readValue(content, IterativeDirectoryListing.class);
+                DirectoryListing directoryListing = iterativeDirectoryListing.getDirectoryListing();
+
+                remainingEntries.set(directoryListing.getRemainingEntries());
+
+                List<FileStatus> results =
+                    directoryListing.getPartialListing().getFileStatuses().getFileStatusList();
+
+                if (remainingEntries.intValue() > 0) {
+                  // start after pathSuffix of the last item for the next request
+                  pathSuffix.set(results.get(results.size() - 1).getPathSuffix());
+                }
+
+                return getRelevantFiles(results, filterDate);
+
+              } else {
+                throw new ReplicationException(
+                    String.format(
+                        "List Status Batch request failed with status code: %d", statusCode));
+              }
+            };
+
+        filesToReplicate.addAll(sendHttpRequest(httpGet, responseHandler));
+
+      } catch (URISyntaxException e) {
+        LOGGER.error("Unable to query, due to invalid URL.", e);
+        return filesToReplicate;
+      }
+    } while (remainingEntries.intValue() > 0);
+
+    LOGGER.info("Identified {} files to replicate.", filesToReplicate.size());
+    return filesToReplicate;
+  }
+
+  /**
+   * Returns the files meeting the criteria for replication by removing elements that: 1) are of
+   * type DIRECTORY or 2) have a modification time before or equal to the filter date, when the
+   * filter date is specified
+   *
+   * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
+   * @param filterDate specifies a point in time such that only files more recent are included; this
+   *     value will be set to {@code null} during the first execution of replication
+   * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
+   */
+  @VisibleForTesting
+  List<FileStatus> getRelevantFiles(List<FileStatus> files, @Nullable Date filterDate) {
+    files.removeIf(
+        file ->
+            file.isDirectory()
+                || (filterDate != null && !file.getModificationTime().after(filterDate)));
+
+    return files;
   }
 
   @Override

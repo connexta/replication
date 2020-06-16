@@ -24,7 +24,7 @@
 
   <name>Replication :: Commons</name>
   <artifactId>commons</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <dependencies>
     <dependency>
@@ -53,6 +53,17 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Export-Package>com.connexta.replication.data</Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
