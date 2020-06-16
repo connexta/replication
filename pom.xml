@@ -74,6 +74,7 @@
         <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
         <project.report.output.directory>project-info</project.report.output.directory>
         <jackson.version>2.10.3</jackson.version>
+        <tika.version>1.22</tika.version>
 
         <!-- documentation replacements -->
         <platform>DDF Base</platform>

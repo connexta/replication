@@ -6,20 +6,16 @@ Replication is the process of creating a copy of a subset of data and storing it
 ## Installing Replication
 Replication is not installed by default with a standard installation. There are several installation options available.
 
-#### Installing Via Admin Console
-An administrator can install the replication feature by following these steps:
-* Navigate to the Admin Console.
-* Select the System tab.
-* Select the Features tab.
-* Locate the replication feature.
-* Select the Install arrow for the replication feature.
-* The status will change from Uninstalled to Installed.
-
 #### Installing Via Kar Feature File
 An administrator can install the replication feature by following the following steps:
 * Locate and download the desired replication artifact kar file.
 * On a running and configured DDF instance, place the kar file in the ${DDF_HOME}/deploy directory.
 * Confirm the feature is running in the Admin Console or the Karaf command line interface.
+
+#### Additional Installation Steps
+Installation on a DDF or Alliance instance requires additional steps
+* Start the registry feature: `feature:install registry-app`.
+* Copy the replication.policy into the ${DDF_HOME}/security directory.
 
 ## Configuring Replication Nodes
 This version of Replication supports nodes created for DDF-based applications as well as HDFS-based systems.
