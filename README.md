@@ -12,7 +12,7 @@ An administrator can install the replication feature by following the following 
 * On a running and configured DDF instance, place the kar file in the ${DDF_HOME}/deploy directory.
 * Confirm the feature is running in the Admin Console or the Karaf command line interface.
 
-#### Additional Installation Steps
+#### Additional Installation Steps for DDF and Alliance
 Installation on a DDF or Alliance instance requires additional steps
 * Start the registry feature: `feature:install registry-app`.
 * Copy the replication.policy into the ${DDF_HOME}/security directory.
