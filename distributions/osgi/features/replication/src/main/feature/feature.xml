@@ -32,6 +32,8 @@
         <feature>graphql-transformer-servlet</feature>
         <feature>admin-query-ui</feature>
         <feature>jackson</feature>
+        <bundle>mvn:org.apache.tika/tika-core/${tika.version}</bundle>
+        <bundle>mvn:ddf.mime.tika/mime-tika-resolver/${ddf.version}</bundle>
         <bundle>mvn:replication/replication-api/${project.version}</bundle>
         <bundle>mvn:replication/replication-api-impl/${project.version}</bundle>
         <bundle>mvn:replication/replication-admin-query/${project.version}</bundle>

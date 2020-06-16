@@ -1,5 +1,21 @@
 priority "grant";
 
+grant codeBase "file:/ddf-adapter" {
+    permission java.lang.RuntimePermission "createClassLoader";
+}
+
+grant codeBase "file:/ddf-adapter/replication-api-impl" {
+    permission java.lang.RuntimePermission "createClassLoader";
+}
+
+grant codeBase "file:/org.apache.servicemix.bundles.xstream" {
+    permission java.lang.RuntimePermission "createClassLoader";
+}
+
+grant codeBase "file:/replication-api-impl" {
+    permission java.io.FilePermission "${ddf.home.perm}etc${/}keystores${/}serverKeystore.jks", "read";
+}
+
 grant codeBase "file:/org.apache.felix.fileinstall/admin-core-jolokia/javax.servlet-api/org.eclipse.jetty.servlet/security-filter-api/platform-filter-clientinfo/platform-filter-response/security-filter-authorization/security-filter-login/org.apache.cxf.cxf-rt-transports-http" {
     permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions${/}-", "read,write";
     permission java.io.FilePermission "${ddf.home.perm}etc${/}definitions", "read";
