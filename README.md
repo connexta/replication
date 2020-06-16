@@ -67,10 +67,10 @@ After the nodes are created, a replication can be configured. This can be done i
   * Bidirectional: Select this checkbox if replication should synchronize the contents of source and destination nodes.
   * Filter: A previously used Intrigue query can be selected from the dropdown, otherwise enter CQL into the Filter text field.
   
-Note: At present, filters on files stored in HDFS are not applied. In a bidirectional replication with a HDFS node, 
-or any replication that uses a HDFS node as the source, the contents of the directory on HDFS will be replicated in full.
-In the future CQL applied to filenames will be possible, but that is not available as of this writing.
-
+Notes: 
+* At present, filters on files stored in HDFS are not applied. In the future CQL applied to filenames will be possible, but that is not available as of this writing.
+* Any replication using HDFS adapter should NOT use the bidirectional flag. This implementation assumes the user will not be reading from and writing to the same directory. 
+To make use of multiple directories -ie, writing to /output and reading from /input- will require two distinct replications be created.
 
 #### Deleting a Replication Configuration
 * Replication configurations can be deleted by selected the Delete option from the vertical ellipsis on the right side of the replication. 
