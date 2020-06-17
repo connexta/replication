@@ -43,6 +43,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -52,6 +53,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -84,6 +86,8 @@ public class WebHdfsNodeAdapterTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  private static final String WEBHDFS_URL = "http://host:1234/some/path/";
+
   WebHdfsNodeAdapter webHdfsNodeAdapter;
 
   CloseableHttpClient client;
@@ -92,7 +96,7 @@ public class WebHdfsNodeAdapterTest {
   public void setup() throws MalformedURLException {
 
     client = mock(CloseableHttpClient.class);
-    webHdfsNodeAdapter = new WebHdfsNodeAdapter(new URL("http://host:1234/some/path/"), client);
+    webHdfsNodeAdapter = new WebHdfsNodeAdapter(new URL(WEBHDFS_URL), client);
   }
 
   @SuppressWarnings("unchecked")
@@ -216,6 +220,105 @@ public class WebHdfsNodeAdapterTest {
     assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
   }
 
+  @Test
+  public void testQueryWithFailedItemIds() throws IOException {
+    Calendar cal = Calendar.getInstance();
+    cal.clear();
+    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    cal.set(Calendar.MONTH, 1);
+    cal.set(Calendar.DAY_OF_MONTH, 1);
+    cal.set(Calendar.YEAR, 2000);
+
+    // dates before the filter date
+    Date beforeFilterDate1 = cal.getTime();
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date beforeFilterDate2 = cal.getTime();
+
+    // the filter date
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date filterDate = cal.getTime();
+
+    // dates after the filter date
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date afterFilterDate1 = cal.getTime();
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date afterFilterDate2 = cal.getTime();
+
+    // file1 should be in the response list and file2 should NOT be
+    FileStatus file1 = getFileStatus(afterFilterDate1, "file1.ext", "FILE", 251);
+    FileStatus file2 = getFileStatus(beforeFilterDate1, "file2.ext", "FILE", 251);
+
+    // the failed files should be in the response list
+    FileStatus failedFile1 = getFileStatus(beforeFilterDate2, "failed-file1.ext", "FILE", 251);
+    FileStatus failedFile2 = getFileStatus(beforeFilterDate1, "failed-file2.ext", "FILE", 251);
+    FileStatus failedFile3 = getFileStatus(afterFilterDate2, "failed-file3.ext", "FILE", 251);
+
+    // when sorted by modification time the order should be: failedFile2, failedFile1, file1,
+    // failedFile3
+    List<FileStatus> files =
+        Stream.of(file1, file2, failedFile1, failedFile2, failedFile3).collect(Collectors.toList());
+
+    // the ids generated for the failed files will populate the failed item ids list
+    String failedIdFile1 =
+        webHdfsNodeAdapter.getVersion4Uuid(
+            WEBHDFS_URL + failedFile1.getPathSuffix(), failedFile1.getModificationTime());
+    String failedIdFile2 =
+        webHdfsNodeAdapter.getVersion4Uuid(
+            WEBHDFS_URL + failedFile2.getPathSuffix(), failedFile2.getModificationTime());
+    String failedIdFile3 =
+        webHdfsNodeAdapter.getVersion4Uuid(
+            WEBHDFS_URL + failedFile3.getPathSuffix(), failedFile3.getModificationTime());
+
+    List<String> failedItemIds = new ArrayList<>();
+    failedItemIds.add(failedIdFile1);
+    failedItemIds.add(failedIdFile2);
+    failedItemIds.add(failedIdFile3);
+
+    QueryRequest queryRequest = mock(QueryRequest.class);
+    when(queryRequest.getModifiedAfter()).thenReturn(filterDate);
+    when(queryRequest.getFailedItemIds()).thenReturn(failedItemIds);
+
+    String idl = getIterativeDirectoryListingAsString(files, 0);
+    InputStream inputStream = new ByteArrayInputStream(idl.getBytes(UTF_8));
+
+    HttpResponse response = mock(HttpResponse.class);
+    StatusLine statusLine = mock(StatusLine.class);
+    when(response.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(200);
+
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    when(response.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent()).thenReturn(inputStream);
+
+    doAnswer(
+            invocationOnMock -> {
+              ResponseHandler<List<FileStatus>> responseHandler =
+                  (ResponseHandler<List<FileStatus>>) invocationOnMock.getArguments()[1];
+              return responseHandler.handleResponse(response);
+            })
+        .when(client)
+        .execute(any(HttpGet.class), any(ResponseHandler.class));
+
+    QueryResponse queryResponse = webHdfsNodeAdapter.query(queryRequest);
+
+    Iterable<Metadata> metadataIterable = queryResponse.getMetadata();
+    Metadata failedFile2Metadata = Iterables.get(metadataIterable, 0);
+    Metadata failedFile1Metadata = Iterables.get(metadataIterable, 1);
+    Metadata file1Metadata = Iterables.get(metadataIterable, 2);
+    Metadata failedFile3Metadata = Iterables.get(metadataIterable, 3);
+    int metadataIterableSize =
+        (int) StreamSupport.stream(metadataIterable.spliterator(), false).count();
+
+    assertThat(metadataIterableSize, is(4));
+    assertThat(
+        failedFile1Metadata.getResourceUri().toString(),
+        is(String.format("%s%s", WEBHDFS_URL, "failed-file1.ext")));
+    assertThat(
+        file1Metadata.getResourceUri().toString(),
+        is(String.format("%s%s", WEBHDFS_URL, "file1.ext")));
+  }
+
   @SuppressWarnings("unchecked")
   @Test
   public void testCreateMetadata() {
@@ -281,23 +384,70 @@ public class WebHdfsNodeAdapterTest {
 
   @Test
   public void testGetRelevantFilesNullFilterDate() {
+    Date date = new Date();
 
     FileStatus file1 = new FileStatus();
     file1.setType("FILE");
+    file1.setModificationTime(date);
     FileStatus file2 = new FileStatus();
     file2.setType("DIRECTORY");
+    file2.setModificationTime(date);
     FileStatus file3 = new FileStatus();
     file3.setType("FILE");
+    file3.setModificationTime(date);
 
     List<FileStatus> files = Stream.of(file1, file2, file3).collect(Collectors.toList());
 
     // when getting a list of relevant files with no specified filter date
-    List<FileStatus> result = webHdfsNodeAdapter.getRelevantFiles(files, null);
+    List<FileStatus> result = webHdfsNodeAdapter.getRelevantFiles(files, new ArrayList<>(), null);
 
     // then all items of type FILE are returned
     assertThat(result.get(0), is(file1));
     assertThat(result.get(1), is(file3));
     assertThat(result.size(), is(2));
+  }
+
+  @Test
+  public void testGetRelevantFilesFailedItemsIncluded() {
+    // for non-failed items, only the ones with modification times after the filter date should be
+    // included
+    Date filterDate = new Date(200000L);
+    Date beforeFilterDate = new Date(100000L);
+    Date afterFilterDate = new Date(300000L);
+
+    FileStatus file1 = new FileStatus();
+    file1.setType("FILE");
+    file1.setModificationTime(afterFilterDate);
+    file1.setPathSuffix("file1");
+    FileStatus file2 = new FileStatus();
+    file2.setType("FILE");
+    file2.setModificationTime(afterFilterDate);
+    file2.setPathSuffix("file2");
+
+    // this file should get filtered because it has a modification time before the filter date
+    FileStatus file3 = new FileStatus();
+    file3.setType("FILE");
+    file3.setModificationTime(beforeFilterDate);
+    file3.setPathSuffix("file3");
+
+    // using this file as the "failed item"
+    FileStatus file4 = new FileStatus();
+    file4.setType("FILE");
+    file4.setModificationTime(beforeFilterDate);
+    file4.setPathSuffix("file4");
+    String failedItemUrl = WEBHDFS_URL + file4.getPathSuffix();
+    String failedId =
+        webHdfsNodeAdapter.getVersion4Uuid(failedItemUrl, file4.getModificationTime());
+
+    List<FileStatus> files = Stream.of(file1, file2, file3, file4).collect(Collectors.toList());
+    List<String> failedItemIds = Collections.singletonList(failedId);
+
+    List<FileStatus> result = webHdfsNodeAdapter.getRelevantFiles(files, failedItemIds, filterDate);
+
+    assertThat(result.size(), is(3));
+    assertThat(result.get(0), is(file1));
+    assertThat(result.get(1), is(file2));
+    assertThat(result.get(2), is(file4));
   }
 
   @SuppressWarnings("unchecked")
@@ -367,7 +517,8 @@ public class WebHdfsNodeAdapterTest {
         .execute(any(HttpGet.class), any(ResponseHandler.class));
 
     // when the adapter retrieves the files to replicate
-    List<FileStatus> filesToReplicate = webHdfsNodeAdapter.getFilesToReplicate(filter);
+    List<FileStatus> filesToReplicate =
+        webHdfsNodeAdapter.getFilesToReplicate(new ArrayList<>(), filter);
 
     // then there are three files that fit the criteria
     assertThat(filesToReplicate.size() == 3, is(true));
@@ -417,7 +568,7 @@ public class WebHdfsNodeAdapterTest {
     thrown.expect(ReplicationException.class);
     thrown.expectMessage("List Status Batch request failed with status code: 400");
 
-    webHdfsNodeAdapter.getFilesToReplicate(new Date());
+    webHdfsNodeAdapter.getFilesToReplicate(new ArrayList<>(), new Date());
   }
 
   @SuppressWarnings({"Duplicates", "unchecked"})

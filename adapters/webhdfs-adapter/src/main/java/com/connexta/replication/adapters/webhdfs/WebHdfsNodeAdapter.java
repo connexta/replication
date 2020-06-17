@@ -151,8 +151,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
+    List<String> failedItemIds = queryRequest.getFailedItemIds();
 
-    List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
+    if (!failedItemIds.isEmpty()) {
+      LOGGER.info("Found failed item IDs: " + failedItemIds);
+    }
+
+    List<FileStatus> filesToReplicate =
+        getFilesToReplicate(failedItemIds, queryRequest.getModifiedAfter());
 
     filesToReplicate.sort(Comparator.comparing(FileStatus::getModificationTime));
 
@@ -255,7 +261,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @param modificationTime modification time of the file
    * @return a {@code String} representing a version-4 UUID
    */
-  private String getVersion4Uuid(String fileUrl, Date modificationTime) {
+  @VisibleForTesting
+  String getVersion4Uuid(String fileUrl, Date modificationTime) {
     String input = String.format("%s_%d", fileUrl, modificationTime.getTime());
     String version3Uuid = UUID.nameUUIDFromBytes(input.getBytes()).toString();
     StringBuilder version4Uuid = new StringBuilder(version3Uuid);
@@ -274,7 +281,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
   @VisibleForTesting
-  List<FileStatus> getFilesToReplicate(@Nullable Date filterDate) {
+  List<FileStatus> getFilesToReplicate(List<String> failedItemIds, @Nullable Date filterDate) {
 
     List<FileStatus> filesToReplicate = new ArrayList<>();
     AtomicInteger remainingEntries = new AtomicInteger();
@@ -315,7 +322,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
                   pathSuffix.set(results.get(results.size() - 1).getPathSuffix());
                 }
 
-                return getRelevantFiles(results, filterDate);
+                return getRelevantFiles(results, failedItemIds, filterDate);
 
               } else {
                 throw new ReplicationException(
@@ -338,22 +345,49 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   /**
    * Returns the files meeting the criteria for replication by removing elements that: 1) are of
-   * type DIRECTORY or 2) have a modification time before or equal to the filter date, when the
-   * filter date is specified
+   * type DIRECTORY or 2) are not one of the failed IDs and have a modification time before or equal
+   * to the filter date, when the filter date is specified
    *
    * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
+   * @param failedItemIds a {@code List} of the IDs that failed to be created
    * @param filterDate specifies a point in time such that only files more recent are included; this
    *     value will be set to {@code null} during the first execution of replication
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
   @VisibleForTesting
-  List<FileStatus> getRelevantFiles(List<FileStatus> files, @Nullable Date filterDate) {
+  List<FileStatus> getRelevantFiles(
+      List<FileStatus> files, List<String> failedItemIds, @Nullable Date filterDate) {
     files.removeIf(
-        file ->
-            file.isDirectory()
-                || (filterDate != null && !file.getModificationTime().after(filterDate)));
+        file -> {
+          // only need to do the lookup if there are items in the failed ID list
+          boolean isFailedId =
+              failedItemIds.isEmpty() ? false : checkIfFailedId(file, failedItemIds);
+
+          return file.isDirectory()
+              || (!isFailedId
+                  && filterDate != null
+                  && !file.getModificationTime().after(filterDate));
+        });
 
     return files;
+  }
+
+  /**
+   * Generates the UUID of the {@code file} and searches for it in the list of failed IDs.
+   *
+   * @param file - the {@link FileStatus} to generate a UUID for
+   * @param failedIds - the {@link List<String>} of failed IDs
+   * @return A {@link Boolean} if the {@code file}'s UUID is a failed ID
+   */
+  private boolean checkIfFailedId(FileStatus file, List<String> failedIds) {
+    String fileUrl = getWebHdfsUrl().toString() + file.getPathSuffix();
+    Date modificationTime = file.getModificationTime();
+
+    // generates the UUID of the file to lookup if it is a failed ID
+    String id = getVersion4Uuid(fileUrl, modificationTime);
+    boolean isFailedId = failedIds.contains(id);
+
+    return isFailedId;
   }
 
   @Override
