@@ -358,36 +358,41 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   @VisibleForTesting
   List<FileStatus> getRelevantFiles(
       List<FileStatus> files, List<String> failedItemIds, @Nullable Date filterDate) {
-    files.removeIf(
-        file -> {
-          // only need to do the lookup if there are items in the failed ID list
-          boolean isFailedId =
-              failedItemIds.isEmpty() ? false : checkIfFailedId(file, failedItemIds);
+    List<FileStatus> results = new ArrayList<>();
+    Map<String, FileStatus> oldFiles = new HashMap<>();
 
-          return file.isDirectory()
-              || (!isFailedId
-                  && filterDate != null
-                  && !file.getModificationTime().after(filterDate));
-        });
+    for (FileStatus file : files) {
+      // skip over any directories
+      if (file.isDirectory()) {
+        continue;
+      }
 
-    return files;
+      // files modified after the filter date should always be added to the returned results
+      if (filterDate == null || file.getModificationTime().after(filterDate)) {
+        results.add(file);
+      } else {
+        String fileUrl = getWebHdfsUrl().toString() + file.getPathSuffix();
+        Date modificationTime = file.getModificationTime();
+        String id = getVersion4Uuid(fileUrl, modificationTime);
+
+        oldFiles.put(id, file);
+      }
+    }
+
+    return addFailedItemsToRelevantFiles(results, oldFiles, failedItemIds);
   }
 
-  /**
-   * Generates the UUID of the {@code file} and searches for it in the list of failed IDs.
-   *
-   * @param file - the {@link FileStatus} to generate a UUID for
-   * @param failedIds - the {@link List<String>} of failed IDs
-   * @return A {@link Boolean} if the {@code file}'s UUID is a failed ID
-   */
-  private boolean checkIfFailedId(FileStatus file, List<String> failedIds) {
-    String fileUrl = getWebHdfsUrl().toString() + file.getPathSuffix();
-    Date modificationTime = file.getModificationTime();
+  private List<FileStatus> addFailedItemsToRelevantFiles(List<FileStatus> relevantFiles, Map<String, FileStatus> oldFiles, List<String> failedItemIds) {
+    // only need to do the lookup if there are items in the failed ID list
+    if (oldFiles.isEmpty() || !failedItemIds.isEmpty()) {
+      for (String failedId : failedItemIds) {
+        if (oldFiles.containsKey(failedId)) {
+          relevantFiles.add(oldFiles.get(failedId));
+        }
+      }
+    }
 
-    // generates the UUID of the file to lookup if it is a failed ID
-    String id = getVersion4Uuid(fileUrl, modificationTime);
-
-    return failedIds.contains(id);
+    return relevantFiles;
   }
 
   @Override
