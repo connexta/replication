@@ -154,7 +154,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     List<String> failedItemIds = queryRequest.getFailedItemIds();
 
     if (!failedItemIds.isEmpty()) {
-      LOGGER.info("Found failed item IDs: " + failedItemIds);
+      LOGGER.info(String.format("Found failed item IDs: %s", failedItemIds));
     }
 
     List<FileStatus> filesToReplicate =
@@ -277,6 +277,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * additional results if the file system contains more results than can be returned in a single
    * response.
    *
+   * @param failedItemIds the list of IDs that failed to be created
    * @param filterDate specifies a point in time such that only files more recent are returned
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
@@ -385,9 +386,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
     // generates the UUID of the file to lookup if it is a failed ID
     String id = getVersion4Uuid(fileUrl, modificationTime);
-    boolean isFailedId = failedIds.contains(id);
 
-    return isFailedId;
+    return failedIds.contains(id);
   }
 
   @Override
