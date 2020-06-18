@@ -302,21 +302,27 @@ public class WebHdfsNodeAdapterTest {
 
     QueryResponse queryResponse = webHdfsNodeAdapter.query(queryRequest);
 
+    // expected sort order: failedFile2, failedFile1, file1, failedFile3
     Iterable<Metadata> metadataIterable = queryResponse.getMetadata();
-    Metadata failedFile2Metadata = Iterables.get(metadataIterable, 0);
-    Metadata failedFile1Metadata = Iterables.get(metadataIterable, 1);
-    Metadata file1Metadata = Iterables.get(metadataIterable, 2);
-    Metadata failedFile3Metadata = Iterables.get(metadataIterable, 3);
+    Metadata metadata1 = Iterables.get(metadataIterable, 0);
+    Metadata metadata2 = Iterables.get(metadataIterable, 1);
+    Metadata metadata3 = Iterables.get(metadataIterable, 2);
+    Metadata metadata4 = Iterables.get(metadataIterable, 3);
     int metadataIterableSize =
         (int) StreamSupport.stream(metadataIterable.spliterator(), false).count();
 
     assertThat(metadataIterableSize, is(4));
     assertThat(
-        failedFile1Metadata.getResourceUri().toString(),
+        metadata1.getResourceUri().toString(),
+        is(String.format("%s%s", WEBHDFS_URL, "failed-file2.ext")));
+    assertThat(
+        metadata2.getResourceUri().toString(),
         is(String.format("%s%s", WEBHDFS_URL, "failed-file1.ext")));
     assertThat(
-        file1Metadata.getResourceUri().toString(),
-        is(String.format("%s%s", WEBHDFS_URL, "file1.ext")));
+        metadata3.getResourceUri().toString(), is(String.format("%s%s", WEBHDFS_URL, "file1.ext")));
+    assertThat(
+        metadata4.getResourceUri().toString(),
+        is(String.format("%s%s", WEBHDFS_URL, "failed-file3.ext")));
   }
 
   @SuppressWarnings("unchecked")
