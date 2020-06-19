@@ -345,15 +345,23 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   }
 
   /**
-   * Returns the files meeting the criteria for replication by only including elements that: 1) are
-   * of type FILE or 2) have a modification time after the filter date or 3) have a UUID matching
-   * one of the items in the failed IDs list
+   * Takes a list of {@link FileStatus} and returns only the ones that are relevant to the current
+   * replication run. Relevancy is determined by meeting the following criteria:
    *
-   * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
-   * @param failedItemIds a {@code List} of the IDs that failed to be created
-   * @param filterDate specifies a point in time such that only files more recent are included; this
-   *     value will be set to {@code null} during the first execution of replication
-   * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
+   * <ol>
+   *   <li>It is of type "FILE". A valid {@link FileStatus} can be either a directory or a file.
+   *   <li>It has a modification date after the {@code filterDate} OR it has a UUID matching one in
+   *       the failed IDs list
+   * </ol>
+   *
+   * <p>For the case when a replication job is first run and the {@code filterDate} is null, all
+   * files will be included in the returned results.
+   *
+   * @param files - the list of {@link FileStatus} to be filtered down
+   * @param failedItemIds - the list of failed IDs from the previous replication run
+   * @param filterDate - the date to use in filtering so that all files modified after will be
+   *     included; this value will be set to {@code null} on the first replication run
+   * @return A list of {@link FileStatus} that have met the relevancy criteria.
    */
   @VisibleForTesting
   List<FileStatus> getRelevantFiles(
