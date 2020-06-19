@@ -151,8 +151,14 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   @Override
   public QueryResponse query(QueryRequest queryRequest) {
+    List<String> failedItemIds = queryRequest.getFailedItemIds();
 
-    List<FileStatus> filesToReplicate = getFilesToReplicate(queryRequest.getModifiedAfter());
+    if (!failedItemIds.isEmpty()) {
+      LOGGER.info(String.format("Found failed item IDs: %s", failedItemIds));
+    }
+
+    List<FileStatus> filesToReplicate =
+        getFilesToReplicate(failedItemIds, queryRequest.getModifiedAfter());
 
     filesToReplicate.sort(Comparator.comparing(FileStatus::getModificationTime));
 
@@ -255,7 +261,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * @param modificationTime modification time of the file
    * @return a {@code String} representing a version-4 UUID
    */
-  private String getVersion4Uuid(String fileUrl, Date modificationTime) {
+  @VisibleForTesting
+  String getVersion4Uuid(String fileUrl, Date modificationTime) {
     String input = String.format("%s_%d", fileUrl, modificationTime.getTime());
     String version3Uuid = UUID.nameUUIDFromBytes(input.getBytes()).toString();
     StringBuilder version4Uuid = new StringBuilder(version3Uuid);
@@ -270,11 +277,12 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * additional results if the file system contains more results than can be returned in a single
    * response.
    *
+   * @param failedItemIds the list of IDs that failed to be created
    * @param filterDate specifies a point in time such that only files more recent are returned
    * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
    */
   @VisibleForTesting
-  List<FileStatus> getFilesToReplicate(@Nullable Date filterDate) {
+  List<FileStatus> getFilesToReplicate(List<String> failedItemIds, @Nullable Date filterDate) {
 
     List<FileStatus> filesToReplicate = new ArrayList<>();
     AtomicInteger remainingEntries = new AtomicInteger();
@@ -315,7 +323,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
                   pathSuffix.set(results.get(results.size() - 1).getPathSuffix());
                 }
 
-                return getRelevantFiles(results, filterDate);
+                return getRelevantFiles(results, failedItemIds, filterDate);
 
               } else {
                 throw new ReplicationException(
@@ -337,23 +345,77 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   }
 
   /**
-   * Returns the files meeting the criteria for replication by removing elements that: 1) are of
-   * type DIRECTORY or 2) have a modification time before or equal to the filter date, when the
-   * filter date is specified
+   * Takes a list of {@link FileStatus} and returns only the ones that are relevant to the current
+   * replication run. Relevancy is determined by meeting the following criteria:
    *
-   * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
-   * @param filterDate specifies a point in time such that only files more recent are included; this
-   *     value will be set to {@code null} during the first execution of replication
-   * @return a resulting {@code List} of {@link FileStatus} objects meeting the criteria
+   * <ol>
+   *   <li>It is of type "FILE". A valid {@link FileStatus} can be either a directory or a file.
+   *   <li>It has a modification date after the {@code filterDate} OR it has a UUID matching one in
+   *       the failed IDs list
+   * </ol>
+   *
+   * <p>For the case when a replication job is first run and the {@code filterDate} is null, all
+   * files will be included in the returned results.
+   *
+   * @param files - the list of {@link FileStatus} to be filtered down
+   * @param failedItemIds - the list of failed IDs from the previous replication run
+   * @param filterDate - the date to use in filtering so that all files modified after will be
+   *     included; this value will be set to {@code null} on the first replication run
+   * @return A list of {@link FileStatus} that have met the relevancy criteria.
    */
   @VisibleForTesting
-  List<FileStatus> getRelevantFiles(List<FileStatus> files, @Nullable Date filterDate) {
-    files.removeIf(
-        file ->
-            file.isDirectory()
-                || (filterDate != null && !file.getModificationTime().after(filterDate)));
+  List<FileStatus> getRelevantFiles(
+      List<FileStatus> files, List<String> failedItemIds, @Nullable Date filterDate) {
+    List<FileStatus> results = new ArrayList<>();
 
-    return files;
+    // this map contains the UUIDs and associated files that are modified before the filter date
+    Map<String, FileStatus> oldFiles = new HashMap<>();
+
+    for (FileStatus file : files) {
+      // skip over any directories since we only want files
+      if (file.isDirectory()) {
+        continue;
+      }
+
+      // files modified after the filter date should always be added to the returned results
+      if (filterDate == null || file.getModificationTime().after(filterDate)) {
+        results.add(file);
+      } else {
+        String id =
+            getVersion4Uuid(
+                getWebHdfsUrl().toString() + file.getPathSuffix(), file.getModificationTime());
+
+        oldFiles.put(id, file);
+      }
+    }
+
+    return addFailedItemsToRelevantFiles(results, oldFiles, failedItemIds);
+  }
+
+  /**
+   * Iterates through the list of failed IDs to look up the associated {@link FileStatus} in the
+   * map.
+   *
+   * @param relevantFiles - the list of {@link FileStatus} to be returned
+   * @param oldFiles - the list of {@link FileStatus} with modification date before the filter date
+   * @param failedItemIds - the list of failed item IDs
+   * @return A list of {@link FileStatus} representing the full set of files to be returned
+   */
+  private List<FileStatus> addFailedItemsToRelevantFiles(
+      List<FileStatus> relevantFiles,
+      Map<String, FileStatus> oldFiles,
+      List<String> failedItemIds) {
+    // the lookup should only occur when there are items in both the old files map and list of
+    // failed IDs
+    if (!oldFiles.isEmpty() && !failedItemIds.isEmpty()) {
+      for (String failedId : failedItemIds) {
+        if (oldFiles.containsKey(failedId)) {
+          relevantFiles.add(oldFiles.get(failedId));
+        }
+      }
+    }
+
+    return relevantFiles;
   }
 
   @Override
