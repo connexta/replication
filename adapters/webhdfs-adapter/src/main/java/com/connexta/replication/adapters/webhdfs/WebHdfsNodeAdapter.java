@@ -346,8 +346,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   /**
    * Returns the files meeting the criteria for replication by only including elements that: 1) are
-   * of type FILE or 2) are one of the failed IDs or 3) have a modification time after the filter
-   * date
+   * of type FILE or 2) have a modification time after the filter date or 3) have a UUID matching
+   * one of the items in the failed IDs list
    *
    * @param files a {@code List} of all {@link FileStatus} objects returned by the GET request
    * @param failedItemIds a {@code List} of the IDs that failed to be created
@@ -360,12 +360,11 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       List<FileStatus> files, List<String> failedItemIds, @Nullable Date filterDate) {
     List<FileStatus> results = new ArrayList<>();
 
-    // this map contains the files that are after the filter date with UUID as keys and the
-    // associated FileStatus as values
+    // this map contains the UUIDs and associated files that are modified before the filter date
     Map<String, FileStatus> oldFiles = new HashMap<>();
 
     for (FileStatus file : files) {
-      // skip over any directories
+      // skip over any directories since we only want files
       if (file.isDirectory()) {
         continue;
       }
@@ -374,8 +373,9 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       if (filterDate == null || file.getModificationTime().after(filterDate)) {
         results.add(file);
       } else {
-        String fileUrl = getWebHdfsUrl().toString() + file.getPathSuffix();
-        String id = getVersion4Uuid(fileUrl, file.getModificationTime());
+        String id =
+            getVersion4Uuid(
+                getWebHdfsUrl().toString() + file.getPathSuffix(), file.getModificationTime());
 
         oldFiles.put(id, file);
       }
@@ -389,7 +389,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
    * map.
    *
    * @param relevantFiles - the list of {@link FileStatus} to be returned
-   * @param oldFiles - the list of {@link FileStatus} with a modification date after the filter date
+   * @param oldFiles - the list of {@link FileStatus} with modification date before the filter date
    * @param failedItemIds - the list of failed item IDs
    * @return A list of {@link FileStatus} representing the full set of files to be returned
    */
@@ -397,7 +397,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
       List<FileStatus> relevantFiles,
       Map<String, FileStatus> oldFiles,
       List<String> failedItemIds) {
-    // only need to do the lookup if there are items in the failed ID list
+    // the lookup should only occur when there are items in both the old files map and list of
+    // failed IDs
     if (!oldFiles.isEmpty() && !failedItemIds.isEmpty()) {
       for (String failedId : failedItemIds) {
         if (oldFiles.containsKey(failedId)) {

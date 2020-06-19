@@ -302,7 +302,6 @@ public class WebHdfsNodeAdapterTest {
 
     QueryResponse queryResponse = webHdfsNodeAdapter.query(queryRequest);
 
-    // expected sort order: failedFile2, failedFile1, file1, failedFile3
     Iterable<Metadata> metadataIterable = queryResponse.getMetadata();
     Metadata metadata1 = Iterables.get(metadataIterable, 0);
     Metadata metadata2 = Iterables.get(metadataIterable, 1);
