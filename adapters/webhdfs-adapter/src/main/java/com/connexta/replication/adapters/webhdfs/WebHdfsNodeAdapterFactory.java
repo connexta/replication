@@ -13,9 +13,21 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import javax.net.ssl.SSLContext;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
@@ -38,7 +50,48 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
-    String protocol = url.getPort() == HTTPS_PORT ? "https://" : "http://";
+    //    String protocol = url.getPort() == HTTPS_PORT ? "https://" : "http://";
+    //    String baseUrl = protocol + url.getHost() + ":" + url.getPort() + url.getPath();
+
+    //    if (!baseUrl.endsWith("/")) {
+    //      baseUrl = baseUrl.concat("/");
+    //    }
+
+    String protocol;
+    CloseableHttpClient httpClient;
+
+    if (url.getPort() == HTTPS_PORT) {
+      protocol = "https://";
+
+      KeyStore keyStore;
+      SSLContext sslContext;
+      try (InputStream keyStoreStream =
+          this.getClass().getResourceAsStream("/path/to/alliance.ddf.jks")) {
+        keyStore = KeyStore.getInstance("JKS"); // or "PKCS12"
+        keyStore.load(keyStoreStream, "<keystore_password>".toCharArray());
+
+        sslContext =
+            SSLContexts.custom()
+                .loadKeyMaterial(
+                    keyStore,
+                    "<key_password>"
+                        .toCharArray()) // use null as second param if you don't have a separate key
+                // password
+                .build();
+      } catch (KeyStoreException
+          | IOException
+          | NoSuchAlgorithmException
+          | CertificateException
+          | UnrecoverableKeyException
+          | KeyManagementException e) {
+        throw new AdapterException("Failed to create adapter", e);
+      }
+      httpClient = HttpClients.custom().setSSLContext(sslContext).build();
+    } else {
+      protocol = "http://";
+      httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
+    }
+
     String baseUrl = protocol + url.getHost() + ":" + url.getPort() + url.getPath();
 
     if (!baseUrl.endsWith("/")) {
@@ -46,8 +99,7 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
     }
 
     try {
-      return new WebHdfsNodeAdapter(
-          new URL(baseUrl), HttpClientBuilder.create().disableRedirectHandling().build());
+      return new WebHdfsNodeAdapter(new URL(baseUrl), httpClient);
     } catch (MalformedURLException e) {
       throw new AdapterException("Failed to create adapter", e);
     }
