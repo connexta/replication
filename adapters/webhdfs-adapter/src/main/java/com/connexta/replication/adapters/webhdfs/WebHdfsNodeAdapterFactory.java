@@ -13,17 +13,19 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
-import java.io.File;
+import com.connexta.replication.data.ReplicationConstants;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import javax.net.ssl.SSLContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.NodeAdapter;
@@ -39,7 +41,11 @@ import org.slf4j.LoggerFactory;
 public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapterFactory.class);
+
   private static final int HTTPS_PORT = 443;
+
+  private final String customKeystorePath = ReplicationConstants.getCustomKeystore();
+  private final String customKeystorePassword = ReplicationConstants.getCustomKeystorePassword();
 
   public WebHdfsNodeAdapterFactory() {
     LOGGER.debug("Created a WebHdfsNodeAdapterFactory");
@@ -56,25 +62,18 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
       KeyStore keyStore;
       SSLContext sslContext;
-      try (FileInputStream keyStoreStream =
-          new FileInputStream(
-              new File(
-                  "/path/to/alliance.ddf.jks"))) {
-        keyStore = KeyStore.getInstance("JKS"); // or "PKCS12"
-        keyStore.load(keyStoreStream, "<cdf_password>".toCharArray());
+      try {
+        keyStore = readCustomKeystore();
 
         sslContext =
             SSLContexts.custom()
-                .loadKeyMaterial(
-                    keyStore,
-                    "<cdf_password>"
-                        .toCharArray()) // use null as second param if you don't have a separate key
-                // password
+                .loadKeyMaterial(keyStore, customKeystorePassword.toCharArray())
                 .build();
-      } catch (IOException | GeneralSecurityException e) {
+      } catch (GeneralSecurityException e) {
         throw new AdapterException("Failed to create adapter", e);
       }
-      httpClient = HttpClients.custom().setSSLContext(sslContext).build();
+      httpClient =
+          HttpClientBuilder.create().setSSLContext(sslContext).disableRedirectHandling().build();
     } else {
       protocol = "http://";
       httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
@@ -96,5 +95,15 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
   @Override
   public NodeAdapterType getType() {
     return NodeAdapterType.WEBHDFS;
+  }
+
+  private KeyStore readCustomKeystore() {
+    try (FileInputStream keyStoreStream = new FileInputStream(customKeystorePath)) {
+      KeyStore keyStore = KeyStore.getInstance("JKS");
+      keyStore.load(keyStoreStream, customKeystorePassword.toCharArray());
+      return keyStore;
+    } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException e) {
+      throw new AdapterException("Failed to read the custom keystore", e);
+    }
   }
 }

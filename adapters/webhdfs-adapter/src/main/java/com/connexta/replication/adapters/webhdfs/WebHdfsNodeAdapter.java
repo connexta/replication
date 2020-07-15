@@ -90,7 +90,6 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
 
   private static final String HTTP_START_AFTER_KEY = "startAfter";
 
-  private static final String HTTP_NO_REDIRECT_KEY = "noredirect";
   private static final String HTTP_CREATE_OVERWRITE_KEY = "overwrite";
 
   private static final String METADATA_ATTRIBUTE_TYPE_STRING = "string";
@@ -491,9 +490,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     URI resourceUri = metadata.getResourceUri();
 
     URIBuilder uriBuilder = new URIBuilder(resourceUri);
-    uriBuilder
-        .setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_OPEN)
-        .setParameter(HTTP_NO_REDIRECT_KEY, "true");
+    uriBuilder.setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_OPEN);
+
     HttpGet httpGet = new HttpGet(uriBuilder.build());
 
     return handleLocationRequest(httpGet);
@@ -520,9 +518,8 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     LOGGER.info("The complete file URL is: {}", fileUrl);
 
     URIBuilder builder = new URIBuilder(fileUrl);
-    builder
-        .setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_CREATE)
-        .setParameter(HTTP_NO_REDIRECT_KEY, "true");
+    builder.setParameter(HTTP_OPERATION_KEY, HTTP_OPERATION_CREATE);
+
     HttpPut httpPut = new HttpPut(builder.build());
 
     return handleLocationRequest(httpPut);
