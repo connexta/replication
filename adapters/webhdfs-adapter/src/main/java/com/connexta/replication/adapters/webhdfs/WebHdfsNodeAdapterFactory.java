@@ -13,16 +13,13 @@
  */
 package com.connexta.replication.adapters.webhdfs;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.KeyManagementException;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import javax.net.ssl.SSLContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -50,12 +47,6 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
-    //    String protocol = url.getPort() == HTTPS_PORT ? "https://" : "http://";
-    //    String baseUrl = protocol + url.getHost() + ":" + url.getPort() + url.getPath();
-
-    //    if (!baseUrl.endsWith("/")) {
-    //      baseUrl = baseUrl.concat("/");
-    //    }
 
     String protocol;
     CloseableHttpClient httpClient;
@@ -65,25 +56,22 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
       KeyStore keyStore;
       SSLContext sslContext;
-      try (InputStream keyStoreStream =
-          this.getClass().getResourceAsStream("/path/to/alliance.ddf.jks")) {
+      try (FileInputStream keyStoreStream =
+          new FileInputStream(
+              new File(
+                  "/path/to/alliance.ddf.jks"))) {
         keyStore = KeyStore.getInstance("JKS"); // or "PKCS12"
-        keyStore.load(keyStoreStream, "<keystore_password>".toCharArray());
+        keyStore.load(keyStoreStream, "<cdf_password>".toCharArray());
 
         sslContext =
             SSLContexts.custom()
                 .loadKeyMaterial(
                     keyStore,
-                    "<key_password>"
+                    "<cdf_password>"
                         .toCharArray()) // use null as second param if you don't have a separate key
                 // password
                 .build();
-      } catch (KeyStoreException
-          | IOException
-          | NoSuchAlgorithmException
-          | CertificateException
-          | UnrecoverableKeyException
-          | KeyManagementException e) {
+      } catch (IOException | GeneralSecurityException e) {
         throw new AdapterException("Failed to create adapter", e);
       }
       httpClient = HttpClients.custom().setSSLContext(sslContext).build();
