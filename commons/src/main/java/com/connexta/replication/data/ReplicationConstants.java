@@ -34,4 +34,16 @@ public class ReplicationConstants {
   public static String getKeystore() {
     return System.getProperty("javax.net.ssl.keyStore");
   }
+
+  public static String getCustomKeystore() {
+    return System.getProperty("replication.ssl.customKeyStore");
+  }
+
+  public static String getCustomKeystorePassword() {
+    return System.getProperty("replication.ssl.customKeyStorePassword");
+  }
+
+  public static String getCustomKeystoreType() {
+    return System.getProperty("replication.ssl.customKeyStoreType");
+  }
 }
