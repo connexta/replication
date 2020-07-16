@@ -15,13 +15,28 @@ package com.connexta.replication.adapters.webhdfs;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
+import com.nimbusds.jose.util.StandardCharset;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.KeyStoreSpi;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.cert.CertificateException;
+import org.apache.commons.io.FileUtils;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterType;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -38,6 +53,28 @@ public class WebHdfsNodeAdapterFactoryTest {
   private static URL urlWithNoPathNoTrailingSlash;
 
   private static URL secureUrlWithPath;
+
+  //  private static File keyStore;
+  //  private static File keyStorePassword;
+
+  @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
+
+  @BeforeClass
+  public static void setupKeyStore() throws IOException {
+    File keyStore = folder.newFile("testKeyStore.jks");
+    FileUtils.writeStringToFile(keyStore, "hello world", StandardCharsets.UTF_8);
+    File keyStorePassword = folder.newFile("testKeyStorePassword");
+    FileUtils.writeStringToFile(keyStorePassword, "password", StandardCharset.UTF_8);
+
+    System.setProperty("replication.ssl.customKeyStore", keyStore.getAbsolutePath());
+    System.setProperty(
+        "replication.ssl.customKeyStorePassword", keyStorePassword.getAbsolutePath());
+  }
+
+  //  @AfterClass
+  //  public static void tearDownStore() {
+  //    assert keyStore.delete();
+  //  }
 
   @Before
   public void setup() throws MalformedURLException {
@@ -89,8 +126,22 @@ public class WebHdfsNodeAdapterFactoryTest {
   }
 
   @Test
-  public void testCreateWithHttps() {
-    NodeAdapter webHdfsNodeAdapter = webHdfsNodeAdapterFactory.create(secureUrlWithPath);
+  public void testCreateWithHttps()
+      throws CertificateException, NoSuchAlgorithmException, IOException {
+    WebHdfsNodeAdapterFactory factory = spy(new WebHdfsNodeAdapterFactory());
+
+    //    KeyStoreMock keyStoreMock = mock(KeyStoreMock.class);
+    //    when(factory.readCustomKeystore(keyStoreMock)).thenReturn(keyStoreMock);
+    //    KeyStore keyStore = mock(KeyStore.class);
+    //    when(factory.readCustomKeystore(keyStore)).thenReturn(keyStore);
+    //
+    KeyStoreSpi keyStoreSpiMock = mock(KeyStoreSpi.class);
+    KeyStore keyStoreMock = new KeyStore(keyStoreSpiMock, null, "test") {};
+    keyStoreMock.load(null); // this is important to put the internal state "initialized" to true
+    //
+    //    NodeAdapter webHdfsNodeAdapter = factory.create(secureUrlWithPath);
+    NodeAdapter webHdfsNodeAdapter = factory.create(secureUrlWithPath, keyStoreMock);
+
     assertThat(webHdfsNodeAdapter.getClass().isAssignableFrom(WebHdfsNodeAdapter.class), is(true));
     assertThat(
         ((WebHdfsNodeAdapter) webHdfsNodeAdapter).getWebHdfsUrl().toString(),
@@ -100,5 +151,19 @@ public class WebHdfsNodeAdapterFactoryTest {
   @Test
   public void testGetType() {
     assertThat(webHdfsNodeAdapterFactory.getType(), is(NodeAdapterType.WEBHDFS));
+  }
+
+  private static class KeyStoreMock extends KeyStore {
+    /**
+     * Creates a KeyStore object of the given type, and encapsulates the given provider
+     * implementation (SPI object) in it.
+     *
+     * @param keyStoreSpi the provider implementation.
+     * @param provider the provider.
+     * @param type the keystore type.
+     */
+    protected KeyStoreMock(KeyStoreSpi keyStoreSpi, Provider provider, String type) {
+      super(keyStoreSpi, provider, type);
+    }
   }
 }
