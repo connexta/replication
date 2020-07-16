@@ -344,11 +344,11 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   }
 
   /**
-   * Takes a list of {@link FileStatus} and returns only the ones that are relevant to the current
-   * replication run. Relevancy is determined by meeting the following criteria:
+   * Takes a list of {@link FileStatus} objects and returns only the ones that are relevant to the
+   * current replication run. Relevancy is determined by meeting the following criteria:
    *
    * <ol>
-   *   <li>It is of type "FILE". A valid {@link FileStatus} can be either a directory or a file.
+   *   <li>It is of type "FILE"
    *   <li>It has a modification date after the {@code filterDate} OR it has a UUID matching one in
    *       the failed IDs list
    * </ol>
@@ -370,21 +370,22 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
     // this map contains the UUIDs and associated files that are modified before the filter date
     Map<String, FileStatus> oldFiles = new HashMap<>();
 
-    for (FileStatus file : files) {
-      // skip over any directories since we only want files
-      if (file.isDirectory()) {
+    for (FileStatus fileStatus : files) {
+      // skip over entries in the List that are not of type FILE
+      if (!fileStatus.isFile()) {
         continue;
       }
 
       // files modified after the filter date should always be added to the returned results
-      if (filterDate == null || file.getModificationTime().after(filterDate)) {
-        results.add(file);
+      if (filterDate == null || fileStatus.getModificationTime().after(filterDate)) {
+        results.add(fileStatus);
       } else {
         String id =
             getVersion4Uuid(
-                getWebHdfsUrl().toString() + file.getPathSuffix(), file.getModificationTime());
+                getWebHdfsUrl().toString() + fileStatus.getPathSuffix(),
+                fileStatus.getModificationTime());
 
-        oldFiles.put(id, file);
+        oldFiles.put(id, fileStatus);
       }
     }
 
@@ -498,8 +499,7 @@ public class WebHdfsNodeAdapter implements NodeAdapter {
   }
 
   /**
-   * Sends a PUT request with no file data and without following redirects, in order to retrieve the
-   * location to write to
+   * Sends a PUT request with no file data, in order to retrieve the location to write to
    *
    * @param createStorageRequest request containing the {@link
    *     org.codice.ditto.replication.api.data.Resource} to create
