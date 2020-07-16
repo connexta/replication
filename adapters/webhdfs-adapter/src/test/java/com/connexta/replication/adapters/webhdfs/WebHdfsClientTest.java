@@ -360,7 +360,6 @@ public class WebHdfsClientTest {
     boolean createResourceSuccessful = badAdapter.createResource(createStorageRequest);
     assertThat(createResourceSuccessful, is(false));
     badAdapter.close();
-    // TODO - figure out a good way to track error messages in the logger
   }
 
   @Test
@@ -375,7 +374,6 @@ public class WebHdfsClientTest {
     boolean createResourceSuccessful = badAdapter.createResource(createStorageRequest);
     assertThat(createResourceSuccessful, is(false));
     badAdapter.close();
-    // TODO - figure out a good way to track error messages in the logger
   }
 
   /**
