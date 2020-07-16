@@ -1239,9 +1239,9 @@ public class WebHdfsNodeAdapterTest {
   /**
    * Returns a {@link FileStatus} object
    *
-   * @param modificationTime the timestamp on the file or directory
-   * @param pathSuffix designates the name of the file or directory
-   * @param type specifies whether a FILE or DIRECTORY
+   * @param modificationTime the timestamp on the {@link FileStatus}
+   * @param pathSuffix designates the name of the {@link FileStatus}
+   * @param type specifies the type of the object
    * @param length the size of the file
    * @return a {@link FileStatus} object
    */
