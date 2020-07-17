@@ -53,70 +53,16 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
-    try {
-      return create(url, KeyStore.getInstance("JKS"));
-    } catch (KeyStoreException e) {
-
-    }
-    return null;
-    //    String protocol;
-    //    CloseableHttpClient httpClient;
-    //
-    //    if (url.getPort() == HTTPS_PORT) {
-    //      protocol = "https://";
-    //
-    //      KeyStore keyStore;
-    //      SSLContext sslContext;
-    //      try {
-    //        keyStore = readCustomKeystore();
-    //
-    //        sslContext =
-    //            SSLContexts.custom()
-    //                .loadKeyMaterial(keyStore, customKeystorePassword.toCharArray())
-    //                .build();
-    //      } catch (GeneralSecurityException e) {
-    //        throw new AdapterException("Failed to create adapter", e);
-    //      }
-    //      httpClient =
-    //
-    // HttpClientBuilder.create().setSSLContext(sslContext).disableRedirectHandling().build();
-    //    } else {
-    //      protocol = "http://";
-    //      httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
-    //    }
-    //
-    //    String baseUrl = protocol + url.getHost() + ":" + url.getPort() + url.getPath();
-    //
-    //    if (!baseUrl.endsWith("/")) {
-    //      baseUrl = baseUrl.concat("/");
-    //    }
-    //
-    //    try {
-    //      return new WebHdfsNodeAdapter(new URL(baseUrl), httpClient);
-    //    } catch (MalformedURLException e) {
-    //      throw new AdapterException("Failed to create adapter", e);
-    //    }
-  }
-
-  NodeAdapter create(URL url, KeyStore keyStore) {
-    try {
-      if (keyStore == null) {
-        keyStore = KeyStore.getInstance("JKS");
-      }
-    } catch (KeyStoreException e) {
-      throw new AdapterException("Failed to create adapter", e);
-    }
-
     String protocol;
     CloseableHttpClient httpClient;
 
     if (url.getPort() == HTTPS_PORT) {
       protocol = "https://";
 
-      //      KeyStore keyStore;
+      KeyStore keyStore;
       SSLContext sslContext;
       try {
-        keyStore = readCustomKeystore(keyStore);
+        keyStore = readCustomKeystore(getKeyStore());
 
         sslContext =
             SSLContexts.custom()
@@ -152,11 +98,22 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   KeyStore readCustomKeystore(KeyStore keyStore) {
     try (FileInputStream keyStoreStream = new FileInputStream(customKeystorePath)) {
-      //      KeyStore keyStore = KeyStore.getInstance("JKS");
       keyStore.load(keyStoreStream, customKeystorePassword.toCharArray());
+
       return keyStore;
     } catch (CertificateException | NoSuchAlgorithmException | IOException e) {
       throw new AdapterException("Failed to read the custom keystore", e);
     }
+  }
+
+  /**
+   * Returns a JKS {@link KeyStore}
+   *
+   * @return a JKS {@link KeyStore}
+   * @throws KeyStoreException if no {@code Provider} supports a {@code KeyStoreSpi} implementation
+   *     for the specified type
+   */
+  KeyStore getKeyStore() throws KeyStoreException {
+    return KeyStore.getInstance("JKS");
   }
 }
