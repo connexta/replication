@@ -15,27 +15,22 @@ package com.connexta.replication.adapters.webhdfs;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.nimbusds.jose.util.StandardCharset;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.KeyStoreSpi;
-import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
 import org.apache.commons.io.FileUtils;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterType;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -48,8 +43,7 @@ public class WebHdfsNodeAdapterFactoryTest {
 
   private WebHdfsNodeAdapterFactory webHdfsNodeAdapterFactory;
 
-  @Rule
-  public TemporaryFolder folder = new TemporaryFolder();
+  @Rule public TemporaryFolder folder = new TemporaryFolder();
 
   private static URL urlWithPath;
   private static URL urlWithPathNoTrailingSlash;
@@ -117,7 +111,7 @@ public class WebHdfsNodeAdapterFactoryTest {
 
     System.setProperty("replication.ssl.customKeyStore", keyStore.getAbsolutePath());
     System.setProperty(
-            "replication.ssl.customKeyStorePassword", keyStorePassword.getAbsolutePath());
+        "replication.ssl.customKeyStorePassword", keyStorePassword.getAbsolutePath());
 
     WebHdfsNodeAdapterTestFactory webHdfsNodeAdapterTestFactory =
         new WebHdfsNodeAdapterTestFactory();
@@ -152,10 +146,10 @@ public class WebHdfsNodeAdapterFactoryTest {
      */
     @Override
     KeyStore getKeyStore() {
-      KeyStoreSpi keyStoreSpiMock = mock(KeyStoreSpi.class);
-      KeyStore keyStoreMock = new KeyStore(keyStoreSpiMock, null, "test") {};
+      KeyStoreSpi mockKeyStoreSpi = mock(KeyStoreSpi.class);
+      KeyStore mockKeyStore = new KeyStore(mockKeyStoreSpi, null, "test") {};
 
-      when(keyStoreSpiMock.engineAliases())
+      when(mockKeyStoreSpi.engineAliases())
           .thenReturn(
               new Enumeration<String>() {
                 @Override
@@ -169,7 +163,7 @@ public class WebHdfsNodeAdapterFactoryTest {
                 }
               });
 
-      return keyStoreMock;
+      return mockKeyStore;
     }
   }
 }
