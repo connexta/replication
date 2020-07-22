@@ -164,6 +164,7 @@
             This is from Shiro Core 1.4.2 and can only be removed when DDF uses an upgraded version
         </notes>
         <cve>CVE-2020-1957</cve>
+        <cve>CVE-2020-11989</cve>
     </suppress>
     <suppress>
         <notes>
@@ -291,6 +292,7 @@
             which are not applicable to this repository.
         </notes>
         <cve>CVE-2020-1957</cve>
+        <cve>CVE-2020-11989</cve>
     </suppress>
     <suppress>
         <notes>
