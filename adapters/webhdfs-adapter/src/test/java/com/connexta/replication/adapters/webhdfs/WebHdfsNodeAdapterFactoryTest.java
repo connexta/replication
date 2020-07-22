@@ -57,11 +57,11 @@ public class WebHdfsNodeAdapterFactoryTest {
   public void setup() throws MalformedURLException {
     webHdfsNodeAdapterFactory = new WebHdfsNodeAdapterFactory();
 
-    urlWithPath = new URL("http://localhost:8993/webhdfs/v1/some/path/");
-    urlWithPathNoTrailingSlash = new URL("http://localhost:8993/webhdfs/v1/some/path");
+    urlWithPath = new URL("http://localhost:9870/webhdfs/v1/some/path/");
+    urlWithPathNoTrailingSlash = new URL("http://localhost:9870/webhdfs/v1/some/path");
 
-    urlWithNoPath = new URL("http://localhost:8993/webhdfs/v1/");
-    urlWithNoPathNoTrailingSlash = new URL("http://localhost:8993/webhdfs/v1");
+    urlWithNoPath = new URL("http://localhost:9870/webhdfs/v1/");
+    urlWithNoPathNoTrailingSlash = new URL("http://localhost:9870/webhdfs/v1");
 
     secureUrlWithPath = new URL("https://localhost:443/webhdfs/v1/some/path/");
   }

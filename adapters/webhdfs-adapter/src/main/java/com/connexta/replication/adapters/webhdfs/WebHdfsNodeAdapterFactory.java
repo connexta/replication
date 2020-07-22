@@ -42,7 +42,7 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebHdfsNodeAdapterFactory.class);
 
-  private static final int HTTPS_PORT = 443;
+  private static final int DEFAULT_HTTP_PORT = 9870;
 
   private final String customKeystorePath = ReplicationConstants.getCustomKeystore();
   private final String customKeystorePassword = ReplicationConstants.getCustomKeystorePassword();
@@ -56,7 +56,11 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
     String protocol;
     CloseableHttpClient httpClient;
 
-    if (url.getPort() == HTTPS_PORT) {
+    if (url.getPort() == DEFAULT_HTTP_PORT) {
+      protocol = "http://";
+      httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
+
+    } else {
       protocol = "https://";
 
       KeyStore keyStore;
@@ -73,9 +77,6 @@ public class WebHdfsNodeAdapterFactory implements NodeAdapterFactory {
       }
       httpClient =
           HttpClientBuilder.create().setSSLContext(sslContext).disableRedirectHandling().build();
-    } else {
-      protocol = "http://";
-      httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
     }
 
     String baseUrl = protocol + url.getHost() + ":" + url.getPort() + url.getPath();
