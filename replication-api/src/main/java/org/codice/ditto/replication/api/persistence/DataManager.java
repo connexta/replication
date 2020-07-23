@@ -15,6 +15,7 @@ package org.codice.ditto.replication.api.persistence;
 
 import java.util.stream.Stream;
 import org.codice.ditto.replication.api.data.Persistable;
+import org.codice.ditto.replication.api.ReplicationPersistenceException;
 
 /**
  * The DataManager interface provides a common interface for the manager classes which manage the
@@ -35,7 +36,7 @@ public interface DataManager<T extends Persistable> {
    * @param id The object id
    * @return the T object with the given id
    * @throws ReplicationPersistenceException if an error occurs while trying to retrieve the object
-   * @throws NotFoundException if an object with the given id cannot be found
+   * @throws NullPointerException if an object with the given id cannot be found
    * @throws IllegalStateException if multiple objects were found with the given id
    */
   T get(String id);
@@ -64,14 +65,14 @@ public interface DataManager<T extends Persistable> {
    *
    * @param id The id of the object to be removed
    * @throws ReplicationPersistenceException if an error occurs while trying to delete the object
-   * @throws NotFoundException if an object with the given id cannot be found
+   * @throws NullPointerException if an object with the given id cannot be found
    */
   void remove(String id);
 
   /**
    * @param id unique id of the {@link Persistable}
    * @return {@code true} if the {@link Persistable} exists, otherwise {@code false}.
-   * @throws {@link org.codice.ditto.replication.api.ReplicationPersistenceException} if there is an
+   * @throws ReplicationPersistenceException if there is an
    *     error accessing storage
    */
   boolean exists(String id);

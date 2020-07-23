@@ -40,7 +40,7 @@ public interface NodeAdapter extends Closeable {
    * @param queryRequest query criteria to determine creates, updates, and/or deletes
    * @return a {@link QueryResponse} containing the {@link Metadata} matching the {@link
    *     QueryRequest} criteria
-   * @throws {@link AdapterException} if there is an error communicating with the remote server
+   * @throws AdapterException if there is an error communicating with the remote server
    */
   QueryResponse query(QueryRequest queryRequest);
 

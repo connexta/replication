@@ -72,7 +72,7 @@ public interface ReplicationStatus extends Persistable {
   /**
    * Sets the Date of the last time the referenced configuration was run
    *
-   * @param lastRun the date at which the refernced configuration was last run
+   * @param lastRun the date at which the referenced configuration was last run
    */
   void setLastRun(@Nullable Date lastRun);
 
@@ -140,28 +140,28 @@ public interface ReplicationStatus extends Persistable {
   void setStatus(Status status);
 
   /**
-   * Gets the total number of items pushed (source -> destination)
+   * Gets the total number of items pushed (source {@literal ->} destination)
    *
    * @return the number of items pushed
    */
   long getPushCount();
 
   /**
-   * Sets the total number of items pushed (source -> destination)
+   * Sets the total number of items pushed (source {@literal ->} destination)
    *
    * @param count the number of items pushed
    */
   void setPushCount(long count);
 
   /**
-   * Gets the total number of items pulled (destination -> source)
+   * Gets the total number of items pulled (destination {@literal ->} source)
    *
    * @return the number of items pulled
    */
   long getPullCount();
 
   /**
-   * Sets the total number of items pulled (destination -> source)
+   * Sets the total number of items pulled (destination {@literal ->} source)
    *
    * @param count the number of items pulled
    */
