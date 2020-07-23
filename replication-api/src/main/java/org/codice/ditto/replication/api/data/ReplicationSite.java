@@ -55,12 +55,12 @@ public interface ReplicationSite extends Persistable {
   void setRemoteManaged(boolean remoteManaged);
 
   /**
-   * When {@code false}, the local process is responsible for running {@link
-   * ReplicatorConfig}s associated with this site.
+   * When {@code false}, the local process is responsible for running {@link ReplicatorConfig}s
+   * associated with this site.
    *
    * <p>When {@code true}, the local process is no longer responsible for performing replication for
-   * any {@link ReplicatorConfig}s associated with this
-   * site. This effectively disables running replication locally.
+   * any {@link ReplicatorConfig}s associated with this site. This effectively disables running
+   * replication locally.
    *
    * @return {@code true} if replication should not run locally, otherwise {@code false}.
    */

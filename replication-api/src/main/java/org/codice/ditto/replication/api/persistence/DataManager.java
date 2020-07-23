@@ -15,8 +15,8 @@ package org.codice.ditto.replication.api.persistence;
 
 import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
-import org.codice.ditto.replication.api.data.Persistable;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
+import org.codice.ditto.replication.api.data.Persistable;
 
 /**
  * The DataManager interface provides a common interface for the manager classes which manage the
@@ -73,8 +73,7 @@ public interface DataManager<T extends Persistable> {
   /**
    * @param id unique id of the {@link Persistable}
    * @return {@code true} if the {@link Persistable} exists, otherwise {@code false}.
-   * @throws ReplicationPersistenceException if there is an
-   *     error accessing storage
+   * @throws ReplicationPersistenceException if there is an error accessing storage
    */
   boolean exists(String id);
 }
