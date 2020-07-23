@@ -14,6 +14,7 @@
 package org.codice.ditto.replication.api.persistence;
 
 import java.util.stream.Stream;
+import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.data.Persistable;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 
@@ -36,7 +37,7 @@ public interface DataManager<T extends Persistable> {
    * @param id The object id
    * @return the T object with the given id
    * @throws ReplicationPersistenceException if an error occurs while trying to retrieve the object
-   * @throws NullPointerException if an object with the given id cannot be found
+   * @throws NotFoundException if an object with the given id cannot be found
    * @throws IllegalStateException if multiple objects were found with the given id
    */
   T get(String id);
@@ -65,7 +66,7 @@ public interface DataManager<T extends Persistable> {
    *
    * @param id The id of the object to be removed
    * @throws ReplicationPersistenceException if an error occurs while trying to delete the object
-   * @throws NullPointerException if an object with the given id cannot be found
+   * @throws NotFoundException if an object with the given id cannot be found
    */
   void remove(String id);
 
