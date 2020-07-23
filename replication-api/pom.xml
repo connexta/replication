@@ -29,6 +29,11 @@
             <version>${jsr305.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>ddf.security</groupId>
+            <artifactId>ddf-security-common</artifactId>
+            <version>${ddf.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

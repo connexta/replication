@@ -40,19 +40,17 @@ public interface Replicator {
   void cancelSyncRequest(final String configId);
 
   /**
-   * Gets the {@link Queue<SyncRequest>} that have been submitted but have not yet been executed.
-   * Does not contain duplicates.
+   * Gets the {@link Queue} that have been submitted but have not yet been executed. Does not
+   * contain duplicates.
    *
-   * @return A unmodifiable {@link Queue<SyncRequest>} or an empty {@link Queue<SyncRequest>} if
-   *     there are none
+   * @return A unmodifiable {@link Queue} or an empty {@link Queue} if there are none
    */
   Queue<SyncRequest> getPendingSyncRequests();
 
   /**
-   * Gets the {@link Set<SyncRequest>} that are currently being executed
+   * Gets the {@link Set} that are currently being executed
    *
-   * @return A unmodifiable {@link Set<SyncRequest>} or an empty {@link Set<SyncRequest>} if there
-   *     are none
+   * @return A unmodifiable {@link Set} or an empty {@link Set} if there are none
    */
   Set<SyncRequest> getActiveSyncRequests();
 }

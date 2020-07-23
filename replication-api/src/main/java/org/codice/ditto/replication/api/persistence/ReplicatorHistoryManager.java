@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.api.persistence;
 
+import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 

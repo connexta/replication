@@ -55,14 +55,14 @@ public interface ReplicationSite extends Persistable {
   void setRemoteManaged(boolean remoteManaged);
 
   /**
-   * When {@link false}, the local process is responsible for running {@link
-   * org.codice.ditto.replication.api.mcard.ReplicationConfig}s associated with this site.
+   * When {@code false}, the local process is responsible for running {@link ReplicatorConfig}s
+   * associated with this site.
    *
-   * <p>When {@link true}, the local process is no longer responsible for performing replication for
-   * any {@link org.codice.ditto.replication.api.mcard.ReplicationConfig}s associated with this
-   * site. This effectively disables running replication locally.
+   * <p>When {@code true}, the local process is no longer responsible for performing replication for
+   * any {@link ReplicatorConfig}s associated with this site. This effectively disables running
+   * replication locally.
    *
-   * @return {@code true} if replication should not run locally, otherwise {@link false}.
+   * @return {@code true} if replication should not run locally, otherwise {@code false}.
    */
   boolean isRemoteManaged();
 
