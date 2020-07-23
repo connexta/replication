@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 
 public class WebHdfsClientTest {
   private static final String HDFS_PATH = "/webhdfs/v1";
-  private static final String HDFS_PORT = "12341";
+  private static final String HDFS_PORT = "9870";
   private static final String BASE_URL = "http://localhost:" + HDFS_PORT + HDFS_PATH;
   private static final String TEST_DATA_STRING =
       "Grumpy wizards make toxic brew for the evil queen and jack.";
@@ -107,7 +107,7 @@ public class WebHdfsClientTest {
 
   @Test(expected = ReplicationException.class)
   public void testInvalidUrlIsNotAvailable() throws MalformedURLException {
-    adapter = (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://foobar:9999"));
+    adapter = (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://foobar:9870"));
     adapter.isAvailable();
   }
 
@@ -168,7 +168,7 @@ public class WebHdfsClientTest {
     String testName = "404-not-found";
     Date testDate = new Date();
     String filename = formatResourceName(testId, testDate) + ".txt";
-    String badPortUri = "http://localhost:9999/webhdfs/v1/" + filename;
+    String badPortUri = "http://localhost:9870/webhdfs/v1/" + filename;
 
     // creates the resource with the bad port
     CreateStorageRequest createStorageRequest =
@@ -356,11 +356,10 @@ public class WebHdfsClientTest {
         generateTestStorageRequest(testId, testName, new Date());
 
     WebHdfsNodeAdapter badAdapter =
-        (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://foobar:12341"));
+        (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://foobar:9870"));
     boolean createResourceSuccessful = badAdapter.createResource(createStorageRequest);
     assertThat(createResourceSuccessful, is(false));
     badAdapter.close();
-    // TODO - figure out a good way to track error messages in the logger
   }
 
   @Test
@@ -371,11 +370,10 @@ public class WebHdfsClientTest {
         generateTestStorageRequest(testId, testName, new Date());
 
     WebHdfsNodeAdapter badAdapter =
-        (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://localhost:9999"));
+        (WebHdfsNodeAdapter) adapterFactory.create(new URL("http://localhost:9870"));
     boolean createResourceSuccessful = badAdapter.createResource(createStorageRequest);
     assertThat(createResourceSuccessful, is(false));
     badAdapter.close();
-    // TODO - figure out a good way to track error messages in the logger
   }
 
   /**

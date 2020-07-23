@@ -86,7 +86,7 @@ public class WebHdfsNodeAdapterTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static final String WEBHDFS_URL = "http://host:1234/some/path/";
+  private static final String WEBHDFS_URL = "https://host:1234/some/path/";
 
   WebHdfsNodeAdapter webHdfsNodeAdapter;
 
@@ -202,7 +202,7 @@ public class WebHdfsNodeAdapterTest {
     assertThat(metadata.getId().charAt(14), is('4')); // indicates version-4 UUID
     assertThat(metadata.getId().length(), is(36)); // 32 digits, plus 4 hyphens
     assertThat(metadata.getMetadataModified(), is(fileDate));
-    assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/file1.ext"));
+    assertThat(metadata.getResourceUri().toString(), is("https://host:1234/some/path/file1.ext"));
     assertThat(metadata.getResourceModified(), is(fileDate));
     assertThat(metadata.getResourceSize(), is(251L));
 
@@ -216,7 +216,7 @@ public class WebHdfsNodeAdapterTest {
     assertThat(metadataAttributes.get("modified").getValue(), is(fileDate.toString()));
     assertThat(
         metadataAttributes.get("resource-uri").getValue(),
-        is("http://host:1234/some/path/file1.ext"));
+        is("https://host:1234/some/path/file1.ext"));
     assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
   }
 
@@ -352,7 +352,7 @@ public class WebHdfsNodeAdapterTest {
     assertThat(metadata.getId().charAt(14), is('4')); // indicating version-4 UUID
     assertThat(metadata.getId().length(), is(36)); // 32 digits, plus 4 hyphens
     assertThat(metadata.getMetadataModified(), is(date));
-    assertThat(metadata.getResourceUri().toString(), is("http://host:1234/some/path/test.txt"));
+    assertThat(metadata.getResourceUri().toString(), is("https://host:1234/some/path/test.txt"));
     assertThat(metadata.getResourceModified(), is(date));
     assertThat(metadata.getResourceSize(), is(251L));
 
@@ -365,7 +365,7 @@ public class WebHdfsNodeAdapterTest {
     assertThat(metadataAttributes.get("modified").getValue(), is(date.toString()));
     assertThat(
         metadataAttributes.get("resource-uri").getValue(),
-        is("http://host:1234/some/path/test.txt"));
+        is("https://host:1234/some/path/test.txt"));
     assertThat(metadataAttributes.get("resource-size").getValue(), is("251"));
   }
 
@@ -584,7 +584,7 @@ public class WebHdfsNodeAdapterTest {
     String testResourceName = String.format("%s_%s", testResourceId, testDate.getTime());
     long testResourceSize = 256L;
     URI testResourceUri =
-        new URI(String.format("http://host1:8000/test/resource/%s.txt", testResourceName));
+        new URI(String.format("https://host1:8000/test/resource/%s.txt", testResourceName));
     String testFileLocation = String.format("{\"Location\":\"%s\"}", testResourceUri.toString());
 
     ResourceRequest mockResourceRequest = mock(ResourceRequest.class);
@@ -666,7 +666,7 @@ public class WebHdfsNodeAdapterTest {
   @SuppressWarnings({"Duplicates", "unchecked"})
   @Test
   public void testGetLocationReadSuccess() throws URISyntaxException, IOException {
-    URI testResourceUri = new URI("http://host1:8000/test/resource/file.txt");
+    URI testResourceUri = new URI("https://host1:8000/test/resource/file.txt");
     String testFileLocation = String.format("{\"Location\":\"%s\"}", testResourceUri.toString());
     ResourceRequest mockResourceRequest = mock(ResourceRequest.class);
     Metadata mockMetadata = mock(Metadata.class);
@@ -748,7 +748,7 @@ public class WebHdfsNodeAdapterTest {
     HttpResponse httpResponse = mock(HttpResponse.class);
     StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
-    String testJson = "{\"Location\":\"http://host2:5678/some/other/path/file123.json\"}";
+    String testJson = "{\"Location\":\"https://host2:5678/some/other/path/file123.json\"}";
     InputStream content = new ByteArrayInputStream(testJson.getBytes());
 
     when(createStorageRequest.getResources()).thenReturn(resources);
@@ -857,7 +857,7 @@ public class WebHdfsNodeAdapterTest {
     thrown.expect(ReplicationException.class);
     thrown.expectMessage("No compatible Resource was found.");
 
-    webHdfsNodeAdapter.writeFileToLocation(createStorageRequest, "http://host:1234/location/");
+    webHdfsNodeAdapter.writeFileToLocation(createStorageRequest, "https://host:1234/location/");
   }
 
   @Test
@@ -869,7 +869,7 @@ public class WebHdfsNodeAdapterTest {
     thrown.expect(ReplicationException.class);
     thrown.expectMessage("No compatible Resource was found.");
 
-    webHdfsNodeAdapter.writeFileToLocation(createStorageRequest, "http://host:1234/location/");
+    webHdfsNodeAdapter.writeFileToLocation(createStorageRequest, "https://host:1234/location/");
   }
 
   @SuppressWarnings("unchecked")
@@ -885,7 +885,7 @@ public class WebHdfsNodeAdapterTest {
     HttpResponse httpResponse = mock(HttpResponse.class);
     StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
-    String testJson = "{\"Location\":\"http://host2:5678/some/other/path/\"}";
+    String testJson = "{\"Location\":\"https://host2:5678/some/other/path/\"}";
     InputStream content = new ByteArrayInputStream(testJson.getBytes());
 
     when(createStorageRequest.getResources()).thenReturn(resources);
@@ -911,7 +911,7 @@ public class WebHdfsNodeAdapterTest {
 
     assertThat(
         webHdfsNodeAdapter.getLocation(createStorageRequest),
-        is("http://host2:5678/some/other/path/"));
+        is("https://host2:5678/some/other/path/"));
   }
 
   @SuppressWarnings("unchecked")
@@ -938,7 +938,7 @@ public class WebHdfsNodeAdapterTest {
 
     Header header = mock(Header.class);
     when(httpResponse.getFirstHeader("Location")).thenReturn(header);
-    when(header.getValue()).thenReturn("http://host2:5678/some/other/path/file123.json");
+    when(header.getValue()).thenReturn("https://host2:5678/some/other/path/file123.json");
 
     doAnswer(
             invocationOnMock -> {
@@ -951,7 +951,7 @@ public class WebHdfsNodeAdapterTest {
 
     assertThat(
         webHdfsNodeAdapter.getLocation(createStorageRequest),
-        is("http://host2:5678/some/other/path/file123.json"));
+        is("https://host2:5678/some/other/path/file123.json"));
   }
 
   @SuppressWarnings("unchecked")
@@ -1025,7 +1025,7 @@ public class WebHdfsNodeAdapterTest {
 
     assertThat(
         webHdfsNodeAdapter.writeFileToLocation(
-            createStorageRequest, "http://host:314/some/path/to/file123.json"),
+            createStorageRequest, "https://host:314/some/path/to/file123.json"),
         is(true));
   }
 
@@ -1066,7 +1066,7 @@ public class WebHdfsNodeAdapterTest {
 
     assertThat(
         webHdfsNodeAdapter.writeFileToLocation(
-            createStorageRequest, "http://host:314/some/path/to/file123.json"),
+            createStorageRequest, "https://host:314/some/path/to/file123.json"),
         is(false));
   }
 
@@ -1099,7 +1099,7 @@ public class WebHdfsNodeAdapterTest {
     StatusLine statusLine = mock(StatusLine.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
     String testJson =
-        String.format("{\"Location\":\"http://host2:5678/some/other/path/%s\"}", resourceName);
+        String.format("{\"Location\":\"https://host2:5678/some/other/path/%s\"}", resourceName);
     InputStream content = new ByteArrayInputStream(testJson.getBytes());
 
     when(updateStorageRequest.getResources()).thenReturn(resources);
@@ -1239,9 +1239,9 @@ public class WebHdfsNodeAdapterTest {
   /**
    * Returns a {@link FileStatus} object
    *
-   * @param modificationTime the timestamp on the file or directory
-   * @param pathSuffix designates the name of the file or directory
-   * @param type specifies whether a FILE or DIRECTORY
+   * @param modificationTime the timestamp on the {@link FileStatus}
+   * @param pathSuffix designates the name of the {@link FileStatus}
+   * @param type specifies the type of the object
    * @param length the size of the file
    * @return a {@link FileStatus} object
    */

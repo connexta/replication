@@ -138,7 +138,7 @@ public class FileStatus {
   }
 
   @JsonIgnore
-  public boolean isDirectory() {
-    return getType().equals("DIRECTORY");
+  public boolean isFile() {
+    return getType().equals("FILE");
   }
 }
