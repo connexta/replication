@@ -95,7 +95,6 @@ pipeline {
                 stage ('Linux') {
                     steps {
                         withMaven(maven: 'maven-latest', jdk: 'jdk8-latest', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            sh 'mvn javadoc:aggregate -B -DskipStatic=true -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                             script {
                                 if(params.RELEASE == true) {
                                     sh "mvn -B -Dtag=${env.RELEASE_TAG} -DreleaseVersion=${env.RELEASE_VERSION} -DdevelopmentVersion=${env.NEXT_VERSION} release:prepare"
@@ -103,6 +102,7 @@ pipeline {
                                 } else {
                                     sh 'mvn clean install -B $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                                 }
+                                sh 'mvn javadoc:aggregate -B -DskipStatic=true -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                             }
                         }
                     }
