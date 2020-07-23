@@ -13,6 +13,7 @@
  */
 package org.codice.ditto.replication.api.persistence;
 
+import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 
@@ -25,8 +26,8 @@ public interface ReplicatorHistoryManager extends DataManager<ReplicationStatus>
    * @param replicatorId the replication configuration id
    * @return the {@link ReplicationStatus} associated with the given
    * @throws ReplicationPersistenceException if an error occurs while trying to retrieve the object
-   * @throws NullPointerException if a {@link ReplicationStatus} with the given replicator id cannot
-   *     be found
+   * @throws NotFoundException if a {@link ReplicationStatus} with the given replicator id cannot be
+   *     found
    */
   ReplicationStatus getByReplicatorId(String replicatorId);
 }
