@@ -358,4 +358,26 @@
         <cve>CVE-2018-1337</cve>
         <cve>CVE-2014-0114</cve>
     </suppress>
+    <suppress>
+        <notes>
+            This is from Shiro Core 1.5.3 and can only be removed when DDF uses an upgraded version
+        </notes>
+        <cve>CVE-2020-13933</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            This is webhdfs adapter suppress set. It is not part of the deployment right now
+            netty-3.6.2.Final.jar: CVE-2019-16869, CVE-2019-20445, CVE-2019-20444
+            netty-all-4.0.23.Final.jar: CVE-2019-16869, CVE-2019-20445, CVE-2019-20444
+            htrace-core-3.1.0-incubating.jar CVE-2020-14195, CVE-2020-24616, CVE-2020-14060, CVE-2020-14061, CVE-2020-14062
+        </notes>
+        <cve>CVE-2019-16869</cve>
+        <cve>CVE-2019-20445</cve>
+        <cve>CVE-2019-20444</cve>
+        <cve>CVE-2020-14195</cve>
+        <cve>CVE-2020-24616</cve>
+        <cve>CVE-2020-14060</cve>
+        <cve>CVE-2020-14061</cve>
+        <cve>CVE-2020-14062</cve>
+    </suppress>
 </suppressions>
