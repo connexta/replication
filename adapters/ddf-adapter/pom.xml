@@ -52,8 +52,8 @@
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.security</groupId>
-      <artifactId>ddf-security-common</artifactId>
+      <groupId>ddf.security.core</groupId>
+      <artifactId>security-core-services</artifactId>
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
@@ -69,9 +69,9 @@
 
     <!-- XML dependencies -->
     <dependency>
-      <groupId>org.jvnet.ogc</groupId>
+      <groupId>io.github.soc</groupId>
       <artifactId>ogc-tools-gml-jts</artifactId>
-      <version>${ogc.tools.version}</version>
+      <version>${ogc-tools-gml-jts.version}</version>
     </dependency>
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
@@ -105,6 +105,26 @@
       <artifactId>slf4j-simple</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.codice.ddf</groupId>
+      <artifactId>alerts</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${httpcore.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client</artifactId>
+      <version>${google-http-client.version}</version>
+    </dependency>
     <!-- Testing -->
     <dependency>
       <groupId>junit</groupId>
@@ -113,6 +133,15 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.fasterxml.woodstox</groupId>
+        <artifactId>woodstox-core</artifactId>
+        <version>${woodstox.core.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <resources>
@@ -164,9 +193,12 @@
               *
             </Import-Package>
             <Embed-Dependency>
+              alerts,
+              httpcore,
+              httpclient,
+              google-http-client,
               commons-collections4,
               ogc-tools-gml-jts,
-              ddf-security-common,
               platform-util,
               jaxb-core,
               commons-lang3

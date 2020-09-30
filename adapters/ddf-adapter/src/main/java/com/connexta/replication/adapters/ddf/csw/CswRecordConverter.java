@@ -226,7 +226,7 @@ public class CswRecordConverter implements Converter {
     }
 
     MetadataImpl metadata = new MetadataImpl(metadataMap, Map.class, id, metacardModified);
-    if (metadataMap.get(RESOURCE_SIZE) != null) {
+    if (metadataMap.get(RESOURCE_SIZE) != null && metadataMap.get(RESOURCE_URI) != null) {
       metadata.setResourceSize(Long.parseLong(metadataMap.get(RESOURCE_SIZE).getValue()));
       metadata.setResourceModified(convertToDate(metadataMap.get(MODIFIED)));
 

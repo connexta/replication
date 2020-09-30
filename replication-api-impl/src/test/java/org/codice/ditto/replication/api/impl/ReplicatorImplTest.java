@@ -28,7 +28,7 @@ import java.net.URL;
 import java.security.PrivilegedAction;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.impl.Security;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterFactory;
 import org.codice.ditto.replication.api.NodeAdapterType;

@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 import org.codice.ddf.configuration.SystemInfo;
 import org.codice.ddf.persistence.PersistenceException;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.impl.Security;
 import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationStatus;

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import org.codice.ddf.configuration.SystemInfo;
 import org.codice.ddf.persistence.PersistenceException;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
@@ -61,26 +61,8 @@ public class ScheduledReplicatorDeleter {
 
   private final int pageSize;
 
-  public ScheduledReplicatorDeleter(
-      ReplicatorConfigManager replicatorConfigManager,
-      ScheduledExecutorService scheduledExecutorService,
-      ReplicationItemManager replicationItemManager,
-      ReplicatorHistoryManager replicatorHistory,
-      Metacards metacards) {
-    this(
-        replicatorConfigManager,
-        scheduledExecutorService,
-        replicationItemManager,
-        replicatorHistory,
-        metacards,
-        Security.getInstance(),
-        TimeUnit.MINUTES.toMillis(1),
-        DEFAULT_PAGE_SIZE);
-  }
-
-  @VisibleForTesting
   @SuppressWarnings("squid:S00107" /* Only for testing */)
-  ScheduledReplicatorDeleter(
+  public ScheduledReplicatorDeleter(
       ReplicatorConfigManager replicatorConfigManager,
       ScheduledExecutorService scheduledExecutorService,
       ReplicationItemManager replicationItemManager,

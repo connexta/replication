@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.NodeAdapter;
 import org.codice.ditto.replication.api.NodeAdapterType;
 import org.codice.ditto.replication.api.ReplicationException;
@@ -73,15 +73,6 @@ public class ReplicatorImpl implements Replicator {
   private final Map<String, Syncer.Job> syncerJobMap = new ConcurrentHashMap<>();
 
   private final Security security;
-
-  public ReplicatorImpl(
-      NodeAdapters nodeAdapters,
-      ReplicatorHistoryManager history,
-      SiteManager siteManager,
-      ExecutorService executor,
-      Syncer syncer) {
-    this(nodeAdapters, history, siteManager, executor, syncer, Security.getInstance());
-  }
 
   public ReplicatorImpl(
       NodeAdapters nodeAdapters,
