@@ -30,8 +30,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>ddf.security</groupId>
-            <artifactId>ddf-security-common</artifactId>
+            <groupId>ddf.security.core</groupId>
+            <artifactId>security-core-impl</artifactId>
             <version>${ddf.version}</version>
         </dependency>
     </dependencies>

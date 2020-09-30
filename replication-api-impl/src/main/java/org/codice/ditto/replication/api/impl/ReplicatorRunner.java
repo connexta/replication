@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
@@ -53,14 +53,6 @@ public class ReplicatorRunner {
       String.valueOf(TimeUnit.MINUTES.toSeconds(5));
 
   public ReplicatorRunner(
-      ScheduledExecutorService scheduledExecutor,
-      Replicator replicator,
-      ReplicatorConfigManager replicatorConfigManager) {
-    this(scheduledExecutor, replicator, replicatorConfigManager, Security.getInstance());
-  }
-
-  @VisibleForTesting
-  ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
       ReplicatorConfigManager replicatorConfigManager,

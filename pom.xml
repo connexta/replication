@@ -27,7 +27,7 @@
         <releases.repository.url />
         <admin-query.version>1.3.2</admin-query.version>
         <ddf.support.version>2.3.16</ddf.support.version>
-        <ddf.version>2.21.5</ddf.version>
+        <ddf.version>2.25.2</ddf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <surefire.version>2.20.1</surefire.version>
         <karaf.version>4.2.6</karaf.version>
@@ -44,11 +44,16 @@
         <commons.lang3.version>3.9</commons.lang3.version>
         <commons.collection4.version>4.1</commons.collection4.version>
         <guava.version>25.1-jre</guava.version>
+        <google-http-client.version>1.22.0</google-http-client.version>
+        <woodstox.core.version>5.3.0</woodstox.core.version>
         <ogc.version>1.1.0</ogc.version>
         <thirdparty.ogc.version>1.1.0_5</thirdparty.ogc.version>
-        <ogc.tools.version>1.0.3</ogc.tools.version>
+        <ogc-tools-gml-jts.version>1.1.90</ogc-tools-gml-jts.version>
         <jts.version>1.14.0</jts.version>
         <jaxb.version>2.2.11</jaxb.version>
+        <jvnet.jaxb2.version>0.11.0</jvnet.jaxb2.version>
+        <httpclient.version>4.5.6</httpclient.version>
+        <httpcore.version>4.4.10</httpcore.version>
         <cxf.frontend.version>3.2.12</cxf.frontend.version>
         <validation.version>1.1.0.Final</validation.version>
         <xstream.version>1.4.11.1</xstream.version>
@@ -73,7 +78,7 @@
         <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
         <project.report.output.directory>project-info</project.report.output.directory>
         <jackson.version>2.10.3</jackson.version>
-        <tika.version>1.22</tika.version>
+        <tika.version>1.24.1</tika.version>
 
         <!-- documentation replacements -->
         <platform>DDF Base</platform>

@@ -36,24 +36,25 @@
             <version>${ddf.version}</version>
         </dependency>
         <dependency>
-            <groupId>ddf.security</groupId>
-            <artifactId>ddf-security-common</artifactId>
+            <groupId>ddf.security.core</groupId>
+            <artifactId>security-core-impl</artifactId>
             <version>${ddf.version}</version>
         </dependency>
         <dependency>
             <groupId>ddf.security.core</groupId>
-            <artifactId>security-core-impl</artifactId>
+            <artifactId>security-core-services</artifactId>
             <version>${ddf.version}</version>
         </dependency>
         <dependency>
             <groupId>ddf.platform.util</groupId>
             <artifactId>platform-util</artifactId>
             <version>${ddf.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util-unavailableurls</artifactId>
-            <version>${ddf.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.jodah</groupId>
+                    <artifactId>failsafe</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>ddf.persistence.core</groupId>
@@ -81,6 +82,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client</artifactId>
+            <version>${google-http-client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -128,7 +134,31 @@
             <artifactId>commons</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.codice.ddf</groupId>
+            <artifactId>alerts</artifactId>
+            <version>${ddf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${httpcore.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
     </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.woodstox</groupId>
+                <artifactId>woodstox-core</artifactId>
+                <version>${woodstox.core.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <plugins>
             <plugin>
@@ -148,11 +178,14 @@
                             org.codice.ditto.replication.api.impl.data
                         </Export-Package>
                         <Embed-Dependency>
+                            alerts,
+                            failsafe,
+                            httpclient,
+                            httpcore,
+                            google-http-client,
                             commons-collections4,
                             catalog-core-api-impl,
-                            ddf-security-common,
                             platform-util,
-                            platform-util-unavailableurls,
                             commons-lang3,
                             security-core-impl,
                             commons

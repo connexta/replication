@@ -40,6 +40,5 @@
         <bundle>mvn:replication/replication-ui/${project.version}</bundle>
         <bundle>mvn:replication/commons/${project.version}</bundle>
         <bundle>mvn:replication-adapters/ddf-adapter/${project.version}</bundle>
-        <bundle>mvn:replication-adapters/webhdfs-adapter/${project.version}</bundle>
     </feature>
 </features>

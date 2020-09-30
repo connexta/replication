@@ -20,6 +20,7 @@
     <reference id="catalog" interface="ddf.catalog.CatalogFramework"/>
     <reference id="filterBuilder" interface="ddf.catalog.filter.FilterBuilder"/>
     <reference id="xmlTransformer" interface="ddf.catalog.transform.InputTransformer" filter="(id=xml)" />
+    <reference id="security" interface="org.codice.ddf.security.Security" />
 
     <bean id="QueryService" class="org.codice.ditto.replication.api.impl.QueryServiceImpl">
         <argument ref="catalog"/>
@@ -45,6 +46,9 @@
         <argument ref="replicationItemManager"/>
         <argument ref="historyManager"/>
         <argument ref="metacards"/>
+        <argument ref="security"/>
+        <argument value="60000"/>
+        <argument value="1000"/>
     </bean>
 
     <bean id="replicationItemManager"
@@ -99,6 +103,7 @@
         <argument ref="siteManager"/>
         <argument ref="replicatorImplExecutor"/>
         <argument ref="syncer"/>
+        <argument ref="security"/>
     </bean>
 
     <service ref="replicator" interface="org.codice.ditto.replication.api.Replicator"/>
@@ -129,5 +134,6 @@
         <argument ref="replicatorRunnerExecutor"/>
         <argument ref="replicator"/>
         <argument ref="configManager"/>
+        <argument ref="security"/>
     </bean>
 </blueprint>
