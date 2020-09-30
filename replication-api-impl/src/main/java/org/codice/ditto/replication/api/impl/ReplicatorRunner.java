@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.Heartbeater;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.data.Persistable;
@@ -66,22 +66,6 @@ public class ReplicatorRunner {
       String.valueOf(TimeUnit.MINUTES.toSeconds(1));
 
   public ReplicatorRunner(
-      ScheduledExecutorService scheduledExecutor,
-      Replicator replicator,
-      Heartbeater heartbeater,
-      ReplicatorConfigManager replicatorConfigManager,
-      SiteManager siteManager) {
-    this(
-        scheduledExecutor,
-        replicator,
-        heartbeater,
-        replicatorConfigManager,
-        siteManager,
-        Security.getInstance());
-  }
-
-  /*Visible for testing only*/
-  ReplicatorRunner(
       ScheduledExecutorService scheduledExecutor,
       Replicator replicator,
       Heartbeater heartbeater,

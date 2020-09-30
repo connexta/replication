@@ -31,7 +31,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.Heartbeater;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.SyncRequest;

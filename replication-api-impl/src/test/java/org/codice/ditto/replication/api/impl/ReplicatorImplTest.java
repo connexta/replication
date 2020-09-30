@@ -28,7 +28,7 @@ import java.net.URL;
 import java.security.PrivilegedAction;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicationStore;

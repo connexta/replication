@@ -49,7 +49,7 @@ import ddf.catalog.source.IngestException;
 import ddf.catalog.source.SourceUnavailableException;
 import ddf.catalog.source.UnsupportedQueryException;
 import ddf.catalog.util.impl.ResultIterable;
-import ddf.security.SubjectUtils;
+import ddf.security.SubjectOperations;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -115,6 +115,8 @@ class SyncHelper {
   private volatile boolean canceled = false;
 
   private final ReplicationStatus status;
+
+  private SubjectOperations subjectOperations;
 
   public SyncHelper(
       ReplicationStore source,
@@ -446,7 +448,8 @@ class SyncHelper {
     mcard.setAttribute(new AttributeImpl(Metacard.TAGS, tagList));
     mcard.setAttribute(
         new AttributeImpl(
-            Metacard.POINT_OF_CONTACT, SubjectUtils.getEmailAddress(SecurityUtils.getSubject())));
+            Metacard.POINT_OF_CONTACT,
+            subjectOperations.getEmailAddress(SecurityUtils.getSubject())));
     // We are not transferring derived resources at this point so remove the derived uri/urls
     mcard.setAttribute(
         new AttributeImpl(Metacard.DERIVED_RESOURCE_DOWNLOAD_URL, (Serializable) null));
@@ -576,5 +579,9 @@ class SyncHelper {
         existingReplicationItem.isPresent()
             ? existingReplicationItem.get().getConfigurationId()
             : config.getId());
+  }
+
+  public void setSubjectOperations(SubjectOperations subjectOperations) {
+    this.subjectOperations = subjectOperations;
   }
 }

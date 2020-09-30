@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.Status;

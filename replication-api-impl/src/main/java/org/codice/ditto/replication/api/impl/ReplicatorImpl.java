@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.security.Subject;
+import ddf.security.SubjectOperations;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
@@ -36,7 +37,7 @@ import java.util.stream.Stream;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.collections4.queue.UnmodifiableQueue;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.ReplicationStatus;
@@ -78,22 +79,7 @@ public class ReplicatorImpl implements Replicator {
 
   private final Security security;
 
-  public ReplicatorImpl(
-      ReplicatorStoreFactory replicatorStoreFactory,
-      ReplicatorHistory history,
-      ReplicationItemManager persistentStore,
-      Verifier verifier,
-      ExecutorService executor,
-      FilterBuilder builder) {
-    this(
-        replicatorStoreFactory,
-        history,
-        persistentStore,
-        verifier,
-        executor,
-        builder,
-        Security.getInstance());
-  }
+  private SubjectOperations subjectOperations;
 
   public ReplicatorImpl(
       ReplicatorStoreFactory replicatorStoreFactory,
@@ -249,7 +235,10 @@ public class ReplicatorImpl implements Replicator {
       ReplicationStore destination,
       ReplicatorConfig config,
       ReplicationStatus status) {
-    return new SyncHelper(source, destination, config, status, persistentStore, history, builder);
+    SyncHelper helper =
+        new SyncHelper(source, destination, config, status, persistentStore, history, builder);
+    helper.setSubjectOperations(subjectOperations);
+    return helper;
   }
 
   private void completeActiveSyncRequest(
@@ -372,5 +361,9 @@ public class ReplicatorImpl implements Replicator {
     } catch (IOException e) {
       LOGGER.trace("Could not close closable. This is not an error.");
     }
+  }
+
+  public void setSubjectOperations(SubjectOperations subjectOperations) {
+    this.subjectOperations = subjectOperations;
   }
 }
