@@ -48,7 +48,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
 import org.codice.ddf.configuration.SystemBaseUrl;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;

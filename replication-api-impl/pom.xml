@@ -61,11 +61,6 @@
             <version>${cxf.frontent.version}</version>
         </dependency>
         <dependency>
-            <groupId>ddf.security</groupId>
-            <artifactId>ddf-security-common</artifactId>
-            <version>${ddf.version}</version>
-        </dependency>
-        <dependency>
             <groupId>ddf.security.core</groupId>
             <artifactId>security-core-impl</artifactId>
             <version>${ddf.version}</version>
@@ -89,6 +84,12 @@
             <groupId>ddf.platform.util</groupId>
             <artifactId>platform-util</artifactId>
             <version>${ddf.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.jodah</groupId>
+                    <artifactId>failsafe</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>javax.validation</groupId>
@@ -99,11 +100,6 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util-unavailableurls</artifactId>
-            <version>${ddf.version}</version>
         </dependency>
         <dependency>
             <groupId>com.thoughtworks.xstream</groupId>
@@ -131,24 +127,13 @@
             <version>${ddf.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jvnet.ogc</groupId>
+            <groupId>io.github.soc</groupId>
             <artifactId>ogc-tools-gml-jts</artifactId>
-            <version>${ogc.tools.version}</version>
+            <version>${ogc-tools-gml-jts.version}</version>
         </dependency>
         <dependency>
             <groupId>com.vividsolutions</groupId>
             <artifactId>jts-core</artifactId>
-            <version>${jts.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>xercesImpl</artifactId>
-                    <groupId>xerces</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.vividsolutions</groupId>
-            <artifactId>jts-io</artifactId>
             <version>${jts.version}</version>
             <exclusions>
                 <exclusion>
@@ -250,7 +235,36 @@
             <version>${sun.jaxb.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client</artifactId>
+            <version>${google-http-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codice.ddf</groupId>
+            <artifactId>alerts</artifactId>
+            <version>${ddf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${httpcore.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
     </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.woodstox</groupId>
+                <artifactId>woodstox-core</artifactId>
+                <version>${woodstox.core.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <resources>
             <resource>
@@ -308,11 +322,15 @@
                             spatial-csw-transformer,
                             catalog-core-api-impl,
                             commons-collections4,
+                            alerts,
+                            failsafe,
+                            httpclient,
+                            httpcore,
+                            google-http-client,
                             gt-cql,
+                            jts-core,
                             ogc-tools-gml-jts,
-                            ddf-security-common,
                             platform-util,
-                            platform-util-unavailableurls,
                             jaxb2-basics-runtime,
                             commons-lang3,
                             geospatial,

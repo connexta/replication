@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.codice.ddf.configuration.SystemInfo;
 import org.codice.ddf.persistence.PersistenceException;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.ReplicationItem;
 import org.codice.ditto.replication.api.ReplicationItemManager;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
@@ -60,26 +60,8 @@ public class ScheduledReplicatorDeleter {
 
   private final int pageSize;
 
-  public ScheduledReplicatorDeleter(
-      ReplicatorConfigManager replicatorConfigManager,
-      ScheduledExecutorService scheduledExecutorService,
-      ReplicationItemManager replicationItemManager,
-      ReplicatorHistory replicatorHistory,
-      Metacards metacards) {
-    this(
-        replicatorConfigManager,
-        scheduledExecutorService,
-        replicationItemManager,
-        replicatorHistory,
-        metacards,
-        Security.getInstance(),
-        TimeUnit.MINUTES.toMillis(1),
-        DEFAULT_PAGE_SIZE);
-  }
-
-  @VisibleForTesting
   @SuppressWarnings("squid:S00107" /* Only for testing */)
-  ScheduledReplicatorDeleter(
+  public ScheduledReplicatorDeleter(
       ReplicatorConfigManager replicatorConfigManager,
       ScheduledExecutorService scheduledExecutorService,
       ReplicationItemManager replicationItemManager,

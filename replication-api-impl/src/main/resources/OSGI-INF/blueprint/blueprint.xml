@@ -30,6 +30,10 @@
     <reference id="persistentStore" interface="org.codice.ddf.persistence.PersistentStore"/>
     <reference id="clientFactoryFactory" interface="org.codice.ddf.cxf.client.ClientFactoryFactory"/>
     <reference id="queryFilterTransformerProvider" interface="ddf.catalog.transform.QueryFilterTransformerProvider"/>
+    <reference id="security" interface="org.codice.ddf.security.Security" />
+    <reference id="subjectOperations" interface="ddf.security.SubjectOperations" />
+    <reference id="clientBuilderFactory" interface="org.codice.ddf.cxf.client.ClientBuilderFactory"/>
+    <reference id="permissions" interface="ddf.security.permission.Permissions"/>
 
     <bean id="QueryService" class="org.codice.ditto.replication.api.impl.QueryServiceImpl">
         <argument ref="catalog"/>
@@ -55,6 +59,9 @@
         <argument ref="replicationItemManager"/>
         <argument ref="historyService"/>
         <argument ref="metacards"/>
+        <argument ref="security"/>
+        <argument value="60000"/>
+        <argument value="1000"/>
     </bean>
 
     <bean id="replicationItemManager"
@@ -76,6 +83,7 @@
         <argument ref="siteManager"/>
         <argument ref="configManager"/>
         <argument ref="newReplicationPersistentStore" />
+        <argument ref="security"/>
     </bean>
 
     <bean id="siteManager" class="org.codice.ditto.replication.api.impl.persistence.SiteManagerImpl" init-method="init">
@@ -117,6 +125,9 @@
         <property name="cswTransactionWriter" ref="cswTransactionWriter"/>
         <property name="clientFactoryFactory" ref="clientFactoryFactory"/>
         <property name="cswQueryFilterTransformerProvider" ref="queryFilterTransformerProvider"/>
+        <property name="security" ref="security"/>
+        <property name="clientBuilderFactory" ref="clientBuilderFactory"/>
+        <property name="permissions" ref="permissions"/>
     </bean>
 
     <service ref="catalogResourceStoreFactory" interface="org.codice.ditto.replication.api.ReplicatorStoreFactory"/>
@@ -140,6 +151,7 @@
         <argument ref="filterBuilder"/>
         <argument ref="metacards"/>
         <argument ref="replicationHistory"/>
+        <argument ref="security"/>
     </bean>
 
     <service ref="historyService" interface="org.codice.ditto.replication.api.ReplicatorHistory"/>
@@ -150,6 +162,7 @@
         <argument ref="historyService"/>
         <argument ref="siteManager"/>
         <argument ref="heartbeaterImplExecutor"/>
+        <argument ref="security"/>
     </bean>
 
     <bean id="heartbeaterImplExecutor" class="java.util.concurrent.Executors"
@@ -173,6 +186,8 @@
         <argument ref="heartbeater_verifier"/>
         <argument ref="replicatorImplExecutor"/>
         <argument ref="filterBuilder"/>
+        <argument ref="security"/>
+        <property name="subjectOperations" ref="subjectOperations"/>
     </bean>
 
     <bean id="replicatorImplExecutor" class="java.util.concurrent.Executors"
@@ -193,6 +208,7 @@
         <argument ref="heartbeater_verifier"/>
         <argument ref="configManager"/>
         <argument ref="siteManager"/>
+        <argument ref="security"/>
     </bean>
 
     <bean id="replicatorRunnerExecutor" class="java.util.concurrent.Executors"

@@ -38,6 +38,8 @@ import ddf.catalog.operation.QueryRequest;
 import ddf.catalog.operation.SourceResponse;
 import ddf.catalog.operation.UpdateRequest;
 import ddf.catalog.operation.impl.ProcessingDetailsImpl;
+import ddf.security.Subject;
+import ddf.security.SubjectOperations;
 import ddf.security.impl.SubjectImpl;
 import java.net.URI;
 import java.util.Collections;
@@ -70,6 +72,8 @@ public class SyncHelperTest {
   @Mock ReplicationItemManager persistentStore;
   @Mock ReplicatorHistory history;
 
+  @Mock SubjectOperations subjectOperations;
+
   ReplicationStatus status;
 
   @Before
@@ -79,6 +83,7 @@ public class SyncHelperTest {
     when(source.getRemoteName()).thenReturn("local");
     when(destination.getRemoteName()).thenReturn("remote");
     helper = new SyncHelper(source, destination, config, status, persistentStore, history, builder);
+    helper.setSubjectOperations(subjectOperations);
   }
 
   // verify a replication with no failures to retry doesn't try to query DDF with an empty list of
@@ -178,6 +183,7 @@ public class SyncHelperTest {
     when(persistentStore.getItem(anyString(), anyString(), anyString()))
         .thenReturn(Optional.empty());
     when(history.getReplicationEvents("test")).thenReturn(Collections.emptyList());
+    when(subjectOperations.getEmailAddress(any(Subject.class))).thenReturn("asdf@1234.com");
     helper.sync();
     assertThat(status.getPushCount(), is(1L));
     assertThat(status.getStatus(), is(Status.SUCCESS));
@@ -205,6 +211,7 @@ public class SyncHelperTest {
         .thenReturn(Optional.empty());
     when(history.getReplicationEvents("test")).thenReturn(Collections.emptyList());
     when(config.isMetadataOnly()).thenReturn(true);
+    when(subjectOperations.getEmailAddress(any(Subject.class))).thenReturn("asdf@1234.com");
     helper.sync();
     assertThat(status.getPushCount(), is(1L));
     assertThat(status.getStatus(), is(Status.SUCCESS));

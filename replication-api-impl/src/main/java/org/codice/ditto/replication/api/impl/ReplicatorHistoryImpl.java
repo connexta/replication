@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.ReplicationStatus;
 import org.codice.ditto.replication.api.ReplicatorHistory;
@@ -63,16 +63,6 @@ public class ReplicatorHistoryImpl implements ReplicatorHistory {
   private final MetacardType metacardType;
 
   public ReplicatorHistoryImpl(
-      CatalogFramework framework,
-      CatalogProvider provider,
-      FilterBuilder filterBuilder,
-      Metacards helper,
-      MetacardType metacardType) {
-    this(framework, provider, filterBuilder, helper, metacardType, Security.getInstance());
-  }
-
-  /*Visible for testing only*/
-  ReplicatorHistoryImpl(
       CatalogFramework framework,
       CatalogProvider provider,
       FilterBuilder filterBuilder,

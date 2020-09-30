@@ -45,6 +45,7 @@ import ddf.catalog.transform.CatalogTransformerException;
 import ddf.catalog.transform.MetacardTransformer;
 import ddf.security.SecurityConstants;
 import ddf.security.encryption.EncryptionService;
+import ddf.security.permission.Permissions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -70,10 +71,10 @@ import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.cxf.jaxrs.impl.MetadataMap;
-import org.codice.ddf.cxf.client.ClientFactoryFactory;
+import org.codice.ddf.cxf.client.ClientBuilderFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ddf.endpoints.rest.RESTService;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ddf.spatial.ogc.catalog.common.AvailabilityTask;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswSourceConfiguration;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.AbstractCswStore;
@@ -98,15 +99,27 @@ public class HybridStore extends AbstractCswStore implements ReplicationStore {
 
   private String remoteName;
 
+  private Security security;
+
   public HybridStore(
       BundleContext context,
       CswSourceConfiguration cswSourceConfiguration,
       Converter provider,
-      ClientFactoryFactory clientFactoryFactory,
+      ClientBuilderFactory clientBuilderFactory,
       EncryptionService encryptionService,
-      SecureCxfClientFactory<RESTService> restClientFactory) {
-    super(context, cswSourceConfiguration, provider, clientFactoryFactory, encryptionService);
+      SecureCxfClientFactory<RESTService> restClientFactory,
+      Security security,
+      Permissions permissions) {
+    super(
+        context,
+        cswSourceConfiguration,
+        provider,
+        clientBuilderFactory,
+        encryptionService,
+        security,
+        permissions);
     this.restClientFactory = restClientFactory;
+    this.security = security;
   }
 
   @Override
@@ -342,7 +355,6 @@ public class HybridStore extends AbstractCswStore implements ReplicationStore {
     MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
     headers.add(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA);
 
-    Security security = Security.getInstance();
     WebClient client =
         security.runAsAdmin(
             () ->

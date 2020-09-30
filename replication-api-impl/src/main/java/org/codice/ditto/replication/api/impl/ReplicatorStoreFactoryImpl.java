@@ -23,13 +23,16 @@ import ddf.catalog.filter.FilterBuilder;
 import ddf.catalog.resource.ResourceReader;
 import ddf.catalog.transform.QueryFilterTransformerProvider;
 import ddf.security.encryption.EncryptionService;
+import ddf.security.permission.Permissions;
 import ddf.security.service.SecurityManager;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import org.codice.ddf.configuration.SystemBaseUrl;
+import org.codice.ddf.cxf.client.ClientBuilderFactory;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ddf.endpoints.rest.RESTService;
+import org.codice.ddf.security.Security;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswAxisOrder;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.CswSourceConfiguration;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter;
@@ -92,6 +95,12 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   private QueryFilterTransformerProvider cswQueryFilterTransformerProvider;
 
+  private Security security;
+
+  private ClientBuilderFactory clientBuilderFactory;
+
+  private Permissions permissions;
+
   public ReplicationStore createReplicatorStore(URL url) {
     if (url.toString().startsWith(SystemBaseUrl.INTERNAL.getBaseUrl())
         || url.toString().startsWith(SystemBaseUrl.EXTERNAL.getBaseUrl())) {
@@ -134,9 +143,11 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
             bundleContext,
             cswConfig,
             provider,
-            clientFactoryFactory,
+            clientBuilderFactory,
             encryptionService,
-            restClientFactory);
+            restClientFactory,
+            security,
+            permissions);
     hybridStore.setFilterBuilder(filterBuilder);
     hybridStore.setFilterAdapter(filterAdapter);
     hybridStore.setResourceReader(resourceReader);
@@ -150,7 +161,8 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
 
   @VisibleForTesting
   CswSourceConfiguration createCswConfig(URL url, int connectionTimeoutMs, int receiveTimeoutMs) {
-    CswSourceConfiguration cswConfiguration = new CswSourceConfiguration(encryptionService);
+    CswSourceConfiguration cswConfiguration =
+        new CswSourceConfiguration(encryptionService, permissions);
     cswConfiguration.setCswUrl(url.toString() + "/csw");
     cswConfiguration.setConnectionTimeout(connectionTimeoutMs);
     cswConfiguration.setReceiveTimeout(receiveTimeoutMs);
@@ -216,5 +228,17 @@ public class ReplicatorStoreFactoryImpl implements ReplicatorStoreFactory {
   public void setCswQueryFilterTransformerProvider(
       QueryFilterTransformerProvider cswQueryFilterTransformerProvider) {
     this.cswQueryFilterTransformerProvider = cswQueryFilterTransformerProvider;
+  }
+
+  public void setSecurity(Security security) {
+    this.security = security;
+  }
+
+  public void setClientBuilderFactory(ClientBuilderFactory clientBuilderFactory) {
+    this.clientBuilderFactory = clientBuilderFactory;
+  }
+
+  public void setPermissions(Permissions permissions) {
+    this.permissions = permissions;
   }
 }

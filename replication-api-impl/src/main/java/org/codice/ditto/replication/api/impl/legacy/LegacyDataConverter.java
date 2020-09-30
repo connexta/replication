@@ -36,7 +36,7 @@ import javax.ws.rs.NotFoundException;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.codice.ddf.configuration.SystemBaseUrl;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.Direction;
 import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
@@ -77,24 +77,6 @@ public class LegacyDataConverter {
   private final Security security;
 
   public LegacyDataConverter(
-      CatalogFramework framework,
-      FilterBuilder filterBuilder,
-      Metacards metacards,
-      SiteManager siteManager,
-      ReplicatorConfigManager newConfigManager,
-      ReplicationPersistentStore persistentStore) {
-    this(
-        framework,
-        filterBuilder,
-        metacards,
-        siteManager,
-        newConfigManager,
-        persistentStore,
-        Security.getInstance());
-  }
-
-  @VisibleForTesting
-  LegacyDataConverter(
       CatalogFramework framework,
       FilterBuilder filterBuilder,
       Metacards metacards,

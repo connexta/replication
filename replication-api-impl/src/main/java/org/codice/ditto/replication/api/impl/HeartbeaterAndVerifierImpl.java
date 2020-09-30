@@ -16,7 +16,7 @@ package org.codice.ditto.replication.api.impl;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.concurrent.ExecutorService;
-import org.codice.ddf.security.common.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.Heartbeater;
 import org.codice.ditto.replication.api.ReplicatorHistory;
 import org.codice.ditto.replication.api.Verifier;
@@ -40,11 +40,6 @@ public class HeartbeaterAndVerifierImpl implements Verifier, Heartbeater {
   private final ExecutorService executor;
 
   private final Security security;
-
-  public HeartbeaterAndVerifierImpl(
-      ReplicatorHistory history, SiteManager siteManager, ExecutorService executor) {
-    this(history, siteManager, executor, Security.getInstance());
-  }
 
   public HeartbeaterAndVerifierImpl(
       ReplicatorHistory history,

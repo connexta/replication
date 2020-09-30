@@ -17,6 +17,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.thoughtworks.xstream.converters.Converter;
 import ddf.catalog.CatalogFramework;
@@ -24,10 +25,14 @@ import ddf.catalog.filter.FilterAdapter;
 import ddf.catalog.filter.FilterBuilder;
 import ddf.catalog.resource.ResourceReader;
 import ddf.security.encryption.EncryptionService;
+import ddf.security.permission.Permissions;
 import ddf.security.service.SecurityManager;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
+import org.codice.ddf.cxf.client.ClientBuilder;
+import org.codice.ddf.cxf.client.ClientBuilderFactory;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
+import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ddf.endpoints.rest.RESTService;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.source.writer.CswTransactionRequestWriter;
 import org.codice.ddf.spatial.ogc.csw.catalog.common.transformer.TransformerManager;
@@ -75,6 +80,14 @@ public class ReplicatorStoreFactoryImplTest {
 
   @Mock CatalogFramework framework;
 
+  @Mock ClientBuilderFactory clientBuilderFactory;
+
+  @Mock ClientBuilder builder;
+
+  @Mock Permissions permissions;
+
+  @Mock SecureCxfClientFactory<RESTService> restCxfClientFactory;
+
   @Before
   public void setUp() throws Exception {
     factory = spy(new ReplicatorStoreFactoryImpl());
@@ -89,6 +102,9 @@ public class ReplicatorStoreFactoryImplTest {
     factory.setCswTransactionWriter(cswTransactionWriter);
     factory.setClientFactoryFactory(clientFactoryFactory);
     factory.setCatalogFramework(framework);
+    factory.setClientBuilderFactory(clientBuilderFactory);
+    factory.setPermissions(permissions);
+    when(clientBuilderFactory.getClientBuilder()).thenReturn(builder);
   }
 
   @Test
