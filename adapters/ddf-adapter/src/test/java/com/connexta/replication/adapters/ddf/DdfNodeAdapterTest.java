@@ -127,7 +127,7 @@ public class DdfNodeAdapterTest {
       adapter.getSystemName();
     } catch (AdapterException e) {
       // a little hacky but way to distinguish between exception causes
-      assertThat(e.getMessage(), containsString("No registry metadata available"));
+      assertThat(e.getMessage(), containsString("Failed to retrieve remote system name"));
     }
   }
 
@@ -296,8 +296,11 @@ public class DdfNodeAdapterTest {
     map.put(
         Constants.METACARD_TAGS, new MetadataAttribute(Constants.METACARD_TAGS, "string", "tag"));
     map.put("title", new MetadataAttribute("title", null, "mytitle"));
-
-    return new MetadataImpl(map, Map.class, UUID.randomUUID().toString(), new Date());
+    map.put("source", new MetadataAttribute("source", null, "mytitle"));
+    MetadataImpl metadata =
+        new MetadataImpl(map, Map.class, UUID.randomUUID().toString(), new Date());
+    metadata.setSource("mytitle");
+    return metadata;
   }
 
   private Resource getResource() {

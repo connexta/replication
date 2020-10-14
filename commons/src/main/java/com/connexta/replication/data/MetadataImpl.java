@@ -48,6 +48,8 @@ public class MetadataImpl implements Metadata {
 
   private boolean isDeleted = false;
 
+  private String source;
+
   /**
    * @param metadata the raw metadata to wrap, cannot be null
    * @param type the type of the metadata, cannot be null
@@ -144,5 +146,15 @@ public class MetadataImpl implements Metadata {
   @Override
   public void setIsDeleted(boolean isDeleted) {
     this.isDeleted = isDeleted;
+  }
+
+  @Override
+  public String getSource() {
+    return source;
+  }
+
+  @Override
+  public void setSource(String source) {
+    this.source = source;
   }
 }

@@ -169,9 +169,11 @@ public class DdfNodeAdapter implements NodeAdapter {
       return this.cachedSystemName;
     }
 
-    String tagFilter = CqlBuilder.equalTo(Constants.METACARD_TAGS, Constants.REGISTRY_TAG);
-    String identityFilter = CqlBuilder.negate(CqlBuilder.isNull(Constants.REGISTRY_IDENTITY_NODE));
-    String filter = CqlBuilder.allOf(tagFilter, identityFilter);
+    // get any one metacard from the system
+    String modifiedFilter = CqlBuilder.negate(CqlBuilder.isNull(Constants.METACARD_MODIFIED));
+    String tagFilter = CqlBuilder.like(Constants.METACARD_TAGS, "*");
+    String noTagFilter = CqlBuilder.negate(CqlBuilder.isNull(Constants.METACARD_TAGS));
+    String filter = CqlBuilder.anyOf(modifiedFilter, tagFilter, noTagFilter);
     List<Metadata> results;
 
     try {
@@ -180,17 +182,11 @@ public class DdfNodeAdapter implements NodeAdapter {
       throw new AdapterException("Failed to retrieve remote system name", e);
     }
 
-    String systemName;
-    if (!results.isEmpty()) {
-      systemName =
-          ((MetadataAttribute) ((Map) results.get(0).getRawMetadata()).get("title")).getValue();
-    } else {
+    if (results.isEmpty() || results.get(0).getSource() == null) {
       throw new AdapterException(
-          String.format(
-              "No registry metadata available on remote node %s. Could not retrieve remote system name",
-              hostUrl));
+          String.format("Failed to retrieve remote system name from %s.", hostUrl));
     }
-    this.cachedSystemName = systemName;
+    this.cachedSystemName = results.get(0).getSource();
     return this.cachedSystemName;
   }
 

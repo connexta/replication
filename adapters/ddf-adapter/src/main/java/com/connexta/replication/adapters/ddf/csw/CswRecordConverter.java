@@ -237,6 +237,10 @@ public class CswRecordConverter implements Converter {
             "Invalid resource URI of {} for {}", metadataMap.get(RESOURCE_URI).getValue(), id);
       }
     }
+    MetadataAttribute source = metadataMap.get("source");
+    if (source != null) {
+      metadata.setSource(source.getValue());
+    }
 
     metadataMap.get(METACARD_TAGS).getValues().forEach(metadata::addTag);
     MetadataAttribute origin = metadataMap.get(Replication.ORIGINS);
