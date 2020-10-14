@@ -91,8 +91,9 @@ public class DdfRestClientFactoryTest {
     DdfRestClientFactory factory =
         new DdfRestClientFactory(
             clientFactory, DEFAULT_CONNECTION_TIMEOUT_MILLIS, DEFAULT_RECEIVE_TIMEOUT_MILLIS);
-    DdfRestClient client = factory.create(new URL("https://host:1234/context"));
-    verify(clientFactory)
+    factory.create(new URL("https://host:1234/context"));
+    factory.create(new URL("https://host:1234/context"));
+    verify(clientFactory, times(1))
         .getSecureCxfClientFactory(
             "https://host:1234/context/catalog",
             RESTService.class,
@@ -121,8 +122,9 @@ public class DdfRestClientFactoryTest {
     cookies.put("JSESSIONID", mockCookie);
     when(whoamiClient.get()).thenReturn(mockResponse);
     when(mockResponse.getCookies()).thenReturn(cookies);
-    DdfRestClient client = factory.createWithSubject(new URL("https://host:1234/context"));
-    verify(clientFactory)
+    factory.createWithSubject(new URL("https://host:1234/context"));
+    factory.createWithSubject(new URL("https://host:1234/context"));
+    verify(clientFactory, times(1))
         .getSecureCxfClientFactory(
             "https://host:1234/context/catalog",
             RESTService.class,

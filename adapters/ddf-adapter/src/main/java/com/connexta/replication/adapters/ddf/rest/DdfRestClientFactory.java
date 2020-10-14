@@ -15,8 +15,12 @@ package com.connexta.replication.adapters.ddf.rest;
 
 import com.connexta.replication.data.ReplicationConstants;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
@@ -31,6 +35,9 @@ public class DdfRestClientFactory {
   private final int connectionTimeout;
 
   private final int receiveTimeout;
+
+  private Map<String, DdfRestClient> clientCache =
+      Collections.synchronizedMap(new PassiveExpiringMap<>(25, TimeUnit.MINUTES));
 
   /**
    * creates a DdfRestClientFactory
@@ -55,10 +62,18 @@ public class DdfRestClientFactory {
    * @return a wrapped {@link WebClient}
    */
   public DdfRestClient create(URL url) {
-    return new DdfRestClient(initializeClient(url));
+    if (clientCache.containsKey(url.toString())) {
+      return clientCache.get(url.toString());
+    }
+    DdfRestClient client = new DdfRestClient(initializeClient(url));
+    clientCache.put(url.toString(), client);
+    return client;
   }
 
   public DdfRestClient createWithSubject(URL url) {
+    if (clientCache.containsKey(url.toString())) {
+      return clientCache.get(url.toString());
+    }
     String pathlessUrl = url.getProtocol() + "://" + url.getHost() + ":" + url.getPort();
     WebClient whoamiClient =
         clientFactoryFactory
@@ -82,7 +97,9 @@ public class DdfRestClientFactory {
 
     WebClient restClient = initializeClient(url);
     restClient.cookie(sessionInfo.getCookies().get("JSESSIONID"));
-    return new DdfRestClient(restClient);
+    DdfRestClient client = new DdfRestClient(restClient);
+    clientCache.put(url.toString(), client);
+    return client;
   }
 
   private WebClient initializeClient(URL url) {
