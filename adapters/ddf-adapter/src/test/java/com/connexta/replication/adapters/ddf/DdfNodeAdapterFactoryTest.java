@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.connexta.replication.adapters.ddf.csw.Csw;
@@ -50,7 +51,8 @@ public class DdfNodeAdapterFactoryTest {
     System.setProperty("javax.net.ssl.keyStore", "/my/keystore.jks");
     DdfNodeAdapterFactory factory = new DdfNodeAdapterFactory(clientFactoryFactory, 30000, 60000);
     assertThat(factory.create(new URL("https://localhost:8993/context")), is(notNullValue()));
-    verify(clientFactoryFactory)
+    assertThat(factory.create(new URL("https://localhost:8993/context")), is(notNullValue()));
+    verify(clientFactoryFactory, times(1))
         .getSecureCxfClientFactory(
             eq("https://localhost:8993/context/csw"),
             eq(Csw.class),

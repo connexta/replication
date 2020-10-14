@@ -23,15 +23,18 @@ import com.connexta.replication.data.ReplicationConstants;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.xml.namespace.QName;
 import net.opengis.cat.csw.v_2_0_2.AcknowledgementType;
 import net.opengis.cat.csw.v_2_0_2.CapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetCapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsResponseType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsType;
+import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ditto.replication.api.NodeAdapter;
@@ -52,6 +55,9 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
   private final ClientFactoryFactory clientFactory;
   private final int connectionTimeout;
   private final int receiveTimeout;
+
+  private Map<String, NodeAdapter> adapterCache =
+      Collections.synchronizedMap(new PassiveExpiringMap<>(25, TimeUnit.MINUTES));
 
   /**
    * Creates a DdfNodeAdapterFactory.
@@ -75,6 +81,9 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
 
   @Override
   public NodeAdapter create(URL url) {
+    if (adapterCache.containsKey(url.toString())) {
+      return adapterCache.get(url.toString());
+    }
     SecureCxfClientFactory<Csw> ddfCswClientFactory =
         clientFactory.getSecureCxfClientFactory(
             url.toString() + "/csw",
@@ -88,7 +97,9 @@ public class DdfNodeAdapterFactory implements NodeAdapterFactory {
             ReplicationConstants.getCertAlias(),
             ReplicationConstants.getKeystore(),
             ReplicationConstants.TLS_PROTOCOL);
-    return new DdfNodeAdapter(ddfRestClientFactory, ddfCswClientFactory, url);
+    DdfNodeAdapter adapter = new DdfNodeAdapter(ddfRestClientFactory, ddfCswClientFactory, url);
+    adapterCache.put(url.toString(), adapter);
+    return adapter;
   }
 
   private List<Object> initProviders() {
