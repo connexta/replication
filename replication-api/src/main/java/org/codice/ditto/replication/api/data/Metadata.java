@@ -106,4 +106,18 @@ public interface Metadata {
 
   /** @param isDeleted whether or not this metadata should be considered deleted */
   void setIsDeleted(boolean isDeleted);
+
+  /**
+   * Get the source of this metadata.
+   *
+   * @return the source of this metadata.
+   */
+  String getSource();
+
+  /**
+   * Set the source of this metadata.
+   *
+   * @param source the source of this metadata.
+   */
+  void setSource(String source);
 }
