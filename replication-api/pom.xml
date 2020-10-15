@@ -33,6 +33,20 @@
             <groupId>ddf.security.core</groupId>
             <artifactId>security-core-impl</artifactId>
             <version>${ddf.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>xmlsec</artifactId>
+                    <groupId>org.apache.santuario</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>opensaml-xmlsec-api</artifactId>
+                    <groupId>org.opensaml</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>opensaml-xmlsec-impl</artifactId>
+                    <groupId>org.opensaml</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     <build>

@@ -27,7 +27,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import org.codice.ddf.security.impl.Security;
+import org.codice.ddf.security.Security;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
