@@ -52,11 +52,6 @@
       <version>${ddf.version}</version>
     </dependency>
     <dependency>
-      <groupId>ddf.security.core</groupId>
-      <artifactId>security-core-services</artifactId>
-      <version>${ddf.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.codice.ddf.spatial</groupId>
       <artifactId>spatial-csw-schema-bindings</artifactId>
       <version>${ddf.version}</version>

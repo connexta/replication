@@ -59,6 +59,12 @@
             <groupId>org.codice.ddf.admin.query</groupId>
             <artifactId>admin-graphql</artifactId>
             <version>${admin-query.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jackson-databind</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.codice.ddf.admin.query</groupId>
