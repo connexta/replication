@@ -33,7 +33,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The ReplicatorRunner periodical queues up replication jobs for all the current replication
- * configurations.
+ * configurations. If the configured replication period is less than or equal to zeor the
+ * ReplicationRunner will not queue up any job. This means that replication jobs will need to
+ * be triggered via another mechanism (command line or ui)
  */
 public class ReplicatorRunner {
 
@@ -67,9 +69,12 @@ public class ReplicatorRunner {
     long period =
         Long.parseLong(
             System.getProperty("org.codice.replication.period", DEFAULT_REPLICATION_PERIOD_STR));
-    scheduledExecutor.scheduleAtFixedRate(
-        this::replicateAsSystemUser, STARTUP_DELAY, period, TimeUnit.SECONDS);
-    LOGGER.info("Replication checks scheduled for every {} seconds.", period);
+    // a period less than or equal to 0 indicates the scheduler should not be run
+    if (period > 0) {
+      scheduledExecutor.scheduleAtFixedRate(
+          this::replicateAsSystemUser, STARTUP_DELAY, period, TimeUnit.SECONDS);
+      LOGGER.info("Replication checks scheduled for every {} seconds.", period);
+    }
   }
 
   public void destroy() {

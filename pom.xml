@@ -724,6 +724,7 @@
         <module>replication-api</module>
         <module>commons</module>
         <module>replication-api-impl</module>
+        <module>replication-commands</module>
         <module>admin</module>
         <module>adapters</module>
         <module>docs</module>

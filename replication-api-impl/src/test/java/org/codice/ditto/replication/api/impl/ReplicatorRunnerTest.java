@@ -92,6 +92,15 @@ public class ReplicatorRunnerTest {
   }
 
   @Test
+  public void initZeorPeriod() {
+    ArgumentCaptor<Long> period = ArgumentCaptor.forClass(Long.class);
+    System.setProperty("org.codice.replication.period", "0");
+    runner.init();
+    verify(scheduledExecutor, never())
+        .scheduleAtFixedRate(any(Runnable.class), anyLong(), period.capture(), any(TimeUnit.class));
+  }
+
+  @Test
   public void destroy() {
     runner.destroy();
     verify(scheduledExecutor).shutdownNow();
