@@ -26,6 +26,6 @@
 
   <modules>
     <module>ddf-adapter</module>
-<!--    <module>webhdfs-adapter</module>-->
+    <module>webhdfs-adapter</module>
   </modules>
 </project>
