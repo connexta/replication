@@ -37,6 +37,7 @@ import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
+import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorConfigManager;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
@@ -423,6 +424,18 @@ public class ReplicationUtils {
     configManager.save(config);
     if (suspended) {
       replicator.cancelSyncRequest(id);
+    }
+    return true;
+  }
+
+  public boolean runConfig(String id) {
+    ReplicatorConfig config = getConfigForId(id);
+    ReplicationStatusImpl status = new ReplicationStatusImpl();
+    status.setReplicatorId(config.getId());
+    try {
+      replicator.submitSyncRequest(new SyncRequestImpl(config, status));
+    } catch (InterruptedException e) {
+      Thread.interrupted();
     }
     return true;
   }
