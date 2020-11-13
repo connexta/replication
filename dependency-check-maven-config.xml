@@ -372,9 +372,14 @@
     </suppress>
     <suppress>
         <notes>
-            This is comming from htrace-core4-4.1.0-incubating jackson-databind but the version of
-            jackson-databind in use is grater (2.10.3) than the affected version. False positive.
+            This is coming from htrace-core4-4.1.0-incubating jackson-databind but the version of
+            jackson-databind in use is grater (2.10.3) than the affected version. False positives.
         </notes>
         <cve>CVE-2020-24750</cve>
+        <cve>CVE-2020-14060</cve>
+        <cve>CVE-2020-14061</cve>
+        <cve>CVE-2020-14062</cve>
+        <cve>CVE-2020-14195</cve>
+        <cve>CVE-2020-24616</cve>
     </suppress>
 </suppressions>
