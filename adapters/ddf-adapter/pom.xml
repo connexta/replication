@@ -183,6 +183,7 @@
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Import-Package>
               !org.jvnet.staxex,
+              !com.sun.istack,
               ddf.security.encryption;version="[1.0.0, 3.0.0]",
               net.opengis.cat.csw.v_2_0_2;version="[2.23,3)",
               net.opengis.filter.v_1_1_0;version="[2.23,3)",
@@ -190,6 +191,7 @@
               org.codice.ddf.configuration;version="[2.23,3)",
               org.codice.ddf.cxf.client;version="[2.23,3)",
               ddf.security.permission;version="[2.23,3)",
+              com.google.common.*;version="[25.1.0,31)",
               *
             </Import-Package>
             <Embed-Dependency>

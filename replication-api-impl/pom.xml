@@ -202,6 +202,7 @@
                             org.apache.shiro.subject.support;version="[1.4.2,2)",
                             org.apache.shiro.util;version="[1.4.2,2)",
                             org.pac4j.oidc.profile;version="[3.8.2,5)",
+                            com.google.common.*;version="[25.1.0,31)",
                             *
                         </Import-Package>
                         <Export-Package>

@@ -16,20 +16,43 @@
           xmlns="http://karaf.apache.org/xmlns/features/v1.4.0"
           xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.4.0">
 
-    <repository>mvn:ddf.features/admin-query/${admin-query.version}/xml/features</repository>
-
     <feature name="replication" version="${project.version}"
              description="Provides capabilities and console commands for replicating metadata and resources between DDF catalogs">
         <configfile finalname="${ddf.etc}/definitions/replication-attributes-injector.json">
           mvn:replication-adapters/ddf-adapter/${project.version}/json/injection
         </configfile>
         <feature>graphql-transformer-servlet</feature>
-        <feature>admin-query-ui</feature>
         <bundle>mvn:replication/replication-api/${project.version}</bundle>
         <bundle>mvn:replication/replication-api-impl/${project.version}</bundle>
         <bundle>mvn:replication/replication-admin-query/${project.version}</bundle>
         <bundle>mvn:replication/replication-ui/${project.version}</bundle>
         <bundle>mvn:replication/commons/${project.version}</bundle>
         <bundle>mvn:replication-adapters/ddf-adapter/${project.version}</bundle>
+    </feature>
+
+    <!-- The features below were pulled from <repository>mvn:ddf.features/admin-query/${admin-query.version}/xml/features</repository> and modified for replication-->
+    <feature name="admin-query-api" install="manual" version="${project.version}"
+      description="DDF :: Admin Console :: Query :: Api ">
+        <bundle>mvn:org.codice.ddf.admin.query/admin-query-api/${admin-query.version}</bundle>
+    </feature>
+
+    <feature name="graphql-java" install="manual" version="${project.version}"
+      description="Required dependencies for graphql-java bundle">
+        <bundle>mvn:com.graphql-java/graphql-java/${graphql-java.version}</bundle>
+        <bundle>mvn:org.antlr/antlr4-runtime/${antlr4.version}</bundle>
+        <bundle>mvn:com.graphql-java/java-dataloader/${java-dataloader.version}</bundle>
+        <bundle>mvn:org.reactivestreams/reactive-streams/${reactive-streams.version}</bundle>
+    </feature>
+
+    <feature name="graphql-transformer-servlet" install="manual" version="${project.version}"
+      description="Contains a graphGl servlet responsible for transforming the query api into a graphql schema and endpoint.">
+        <feature prerequisite="true">wrap</feature>
+        <feature>graphql-java</feature>
+        <feature>pax-http-whiteboard</feature>
+        <feature>admin-query-api</feature>
+        <bundle>mvn:com.google.guava/guava/${graphql-guava.version}</bundle>
+        <bundle>mvn:com.fasterxml.jackson.datatype/jackson-datatype-jdk8/${jackson-datatype.version}</bundle>
+        <bundle>mvn:com.google.code.gson/gson/${gson.version}</bundle>
+        <bundle>mvn:org.codice.ddf.admin.query/admin-graphql/${admin-query.version}</bundle>
     </feature>
 </features>
