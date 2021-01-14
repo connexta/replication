@@ -80,9 +80,10 @@
                             admin-query-common
                         </Embed-Dependency>
                         <Import-Package>
-                          org.codice.ddf.admin.configurator;version="[2.23,3)",
-                          org.codice.ddf.configuration;version="[2.23,3)",
-                          org.codice.ddf.internal.admin.configurator.actions;version="[2.23,3)",
+                            org.codice.ddf.admin.configurator;version="[2.23,3)",
+                            org.codice.ddf.configuration;version="[2.23,3)",
+                            org.codice.ddf.internal.admin.configurator.actions;version="[2.23,3)",
+                            com.google.common.*;version="[25.1.0,31)",
                             *
                         </Import-Package>
                     </instructions>
