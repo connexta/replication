@@ -1,0 +1,12 @@
+[
+  {
+    "url":"https://src:8993/services",
+    "name":"src",
+    "id":"source-1"
+ },
+ {
+    "url":"https://dest:8993/services",
+    "name":"dest",
+    "id":"destination-1"
+ }
+]

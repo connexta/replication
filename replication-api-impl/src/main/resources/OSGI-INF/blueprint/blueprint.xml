@@ -73,7 +73,7 @@
         <argument ref="filterBuilder"/>
     </bean>
 
-    <bean id="configManager" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorConfigManagerImpl">
+    <bean id="configManager" class="org.codice.ditto.replication.api.impl.persistence.ReplicatorConfigManagerImpl" init-method="init">
         <argument ref="replicationPersistentStore"/>
     </bean>
 
