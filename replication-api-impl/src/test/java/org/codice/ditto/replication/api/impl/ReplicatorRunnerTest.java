@@ -92,7 +92,7 @@ public class ReplicatorRunnerTest {
   }
 
   @Test
-  public void initZeorPeriod() {
+  public void initZeroPeriod() {
     ArgumentCaptor<Long> period = ArgumentCaptor.forClass(Long.class);
     System.setProperty("org.codice.replication.period", "0");
     runner.init();

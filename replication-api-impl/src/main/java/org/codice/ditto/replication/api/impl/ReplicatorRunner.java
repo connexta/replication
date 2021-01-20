@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The ReplicatorRunner periodical queues up replication jobs for all the current replication
- * configurations. If the configured replication period is less than or equal to zeor the
+ * configurations. If the configured replication period is less than or equal to zero the
  * ReplicationRunner will not queue up any job. This means that replication jobs will need to be
  * triggered via another mechanism (command line or ui)
  */
