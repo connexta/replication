@@ -77,3 +77,9 @@ export const deleteReplication = gql`
     deleteReplication(id: $id, deleteData: $deleteData)
   }
 `
+
+export const runReplication = gql`
+  mutation runReplication($id: Pid!) {
+    runReplication(id: $id)
+  }
+`

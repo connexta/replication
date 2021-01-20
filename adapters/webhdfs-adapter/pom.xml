@@ -16,7 +16,7 @@
     <parent>
         <artifactId>adapters</artifactId>
         <groupId>replication</groupId>
-        <version>0.3.2-SNAPSHOT</version>
+        <version>0.3.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -29,7 +29,7 @@
         <apache.httpcomponents.version>4.5.2</apache.httpcomponents.version>
         <apache.httpclient.version>4.5.12</apache.httpclient.version>
         <guava.version>20.0</guava.version>
-        <hadoop.version>2.7.3</hadoop.version>
+        <hadoop.version>2.10.1</hadoop.version>
         <hadoop.mini.clusters.version>0.1.16</hadoop.mini.clusters.version>
     </properties>
 
@@ -82,11 +82,18 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
             <version>${hadoop.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>netty</artifactId>
+                    <groupId>io.netty</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-minicluster</artifactId>
             <version>${hadoop.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>replication</groupId>
@@ -141,6 +148,17 @@
             <groupId>ddf.security.core</groupId>
             <artifactId>security-core-services</artifactId>
             <version>${ddf.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>xmlsec</artifactId>
+                    <groupId>org.apache.santuario</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <artifactId>xmlsec</artifactId>
+            <groupId>org.apache.santuario</groupId>
+            <version>2.1.4</version>
         </dependency>
         <dependency>
             <groupId>org.codice.ddf</groupId>
@@ -224,7 +242,8 @@
                             security-core-impl,
                             mime-tika-resolver,
                             platform-util,
-                            jaxb-core
+                            jaxb-core,
+                            xmlsec
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>

@@ -372,18 +372,14 @@
     </suppress>
     <suppress>
         <notes>
-            This is webhdfs adapter suppress set. It is not part of the deployment right now
-            netty-3.6.2.Final.jar: CVE-2019-16869, CVE-2019-20445, CVE-2019-20444
-            netty-all-4.0.23.Final.jar: CVE-2019-16869, CVE-2019-20445, CVE-2019-20444
-            htrace-core-3.1.0-incubating.jar CVE-2020-14195, CVE-2020-24616, CVE-2020-14060, CVE-2020-14061, CVE-2020-14062
+            This is coming from htrace-core4-4.1.0-incubating jackson-databind but the version of
+            jackson-databind in use is grater (2.10.3) than the affected version. False positives.
         </notes>
-        <cve>CVE-2019-16869</cve>
-        <cve>CVE-2019-20445</cve>
-        <cve>CVE-2019-20444</cve>
-        <cve>CVE-2020-14195</cve>
-        <cve>CVE-2020-24616</cve>
+        <cve>CVE-2020-24750</cve>
         <cve>CVE-2020-14060</cve>
         <cve>CVE-2020-14061</cve>
         <cve>CVE-2020-14062</cve>
+        <cve>CVE-2020-14195</cve>
+        <cve>CVE-2020-24616</cve>
     </suppress>
 </suppressions>

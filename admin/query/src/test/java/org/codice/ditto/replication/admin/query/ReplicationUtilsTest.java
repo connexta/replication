@@ -41,6 +41,7 @@ import org.codice.ditto.replication.api.ReplicationException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.Replicator;
 import org.codice.ditto.replication.api.Status;
+import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
@@ -551,6 +552,15 @@ public class ReplicationUtilsTest {
   public void cancelConfig() {
     assertThat(utils.cancelConfig("test"), is(true));
     verify(replicator).cancelSyncRequest("test");
+  }
+
+  @Test
+  public void runConfig() throws Exception {
+    ReplicatorConfigImpl config = new ReplicatorConfigImpl();
+    config.setId(REP_ID);
+    when(configManager.get(REP_ID)).thenReturn(config);
+    assertThat(utils.runConfig(REP_ID), is(true));
+    verify(replicator).submitSyncRequest(any(SyncRequest.class));
   }
 
   @Test

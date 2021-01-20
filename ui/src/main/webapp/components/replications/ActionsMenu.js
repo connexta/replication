@@ -26,6 +26,7 @@ import {
   deleteReplication,
   suspendReplication,
   cancelReplication,
+  runReplication,
 } from './gql/mutations'
 import { allReplications } from './gql/queries'
 import { Mutation } from 'react-apollo'
@@ -221,6 +222,54 @@ const CancelReplication = props => {
   )
 }
 
+const RunReplication = props => {
+  const { id, onClose, name } = props
+  const { enqueueSnackbar } = useSnackbar()
+
+  return (
+    <Mutation mutation={runReplication}>
+      {runReplication => (
+        <MenuItem
+          key='Run'
+          onClick={() => {
+            runReplication({
+              variables: {
+                id: id,
+              },
+              update: (store, { data }) => {
+                if (data && data.runReplication) {
+                  const data = store.readQuery({
+                    query: allReplications,
+                  })
+
+                  const runRep = data.replication.replications.find(
+                    r => r.id === id
+                  )
+                  const index = data.replication.replications.indexOf(runRep)
+                  runRep.replicationStatus = Replications.Status.PENDING
+                  data.replication.replications[index] = runRep
+
+                  store.writeQuery({
+                    query: allReplications,
+                    data,
+                  })
+
+                  enqueueSnackbar('Running replication for ' + name + '.', {
+                    variant: 'success',
+                  })
+                }
+              },
+            })
+            onClose()
+          }}
+        >
+          <Typography>Run</Typography>
+        </MenuItem>
+      )}
+    </Mutation>
+  )
+}
+
 const ActionsMenu = function(props) {
   const { menuId, anchorEl = null, onClose, replication } = props
 
@@ -240,6 +289,10 @@ const ActionsMenu = function(props) {
     >
       {Replications.cancelable(replication) && (
         <CancelReplication id={id} onClose={onClose} name={name} />
+      )}
+
+      {!Replications.cancelable(replication) && (
+        <RunReplication id={id} onClose={onClose} name={name} />
       )}
 
       <DeleteReplication id={id} onClose={onClose} name={name} />
