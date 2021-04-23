@@ -135,7 +135,7 @@
         <failsafe.version>1.1.0</failsafe.version>
         <spring-data-jpa.version>2.1.10.RELEASE</spring-data-jpa.version>
         <spring-data-solr.version>4.1.0.RC3</spring-data-solr.version>
-        <solr.version>8.2.0</solr.version>
+        <solr.version>8.8.2</solr.version>
         <opengis.version>19.1</opengis.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
         <jackson.version>2.10.0</jackson.version>
