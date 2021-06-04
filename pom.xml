@@ -151,7 +151,7 @@
         <gpg-plugin.version>1.6</gpg-plugin.version>
         <micrometer.version>1.2.1</micrometer.version>
         <javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
-        <httpclient.version>4.5.10</httpclient.version>
+        <httpclient.version>4.5.13</httpclient.version>
         <to-string-verifier.version>1.4.5</to-string-verifier.version>
         <spotless.maven.plugin.version>1.25.1</spotless.maven.plugin.version>
         <directory.maven.plugin.version>0.3.1</directory.maven.plugin.version>
