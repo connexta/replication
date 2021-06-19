@@ -95,8 +95,8 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <java.version>1.11</java.version>
-        <snapshots.repository.url />
-        <releases.repository.url />
+        <snapshots.repository.url/>
+        <releases.repository.url/>
         <ddf.support.version>2.3.16</ddf.support.version>
         <ddf.version>2.16.1</ddf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -111,7 +111,7 @@
         <commons.collection4.version>4.4</commons.collection4.version>
         <commons-text.version>1.8</commons-text.version>
         <commons.io.version>2.6</commons.io.version>
-        <guava.version>28.1-jre</guava.version>
+        <guava.version>30.0-jre</guava.version>
         <ogc.version>1.1.0</ogc.version>
         <thirdparty.ogc.version>1.1.0_5</thirdparty.ogc.version>
         <ogc.tools.version>1.0.3</ogc.tools.version>
@@ -122,11 +122,11 @@
         <xstream.version>1.4.11.1</xstream.version>
         <xerces.version>2.12.0</xerces.version>
         <jsr305.version>3.0.2_1</jsr305.version>
-        <jetty.version>9.4.20.v20190813</jetty.version>
+        <jetty.version>9.4.39.v20210325</jetty.version>
         <common.codec.version>1.11</common.codec.version>
         <hamcrest.version>2.1</hamcrest.version>
         <hamcrest-optional.version>2.0.0</hamcrest-optional.version>
-        <awaitility.version>4.0.1</awaitility.version>
+        <awaitility.version>4.0.3</awaitility.version>
         <codice-test.version>0.9</codice-test.version>
         <mockito.version>1.10.19</mockito.version>
         <mockito-core.version>2.8.47</mockito-core.version>
@@ -134,13 +134,13 @@
         <maven-jacoco-plugin.version>0.8.4</maven-jacoco-plugin.version>
         <failsafe.version>1.1.0</failsafe.version>
         <spring-data-jpa.version>2.1.10.RELEASE</spring-data-jpa.version>
-        <spring-data-solr.version>4.1.0.RC3</spring-data-solr.version>
-        <solr.version>8.2.0</solr.version>
+        <spring-data-solr.version>4.1.0.RELEASE</spring-data-solr.version>
+        <solr.version>8.6.3</solr.version>
         <opengis.version>19.1</opengis.version>
         <javax.xml.soap.version>1.4.0</javax.xml.soap.version>
-        <jackson.version>2.10.0</jackson.version>
+        <jackson.version>2.10.5.1</jackson.version>
         <spring.version>5.2.0.RC2</spring.version>
-        <spring-boot-starter.version>2.1.8.RELEASE</spring-boot-starter.version>
+        <spring-boot-starter.version>2.3.0.RELEASE</spring-boot-starter.version>
         <testcontainers.version>1.12.1</testcontainers.version>
         <annotation.version>1.3.1</annotation.version>
         <reactive-streams.version>1.0.3</reactive-streams.version>
@@ -861,20 +861,17 @@
                                                 will be set to 0 not 0.75
                                                 -->
                                                 <limits>
-                                                    <limit
-                                                        implementation="org.codice.jacoco.LenientLimit">
+                                                    <limit implementation="org.codice.jacoco.LenientLimit">
                                                         <counter>INSTRUCTION</counter>
                                                         <value>COVEREDRATIO</value>
                                                         <minimum>0.75</minimum>
                                                     </limit>
-                                                    <limit
-                                                        implementation="org.codice.jacoco.LenientLimit">
+                                                    <limit implementation="org.codice.jacoco.LenientLimit">
                                                         <counter>BRANCH</counter>
                                                         <value>COVEREDRATIO</value>
                                                         <minimum>0.75</minimum>
                                                     </limit>
-                                                    <limit
-                                                        implementation="org.codice.jacoco.LenientLimit">
+                                                    <limit implementation="org.codice.jacoco.LenientLimit">
                                                         <counter>COMPLEXITY</counter>
                                                         <value>COVEREDRATIO</value>
                                                         <minimum>0.75</minimum>
@@ -988,8 +985,8 @@
                                 <googleJavaFormat>
                                     <version>1.7</version>
                                 </googleJavaFormat>
-                                <trimTrailingWhitespace />
-                                <removeUnusedImports />
+                                <trimTrailingWhitespace/>
+                                <removeUnusedImports/>
                             </java>
                         </configuration>
                         <executions>
