@@ -95,8 +95,8 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <java.version>1.11</java.version>
-        <snapshots.repository.url />
-        <releases.repository.url />
+        <snapshots.repository.url/>
+        <releases.repository.url/>
         <ddf.support.version>2.3.16</ddf.support.version>
         <ddf.version>2.16.1</ddf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -158,7 +158,7 @@
         <rabbitmq-docker.version>3.7</rabbitmq-docker.version>
         <beanutils.version>1.9.4</beanutils.version>
         <opensaml.xmlsec.version>3.4.3</opensaml.xmlsec.version>
-        <xmlsec.version>2.1.4</xmlsec.version>
+        <xmlsec.version>2.1.7</xmlsec.version>
         <hamcrest.json.version>0.2</hamcrest.json.version>
     </properties>
 
@@ -861,20 +861,17 @@
                                                 will be set to 0 not 0.75
                                                 -->
                                                 <limits>
-                                                    <limit
-                                                        implementation="org.codice.jacoco.LenientLimit">
+                                                    <limit implementation="org.codice.jacoco.LenientLimit">
                                                         <counter>INSTRUCTION</counter>
                                                         <value>COVEREDRATIO</value>
                                                         <minimum>0.75</minimum>
                                                     </limit>
-                                                    <limit
-                                                        implementation="org.codice.jacoco.LenientLimit">
+                                                    <limit implementation="org.codice.jacoco.LenientLimit">
                                                         <counter>BRANCH</counter>
                                                         <value>COVEREDRATIO</value>
                                                         <minimum>0.75</minimum>
                                                     </limit>
-                                                    <limit
-                                                        implementation="org.codice.jacoco.LenientLimit">
+                                                    <limit implementation="org.codice.jacoco.LenientLimit">
                                                         <counter>COMPLEXITY</counter>
                                                         <value>COVEREDRATIO</value>
                                                         <minimum>0.75</minimum>
@@ -988,8 +985,8 @@
                                 <googleJavaFormat>
                                     <version>1.7</version>
                                 </googleJavaFormat>
-                                <trimTrailingWhitespace />
-                                <removeUnusedImports />
+                                <trimTrailingWhitespace/>
+                                <removeUnusedImports/>
                             </java>
                         </configuration>
                         <executions>
