@@ -1,0 +1,40 @@
+:title: Running Replication
+:type: configuration
+:status: published
+:parent: Replication
+:summary: Instructions for running replication.
+:order: 20
+
+== {title}
+
+After replication has been configured, it will automatically run every 5 minutes. Configurations can also be run via
+the command line on demand.
+
+=== Running Manually
+
+[TIP]
+====
+In order to re-trigger pushing and/or pulling on products that have already been replicated, the
+replication configuration's history needs to be deleted. To do this, run the `replication:delete-config
+-h <config_name>` command, and then re-create the replication configuration. See <<_configuring,Configuring>>
+for more information about deleting and creating replication configurations.
+====
+
+Replication can be run manually by executing the `replication:run` command, which has the following syntax:
+
+`replication:run <names>`
+
+Where <names> is replaced with the names of the replications to run.
+
+=== Failure Retry
+
+Items that failed to be replicated for any reason other than connection loss will be retried up to
+a configurable amount of times, except for deletion, which is only tried once. Use the `replication:config-add
+--help` in the ${command-console} for more information on configuring failure retries.
+
+
+=== Viewing Replication Status
+
+The user can view information on currently running, pending, or completed replication configuration runs by
+executing the `replication:status` command.
+

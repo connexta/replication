@@ -160,6 +160,14 @@
         <opensaml.xmlsec.version>3.4.3</opensaml.xmlsec.version>
         <xmlsec.version>2.1.4</xmlsec.version>
         <hamcrest.json.version>0.2</hamcrest.json.version>
+        <jbake.maven.plugin.version>0.0.9</jbake.maven.plugin.version>
+        <asciidoctor.maven.plugin.version>1.5.6</asciidoctor.maven.plugin.version>
+        <asciidoctorj.diagram.version>1.5.4.1</asciidoctorj.diagram.version>
+        <asciidoctorj.pdf.version>1.5.0-alpha.16</asciidoctorj.pdf.version>
+        <asciidoctorj.version>1.6.2</asciidoctorj.version>
+        <jruby.version>9.2.11.1</jruby.version>
+        <branding>DDF Base</branding>
+        <admin-console>Admin Console</admin-console>
     </properties>
 
     <dependencyManagement>
