@@ -13,6 +13,7 @@
  */
 package com.connexta.replication.adapters.ddf.csw;
 
+import static com.connexta.replication.adapters.ddf.csw.Constants.COMPLEX_TYPES;
 import static com.connexta.replication.adapters.ddf.csw.Constants.DEFAULT_METACARD_TYPE_NAME;
 
 import com.connexta.replication.data.MetadataAttribute;
@@ -120,7 +121,9 @@ public class MetacardMarshaller {
 
         writer.startNode("value");
 
-        if (format.equals("stringxml") || format.equals("geometry")) {
+        String trimmedFormat = format.substring(format.indexOf(':') + 1);
+
+        if (COMPLEX_TYPES.contains(trimmedFormat)) {
           writer.setRawValue(value);
         } else {
           writer.setValue(value);

@@ -14,6 +14,7 @@
 package com.connexta.replication.adapters.ddf.csw;
 
 import static com.connexta.replication.adapters.ddf.csw.Constants.ACTION;
+import static com.connexta.replication.adapters.ddf.csw.Constants.COMPLEX_TYPES;
 import static com.connexta.replication.adapters.ddf.csw.Constants.DERIVED_RESOURCE_DOWNLOAD_URL;
 import static com.connexta.replication.adapters.ddf.csw.Constants.DERIVED_RESOURCE_URI;
 import static com.connexta.replication.adapters.ddf.csw.Constants.METACARD_ID;
@@ -46,7 +47,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -75,8 +75,6 @@ public class CswRecordConverter implements Converter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CswRecordConverter.class);
   private static final HierarchicalStreamCopier COPIER = new HierarchicalStreamCopier();
-
-  private static final List<String> COMPLEX_TYPE = Arrays.asList("geometry", "stringxml");
 
   @Override
   public boolean canConvert(Class clazz) {
@@ -277,7 +275,9 @@ public class CswRecordConverter implements Converter {
         continue;
       }
 
-      if (COMPLEX_TYPE.contains(entryType)) {
+      String trimmedType = entryType.substring(entryType.indexOf(':') + 1);
+
+      if (COMPLEX_TYPES.contains(trimmedType)) {
         reader.moveDown();
         reader.moveDown();
         StringWriter xmlWriter = new StringWriter();
