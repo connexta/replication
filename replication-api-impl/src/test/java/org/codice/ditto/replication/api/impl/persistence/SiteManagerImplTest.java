@@ -20,16 +20,21 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.configuration.SystemInfo;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
+import org.codice.junit.rules.RestoreSystemProperties;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +43,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SiteManagerImplTest {
+
+  @Rule
+  public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
   private static final String LOCAL_SITE_ID = "local-site-id-1234567890";
 
@@ -60,6 +68,29 @@ public class SiteManagerImplTest {
     ReplicationSite site = captor.getValue();
     assertThat(site.getName(), is(SystemInfo.getSiteName()));
     assertThat(site.getUrl(), is(SystemBaseUrl.EXTERNAL.constructUrl(null, true)));
+  }
+
+  @Test
+  public void initFromConfig() {
+    System.setProperty("karaf.home", "src/test/resources");
+    when(persistentStore.get(any(Class.class), anyString())).thenThrow(new NotFoundException());
+    when(persistentStore.objects(any(Class.class))).thenReturn(Stream.empty());
+    siteManager.init();
+    ArgumentCaptor<ReplicationSiteImpl> captor = ArgumentCaptor.forClass(ReplicationSiteImpl.class);
+    verify(persistentStore, times(3)).save(captor.capture());
+    Set<String> ids =
+        captor.getAllValues().stream().map(ReplicationSite::getId).collect(Collectors.toSet());
+    assertThat(ids.contains("source-1"), is(true));
+    assertThat(ids.contains("destination-1"), is(true));
+  }
+
+  @Test
+  public void initBadConfigPath() {
+    System.setProperty("karaf.home", "not/the/right/path");
+    when(persistentStore.get(any(Class.class), anyString())).thenThrow(new NotFoundException());
+    when(persistentStore.objects(any(Class.class))).thenReturn(Stream.empty());
+    siteManager.init();
+    verify(persistentStore, times(1)).save(any());
   }
 
   @Test

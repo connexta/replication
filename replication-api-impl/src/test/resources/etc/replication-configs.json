@@ -1,0 +1,11 @@
+[
+  {
+    "bidirectional":"false",
+    "name":"config-test",
+    "id":"test-confg-id",
+    "destination":"destination-1",
+    "source":"source-1",
+    "filter":"(\"anyText\" ILIKE 'asdf')",
+    "retry_count": 5
+  }
+]

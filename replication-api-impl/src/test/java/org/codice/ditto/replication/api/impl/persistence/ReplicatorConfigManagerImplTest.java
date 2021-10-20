@@ -19,6 +19,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,14 +28,20 @@ import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
+import org.codice.junit.rules.RestoreSystemProperties;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ReplicatorConfigManagerImplTest {
+
+  @Rule
+  public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
   ReplicatorConfigManagerImpl manager;
 
@@ -42,6 +50,27 @@ public class ReplicatorConfigManagerImplTest {
   @Before
   public void setup() {
     manager = new ReplicatorConfigManagerImpl(persistentStore);
+  }
+
+  @Test
+  public void initFromConfig() {
+    System.setProperty("karaf.home", "src/test/resources");
+    when(persistentStore.get(any(Class.class), anyString())).thenThrow(new NotFoundException());
+    when(persistentStore.objects(any(Class.class))).thenReturn(Stream.empty());
+    manager.init();
+    ArgumentCaptor<ReplicatorConfigImpl> captor =
+        ArgumentCaptor.forClass(ReplicatorConfigImpl.class);
+    verify(persistentStore, times(1)).save(captor.capture());
+    assertThat(captor.getValue().getId(), is("test-confg-id"));
+  }
+
+  @Test
+  public void initBadConfigPath() {
+    System.setProperty("karaf.home", "not/the/right/path");
+    when(persistentStore.get(any(Class.class), anyString())).thenThrow(new NotFoundException());
+    when(persistentStore.objects(any(Class.class))).thenReturn(Stream.empty());
+    manager.init();
+    verify(persistentStore, never()).save(any());
   }
 
   @Test

@@ -13,7 +13,13 @@
  */
 package org.codice.ditto.replication.api.impl.persistence;
 
+import com.google.gson.Gson;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
 import net.jodah.failsafe.Failsafe;
@@ -24,8 +30,11 @@ import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.impl.data.ReplicationSiteImpl;
 import org.codice.ditto.replication.api.persistence.SiteManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SiteManagerImpl implements SiteManager {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SiteManagerImpl.class);
 
   private ReplicationPersistentStore persistentStore;
 
@@ -35,11 +44,14 @@ public class SiteManagerImpl implements SiteManager {
 
   private static final String LOCAL_SITE_ID = "local-site-id-1234567890";
 
+  private static final String SITE_CONFIG_FILE = "/etc/replication-sites.json";
+
   public SiteManagerImpl(ReplicationPersistentStore persistentStore) {
     this.persistentStore = persistentStore;
   }
 
   public void init() {
+
     RetryPolicy retryPolicy =
         new RetryPolicy()
             .withDelay(RETRY_DELAY_SEC, TimeUnit.SECONDS)
@@ -47,6 +59,30 @@ public class SiteManagerImpl implements SiteManager {
             .retryOn(ReplicationPersistenceException.class);
 
     Failsafe.with(retryPolicy).run(this::createLocalSite);
+    Failsafe.with(retryPolicy).run(this::loadSitesFromFile);
+  }
+
+  void loadSitesFromFile() {
+    String basePath = System.getProperty("karaf.home", "./");
+    File sitesFile = new File(basePath + SITE_CONFIG_FILE);
+    if (!sitesFile.exists()) {
+      return;
+    }
+    Gson gson = new Gson();
+    Set<String> existingSites =
+        this.objects().map(ReplicationSite::getId).collect(Collectors.toSet());
+    try {
+      ReplicationSiteImpl[] sites =
+          gson.fromJson(new FileReader(sitesFile), ReplicationSiteImpl[].class);
+      for (ReplicationSiteImpl site : sites) {
+        if (!existingSites.contains(site.getId())) {
+          this.save(site);
+        }
+      }
+    } catch (FileNotFoundException e) {
+      LOGGER.warn("Could not load replication site configuration: {}", e.getMessage());
+      LOGGER.debug("Replication site config load error: ", e);
+    }
   }
 
   private void createLocalSite() {
