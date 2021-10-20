@@ -22,6 +22,7 @@ import org.codice.ditto.replication.admin.query.replications.discover.GetReplica
 import org.codice.ditto.replication.admin.query.replications.persist.CancelReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.CreateReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.DeleteReplication;
+import org.codice.ditto.replication.admin.query.replications.persist.RunReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.SuspendReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.UpdateReplication;
 import org.codice.ditto.replication.admin.query.sites.discover.GetReplicationSites;
@@ -59,6 +60,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
 
   private final CancelReplication cancelReplication;
 
+  private final RunReplication runReplication;
+
   private final SuspendReplication suspendReplication;
 
   private final GetUiConfig getUiConfig;
@@ -79,6 +82,7 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
       UpdateReplication updateReplication,
       DeleteReplication deleteReplication,
       CancelReplication cancelReplication,
+      RunReplication runReplication,
       SuspendReplication suspendReplication,
       CreateReplicationSite createReplicationSite,
       UpdateReplicationSite updateReplicationSite,
@@ -93,6 +97,7 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
     this.updateReplication = updateReplication;
     this.deleteReplication = deleteReplication;
     this.cancelReplication = cancelReplication;
+    this.runReplication = runReplication;
     this.suspendReplication = suspendReplication;
     this.createReplicationSite = createReplicationSite;
     this.updateReplicationSite = updateReplicationSite;
@@ -131,6 +136,7 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
         updateReplicationSite,
         deleteReplicationSite,
         cancelReplication,
+        runReplication,
         suspendReplication,
         updateReplicationStats);
   }

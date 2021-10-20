@@ -164,13 +164,10 @@ public class Syncer {
                 Status.CONNECTION_LOST);
             replicationStatus.setStatus(Status.CONNECTION_LOST);
             return new SyncResponse(replicationStatus.getStatus());
-          } else if (replicationItem.isPresent()) {
-            ReplicationItem item = replicationItem.get();
-            item.incrementFailureCount();
-            replicationItemManager.saveItem(item);
-            replicationStatus.incrementFailure();
           } else {
-            ReplicationItem item = createReplicationItem(metadata, replicationItem);
+            LOGGER.debug("Unexpected replication error. Incrementing failure count.", e);
+            ReplicationItem item =
+                replicationItem.orElseGet(() -> createReplicationItem(metadata, replicationItem));
             item.incrementFailureCount();
             replicationItemManager.saveItem(item);
             replicationStatus.incrementFailure();
@@ -208,7 +205,7 @@ public class Syncer {
         ResourceResponse resourceResponse = source.readResource(new ResourceRequestImpl(metadata));
         List<Resource> resources = Collections.singletonList(resourceResponse.getResource());
 
-        LOGGER.trace(
+        LOGGER.debug(
             "Sending create storage from {} to {} for metadata {}",
             sourceName,
             destinationName,
@@ -219,7 +216,7 @@ public class Syncer {
           replicationStatus.incrementBytesTransferred(bytesTransferred);
         }
       } else {
-        LOGGER.trace(
+        LOGGER.debug(
             "Sending create from {} to {} for metadata {}",
             sourceName,
             destinationName,
