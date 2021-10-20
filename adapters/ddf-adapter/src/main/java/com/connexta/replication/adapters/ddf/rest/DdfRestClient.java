@@ -17,6 +17,7 @@ import com.connexta.replication.adapters.ddf.csw.MetacardMarshaller;
 import com.connexta.replication.data.ResourceImpl;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -120,6 +121,8 @@ public class DdfRestClient {
         .query("transform", "resource")
         .accept(MediaType.APPLICATION_OCTET_STREAM);
     Response response = webClient.get();
+    URI resourceUri = webClient.getCurrentURI();
+    webClient.reset();
     if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
       throw new AdapterException(
           "Failed to retrieve resource. Received status code: " + response.getStatus());
@@ -133,7 +136,7 @@ public class DdfRestClient {
     return new ResourceImpl(
         metadata.getId(),
         name,
-        webClient.getCurrentURI(),
+        resourceUri,
         null,
         (InputStream) response.getEntity(),
         response.getMediaType().toString(),
