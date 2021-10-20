@@ -105,7 +105,7 @@ public class ReplicatorRunner {
         replicatorConfigManager
             .objects()
             .filter(c -> !c.isSuspended())
-            .sorted(Comparator.comparingInt(ReplicatorConfig::getPriority))
+            .sorted(Comparator.comparingInt(ReplicatorConfig::getPriority).reversed())
             .collect(Collectors.toList());
     try {
       for (ReplicatorConfig config : configsToSchedule) {

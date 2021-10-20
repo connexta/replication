@@ -96,7 +96,7 @@ const defaultFormState = {
   destinationId: '',
   filter: '',
   biDirectional: false,
-  priority: 6,
+  priority: 5,
   filterErrorText: '',
   nameErrorText: '',
   disableSave: false,
@@ -279,16 +279,17 @@ class AddReplication extends React.Component {
                               value={priority}
                               onChange={this.handlePriorityChange('priority')}
                             >
-                              <MenuItem value={1}>1 - Highest</MenuItem>
-                              <MenuItem value={2}>2 - High</MenuItem>
-                              <MenuItem value={3}>3 - High</MenuItem>
-                              <MenuItem value={4}>4 - Medium</MenuItem>
-                              <MenuItem value={5}>5 - Medium</MenuItem>
-                              <MenuItem value={6}>6 - Medium</MenuItem>
+                              <MenuItem value={10}>10 - High</MenuItem>
+                              <MenuItem value={9}>9 - High</MenuItem>
+                              <MenuItem value={8}>8 - High</MenuItem>
                               <MenuItem value={7}>7 - Medium</MenuItem>
-                              <MenuItem value={8}>8 - Low</MenuItem>
-                              <MenuItem value={9}>9 - Low</MenuItem>
-                              <MenuItem value={10}>10 - Lowest</MenuItem>
+                              <MenuItem value={6}>6 - Medium</MenuItem>
+                              <MenuItem value={5}>5 - Medium</MenuItem>
+                              <MenuItem value={4}>4 - Medium</MenuItem>
+                              <MenuItem value={3}>3 - Low</MenuItem>
+                              <MenuItem value={2}>2 - Low</MenuItem>
+                              <MenuItem value={2}>2 - Low</MenuItem>
+                              <MenuItem value={1}>1 - Low</MenuItem>
                             </Select>
                           }
                         />

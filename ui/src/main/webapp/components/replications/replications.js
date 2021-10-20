@@ -91,7 +91,7 @@ function priorityString(priority) {
     case 10:
     case 9:
     case 8:
-      return 'Low (' + priority + ')'
+      return 'High (' + priority + ')'
     case 7:
     case 6:
     case 5:
@@ -99,9 +99,8 @@ function priorityString(priority) {
       return 'Medium (' + priority + ')'
     case 3:
     case 2:
-      return 'High (' + priority + ')'
     case 1:
-      return 'Highest (' + priority + ')'
+      return 'Low (' + priority + ')'
     default:
       return priority
   }

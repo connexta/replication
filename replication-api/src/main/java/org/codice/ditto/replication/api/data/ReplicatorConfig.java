@@ -181,7 +181,7 @@ public interface ReplicatorConfig extends Persistable {
   /**
    * Sets the config/job priority
    *
-   * @param priority the integer priority for the job from 1-10
+   * @param priority the integer priority for the job. Larger numbers are higher priority.
    */
   void setPriority(int priority);
 }

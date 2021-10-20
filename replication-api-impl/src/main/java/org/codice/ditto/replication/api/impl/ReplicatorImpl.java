@@ -70,7 +70,9 @@ public class ReplicatorImpl implements Replicator {
 
   /** Does not contain duplicates */
   private BlockingQueue<SyncRequest> pendingSyncRequests =
-      new PriorityBlockingQueue<>(20, Comparator.comparingInt(c -> c.getConfig().getPriority()));
+      new PriorityBlockingQueue<>(
+          20,
+          (c1, c2) -> Integer.compare(c2.getConfig().getPriority(), c1.getConfig().getPriority()));
 
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
@@ -254,9 +256,7 @@ public class ReplicatorImpl implements Replicator {
       pendingSyncRequests.put(syncRequest);
       SyncRequest lowestPriorityJob =
           activeSyncRequests.stream()
-              .sorted(
-                  (c1, c2) ->
-                      Integer.compare(c2.getConfig().getPriority(), c1.getConfig().getPriority()))
+              .sorted(Comparator.comparingInt(c -> c.getConfig().getPriority()))
               .findFirst()
               .orElse(null);
       if (lowestPriorityJob != null
