@@ -86,6 +86,27 @@ function formatBytes(bytes, disableBytes = true) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+function priorityString(priority) {
+  switch (priority) {
+    case 10:
+    case 9:
+    case 8:
+      return 'Low (' + priority + ')'
+    case 7:
+    case 6:
+    case 5:
+    case 4:
+      return 'Medium (' + priority + ')'
+    case 3:
+    case 2:
+      return 'High (' + priority + ')'
+    case 1:
+      return 'Highest (' + priority + ')'
+    default:
+      return priority
+  }
+}
+
 export default {
   Status,
   isInProgress,
@@ -93,4 +114,5 @@ export default {
   cancelable,
   repSort,
   formatBytes,
+  priorityString,
 }

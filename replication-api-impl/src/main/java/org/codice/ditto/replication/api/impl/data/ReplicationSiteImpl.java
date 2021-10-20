@@ -29,6 +29,8 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
 
   private static final String URL_KEY = "url";
 
+  private static final String TYPE_KEY = "type";
+
   private static final String IS_REMOTE_MANAGED_KEY = "is-remote-managed";
 
   /**
@@ -42,7 +44,7 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
    *       </ul>
    * </ul>
    */
-  public static final int CURRENT_VERSION = 2;
+  public static final int CURRENT_VERSION = 3;
 
   private boolean isRemoteManaged = false;
 
@@ -103,6 +105,9 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     result.put(NAME_KEY, getName());
     result.put(URL_KEY, getUrl());
     result.put(IS_REMOTE_MANAGED_KEY, isRemoteManaged());
+    if (type != null) {
+      result.put(TYPE_KEY, type);
+    }
     return result;
   }
 
@@ -118,5 +123,7 @@ public class ReplicationSiteImpl extends AbstractPersistable implements Replicat
     } else {
       setRemoteManaged(Boolean.parseBoolean((String) properties.get(IS_REMOTE_MANAGED_KEY)));
     }
+
+    setType((String) properties.get(TYPE_KEY));
   }
 }

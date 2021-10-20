@@ -21,6 +21,7 @@ import org.codice.ddf.admin.api.Field;
 import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
+import org.codice.ddf.admin.common.fields.base.scalar.IntegerField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.PidField;
 import org.codice.ditto.replication.admin.query.ReplicationMessages;
@@ -52,6 +53,8 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
 
   private ReplicationUtils replicationUtils;
 
+  private IntegerField priority;
+
   public CreateReplication(ReplicationUtils replicationUtils) {
     super(FIELD_NAME, DESCRIPTION);
     this.replicationUtils = replicationUtils;
@@ -62,11 +65,13 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
     biDirectional = new BooleanField("biDirectional");
     biDirectional.setValue(false);
     suspended = new BooleanField("suspended");
+    priority = new IntegerField("priority");
     suspended.setValue(false);
     name.isRequired(true);
     source.isRequired(true);
     destination.isRequired(true);
     filter.isRequired(true);
+    priority.isRequired(true);
   }
 
   @Override
@@ -77,7 +82,8 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
         destination.getValue(),
         filter.getValue(),
         biDirectional.getValue(),
-        suspended.getValue());
+        suspended.getValue(),
+        priority.getValue());
   }
 
   @Override
@@ -87,7 +93,7 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(name, source, destination, filter, biDirectional, suspended);
+    return ImmutableList.of(name, source, destination, filter, biDirectional, suspended, priority);
   }
 
   @Override

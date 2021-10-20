@@ -169,4 +169,19 @@ public interface ReplicatorConfig extends Persistable {
    *     otherwise false
    */
   void setDeleteData(boolean deleteData);
+
+  /**
+   * Get the priority of the replication config/job. A priority of 1 is the highest priority while a
+   * priority of 10 is the lowest priority
+   *
+   * @return an integer from 1-10
+   */
+  int getPriority();
+
+  /**
+   * Sets the config/job priority
+   *
+   * @param priority the integer priority for the job from 1-10
+   */
+  void setPriority(int priority);
 }

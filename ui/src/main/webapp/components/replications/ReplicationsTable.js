@@ -81,6 +81,9 @@ class ReplicationRow extends React.Component {
         <TableCell>{Replications.statusDisplayName(replication)}</TableCell>
         <TableCell>{replication.source.name}</TableCell>
         <TableCell>{replication.destination.name}</TableCell>
+        <TableCell>
+          {Replications.priorityString(replication.priority)}
+        </TableCell>
         <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
         <TableCell>{replication.filter}</TableCell>
         <TableCell>
@@ -133,6 +136,7 @@ class ReplicationsTable extends React.Component {
               <TableCell>Last Run Status</TableCell>
               <TableCell>Source</TableCell>
               <TableCell>Destination</TableCell>
+              <TableCell>Priority</TableCell>
               <TableCell>Bidirectional</TableCell>
               <TableCell>Filter</TableCell>
               <TableCell>Items Transferred</TableCell>

@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.security.service.SecurityServiceException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -104,12 +105,12 @@ public class ReplicatorRunner {
         replicatorConfigManager
             .objects()
             .filter(c -> !c.isSuspended())
+            .sorted(Comparator.comparingInt(ReplicatorConfig::getPriority))
             .collect(Collectors.toList());
     try {
       for (ReplicatorConfig config : configsToSchedule) {
-        ReplicationStatusImpl status = new ReplicationStatusImpl();
-        status.setReplicatorId(config.getId());
-        replicator.submitSyncRequest(new SyncRequestImpl(config, status));
+        replicator.submitSyncRequest(
+            new SyncRequestImpl(config, new ReplicationStatusImpl(config.getId())));
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

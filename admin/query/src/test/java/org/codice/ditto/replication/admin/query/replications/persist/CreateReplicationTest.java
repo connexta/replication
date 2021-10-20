@@ -16,6 +16,7 @@ package org.codice.ditto.replication.admin.query.replications.persist;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +46,13 @@ public class CreateReplicationTest {
   public void setUp() throws Exception {
     create = new CreateReplication(utils);
     when(utils.createReplication(
-            anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean()))
+            anyString(),
+            anyString(),
+            anyString(),
+            anyString(),
+            anyBoolean(),
+            anyBoolean(),
+            anyInt()))
         .thenReturn(new ReplicationField());
     input = new HashMap<>();
     input.put("id", "myid");
@@ -55,6 +62,7 @@ public class CreateReplicationTest {
     input.put("destinationId", "destId");
     input.put("biDirectional", false);
     input.put("suspended", false);
+    input.put("priority", 3);
   }
 
   @Test

@@ -198,7 +198,8 @@ public class ReplicationUtilsTest {
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true, true);
+    ReplicationField field =
+        utils.createReplication("test", "srcId", "destId", "cql", true, true, 6);
 
     // then
     assertThat(field.name(), is("test"));
@@ -242,7 +243,8 @@ public class ReplicationUtilsTest {
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    ReplicationField field = utils.createReplication("test", "srcId", "destId", "cql", true, true);
+    ReplicationField field =
+        utils.createReplication("test", "srcId", "destId", "cql", true, true, 6);
 
     // then
     assertThat(field.name(), is("test"));
@@ -302,7 +304,7 @@ public class ReplicationUtilsTest {
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.emptySet());
 
     // when
-    boolean field = utils.updateReplication(REP_ID, "test", "srcId", "destId", "cql", true);
+    boolean field = utils.updateReplication(REP_ID, "test", "srcId", "destId", "cql", true, 6);
 
     ArgumentCaptor<ReplicatorConfig> replicatorConfigCaptor =
         ArgumentCaptor.forClass(ReplicatorConfig.class);
@@ -384,7 +386,7 @@ public class ReplicationUtilsTest {
     when(configManager.get(REP_ID)).thenReturn(config);
 
     // when
-    boolean field = utils.updateReplication(REP_ID, null, null, null, null, null);
+    boolean field = utils.updateReplication(REP_ID, null, null, null, null, null, null);
 
     ArgumentCaptor<ReplicatorConfig> replicatorConfigCaptor =
         ArgumentCaptor.forClass(ReplicatorConfig.class);
@@ -431,7 +433,7 @@ public class ReplicationUtilsTest {
     when(replicator.getActiveSyncRequests()).thenReturn(Collections.singleton(syncRequest));
 
     // when
-    boolean field = utils.updateReplication(REP_ID, "test", "srcId", "destId", "cql", true);
+    boolean field = utils.updateReplication(REP_ID, "test", "srcId", "destId", "cql", true, 6);
     ArgumentCaptor<ReplicatorConfig> replicatorConfigCaptor =
         ArgumentCaptor.forClass(ReplicatorConfig.class);
 

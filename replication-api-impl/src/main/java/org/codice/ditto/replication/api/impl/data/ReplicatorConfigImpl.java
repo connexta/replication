@@ -45,6 +45,8 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   private static final String DELETE_DATA_KEY = "deleteData";
 
+  private static final String PRIORITY_KEY = "priority";
+
   /**
    * Field specifying the version of the configuration. Possible versions include:
    *
@@ -56,9 +58,13 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
    *         <li>Add <b>deleted</b> field of type boolean with default of false
    *         <li>Add <b>deleteData</b> field of type boolean with default of false
    *       </ul>
+   *   <li>2 - Add prioritization
+   *       <ul>
+   *         <li>Add <b>priority</b> field of type int with default of 6
+   *       </ul>
    * </ol>
    */
-  public static final int CURRENT_VERSION = 1;
+  public static final int CURRENT_VERSION = 2;
 
   private boolean deleted = false;
 
@@ -80,6 +86,8 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
 
   private boolean suspended;
 
+  private int priority = 6;
+
   public ReplicatorConfigImpl() {
     super();
     super.setVersion(CURRENT_VERSION);
@@ -98,6 +106,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     result.put(SUSPENDED_KEY, Boolean.toString(isSuspended()));
     result.put(DELETED_KEY, Boolean.toString(isDeleted()));
     result.put(DELETE_DATA_KEY, Boolean.toString(shouldDeleteData()));
+    result.put(PRIORITY_KEY, getPriority());
     return result;
   }
 
@@ -114,6 +123,7 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
     setSuspended(Boolean.valueOf((String) properties.get(SUSPENDED_KEY)));
     setDeleted(Boolean.valueOf((String) properties.get(DELETED_KEY)));
     setDeleteData(Boolean.valueOf((String) properties.get(DELETE_DATA_KEY)));
+    setPriority((int) properties.getOrDefault(PRIORITY_KEY, 6));
   }
 
   @Override
@@ -214,5 +224,15 @@ public class ReplicatorConfigImpl extends AbstractPersistable implements Replica
   @Override
   public void setDeleteData(boolean deleteData) {
     this.deleteData = deleteData;
+  }
+
+  @Override
+  public int getPriority() {
+    return priority;
+  }
+
+  @Override
+  public void setPriority(int priority) {
+    this.priority = priority;
   }
 }

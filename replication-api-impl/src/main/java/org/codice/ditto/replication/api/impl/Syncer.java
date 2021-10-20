@@ -152,6 +152,7 @@ public class Syncer {
         } catch (VirtualMachineError e) {
           throw e;
         } catch (Exception e) {
+          LOGGER.debug("Error replicating data.", e);
           final boolean sourceAvailable = source.isAvailable();
           final boolean destinationAvailable = destination.isAvailable();
           if (!sourceAvailable || !destinationAvailable) {
