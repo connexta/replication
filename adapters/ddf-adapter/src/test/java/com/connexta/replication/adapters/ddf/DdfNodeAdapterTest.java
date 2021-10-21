@@ -46,8 +46,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.Response.StatusType;
-import net.opengis.cat.csw.v_2_0_2.CapabilitiesType;
-import net.opengis.cat.csw.v_2_0_2.GetCapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsType;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
@@ -87,15 +85,13 @@ public class DdfNodeAdapterTest {
 
   @Test
   public void isAvailable() throws Exception {
-    CapabilitiesType response = mock(CapabilitiesType.class);
-    when(csw.getCapabilities(any(GetCapabilitiesType.class))).thenReturn(response);
-    when(response.getVersion()).thenReturn("2.0.2");
+    when(restClient.ping()).thenReturn(true);
     assertThat(adapter.isAvailable(), is(true));
   }
 
   @Test
   public void isAvailableError() throws Exception {
-    when(csw.getCapabilities(any(GetCapabilitiesType.class))).thenThrow(new Exception("error"));
+    when(restClient.ping()).thenThrow(new RuntimeException("error"));
     assertThat(adapter.isAvailable(), is(false));
   }
 
@@ -156,8 +152,8 @@ public class DdfNodeAdapterTest {
   @Test
   public void exists() throws Exception {
     CswRecordCollection collection = new CswRecordCollection();
+    collection.setNumberOfRecordsMatched(1);
     Metadata metadata = getMetadata();
-    collection.setCswRecords(Collections.singletonList(metadata));
     when(csw.getRecords(any(GetRecordsType.class))).thenReturn(collection);
     assertThat(adapter.exists(metadata), is(true));
   }
@@ -165,6 +161,7 @@ public class DdfNodeAdapterTest {
   @Test
   public void doesNotExist() throws Exception {
     CswRecordCollection collection = new CswRecordCollection();
+    collection.setNumberOfRecordsMatched(0);
     when(csw.getRecords(any(GetRecordsType.class))).thenReturn(collection);
     assertThat(adapter.exists(getMetadata()), is(false));
   }

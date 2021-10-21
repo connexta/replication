@@ -144,6 +144,11 @@ public class DdfRestClient {
         metadata);
   }
 
+  public boolean ping() {
+    Response response = webClient.head();
+    return response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL);
+  }
+
   private MultipartBody createBody(Resource resource) {
     List<Attachment> attachments = new ArrayList<>();
     attachments.add(createParseResourceAttachment(resource));
