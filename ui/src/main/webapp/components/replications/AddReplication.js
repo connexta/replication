@@ -288,7 +288,6 @@ class AddReplication extends React.Component {
                               <MenuItem value={4}>4 - Medium</MenuItem>
                               <MenuItem value={3}>3 - Low</MenuItem>
                               <MenuItem value={2}>2 - Low</MenuItem>
-                              <MenuItem value={2}>2 - Low</MenuItem>
                               <MenuItem value={1}>1 - Low</MenuItem>
                             </Select>
                           }

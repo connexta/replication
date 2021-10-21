@@ -20,6 +20,7 @@ import org.codice.ddf.admin.common.fields.base.function.BaseFieldProvider;
 import org.codice.ditto.replication.admin.query.queries.GetQueries;
 import org.codice.ditto.replication.admin.query.replications.discover.GetReplications;
 import org.codice.ditto.replication.admin.query.replications.persist.CancelReplication;
+import org.codice.ditto.replication.admin.query.replications.persist.ChangePriority;
 import org.codice.ditto.replication.admin.query.replications.persist.CreateReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.DeleteReplication;
 import org.codice.ditto.replication.admin.query.replications.persist.RunReplication;
@@ -62,6 +63,8 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
 
   private final RunReplication runReplication;
 
+  private final ChangePriority changePriority;
+
   private final SuspendReplication suspendReplication;
 
   private final GetUiConfig getUiConfig;
@@ -83,6 +86,7 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
       DeleteReplication deleteReplication,
       CancelReplication cancelReplication,
       RunReplication runReplication,
+      ChangePriority changePriority,
       SuspendReplication suspendReplication,
       CreateReplicationSite createReplicationSite,
       UpdateReplicationSite updateReplicationSite,
@@ -98,6 +102,7 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
     this.deleteReplication = deleteReplication;
     this.cancelReplication = cancelReplication;
     this.runReplication = runReplication;
+    this.changePriority = changePriority;
     this.suspendReplication = suspendReplication;
     this.createReplicationSite = createReplicationSite;
     this.updateReplicationSite = updateReplicationSite;
@@ -137,6 +142,7 @@ public class ReplicationFieldProvider extends BaseFieldProvider {
         deleteReplicationSite,
         cancelReplication,
         runReplication,
+        changePriority,
         suspendReplication,
         updateReplicationStats);
   }

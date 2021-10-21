@@ -86,3 +86,9 @@ export const runReplication = gql`
     runReplication(id: $id)
   }
 `
+
+export const changePriority = gql`
+  mutation changePriority($id: Pid!, $priority: Int!) {
+    changePriority(id: $id, priority: $priority)
+  }
+`

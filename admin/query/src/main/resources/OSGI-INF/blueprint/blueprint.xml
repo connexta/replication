@@ -46,6 +46,9 @@
     <bean id="runReplication" class="org.codice.ditto.replication.admin.query.replications.persist.RunReplication">
         <argument ref="replicationUtils"/>
     </bean>
+    <bean id="changePriority" class="org.codice.ditto.replication.admin.query.replications.persist.ChangePriority">
+        <argument ref="replicationUtils"/>
+    </bean>
     <bean id="suspendReplication" class="org.codice.ditto.replication.admin.query.replications.persist.SuspendReplication">
         <argument ref="replicationUtils"/>
     </bean>
@@ -80,6 +83,7 @@
             <argument ref="deleteReplication"/>
             <argument ref="cancelReplication"/>
             <argument ref="runReplication"/>
+            <argument ref="changePriority"/>
             <argument ref="suspendReplication"/>
             <argument ref="createReplicationSite"/>
             <argument ref="updateReplicationSite"/>

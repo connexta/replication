@@ -23,6 +23,8 @@ import {
   IconButton,
   Typography,
   Toolbar,
+  MenuItem,
+  Select,
 } from '@material-ui/core'
 import { MoreVert } from '@material-ui/icons'
 import moment from 'moment'
@@ -31,6 +33,8 @@ import { withStyles } from '@material-ui/core/styles'
 import ActionsMenu from './ActionsMenu'
 import Replications from './replications'
 import ReactInterval from 'react-interval'
+import { changePriority } from './gql/mutations'
+import { Mutation } from 'react-apollo'
 
 const styles = {
   root: {
@@ -82,7 +86,36 @@ class ReplicationRow extends React.Component {
         <TableCell>{replication.source.name}</TableCell>
         <TableCell>{replication.destination.name}</TableCell>
         <TableCell>
-          {Replications.priorityString(replication.priority)}
+          <Mutation mutation={changePriority}>
+            {changePriority => (
+              <Select
+                disableUnderline={true}
+                value={replication.priority}
+                onChange={event => {
+                  changePriority({
+                    variables: {
+                      id: replication.id,
+                      priority: event.target.value,
+                    },
+                    update: () => {
+                      replication.priority = event.target.value
+                    },
+                  })
+                }}
+              >
+                <MenuItem value={10}>10 - High</MenuItem>
+                <MenuItem value={9}>9 - High</MenuItem>
+                <MenuItem value={8}>8 - High</MenuItem>
+                <MenuItem value={7}>7 - Medium</MenuItem>
+                <MenuItem value={6}>6 - Medium</MenuItem>
+                <MenuItem value={5}>5 - Medium</MenuItem>
+                <MenuItem value={4}>4 - Medium</MenuItem>
+                <MenuItem value={3}>3 - Low</MenuItem>
+                <MenuItem value={2}>2 - Low</MenuItem>
+                <MenuItem value={1}>1 - Low</MenuItem>
+              </Select>
+            )}
+          </Mutation>
         </TableCell>
         <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
         <TableCell>{replication.filter}</TableCell>
