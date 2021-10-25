@@ -61,15 +61,6 @@ public class DdfRestClientFactory {
    * @param url the url for the client to connect to
    * @return a wrapped {@link WebClient}
    */
-  public DdfRestClient create(URL url) {
-    if (clientCache.containsKey(url.toString())) {
-      return clientCache.get(url.toString());
-    }
-    DdfRestClient client = new DdfRestClient(initializeClient(url));
-    clientCache.put(url.toString(), client);
-    return client;
-  }
-
   public DdfRestClient createWithSubject(URL url) {
     if (clientCache.containsKey(url.toString())) {
       return clientCache.get(url.toString());

@@ -39,8 +39,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.xml.namespace.QName;
+import net.opengis.cat.csw.v_2_0_2.CapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.ElementSetNameType;
 import net.opengis.cat.csw.v_2_0_2.ElementSetType;
+import net.opengis.cat.csw.v_2_0_2.GetCapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsType;
 import net.opengis.cat.csw.v_2_0_2.ObjectFactory;
 import net.opengis.cat.csw.v_2_0_2.QueryConstraintType;
@@ -99,17 +101,18 @@ public class DdfNodeAdapter implements NodeAdapter {
 
   @Override
   public boolean isAvailable() {
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
-
-    boolean available = false;
+    Csw csw = factory.getClient();
+    GetCapabilitiesType getCapabilitiesType = new GetCapabilitiesType();
+    getCapabilitiesType.setService("CSW");
     try {
-      available = client.ping();
-      LOGGER.debug("Server at {} available? {}", hostUrl, available);
+      CapabilitiesType response = csw.getCapabilities(getCapabilitiesType);
+      LOGGER.info(
+          "Successfully contacted CSW server version {} at {}", response.getVersion(), hostUrl);
     } catch (Exception e) {
-      LOGGER.warn("Error contacting server at {}", hostUrl, e);
-      available = false;
+      LOGGER.warn("Error contacting CSW Server at {}", hostUrl, e);
+      return false;
     }
-    return available;
+    return true;
   }
 
   private List<Metadata> getRecords(QueryRequest request) {
@@ -235,7 +238,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean createRequest(CreateRequest createRequest) {
     List<Metadata> metadata = createRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     metadata.forEach(this::prepareMetadata);
     return performRequestForEach(client::post, metadata);
   }
@@ -243,7 +246,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean updateRequest(UpdateRequest updateRequest) {
     List<Metadata> metadata = updateRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     metadata.forEach(this::prepareMetadata);
     return performRequestForEach(client::put, metadata);
   }
@@ -252,14 +255,14 @@ public class DdfNodeAdapter implements NodeAdapter {
   public boolean deleteRequest(DeleteRequest deleteRequest) {
     List<String> ids =
         deleteRequest.getMetadata().stream().map(Metadata::getId).collect(Collectors.toList());
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     return performRequestForEach(client::delete, ids);
   }
 
   @Override
   public ResourceResponse readResource(ResourceRequest resourceRequest) {
     Metadata metadata = resourceRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     Resource resource = client.get(metadata);
     return new ResourceResponseImpl(resource);
   }
