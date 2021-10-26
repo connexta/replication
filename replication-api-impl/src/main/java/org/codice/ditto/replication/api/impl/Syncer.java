@@ -95,8 +95,6 @@ public class Syncer {
 
     private boolean canceled = false;
 
-    private long bytesTransferred = 0;
-
     Job(
         NodeAdapter source,
         NodeAdapter destination,
@@ -152,6 +150,7 @@ public class Syncer {
         } catch (VirtualMachineError e) {
           throw e;
         } catch (Exception e) {
+          LOGGER.debug("Error replicating data.", e);
           final boolean sourceAvailable = source.isAvailable();
           final boolean destinationAvailable = destination.isAvailable();
           if (!sourceAvailable || !destinationAvailable) {
@@ -212,8 +211,7 @@ public class Syncer {
             metadataId);
         created = destination.createResource(new CreateStorageRequestImpl(resources));
         if (created) {
-          bytesTransferred += metadata.getResourceSize();
-          replicationStatus.incrementBytesTransferred(bytesTransferred);
+          replicationStatus.incrementBytesTransferred(metadata.getResourceSize());
         }
       } else {
         LOGGER.debug(
@@ -268,8 +266,7 @@ public class Syncer {
             metadataId);
         updated = destination.updateResource(new UpdateStorageRequestImpl(resources));
         if (updated) {
-          bytesTransferred += metadata.getResourceSize();
-          replicationStatus.incrementBytesTransferred(bytesTransferred);
+          replicationStatus.incrementBytesTransferred(metadata.getResourceSize());
         }
       } else if (shouldUpdateMetadata) {
         LOGGER.trace(

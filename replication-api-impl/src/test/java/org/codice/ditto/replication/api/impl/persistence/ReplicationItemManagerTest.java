@@ -82,6 +82,8 @@ public class ReplicationItemManagerTest {
 
   private static final String IS_REMOTE_MANAGED = "is-remote-managed";
 
+  private static final String PRIORITY = "priority";
+
   private PersistentStore mockPersistentStore;
 
   private ReplicationPersistentStore persistentStore;
@@ -126,6 +128,7 @@ public class ReplicationItemManagerTest {
     map.put(SUSPENDED, "false");
     map.put(DELETE_DATA, "false");
     map.put(DELETED, "false");
+    map.put(PRIORITY, num);
     map.put(DESCRIPTION, DESCRIPTION + num);
     map.put(VERSION, ReplicatorConfigImpl.CURRENT_VERSION);
     return map;

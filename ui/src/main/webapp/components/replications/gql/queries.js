@@ -34,6 +34,7 @@ export const allReplications = gql`
           }
         }
         biDirectional
+        priority
         filter
         suspended
         stats {

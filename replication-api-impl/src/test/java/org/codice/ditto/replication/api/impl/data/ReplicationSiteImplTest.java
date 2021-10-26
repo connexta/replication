@@ -29,6 +29,8 @@ public class ReplicationSiteImplTest {
 
   private static final String URL = "url";
 
+  private static final String TYPE = "type";
+
   private static final String VERSION = "version";
 
   private static final String TEST_ID = "testId";
@@ -36,6 +38,8 @@ public class ReplicationSiteImplTest {
   private static final String TEST_NAME = "testName";
 
   private static final String TEST_URL = "https://host:44";
+
+  private static final String TEST_TYPE = "testType";
 
   private ReplicationSiteImpl site;
 
@@ -73,6 +77,7 @@ public class ReplicationSiteImplTest {
     map.put(ID, TEST_ID);
     map.put(NAME, TEST_NAME);
     map.put(URL, TEST_URL);
+    map.put(TYPE, TEST_TYPE);
     map.put(VERSION, ReplicationSiteImpl.CURRENT_VERSION);
 
     site.fromMap(map);
@@ -80,7 +85,8 @@ public class ReplicationSiteImplTest {
     assertThat(site.getId(), equalTo(TEST_ID));
     assertThat(site.getName(), equalTo(TEST_NAME));
     assertThat(site.getUrl(), equalTo(TEST_URL));
-    assertThat(site.getVersion(), equalTo(2));
+    assertThat(site.getType(), equalTo(TEST_TYPE));
+    assertThat(site.getVersion(), equalTo(3));
   }
 
   @Test
@@ -97,7 +103,7 @@ public class ReplicationSiteImplTest {
     assertThat(site.getName(), is(TEST_NAME));
     assertThat(site.getUrl(), is(TEST_URL));
     assertThat(site.isRemoteManaged(), is(false));
-    assertThat(site.getVersion(), is(2));
+    assertThat(site.getVersion(), is(3));
   }
 
   private ReplicationSiteImpl loadSite(ReplicationSiteImpl site) {

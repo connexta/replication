@@ -13,8 +13,7 @@
  */
 package com.connexta.replication.data;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import org.codice.ddf.configuration.SystemBaseUrl;
 
 public class ReplicationConstants {
 
@@ -23,12 +22,7 @@ public class ReplicationConstants {
   private ReplicationConstants() {}
 
   public static String getCertAlias() {
-    try {
-      return System.getProperty(
-          "javax.net.ssl.certAlias", InetAddress.getLocalHost().getCanonicalHostName());
-    } catch (UnknownHostException e) {
-      return "localhost";
-    }
+    return System.getProperty("javax.net.ssl.certAlias", SystemBaseUrl.EXTERNAL.getHost());
   }
 
   public static String getKeystore() {

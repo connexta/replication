@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
@@ -30,6 +31,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import net.jodah.failsafe.Failsafe;
@@ -45,6 +47,8 @@ import org.codice.ditto.replication.api.SyncRequest;
 import org.codice.ditto.replication.api.data.ReplicationSite;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
+import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
+import org.codice.ditto.replication.api.impl.data.SyncRequestImpl;
 import org.codice.ditto.replication.api.persistence.ReplicatorHistoryManager;
 import org.codice.ditto.replication.api.persistence.SiteManager;
 import org.slf4j.Logger;
@@ -65,7 +69,10 @@ public class ReplicatorImpl implements Replicator {
   private final Syncer syncer;
 
   /** Does not contain duplicates */
-  private BlockingQueue<SyncRequest> pendingSyncRequests = new LinkedBlockingQueue<>();
+  private BlockingQueue<SyncRequest> pendingSyncRequests =
+      new PriorityBlockingQueue<>(
+          20,
+          (c1, c2) -> Integer.compare(c2.getConfig().getPriority(), c1.getConfig().getPriority()));
 
   /** Does not contain duplicates */
   private final BlockingQueue<SyncRequest> activeSyncRequests = new LinkedBlockingQueue<>();
@@ -247,6 +254,21 @@ public class ReplicatorImpl implements Replicator {
     } else {
       syncRequest.getStatus().setStatus(Status.PENDING);
       pendingSyncRequests.put(syncRequest);
+      SyncRequest lowestPriorityJob =
+          activeSyncRequests.stream()
+              .sorted(Comparator.comparingInt(c -> c.getConfig().getPriority()))
+              .findFirst()
+              .orElse(null);
+      if (lowestPriorityJob != null
+          && syncRequest.getConfig().getPriority() > lowestPriorityJob.getConfig().getPriority()) {
+        cancelSyncRequest(lowestPriorityJob);
+        SyncRequestImpl rerunRequest =
+            new SyncRequestImpl(
+                lowestPriorityJob.getConfig(),
+                new ReplicationStatusImpl(lowestPriorityJob.getConfig().getId()));
+        rerunRequest.getStatus().setStatus(Status.PENDING);
+        pendingSyncRequests.put(rerunRequest);
+      }
     }
   }
 
@@ -286,6 +308,10 @@ public class ReplicatorImpl implements Replicator {
     if (site.getType() == null) {
       determineType(site);
     }
+    if (site.getType() == null) {
+      throw new ReplicationException("Couldn't determine site type for " + site.getName());
+    }
+
     try {
       store =
           nodeAdapters

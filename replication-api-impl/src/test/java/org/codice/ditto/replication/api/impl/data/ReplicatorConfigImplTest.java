@@ -39,6 +39,8 @@ public class ReplicatorConfigImplTest {
 
   private static final String VERSION_KEY = "version";
 
+  private static final String PRIORITY_KEY = "priority";
+
   private ReplicatorConfigImpl config;
 
   @Before
@@ -55,6 +57,7 @@ public class ReplicatorConfigImplTest {
     config.setFilter("filter");
     config.setBidirectional(true);
     config.setFailureRetryCount(5);
+    config.setPriority(1);
 
     Map<String, Object> props = config.toMap();
 
@@ -65,7 +68,8 @@ public class ReplicatorConfigImplTest {
     assertThat(props.get(FILTER_KEY), is("filter"));
     assertThat(props.get(BIDIRECTIONAL_KEY), is("true"));
     assertThat(props.get(RETRY_COUNT_KEY), is(5));
-    assertThat(props.get(VERSION_KEY), is(1));
+    assertThat(props.get(VERSION_KEY), is(2));
+    assertThat(props.get(PRIORITY_KEY), is(1));
   }
 
   @Test
@@ -90,5 +94,6 @@ public class ReplicatorConfigImplTest {
     assertThat(config.isBidirectional(), is(true));
     assertThat(config.getFailureRetryCount(), is(5));
     assertThat(config.getVersion(), is(1));
+    assertThat(config.getPriority(), is(6));
   }
 }

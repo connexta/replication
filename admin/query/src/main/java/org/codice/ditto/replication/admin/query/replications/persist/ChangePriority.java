@@ -17,67 +17,47 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import java.util.Set;
+import javax.ws.rs.NotFoundException;
 import org.codice.ddf.admin.api.Field;
 import org.codice.ddf.admin.api.fields.FunctionField;
 import org.codice.ddf.admin.common.fields.base.BaseFunctionField;
 import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.common.fields.base.scalar.IntegerField;
-import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 import org.codice.ddf.admin.common.fields.common.PidField;
+import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
 
-public class UpdateReplication extends BaseFunctionField<BooleanField> {
+public class ChangePriority extends BaseFunctionField<BooleanField> {
 
-  public static final String FIELD_NAME = "updateReplication";
+  public static final String FIELD_NAME = "changePriority";
 
-  public static final String DESCRIPTION = "Updates a replication.";
+  public static final String DESCRIPTION = "Changes the priority of a replication job";
 
   public static final BooleanField RETURN_TYPE = new BooleanField();
 
   private PidField id;
 
-  private StringField name;
-
-  private PidField source;
-
-  private PidField destination;
-
-  private StringField filter;
-
-  private BooleanField biDirectional;
-
-  private BooleanField suspended;
-
   private IntegerField priority;
 
   private ReplicationUtils replicationUtils;
 
-  public UpdateReplication(ReplicationUtils replicationUtils) {
+  public ChangePriority(ReplicationUtils replicationUtils) {
     super(FIELD_NAME, DESCRIPTION);
     this.replicationUtils = replicationUtils;
     id = new PidField("id");
-    name = new StringField("name");
-    source = new PidField("sourceId");
-    destination = new PidField("destinationId");
-    filter = new StringField("filter");
-    biDirectional = new BooleanField("biDirectional");
-    suspended = new BooleanField("suspended");
     priority = new IntegerField("priority");
-
     id.isRequired(true);
+    priority.isRequired(true);
   }
 
   @Override
   public BooleanField performFunction() {
-    return new BooleanField(
+    BooleanField successful = new BooleanField();
+    successful.setValue(
         replicationUtils.updateReplication(
-            id.getValue(),
-            name.getValue(),
-            source.getValue(),
-            destination.getValue(),
-            filter.getValue(),
-            biDirectional.getValue(),
-            priority.getValue()));
+            id.getValue(), null, null, null, null, null, priority.getValue()));
+
+    return successful;
   }
 
   @Override
@@ -87,17 +67,29 @@ public class UpdateReplication extends BaseFunctionField<BooleanField> {
 
   @Override
   public List<Field> getArguments() {
-    return ImmutableList.of(
-        id, name, source, destination, filter, biDirectional, suspended, priority);
+    return ImmutableList.of(id, priority);
   }
 
   @Override
   public FunctionField<BooleanField> newInstance() {
-    return new UpdateReplication(replicationUtils);
+    return new ChangePriority(replicationUtils);
   }
 
   @Override
   public Set<String> getFunctionErrorCodes() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(ReplicationMessages.CONFIG_DOES_NOT_EXIST);
+  }
+
+  @Override
+  public void validate() {
+    super.validate();
+    if (containsErrorMsgs()) {
+      return;
+    }
+    try {
+      replicationUtils.getConfigForId(id.getValue());
+    } catch (NotFoundException e) {
+      addErrorMessage(ReplicationMessages.configDoesNotExist());
+    }
   }
 }

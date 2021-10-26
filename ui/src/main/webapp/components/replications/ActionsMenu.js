@@ -37,7 +37,7 @@ import Confirmable from '../common/Confirmable'
 const DeleteReplication = withSnackbar(
   class extends React.Component {
     state = {
-      deleteData: false,
+      deleteData: true,
     }
 
     handleCheck = name => event => {

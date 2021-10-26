@@ -121,37 +121,7 @@ public class DdfNodeAdapter implements NodeAdapter {
           "============================ START CSW GetRecords ============================");
       LOGGER.trace("CSW cql query: {}", request.getCql());
       Csw csw = factory.getClient();
-
-      GetRecordsType getRecordsType = new GetRecordsType();
-      getRecordsType.setVersion(Constants.VERSION_2_0_2);
-      getRecordsType.setService("CSW");
-      getRecordsType.setResultType(ResultType.RESULTS);
-      getRecordsType.setStartPosition(BigInteger.valueOf(request.getStartIndex()));
-      getRecordsType.setMaxRecords(BigInteger.valueOf(request.getPageSize()));
-      getRecordsType.setOutputFormat(MediaType.APPLICATION_XML);
-      getRecordsType.setOutputSchema(Constants.METACARD_SCHEMA);
-      QueryType queryType = new QueryType();
-      queryType.setTypeNames(
-          Arrays.asList(
-              new QName(Constants.CSW_OUTPUT_SCHEMA, "Record", Constants.CSW_NAMESPACE_PREFIX)));
-
-      ElementSetNameType elementSetNameType = new ElementSetNameType();
-      elementSetNameType.setValue(ElementSetType.FULL);
-      queryType.setElementSetName(elementSetNameType);
-      SortByType cswSortBy = new SortByType();
-      SortPropertyType sortProperty = new SortPropertyType();
-      PropertyNameType propertyName = new PropertyNameType();
-      propertyName.setContent(Arrays.asList(Constants.METACARD_MODIFIED));
-      sortProperty.setPropertyName(propertyName);
-      sortProperty.setSortOrder(SortOrderType.ASC);
-      cswSortBy.getSortProperty().add(sortProperty);
-      queryType.setSortBy(cswSortBy);
-      QueryConstraintType queryConstraintType = new QueryConstraintType();
-      queryConstraintType.setVersion(Constants.CONSTRAINT_VERSION);
-      queryConstraintType.setCqlText(request.getCql());
-      queryType.setConstraint(queryConstraintType);
-      ObjectFactory objectFactory = new ObjectFactory();
-      getRecordsType.setAbstractQuery(objectFactory.createQuery(queryType));
+      GetRecordsType getRecordsType = getCswQuery(request, ResultType.RESULTS);
 
       CswRecordCollection response = csw.getRecords(getRecordsType);
       LOGGER.debug("Csw query returned {} results", response.getCswRecords().size());
@@ -161,6 +131,52 @@ public class DdfNodeAdapter implements NodeAdapter {
     } catch (Exception e) {
       throw new AdapterException("Error executing csw getRecords", e);
     }
+  }
+
+  public long checkForDatasets(QueryRequest request) {
+    Csw csw = factory.getClient();
+
+    GetRecordsType getRecordsType = getCswQuery(request, ResultType.HITS);
+    try {
+      return csw.getRecords(getRecordsType).getNumberOfRecordsMatched();
+    } catch (Exception e) {
+      LOGGER.debug("Error getting hit count.", e);
+      return -1;
+    }
+  }
+
+  private GetRecordsType getCswQuery(QueryRequest request, ResultType type) {
+    GetRecordsType getRecordsType = new GetRecordsType();
+    getRecordsType.setVersion(Constants.VERSION_2_0_2);
+    getRecordsType.setService("CSW");
+    getRecordsType.setResultType(type);
+    getRecordsType.setStartPosition(BigInteger.valueOf(request.getStartIndex()));
+    getRecordsType.setMaxRecords(BigInteger.valueOf(request.getPageSize()));
+    getRecordsType.setOutputFormat(MediaType.APPLICATION_XML);
+    getRecordsType.setOutputSchema(Constants.METACARD_SCHEMA);
+    QueryType queryType = new QueryType();
+    queryType.setTypeNames(
+        Arrays.asList(
+            new QName(Constants.CSW_OUTPUT_SCHEMA, "Record", Constants.CSW_NAMESPACE_PREFIX)));
+
+    ElementSetNameType elementSetNameType = new ElementSetNameType();
+    elementSetNameType.setValue(ElementSetType.FULL);
+    queryType.setElementSetName(elementSetNameType);
+    SortByType cswSortBy = new SortByType();
+    SortPropertyType sortProperty = new SortPropertyType();
+    PropertyNameType propertyName = new PropertyNameType();
+    propertyName.setContent(Arrays.asList(Constants.METACARD_MODIFIED));
+    sortProperty.setPropertyName(propertyName);
+    sortProperty.setSortOrder(SortOrderType.ASC);
+    cswSortBy.getSortProperty().add(sortProperty);
+    queryType.setSortBy(cswSortBy);
+    QueryConstraintType queryConstraintType = new QueryConstraintType();
+    queryConstraintType.setVersion(Constants.CONSTRAINT_VERSION);
+    queryConstraintType.setCqlText(request.getCql());
+    queryType.setConstraint(queryConstraintType);
+    ObjectFactory objectFactory = new ObjectFactory();
+    getRecordsType.setAbstractQuery(objectFactory.createQuery(queryType));
+    return getRecordsType;
   }
 
   @Override
@@ -206,10 +222,10 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean exists(Metadata metadata) {
     try {
-      return !getRecords(
+      return checkForDatasets(
               new QueryRequestImpl(
                   CqlBuilder.equalTo(Constants.METACARD_ID, metadata.getId()), 1, 1))
-          .isEmpty();
+          > 0;
     } catch (Exception e) {
       throw new AdapterException(
           String.format(
@@ -222,7 +238,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean createRequest(CreateRequest createRequest) {
     List<Metadata> metadata = createRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     metadata.forEach(this::prepareMetadata);
     return performRequestForEach(client::post, metadata);
   }
@@ -230,7 +246,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   @Override
   public boolean updateRequest(UpdateRequest updateRequest) {
     List<Metadata> metadata = updateRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     metadata.forEach(this::prepareMetadata);
     return performRequestForEach(client::put, metadata);
   }
@@ -239,14 +255,14 @@ public class DdfNodeAdapter implements NodeAdapter {
   public boolean deleteRequest(DeleteRequest deleteRequest) {
     List<String> ids =
         deleteRequest.getMetadata().stream().map(Metadata::getId).collect(Collectors.toList());
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     return performRequestForEach(client::delete, ids);
   }
 
   @Override
   public ResourceResponse readResource(ResourceRequest resourceRequest) {
     Metadata metadata = resourceRequest.getMetadata();
-    DdfRestClient client = ddfRestClientFactory.create(hostUrl);
+    DdfRestClient client = ddfRestClientFactory.createWithSubject(hostUrl);
     Resource resource = client.get(metadata);
     return new ResourceResponseImpl(resource);
   }

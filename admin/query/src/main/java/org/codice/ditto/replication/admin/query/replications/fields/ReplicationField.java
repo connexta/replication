@@ -53,6 +53,8 @@ public class ReplicationField extends BaseObjectField {
 
   private IntegerField version;
 
+  private IntegerField priority;
+
   public ReplicationField() {
     super("replication", "ReplicationConfig", DESCRIPTION);
     id = new PidField("id");
@@ -64,6 +66,7 @@ public class ReplicationField extends BaseObjectField {
     suspended = new BooleanField("suspended");
     modified = new Iso8601Field("modified");
     version = new IntegerField("version");
+    priority = new IntegerField("priority");
     stats = new ReplicationStats();
   }
 
@@ -127,6 +130,11 @@ public class ReplicationField extends BaseObjectField {
     return this;
   }
 
+  public ReplicationField priority(int priority) {
+    this.priority.setValue(priority);
+    return this;
+  }
+
   private Instant getInstantOrNull(Date date) {
     if (date != null) {
       return date.toInstant();
@@ -183,10 +191,24 @@ public class ReplicationField extends BaseObjectField {
     return version;
   }
 
+  public IntegerField priority() {
+    return priority;
+  }
+
   @Override
   public List<Field> getFields() {
     return ImmutableList.of(
-        id, name, source, destination, filter, biDirectional, suspended, modified, version, stats);
+        id,
+        name,
+        source,
+        destination,
+        filter,
+        biDirectional,
+        suspended,
+        modified,
+        version,
+        priority,
+        stats);
   }
 
   public static class ListImpl extends BaseListField<ReplicationField> {

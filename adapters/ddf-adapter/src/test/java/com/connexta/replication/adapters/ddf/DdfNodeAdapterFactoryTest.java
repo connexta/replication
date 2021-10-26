@@ -22,9 +22,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.connexta.replication.adapters.ddf.csw.Csw;
-import com.connexta.replication.adapters.ddf.rest.DdfRestClientFactory;
 import com.connexta.replication.data.ReplicationConstants;
-import java.net.InetAddress;
 import java.net.URL;
 import java.util.List;
 import org.apache.cxf.interceptor.Interceptor;
@@ -41,8 +39,6 @@ public class DdfNodeAdapterFactoryTest {
 
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
-
-  @Mock DdfRestClientFactory ddfRestClientFactory;
 
   @Mock ClientFactoryFactory clientFactoryFactory;
 
@@ -62,7 +58,7 @@ public class DdfNodeAdapterFactoryTest {
             eq(false),
             eq(30000),
             eq(60000),
-            eq(InetAddress.getLocalHost().getCanonicalHostName()),
+            eq("localhost"),
             eq("/my/keystore.jks"),
             eq(ReplicationConstants.TLS_PROTOCOL));
   }

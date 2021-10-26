@@ -20,6 +20,7 @@ export const addReplication = gql`
     $destinationId: Pid!
     $filter: String!
     $biDirectional: Boolean
+    $priority: Int!
   ) {
     createReplication(
       name: $name
@@ -27,6 +28,7 @@ export const addReplication = gql`
       destinationId: $destinationId
       filter: $filter
       biDirectional: $biDirectional
+      priority: $priority
     ) {
       name
       id
@@ -45,6 +47,7 @@ export const addReplication = gql`
         }
       }
       biDirectional
+      priority
       filter
       suspended
       stats {
@@ -81,5 +84,11 @@ export const deleteReplication = gql`
 export const runReplication = gql`
   mutation runReplication($id: Pid!) {
     runReplication(id: $id)
+  }
+`
+
+export const changePriority = gql`
+  mutation changePriority($id: Pid!, $priority: Int!) {
+    changePriority(id: $id, priority: $priority)
   }
 `

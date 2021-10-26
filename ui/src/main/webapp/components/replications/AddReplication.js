@@ -17,6 +17,7 @@ import {
   CircularProgress,
   Typography,
   Checkbox,
+  Select,
   FormControlLabel,
   FormGroup,
   Tooltip,
@@ -95,6 +96,7 @@ const defaultFormState = {
   destinationId: '',
   filter: '',
   biDirectional: false,
+  priority: 5,
   filterErrorText: '',
   nameErrorText: '',
   disableSave: false,
@@ -134,6 +136,10 @@ class AddReplication extends React.Component {
 
   handleSelectorChange = option => {
     this.setState({ filter: option ? option.value : '' })
+  }
+
+  handlePriorityChange = name => event => {
+    this.setState({ [name]: event.target.value })
   }
 
   handleCheck = name => event => {
@@ -181,6 +187,7 @@ class AddReplication extends React.Component {
       destinationId,
       filter,
       biDirectional,
+      priority,
       filterErrorText,
       nameErrorText,
       disableSave = false,
@@ -261,6 +268,32 @@ class AddReplication extends React.Component {
                         </Tooltip>
                       </div>
                     </FormGroup>
+                    <FormGroup>
+                      <div style={{ display: 'flex' }}>
+                        <FormControlLabel
+                          style={{ padding: '0px 0px 16px 16px' }}
+                          label='Priority'
+                          control={
+                            <Select
+                              style={{ 'padding-right': '12px' }}
+                              value={priority}
+                              onChange={this.handlePriorityChange('priority')}
+                            >
+                              <MenuItem value={10}>10 - High</MenuItem>
+                              <MenuItem value={9}>9 - High</MenuItem>
+                              <MenuItem value={8}>8 - High</MenuItem>
+                              <MenuItem value={7}>7 - Medium</MenuItem>
+                              <MenuItem value={6}>6 - Medium</MenuItem>
+                              <MenuItem value={5}>5 - Medium</MenuItem>
+                              <MenuItem value={4}>4 - Medium</MenuItem>
+                              <MenuItem value={3}>3 - Low</MenuItem>
+                              <MenuItem value={2}>2 - Low</MenuItem>
+                              <MenuItem value={1}>1 - Low</MenuItem>
+                            </Select>
+                          }
+                        />
+                      </div>
+                    </FormGroup>
                   </div>
                 )
               }}
@@ -319,6 +352,7 @@ class AddReplication extends React.Component {
                           destinationId: destinationId,
                           filter: filter,
                           biDirectional: biDirectional,
+                          priority: priority,
                         },
                         update: (store, { data: { createReplication } }) => {
                           const data = store.readQuery({

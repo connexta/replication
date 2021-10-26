@@ -86,30 +86,6 @@ public class DdfRestClientFactoryTest {
   }
 
   @Test
-  public void create() throws Exception {
-    when(secureCxfClientFactory.getWebClient()).thenReturn(webClient);
-    DdfRestClientFactory factory =
-        new DdfRestClientFactory(
-            clientFactory, DEFAULT_CONNECTION_TIMEOUT_MILLIS, DEFAULT_RECEIVE_TIMEOUT_MILLIS);
-    factory.create(new URL("https://host:1234/context"));
-    factory.create(new URL("https://host:1234/context"));
-    verify(clientFactory, times(1))
-        .getSecureCxfClientFactory(
-            "https://host:1234/context/catalog",
-            RESTService.class,
-            null,
-            null,
-            false,
-            false,
-            DEFAULT_CONNECTION_TIMEOUT_MILLIS,
-            DEFAULT_RECEIVE_TIMEOUT_MILLIS,
-            "myAlias",
-            "/my/keystore.jks",
-            ReplicationConstants.TLS_PROTOCOL);
-    verify(secureCxfClientFactory).getWebClient();
-  }
-
-  @Test
   public void createWithSubject() throws Exception {
     WebClient whoamiClient = mock(WebClient.class);
     when(secureCxfClientFactory.getWebClient()).thenReturn(whoamiClient, webClient);

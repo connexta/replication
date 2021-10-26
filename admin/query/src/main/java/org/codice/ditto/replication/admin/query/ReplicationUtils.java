@@ -219,7 +219,8 @@ public class ReplicationUtils {
       String destinationId,
       String filter,
       Boolean biDirectional,
-      boolean suspended) {
+      boolean suspended,
+      int priority) {
     ReplicatorConfig config = configManager.create();
     config.setName(name);
     config.setSource(sourceId);
@@ -228,6 +229,7 @@ public class ReplicationUtils {
     config.setBidirectional(biDirectional);
     config.setFailureRetryCount(5);
     config.setSuspended(suspended);
+    config.setPriority(priority);
     configManager.save(config);
 
     return getReplicationFieldForConfig(config);
@@ -239,7 +241,8 @@ public class ReplicationUtils {
       @Nullable String sourceId,
       @Nullable String destinationId,
       @Nullable String filter,
-      @Nullable Boolean biDirectional) {
+      @Nullable Boolean biDirectional,
+      @Nullable Integer priority) {
     ReplicatorConfig config = configManager.get(id);
 
     setIfPresent(config::setName, name);
@@ -247,7 +250,7 @@ public class ReplicationUtils {
     setIfPresent(config::setDestination, destinationId);
     setIfPresent(config::setFilter, filter);
     setIfPresent(config::setBidirectional, biDirectional);
-
+    setIfPresent(config::setPriority, priority);
     try {
       configManager.save(config);
       return true;
@@ -273,7 +276,8 @@ public class ReplicationUtils {
         .filter(config.getFilter())
         .biDirectional(config.isBidirectional())
         .version(config.getVersion())
-        .suspended(config.isSuspended());
+        .suspended(config.isSuspended())
+        .priority(config.getPriority());
     ReplicationStats stats = new ReplicationStats();
     ReplicationStatus currentStatus = null;
     try {

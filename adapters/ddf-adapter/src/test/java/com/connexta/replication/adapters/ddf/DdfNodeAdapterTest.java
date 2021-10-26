@@ -49,7 +49,6 @@ import javax.ws.rs.core.Response.StatusType;
 import net.opengis.cat.csw.v_2_0_2.CapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetCapabilitiesType;
 import net.opengis.cat.csw.v_2_0_2.GetRecordsType;
-import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
 import org.codice.ditto.replication.api.AdapterException;
 import org.codice.ditto.replication.api.data.Metadata;
@@ -65,7 +64,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class DdfNodeAdapterTest {
   @Mock DdfRestClientFactory ddfRestClientFactory;
-  @Mock ClientFactoryFactory clientFactory;
 
   @Mock DdfRestClient restClient;
 
@@ -77,7 +75,6 @@ public class DdfNodeAdapterTest {
 
   @Before
   public void setUp() throws Exception {
-    when(ddfRestClientFactory.create(any(URL.class))).thenReturn(restClient);
     when(ddfRestClientFactory.createWithSubject(any(URL.class))).thenReturn(restClient);
     when(secureFactory.getClient()).thenReturn(csw);
     adapter =
@@ -156,8 +153,8 @@ public class DdfNodeAdapterTest {
   @Test
   public void exists() throws Exception {
     CswRecordCollection collection = new CswRecordCollection();
+    collection.setNumberOfRecordsMatched(1);
     Metadata metadata = getMetadata();
-    collection.setCswRecords(Collections.singletonList(metadata));
     when(csw.getRecords(any(GetRecordsType.class))).thenReturn(collection);
     assertThat(adapter.exists(metadata), is(true));
   }
@@ -165,6 +162,7 @@ public class DdfNodeAdapterTest {
   @Test
   public void doesNotExist() throws Exception {
     CswRecordCollection collection = new CswRecordCollection();
+    collection.setNumberOfRecordsMatched(0);
     when(csw.getRecords(any(GetRecordsType.class))).thenReturn(collection);
     assertThat(adapter.exists(getMetadata()), is(false));
   }
