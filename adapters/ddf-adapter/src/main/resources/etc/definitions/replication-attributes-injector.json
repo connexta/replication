@@ -1,4 +1,26 @@
 {
+  "attributeTypes": {
+    "replication.origins": {
+      "type": "STRING_TYPE",
+      "stored": true,
+      "indexed": true,
+      "tokenized": false,
+      "multivalued": true
+    }
+  },
+  "metacardTypes": [
+    {
+      "type": "replication",
+      "extendsTypes": [
+        "core"
+      ],
+      "attributes": {
+        "replication.origins": {
+          "required": true
+        }
+      }
+    }
+  ],
   "inject": [
     {
       "attribute": "replication.origins"
