@@ -34,11 +34,31 @@
             <groupId>replication</groupId>
             <artifactId>replication-api</artifactId>
             <version>${project.version}</version>
+          <exclusions>
+            <exclusion>
+              <artifactId>ehcache</artifactId>
+              <groupId>org.ehcache</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>json-smart</artifactId>
+              <groupId>net.minidev</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>bcprov-jdk15on</artifactId>
+              <groupId>org.bouncycastle</groupId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
             <groupId>replication</groupId>
             <artifactId>replication-api-impl</artifactId>
             <version>${project.version}</version>
+          <exclusions>
+            <exclusion>
+              <artifactId>bcprov-jdk15on</artifactId>
+              <groupId>org.bouncycastle</groupId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
             <groupId>ddf.catalog.core</groupId>
@@ -54,6 +74,38 @@
                     <artifactId>xmlsec</artifactId>
                     <groupId>org.apache.santuario</groupId>
                 </exclusion>
+              <exclusion>
+                <artifactId>shiro-cache</artifactId>
+                <groupId>org.apache.shiro</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>shiro-config-core</artifactId>
+                <groupId>org.apache.shiro</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>json-smart</artifactId>
+                <groupId>net.minidev</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <groupId>org.bouncycastle</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jdom2</artifactId>
+                <groupId>org.jdom</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>hazelcast</artifactId>
+                <groupId>com.hazelcast</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>platform-configuration</artifactId>
+                <groupId>ddf.platform</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>commons-compress</artifactId>
+                <groupId>org.apache.commons</groupId>
+              </exclusion>
             </exclusions>
         </dependency>
         <dependency>

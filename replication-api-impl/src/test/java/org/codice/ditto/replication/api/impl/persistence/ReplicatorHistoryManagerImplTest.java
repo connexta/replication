@@ -20,10 +20,10 @@ import static org.mockito.Mockito.*;
 
 import java.util.Date;
 import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.Status;
 import org.codice.ditto.replication.api.data.ReplicationStatus;
 import org.codice.ditto.replication.api.impl.data.ReplicationStatusImpl;
+import org.codice.ditto.replication.api.persistence.NotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

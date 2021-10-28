@@ -27,6 +27,24 @@
             <groupId>replication</groupId>
             <artifactId>replication-api</artifactId>
             <version>${project.version}</version>
+          <exclusions>
+            <exclusion>
+              <artifactId>ehcache</artifactId>
+              <groupId>org.ehcache</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>json-smart</artifactId>
+              <groupId>net.minidev</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>opensaml-security-api</artifactId>
+              <groupId>org.opensaml</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>security-core-impl</artifactId>
+              <groupId>ddf.security.core</groupId>
+            </exclusion>
+          </exclusions>
         </dependency>
 
         <!-- Start DDF Dependencies -->
@@ -34,6 +52,20 @@
             <groupId>ddf.security.core</groupId>
             <artifactId>security-core-api</artifactId>
             <version>${ddf.version}</version>
+          <exclusions>
+            <exclusion>
+              <artifactId>shiro-cache</artifactId>
+              <groupId>org.apache.shiro</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>shiro-core</artifactId>
+              <groupId>org.apache.shiro</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>bcprov-jdk15on</artifactId>
+              <groupId>org.bouncycastle</groupId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
             <groupId>ddf.platform.util</groupId>
@@ -43,6 +75,14 @@
                 <exclusion>
                     <groupId>net.jodah</groupId>
                     <artifactId>failsafe</artifactId>
+                </exclusion>
+              <exclusion>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <groupId>org.bouncycastle</groupId>
+              </exclusion>
+                <exclusion>
+                    <artifactId>spring-core</artifactId>
+                    <groupId>org.springframework</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -65,9 +105,32 @@
             <groupId>ddf.catalog.core</groupId>
             <artifactId>filter-proxy</artifactId>
             <version>${ddf.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jdom2</artifactId>
+                    <groupId>org.jdom</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>net.opengis.fes</artifactId>
+                    <groupId>org.geotools.ogc</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org.w3.xlink</artifactId>
+                    <groupId>org.geotools.ogc</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>geotools-suite</artifactId>
+                    <groupId>org.codice.thirdparty</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- End DDF Dependencies -->
 
+        <dependency>
+            <artifactId>shiro-core</artifactId>
+            <groupId>org.apache.shiro</groupId>
+            <version>1.8.0</version>
+        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>

@@ -19,13 +19,13 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.ws.rs.NotFoundException;
 import org.codice.ddf.admin.api.report.ErrorMessage;
 import org.codice.ddf.admin.api.report.FunctionReport;
 import org.codice.ddf.admin.common.report.message.DefaultMessages;
 import org.codice.ditto.replication.admin.query.ReplicationMessages;
 import org.codice.ditto.replication.admin.query.ReplicationUtils;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
+import org.codice.ditto.replication.api.persistence.NotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

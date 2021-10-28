@@ -32,6 +32,24 @@
       <artifactId>replication-api</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>shiro-core</artifactId>
+          <groupId>org.apache.shiro</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>ehcache</artifactId>
+          <groupId>org.ehcache</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>json-smart</artifactId>
+          <groupId>net.minidev</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>cxf-core</artifactId>
+          <groupId>org.apache.cxf</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>replication</groupId>
@@ -45,11 +63,62 @@
       <groupId>ddf.platform.security</groupId>
       <artifactId>security-rest-clientapi</artifactId>
       <version>${ddf.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>shiro-core</artifactId>
+          <groupId>org.apache.shiro</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>cxf-core</artifactId>
+          <groupId>org.apache.cxf</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>spring-core</artifactId>
+          <groupId>org.springframework</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>cxf-rt-security</artifactId>
+          <groupId>org.apache.cxf</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>cxf-rt-rs-client</artifactId>
+          <groupId>org.apache.cxf</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <artifactId>cxf-core</artifactId>
+      <groupId>org.apache.cxf</groupId>
+      <version>${cxf.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>cxf-rt-rs-client</artifactId>
+      <groupId>org.apache.cxf</groupId>
+      <version>${cxf.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>shiro-core</artifactId>
+      <groupId>org.apache.shiro</groupId>
+      <version>${shiro.version}</version>
     </dependency>
     <dependency>
       <groupId>ddf.security.core</groupId>
       <artifactId>security-core-api</artifactId>
       <version>${ddf.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>shiro-core</artifactId>
+          <groupId>org.apache.shiro</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>shiro-cache</artifactId>
+          <groupId>org.apache.shiro</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>bcprov-jdk15on</artifactId>
+          <groupId>org.bouncycastle</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.codice.ddf.spatial</groupId>
@@ -60,6 +129,16 @@
       <groupId>ddf.platform.util</groupId>
       <artifactId>platform-util</artifactId>
       <version>${ddf.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>spring-core</artifactId>
+          <groupId>org.springframework</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>bcprov-jdk15on</artifactId>
+          <groupId>org.bouncycastle</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- XML dependencies -->

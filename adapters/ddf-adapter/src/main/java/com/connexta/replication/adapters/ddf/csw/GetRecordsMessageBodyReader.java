@@ -63,6 +63,7 @@ public class GetRecordsMessageBodyReader implements MessageBodyReader<CswRecordC
             + Constants.NAMESPACE_DELIMITER
             + Constants.GET_RECORDS_RESPONSE,
         CswRecordCollection.class);
+    xstream.allowTypesByWildcard(new String[] {"com.connexta.replication.adapters.ddf.csw.**"});
     buildArguments();
   }
 

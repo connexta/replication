@@ -25,9 +25,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.data.ReplicatorConfig;
 import org.codice.ditto.replication.api.impl.data.ReplicatorConfigImpl;
+import org.codice.ditto.replication.api.persistence.NotFoundException;
 import org.codice.junit.rules.RestoreSystemProperties;
 import org.junit.Before;
 import org.junit.Rule;

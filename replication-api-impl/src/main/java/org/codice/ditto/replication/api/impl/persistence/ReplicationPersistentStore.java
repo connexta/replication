@@ -17,7 +17,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ddf.persistence.PersistentItem;
@@ -25,6 +24,7 @@ import org.codice.ddf.persistence.PersistentStore;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.Persistable;
 import org.codice.ditto.replication.api.impl.data.AbstractPersistable;
+import org.codice.ditto.replication.api.persistence.NotFoundException;
 
 /**
  * ReplicationPersistentStore uses {@link Persistable}s to alter and retrieve data in a {@link

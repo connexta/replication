@@ -65,6 +65,12 @@
           <groupId>org.geotools</groupId>
           <artifactId>gt-cql</artifactId>
           <version>${org.geotools.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jdom2</artifactId>
+                    <groupId>org.jdom</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
