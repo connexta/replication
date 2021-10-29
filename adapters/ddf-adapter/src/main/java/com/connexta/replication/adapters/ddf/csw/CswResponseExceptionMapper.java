@@ -16,7 +16,7 @@ package com.connexta.replication.adapters.ddf.csw;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.ws.rs.core.Response;
-import org.apache.cxf.helpers.IOUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.client.ResponseExceptionMapper;
 import org.codice.ditto.replication.api.AdapterException;
 

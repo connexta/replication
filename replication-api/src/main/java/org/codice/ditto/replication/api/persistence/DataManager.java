@@ -14,7 +14,6 @@
 package org.codice.ditto.replication.api.persistence;
 
 import java.util.stream.Stream;
-import javax.ws.rs.NotFoundException;
 import org.codice.ditto.replication.api.ReplicationPersistenceException;
 import org.codice.ditto.replication.api.data.Persistable;
 
