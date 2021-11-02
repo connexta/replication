@@ -17,7 +17,7 @@
     <parent>
         <groupId>replication</groupId>
         <artifactId>replication</artifactId>
-        <version>0.3.3</version>
+        <version>0.3.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>replication-commands</artifactId>
