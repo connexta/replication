@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
@@ -165,14 +166,22 @@ public class ReplicatorImpl implements Replicator {
           try (NodeAdapter store1 = node1;
               NodeAdapter store2 = node2) {
             Status pullStatus = Status.SUCCESS;
+            Date latestDate = null;
             if (config.isBidirectional()) {
               status.setStatus(Status.PULL_IN_PROGRESS);
               pullStatus = sync(store2, store1, config, status);
+              latestDate = status.getLastMetadataModified();
             }
 
             if (pullStatus.equals(Status.SUCCESS)) {
               status.setStatus(Status.PUSH_IN_PROGRESS);
               sync(store1, store2, config, status);
+              // in bidirectional config we need to make sure we don't advance the search timestamp
+              // past the pull timestamp which could result in missing results
+              if (latestDate != null && status.getLastMetadataModified().after(latestDate)) {
+                status.setLastMetadataModified(
+                    status.getStatus() == Status.SUCCESS ? latestDate : null);
+              }
             }
           } catch (Exception e) {
             final Status failureStatus = Status.FAILURE;
@@ -208,6 +217,13 @@ public class ReplicatorImpl implements Replicator {
       LOGGER.debug("Failed to remove sync request {} from the active queue", syncRequest);
     }
     LOGGER.trace("Adding replication event to history: {}", status);
+    if (status.getLastMetadataModified() != null) {
+      // pull back 1 minute to account for solr commit time to be safe. We will end up pulling a few
+      // extra metacards
+      // occationally but this will ensure we don't miss any chagnes
+      status.setLastMetadataModified(
+          new Date(status.getLastMetadataModified().getTime() - TimeUnit.SECONDS.toMillis(60)));
+    }
     history.save(status);
     LOGGER.trace("Successfully added replication event to history: {}", status);
   }

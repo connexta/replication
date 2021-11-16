@@ -65,6 +65,18 @@ class ReplicationRow extends React.Component {
     this.setState({ anchor: null })
   }
 
+  formatSorts = (sortStr) => {
+    //the "json" string is poorly formatted so we need to parse it manually
+    let str = sortStr.substr(1,sortStr.length -2)
+    let sortArray = str.split("},")
+    let sorts = ''
+    sortArray.forEach((sort)=>{
+      let parts = sort.replace('{','').replace('}','').split(',')
+      sorts += parts[0].substr(parts[0].indexOf("=")+1)+ "->"+parts [1].substr(parts[1].indexOf("=")+1)+" \n"
+    })
+    return sorts
+  }
+
   render() {
     const { replication } = this.props
 
@@ -118,7 +130,8 @@ class ReplicationRow extends React.Component {
           </Mutation>
         </TableCell>
         <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
-        <TableCell>{replication.filter}</TableCell>
+        <TableCell>{replication.filter.split('::')[0]}</TableCell>
+        <TableCell>{replication.filter.split('::').length > 1?this.formatSorts(replication.filter.split('::')[1]):'metacard.modified: assending'}</TableCell>
         <TableCell>
           {replication.stats.pullCount + replication.stats.pushCount}
         </TableCell>
@@ -172,6 +185,7 @@ class ReplicationsTable extends React.Component {
               <TableCell>Priority</TableCell>
               <TableCell>Bidirectional</TableCell>
               <TableCell>Filter</TableCell>
+              <TableCell>Sorting</TableCell>
               <TableCell>Items Transferred</TableCell>
               <TableCell>Data Transferred</TableCell>
               <TableCell>Last Run</TableCell>

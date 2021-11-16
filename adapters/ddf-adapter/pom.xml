@@ -140,7 +140,11 @@
         </exclusion>
       </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>ddf.lib</groupId>
+      <artifactId>gson-support</artifactId>
+      <version>${ddf.version}</version>
+    </dependency>
     <!-- XML dependencies -->
     <dependency>
       <groupId>io.github.soc</groupId>
