@@ -23,6 +23,8 @@ import com.connexta.replication.data.QueryRequestImpl;
 import com.connexta.replication.data.QueryResponseImpl;
 import com.connexta.replication.data.ResourceResponseImpl;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
@@ -74,6 +76,9 @@ import org.slf4j.LoggerFactory;
 public class DdfNodeAdapter implements NodeAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DdfNodeAdapter.class);
+
+  private static final Gson GSON =
+      new GsonBuilder().disableHtmlEscaping().serializeNulls().setLenient().create();
 
   private final DdfRestClientFactory ddfRestClientFactory;
 
@@ -163,12 +168,28 @@ public class DdfNodeAdapter implements NodeAdapter {
     elementSetNameType.setValue(ElementSetType.FULL);
     queryType.setElementSetName(elementSetNameType);
     SortByType cswSortBy = new SortByType();
-    SortPropertyType sortProperty = new SortPropertyType();
-    PropertyNameType propertyName = new PropertyNameType();
-    propertyName.setContent(Arrays.asList(Constants.METACARD_MODIFIED));
-    sortProperty.setPropertyName(propertyName);
-    sortProperty.setSortOrder(SortOrderType.ASC);
-    cswSortBy.getSortProperty().add(sortProperty);
+    if (request.getSorting() == null) {
+      SortPropertyType sortProperty = new SortPropertyType();
+      PropertyNameType propertyName = new PropertyNameType();
+      propertyName.setContent(Arrays.asList(Constants.METACARD_MODIFIED));
+      sortProperty.setPropertyName(propertyName);
+      sortProperty.setSortOrder(SortOrderType.ASC);
+      cswSortBy.getSortProperty().add(sortProperty);
+    } else {
+      Class<List<Map<String, String>>> clazz =
+          (Class<List<Map<String, String>>>) (Class) List.class;
+      List<Map<String, String>> sorts = GSON.fromJson(request.getSorting(), clazz);
+      for (Map<String, String> sort : sorts) {
+        SortPropertyType sortProperty = new SortPropertyType();
+        PropertyNameType propertyName = new PropertyNameType();
+        propertyName.setContent(Arrays.asList(sort.get("attribute")));
+        sortProperty.setPropertyName(propertyName);
+        sortProperty.setSortOrder(
+            sort.get("direction").equals("ascending") ? SortOrderType.ASC : SortOrderType.DESC);
+        cswSortBy.getSortProperty().add(sortProperty);
+      }
+    }
+
     queryType.setSortBy(cswSortBy);
     QueryConstraintType queryConstraintType = new QueryConstraintType();
     queryConstraintType.setVersion(Constants.CONSTRAINT_VERSION);
@@ -385,8 +406,12 @@ public class DdfNodeAdapter implements NodeAdapter {
       LOGGER.debug("Deleted failed items filter: {}", CqlBuilder.anyOf(deletedFailedItemFilters));
       finalFilter = CqlBuilder.anyOf(finalFilter, deletedFailedItemsFilter);
     }
+
     LOGGER.debug("Final cql query filter: {}", finalFilter);
     return new QueryRequestImpl(
-        finalFilter, queryRequest.getStartIndex(), queryRequest.getPageSize());
+        finalFilter,
+        queryRequest.getSorting(),
+        queryRequest.getStartIndex(),
+        queryRequest.getPageSize());
   }
 }

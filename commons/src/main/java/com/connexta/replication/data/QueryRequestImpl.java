@@ -23,6 +23,8 @@ public class QueryRequestImpl implements QueryRequest {
 
   private final String cql;
 
+  private final String sorts;
+
   private final List<String> excludedNodes;
 
   private final List<String> failedItemIds;
@@ -42,7 +44,11 @@ public class QueryRequestImpl implements QueryRequest {
   }
 
   public QueryRequestImpl(String cql, int startIndex, int pageSize) {
-    this(cql, Collections.emptyList(), Collections.emptyList(), null, startIndex, pageSize);
+    this(cql, Collections.emptyList(), Collections.emptyList(), null, startIndex, pageSize, null);
+  }
+
+  public QueryRequestImpl(String cql, String sorts, int startIndex, int pageSize) {
+    this(cql, Collections.emptyList(), Collections.emptyList(), null, startIndex, pageSize, sorts);
   }
 
   public QueryRequestImpl(String cql, List<String> excludedNodes, List<String> failedItemIds) {
@@ -51,7 +57,7 @@ public class QueryRequestImpl implements QueryRequest {
 
   public QueryRequestImpl(
       String cql, List<String> excludedNodes, List<String> failedItemIds, Date modifiedAfter) {
-    this(cql, excludedNodes, failedItemIds, modifiedAfter, 1, 100);
+    this(cql, excludedNodes, failedItemIds, modifiedAfter, 1, 100, null);
   }
 
   public QueryRequestImpl(
@@ -60,18 +66,30 @@ public class QueryRequestImpl implements QueryRequest {
       List<String> failedItemIds,
       Date modifiedAfter,
       int startIndex,
-      int pageSize) {
+      int pageSize,
+      String sorts) {
     this.cql = cql;
+    this.sorts = sorts;
     this.excludedNodes = excludedNodes;
     this.failedItemIds = failedItemIds;
     this.modifiedAfter = modifiedAfter;
     this.startIndex = startIndex;
     this.pageSize = pageSize;
+    String[] parts = this.cql.split("::");
+    if (parts.length > 1) {
+      cql = parts[0];
+      sorts = sorts == null ? parts[1] : sorts;
+    }
   }
 
   @Override
   public String getCql() {
     return cql;
+  }
+
+  @Override
+  public String getSorting() {
+    return sorts;
   }
 
   @Override

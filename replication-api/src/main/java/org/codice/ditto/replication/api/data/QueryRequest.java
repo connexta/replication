@@ -33,6 +33,13 @@ public interface QueryRequest {
   String getCql();
 
   /**
+   * A Json string representing the sorting order
+   *
+   * @return json list of sorting attributes and order
+   */
+  String getSorting();
+
+  /**
    * A list of system names that should be compared against the lineage of a {@link Metadata}. If
    * the {@link Metadata}s lineage contains the {@link
    * org.codice.ditto.replication.api.NodeAdapter}s name, it should not be returned in the query.
