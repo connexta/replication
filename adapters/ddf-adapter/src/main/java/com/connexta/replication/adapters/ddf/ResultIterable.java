@@ -216,7 +216,8 @@ public class ResultIterable implements Iterable<Metadata> {
               request.getFailedItemIds(),
               request.getModifiedAfter(),
               index,
-              request.getPageSize());
+              request.getPageSize(),
+              request.getSorting());
     }
   }
 }

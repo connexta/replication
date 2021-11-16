@@ -131,7 +131,7 @@ public class CreateReplication extends BaseFunctionField<ReplicationField> {
     }
 
     try {
-      ECQL.toFilter(filter.getValue());
+      ECQL.toFilter(filter.getValue().split("::")[0]);
     } catch (CQLException e) {
       addErrorMessage(ReplicationMessages.invalidFilter());
     }

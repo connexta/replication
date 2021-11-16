@@ -25,6 +25,8 @@ import ddf.catalog.operation.impl.QueryImpl;
 import ddf.catalog.operation.impl.QueryRequestImpl;
 import ddf.catalog.source.SourceUnavailableException;
 import ddf.catalog.source.UnsupportedQueryException;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.codice.ditto.replication.api.QueryException;
 import org.codice.ditto.replication.api.QueryService;
@@ -85,6 +87,10 @@ public class QueryServiceImpl implements QueryService {
       Metacard mcard) {
     String title = (String) mcard.getAttribute(Core.TITLE).getValue();
     String cql = (String) mcard.getAttribute("cql").getValue();
-    return new org.codice.ditto.replication.api.impl.data.QueryImpl(title, cql);
+    String sortJson =
+        mcard.getAttribute("sorts").getValues().stream()
+            .map(Objects::toString)
+            .collect(Collectors.joining(",", "::[", "]"));
+    return new org.codice.ditto.replication.api.impl.data.QueryImpl(title, cql + sortJson);
   }
 }

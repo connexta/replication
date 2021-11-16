@@ -173,14 +173,14 @@ public class Syncer {
           }
         }
 
-        if (replicationStatus.getLastMetadataModified() == null
-            || metadata.getMetadataModified().after(replicationStatus.getLastMetadataModified())) {
-          replicationStatus.setLastMetadataModified(metadata.getMetadataModified());
+        if (modifiedAfter == null || metadata.getMetadataModified().after(modifiedAfter)) {
+          modifiedAfter = metadata.getMetadataModified();
         }
       }
 
       synchronized (lock) {
         replicationStatus.setStatus(canceled ? Status.CANCELED : Status.SUCCESS);
+        replicationStatus.setLastMetadataModified(canceled ? null : modifiedAfter);
       }
       return new SyncResponse(replicationStatus.getStatus());
     }
