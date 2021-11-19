@@ -90,7 +90,7 @@ class ReplicationRow extends React.Component {
 
   getSorts = (filter) => {
     const parts = filter.split('::')
-    if (parts.length > 1) {
+    if (parts.length > 1 && parts[1] != '[]') {
       const sorts = RJSON.parse(parts[1])
       return sorts.map(s => (
           <div style={{ 'display': 'flex', 'alignItems': 'center' }}>
