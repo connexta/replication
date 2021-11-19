@@ -25,16 +25,20 @@ import {
   Toolbar,
   MenuItem,
   Select,
+  Tooltip,
 } from '@material-ui/core'
 import { MoreVert } from '@material-ui/icons'
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward'
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward'
 import moment from 'moment'
 import Immutable from 'immutable'
-import { withStyles } from '@material-ui/core/styles'
+import { withStyles, createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles'
 import ActionsMenu from './ActionsMenu'
 import Replications from './replications'
 import ReactInterval from 'react-interval'
 import { changePriority } from './gql/mutations'
 import { Mutation } from 'react-apollo'
+import RJSON from 'relaxed-json'
 
 const styles = {
   root: {
@@ -45,6 +49,16 @@ const styles = {
     flex: '0 0 auto',
   },
 }
+
+const theme = createMuiTheme({
+  overrides: {
+    MuiTableCell: {
+      root: {
+        padding: '10px 15px',
+      }
+    }
+  }
+});
 
 const format = utc => {
   return utc ? moment.utc(utc).fromNow() : '-'
@@ -65,16 +79,34 @@ class ReplicationRow extends React.Component {
     this.setState({ anchor: null })
   }
 
-  formatSorts = (sortStr) => {
-    //the "json" string is poorly formatted so we need to parse it manually
-    let str = sortStr.substr(1,sortStr.length -2)
-    let sortArray = str.split("},")
-    let sorts = ''
-    sortArray.forEach((sort)=>{
-      let parts = sort.replace('{','').replace('}','').split(',')
-      sorts += parts[0].substr(parts[0].indexOf("=")+1)+ "->"+parts [1].substr(parts[1].indexOf("=")+1)+" \n"
-    })
-    return sorts
+  getSortIcon = (asc) => {
+    const Icon = asc ? ArrowUpwardIcon : ArrowDownwardIcon
+    return (
+      <Tooltip title={asc ? 'Ascending' : 'Descending'}>
+        <Icon fontSize='small' style={{ 'color': '#808080' }}/>
+      </Tooltip>
+    )
+  }
+
+  getSorts = (filter) => {
+    const parts = filter.split('::')
+    if (parts.length > 1) {
+      const sorts = RJSON.parse(parts[1])
+      return sorts.map(s => (
+          <div style={{ 'display': 'flex', 'alignItems': 'center' }}>
+            {s.attribute}{'  '}
+            {this.getSortIcon(s.direction == 'ascending')}
+          </div>
+        )
+      )
+    } else {
+      return (
+        <div style={{ 'display': 'flex', 'alignItems': 'center' }}>
+          modified{'  '}
+          {this.getSortIcon(false)}
+        </div>
+      )
+    }
   }
 
   render() {
@@ -131,7 +163,7 @@ class ReplicationRow extends React.Component {
         </TableCell>
         <TableCell>{replication.biDirectional ? 'Yes' : 'No'}</TableCell>
         <TableCell>{replication.filter.split('::')[0]}</TableCell>
-        <TableCell>{replication.filter.split('::').length > 1?this.formatSorts(replication.filter.split('::')[1]):'metacard.modified: assending'}</TableCell>
+        <TableCell>{this.getSorts(replication.filter)}</TableCell>
         <TableCell>
           {replication.stats.pullCount + replication.stats.pushCount}
         </TableCell>
@@ -169,41 +201,43 @@ class ReplicationsTable extends React.Component {
     const sorted = Immutable.List(replications.sort(Replications.repSort))
 
     return (
-      <Paper className={classes.root}>
-        <Toolbar>
-          <Typography variant='h6' id='tableTitle' className={classes.title}>
-            {title}
-          </Typography>
-        </Toolbar>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Last Run Status</TableCell>
-              <TableCell>Source</TableCell>
-              <TableCell>Destination</TableCell>
-              <TableCell>Priority</TableCell>
-              <TableCell>Bidirectional</TableCell>
-              <TableCell>Filter</TableCell>
-              <TableCell>Sorting</TableCell>
-              <TableCell>Items Transferred</TableCell>
-              <TableCell>Data Transferred</TableCell>
-              <TableCell>Last Run</TableCell>
-              <TableCell>Last Success</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sorted &&
-              sorted.map(replication => (
-                <ReplicationRow
-                  key={replication.id}
-                  replication={replication}
-                />
-              ))}
-          </TableBody>
-        </Table>
-      </Paper>
+      <MuiThemeProvider theme={theme}>
+        <Paper className={classes.root}>
+          <Toolbar>
+            <Typography variant='h6' id='tableTitle' className={classes.title}>
+              {title}
+            </Typography>
+          </Toolbar>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Last Run Status</TableCell>
+                <TableCell>Source</TableCell>
+                <TableCell>Destination</TableCell>
+                <TableCell>Priority</TableCell>
+                <TableCell>Bidirectional</TableCell>
+                <TableCell>Filter</TableCell>
+                <TableCell>Sorting</TableCell>
+                <TableCell>Items Transferred</TableCell>
+                <TableCell>Data Transferred</TableCell>
+                <TableCell>Last Run</TableCell>
+                <TableCell>Last Success</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sorted &&
+                sorted.map(replication => (
+                  <ReplicationRow
+                    key={replication.id}
+                    replication={replication}
+                  />
+                ))}
+            </TableBody>
+          </Table>
+        </Paper>
+      </MuiThemeProvider>
     )
   }
 }

@@ -36,6 +36,8 @@ import { allReplications } from './gql/queries'
 import { addReplication } from './gql/mutations'
 import { withStyles } from '@material-ui/core/styles'
 import QuerySelector from './QuerySelector'
+import SortPolicies from './SortPolicies'
+import RJSON from 'relaxed-json'
 
 const styles = {
   tooltip: {
@@ -95,6 +97,7 @@ const defaultFormState = {
   sourceId: '',
   destinationId: '',
   filter: '',
+  sorts: [{ attribute: 'modified', direction: 'descending' }],
   biDirectional: false,
   priority: 5,
   filterErrorText: '',
@@ -130,12 +133,39 @@ class AddReplication extends React.Component {
       )
   }
 
+  getFilterToSave = () => {
+    const validSorts = this.state.sorts.filter(s => 
+      s.attribute && s.attribute != '' && s.direction)
+    return `${this.state.filter}::${JSON.stringify(validSorts)}`
+  }
+
   handleChange = map => name => event => {
     this.setState({ [map[name]]: event.target.value })
   }
 
+  handleAddSort = () => {
+    const blankSort = { attribute: '', direction: 'ascending' }
+    this.setState({ sorts: [...this.state.sorts, blankSort] })
+  }
+
+  handleRemoveSort = sort => {
+    this.setState({ sorts: this.state.sorts.filter(s => s !== sort) })
+  }
+
+  handleChangeSort = (update, index) => {
+    let newSorts = [...this.state.sorts]
+    newSorts[index][update.id] = update.value
+    this.setState({ sorts: newSorts })
+  }
+
   handleSelectorChange = option => {
-    this.setState({ filter: option ? option.value : '' })
+    if (option) {
+      const parts = option.value.split('::')  
+      this.setState({ filter: parts[0] || '' })
+      if (parts.length > 1) {
+        this.setState({ sorts: RJSON.parse(parts[1]) })
+      }
+    }
   }
 
   handlePriorityChange = name => event => {
@@ -186,6 +216,7 @@ class AddReplication extends React.Component {
       sourceId,
       destinationId,
       filter,
+      sorts,
       biDirectional,
       priority,
       filterErrorText,
@@ -275,7 +306,7 @@ class AddReplication extends React.Component {
                           label='Priority'
                           control={
                             <Select
-                              style={{ 'padding-right': '12px' }}
+                              style={{ 'paddingRight': '12px' }}
                               value={priority}
                               onChange={this.handlePriorityChange('priority')}
                             >
@@ -312,6 +343,12 @@ class AddReplication extends React.Component {
                   : 'A CQL filter specifying resources to replicate.'
               }
               error={filterErrorText ? true : false}
+            />
+            <SortPolicies 
+              sortPolicies={sorts} 
+              onAddSort={this.handleAddSort} 
+              onRemoveSort={this.handleRemoveSort} 
+              onChangeSort={this.handleChangeSort}
             />
           </DialogContent>
           <DialogActions>
@@ -350,7 +387,7 @@ class AddReplication extends React.Component {
                           name: name,
                           sourceId: sourceId,
                           destinationId: destinationId,
-                          filter: filter,
+                          filter: this.getFilterToSave(),
                           biDirectional: biDirectional,
                           priority: priority,
                         },
