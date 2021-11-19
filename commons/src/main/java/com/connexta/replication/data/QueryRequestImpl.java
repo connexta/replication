@@ -68,18 +68,22 @@ public class QueryRequestImpl implements QueryRequest {
       int startIndex,
       int pageSize,
       String sorts) {
-    this.cql = cql;
-    this.sorts = sorts;
+
+    String cqlTmp = cql;
+    String sortsTmp = sorts;
+    String[] parts = cql.split("::");
+    if (parts.length > 1) {
+      cqlTmp = parts[0];
+      sortsTmp = sorts == null ? parts[1] : sorts;
+    }
+
+    this.cql = cqlTmp;
+    this.sorts = sortsTmp;
     this.excludedNodes = excludedNodes;
     this.failedItemIds = failedItemIds;
     this.modifiedAfter = modifiedAfter;
     this.startIndex = startIndex;
     this.pageSize = pageSize;
-    String[] parts = this.cql.split("::");
-    if (parts.length > 1) {
-      cql = parts[0];
-      sorts = sorts == null ? parts[1] : sorts;
-    }
   }
 
   @Override

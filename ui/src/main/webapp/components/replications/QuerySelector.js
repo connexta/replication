@@ -31,7 +31,7 @@ function QuerySelector(props) {
   return (
     <div>
       <FormLabel>
-        Select a search to use its filter, or create your own
+        Select a search to use its filter and sort policies, or create your own
       </FormLabel>
       <Query query={allQueries}>
         {({ loading, error, data, refetch }) => {
