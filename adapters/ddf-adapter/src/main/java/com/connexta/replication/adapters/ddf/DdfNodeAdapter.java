@@ -173,7 +173,7 @@ public class DdfNodeAdapter implements NodeAdapter {
       PropertyNameType propertyName = new PropertyNameType();
       propertyName.setContent(Arrays.asList(Constants.METACARD_MODIFIED));
       sortProperty.setPropertyName(propertyName);
-      sortProperty.setSortOrder(SortOrderType.ASC);
+      sortProperty.setSortOrder(SortOrderType.DESC);
       cswSortBy.getSortProperty().add(sortProperty);
     } else {
       Class<List<Map<String, String>>> clazz =
