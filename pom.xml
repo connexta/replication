@@ -89,6 +89,7 @@
         <antlr4.version>4.7.1</antlr4.version>
         <java-dataloader.version>2.0.2</java-dataloader.version>
         <reactive-streams.version>1.0.2</reactive-streams.version>
+        <joda.version>2.10.6</joda.version>
 
         <!-- documentation replacements -->
         <platform>DDF Base</platform>
@@ -729,6 +730,7 @@
         <module>replication-commands</module>
         <module>admin</module>
         <module>adapters</module>
+        <module>replication-groomer</module>
         <module>docs</module>
         <module>ui</module>
         <module>distributions</module>

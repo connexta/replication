@@ -32,8 +32,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -126,7 +128,7 @@ public class DdfNodeAdapter implements NodeAdapter {
           "============================ START CSW GetRecords ============================");
       LOGGER.trace("CSW cql query: {}", request.getCql());
       Csw csw = factory.getClient();
-      GetRecordsType getRecordsType = getCswQuery(request, ResultType.RESULTS);
+      GetRecordsType getRecordsType = getCswQuery(request, Constants.METACARD_SCHEMA);
 
       CswRecordCollection response = csw.getRecords(getRecordsType);
       LOGGER.debug("Csw query returned {} results", response.getCswRecords().size());
@@ -141,7 +143,7 @@ public class DdfNodeAdapter implements NodeAdapter {
   public long checkForDatasets(QueryRequest request) {
     Csw csw = factory.getClient();
 
-    GetRecordsType getRecordsType = getCswQuery(request, ResultType.HITS);
+    GetRecordsType getRecordsType = getCswQuery(request, Constants.MINIMAL_SCHEMA);
     try {
       return csw.getRecords(getRecordsType).getNumberOfRecordsMatched();
     } catch (Exception e) {
@@ -150,15 +152,15 @@ public class DdfNodeAdapter implements NodeAdapter {
     }
   }
 
-  private GetRecordsType getCswQuery(QueryRequest request, ResultType type) {
+  private GetRecordsType getCswQuery(QueryRequest request, String schema) {
     GetRecordsType getRecordsType = new GetRecordsType();
     getRecordsType.setVersion(Constants.VERSION_2_0_2);
     getRecordsType.setService("CSW");
-    getRecordsType.setResultType(type);
+    getRecordsType.setResultType(ResultType.RESULTS);
     getRecordsType.setStartPosition(BigInteger.valueOf(request.getStartIndex()));
     getRecordsType.setMaxRecords(BigInteger.valueOf(request.getPageSize()));
     getRecordsType.setOutputFormat(MediaType.APPLICATION_XML);
-    getRecordsType.setOutputSchema(Constants.METACARD_SCHEMA);
+    getRecordsType.setOutputSchema(schema);
     QueryType queryType = new QueryType();
     queryType.setTypeNames(
         Arrays.asList(
@@ -241,12 +243,19 @@ public class DdfNodeAdapter implements NodeAdapter {
   }
 
   @Override
-  public boolean exists(Metadata metadata) {
+  public @Nullable Metadata exists(Metadata metadata) {
     try {
-      return checkForDatasets(
+      Csw csw = factory.getClient();
+
+      GetRecordsType getRecordsType =
+          getCswQuery(
               new QueryRequestImpl(
-                  CqlBuilder.equalTo(Constants.METACARD_ID, metadata.getId()), 1, 1))
-          > 0;
+                  CqlBuilder.equalTo(Constants.METACARD_ID, metadata.getId()), 1, 1),
+              Constants.MINIMAL_SCHEMA);
+      List<Metadata> results = csw.getRecords(getRecordsType).getCswRecords();
+      if (results != null && !results.isEmpty()) {
+        return results.get(0);
+      }
     } catch (Exception e) {
       throw new AdapterException(
           String.format(
@@ -254,6 +263,7 @@ public class DdfNodeAdapter implements NodeAdapter {
               metadata.getId(), getSystemName()),
           e);
     }
+    return null;
   }
 
   @Override
@@ -311,13 +321,11 @@ public class DdfNodeAdapter implements NodeAdapter {
           "DDF adapter can't process raw metadata of type " + metadata.getRawMetadata().getClass());
     }
     Map metadataMap = (Map) metadata.getRawMetadata();
+    ArrayList<String> tags = new ArrayList<>(metadata.getTags());
+    tags.add(Replication.REPLICATION_RUN_TAG);
     metadataMap.put(
         Constants.METACARD_TAGS,
-        new MetadataAttribute(
-            Constants.METACARD_TAGS,
-            "string",
-            new ArrayList(metadata.getTags()),
-            Collections.emptyList()));
+        new MetadataAttribute(Constants.METACARD_TAGS, "string", tags, Collections.emptyList()));
     metadataMap.put(
         Replication.ORIGINS,
         new MetadataAttribute(
@@ -366,13 +374,11 @@ public class DdfNodeAdapter implements NodeAdapter {
     LOGGER.debug("Base query filter: {}", cql);
     final List<String> filters = new ArrayList<>();
 
-    List<String> originFilters = new ArrayList<>();
+    Set<String> originFilters = new HashSet<>();
     for (String excludedNode : queryRequest.getExcludedNodes()) {
       originFilters.add(CqlBuilder.negate(CqlBuilder.equalTo(Replication.ORIGINS, excludedNode)));
     }
-    if (!originFilters.isEmpty()) {
-      filters.addAll(originFilters);
-    }
+
     filters.add(CqlBuilder.equalTo(Constants.METACARD_TAGS, Constants.DEFAULT_TAG));
 
     final List<String> deletedFailedItemFilters = new ArrayList<>();

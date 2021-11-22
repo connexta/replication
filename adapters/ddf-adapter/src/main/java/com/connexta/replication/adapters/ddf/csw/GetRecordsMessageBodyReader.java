@@ -15,6 +15,7 @@ package com.connexta.replication.adapters.ddf.csw;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.XStreamException;
+import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.DataHolder;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.xml.XppDriver;
@@ -26,6 +27,8 @@ import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -47,16 +50,17 @@ import org.xmlpull.v1.XmlPullParserFactory;
 public class GetRecordsMessageBodyReader implements MessageBodyReader<CswRecordCollection> {
   private static final Logger LOGGER = LoggerFactory.getLogger(GetRecordsMessageBodyReader.class);
 
-  public static final String BYTES_SKIPPED = "bytes-skipped";
-
   private XStream xstream;
 
   private DataHolder argumentHolder;
 
   public GetRecordsMessageBodyReader() {
+    Map<String, Converter> converters = new HashMap<>();
+    converters.put("urn:catalog:metacard", new CswRecordConverter());
+    converters.put("urn:catalog:minimal", new CswMinimalRecordConverter());
     xstream = new XStream(new XppDriver());
     xstream.setClassLoader(this.getClass().getClassLoader());
-    xstream.registerConverter(new GetRecordsResponseConverter(new CswRecordConverter()));
+    xstream.registerConverter(new GetRecordsResponseConverter(converters));
     xstream.alias(Constants.GET_RECORDS_RESPONSE, CswRecordCollection.class);
     xstream.alias(
         Constants.CSW_NAMESPACE_PREFIX
@@ -69,7 +73,6 @@ public class GetRecordsMessageBodyReader implements MessageBodyReader<CswRecordC
 
   private void buildArguments() {
     argumentHolder = xstream.newDataHolder();
-    argumentHolder.put(Constants.OUTPUT_SCHEMA_PARAMETER, Constants.METACARD_SCHEMA);
   }
 
   @Override
@@ -92,17 +95,14 @@ public class GetRecordsMessageBodyReader implements MessageBodyReader<CswRecordC
 
     // Save original input stream for any exception message that might need to be
     // created
-    String originalInputStream = IOUtils.toString(inStream, "UTF-8");
+    String originalInputStream = IOUtils.toString(inStream, StandardCharsets.UTF_8);
     LOGGER.trace("Converting to CswRecordCollection: \n {}", originalInputStream);
 
-    // Re-create the input stream (since it has already been read for potential
-    // exception message creation)
-    inStream = new ByteArrayInputStream(originalInputStream.getBytes("UTF-8"));
-
-    try {
+    try (InputStream stream =
+        new ByteArrayInputStream(originalInputStream.getBytes(StandardCharsets.UTF_8))) {
       HierarchicalStreamReader reader =
           new XppReader(
-              new InputStreamReader(inStream, StandardCharsets.UTF_8),
+              new InputStreamReader(stream, StandardCharsets.UTF_8),
               XmlPullParserFactory.newInstance().newPullParser());
       cswRecords = (CswRecordCollection) xstream.unmarshal(reader, null, argumentHolder);
     } catch (XmlPullParserException e) {
@@ -123,8 +123,6 @@ public class GetRecordsMessageBodyReader implements MessageBodyReader<CswRecordC
       responseBuilder.type("text/xml");
       Response response = responseBuilder.build();
       throw new WebApplicationException(e, response);
-    } finally {
-      IOUtils.closeQuietly(inStream);
     }
     return cswRecords;
   }

@@ -207,6 +207,11 @@
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>net.jodah</groupId>
+            <artifactId>expiringmap</artifactId>
+            <version>0.5.10</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -286,7 +291,8 @@
                             catalog-core-api-impl,
                             platform-util,
                             commons-lang3,
-                            commons
+                            commons,
+                            expiringmap
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>

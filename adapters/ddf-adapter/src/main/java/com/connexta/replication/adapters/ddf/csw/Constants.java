@@ -54,6 +54,8 @@ public final class Constants {
 
   public static final String METACARD_SCHEMA = "urn:catalog:metacard";
 
+  public static final String MINIMAL_SCHEMA = "urn:catalog:minimal";
+
   public static final String RAW_METADATA_KEY = "raw-metadata";
 
   public static final List<String> COMPLEX_TYPES = Arrays.asList("geometry", "stringxml");

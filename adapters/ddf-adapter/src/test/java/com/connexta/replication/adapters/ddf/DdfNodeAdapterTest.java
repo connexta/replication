@@ -15,6 +15,7 @@ package com.connexta.replication.adapters.ddf;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -155,8 +156,9 @@ public class DdfNodeAdapterTest {
     CswRecordCollection collection = new CswRecordCollection();
     collection.setNumberOfRecordsMatched(1);
     Metadata metadata = getMetadata();
+    collection.setCswRecords(Collections.singletonList(metadata));
     when(csw.getRecords(any(GetRecordsType.class))).thenReturn(collection);
-    assertThat(adapter.exists(metadata), is(true));
+    assertThat(adapter.exists(metadata), is(notNullValue()));
   }
 
   @Test
@@ -164,7 +166,7 @@ public class DdfNodeAdapterTest {
     CswRecordCollection collection = new CswRecordCollection();
     collection.setNumberOfRecordsMatched(0);
     when(csw.getRecords(any(GetRecordsType.class))).thenReturn(collection);
-    assertThat(adapter.exists(getMetadata()), is(false));
+    assertThat(adapter.exists(getMetadata()), is(nullValue()));
   }
 
   @Test
@@ -262,7 +264,7 @@ public class DdfNodeAdapterTest {
         adapter.createDdfQueryRequest(request).getCql(),
         is(
             String.format(
-                "[ [ [ title like '*' ] AND [ [ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ \"metacard.modified\" after %s ] ] OR [ [ \"metacard.version.versioned-on\" after %s ] AND [ \"metacard-tags\" = 'revision' ] AND [ \"metacard.version.action\" like 'Deleted*' ] AND [ NOT [ \"replication.origins\" = 'node1' ] ] ] ] ] OR [ [ [ \"metacard.version.id\" = '123456789' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ]",
+                "[ [ [ title like '*' ] AND [ [ [ \"metacard-tags\" = 'resource' ] AND [ \"metacard.modified\" after %s ] ] OR [ [ \"metacard.version.versioned-on\" after %s ] AND [ \"metacard-tags\" = 'revision' ] AND [ \"metacard.version.action\" like 'Deleted*' ] AND [ NOT [ \"replication.origins\" = 'node1' ] ] ] ] ] OR [ [ [ \"metacard.version.id\" = '123456789' ] AND [ \"metacard.version.action\" like 'Deleted*' ] ] ] ]",
                 modifiedString, modifiedString)));
   }
 
@@ -272,8 +274,7 @@ public class DdfNodeAdapterTest {
         new QueryRequestImpl("title like '*'", Collections.singletonList("node1"));
     assertThat(
         adapter.createDdfQueryRequest(request).getCql(),
-        is(
-            "[ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ title like '*' ] ]"));
+        is("[ [ \"metacard-tags\" = 'resource' ] AND [ title like '*' ] ]"));
   }
 
   @Test
@@ -282,8 +283,7 @@ public class DdfNodeAdapterTest {
         new QueryRequestImpl("[ title like '*' ]", Collections.singletonList("node1"));
     assertThat(
         adapter.createDdfQueryRequest(request).getCql(),
-        is(
-            "[ [ NOT [ \"replication.origins\" = 'node1' ] ] AND [ \"metacard-tags\" = 'resource' ] AND [ title like '*' ] ]"));
+        is("[ [ \"metacard-tags\" = 'resource' ] AND [ title like '*' ] ]"));
   }
 
   private Metadata getMetadata() {

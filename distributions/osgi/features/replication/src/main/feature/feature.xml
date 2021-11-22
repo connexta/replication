@@ -28,6 +28,7 @@
         <bundle>mvn:replication/replication-ui/${project.version}</bundle>
         <bundle>mvn:replication/commons/${project.version}</bundle>
         <bundle>mvn:replication-adapters/ddf-adapter/${project.version}</bundle>
+        <bundle>mvn:replication/replication-groomer/${project.version}</bundle>
     </feature>
 
     <!-- The features below were pulled from <repository>mvn:ddf.features/admin-query/${admin-query.version}/xml/features</repository> and modified for replication-->

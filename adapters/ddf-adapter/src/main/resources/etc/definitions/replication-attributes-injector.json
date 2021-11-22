@@ -6,6 +6,27 @@
       "indexed": true,
       "tokenized": false,
       "multivalued": true
+    },
+    "metacard.change.user": {
+      "type": "STRING_TYPE",
+      "stored": true,
+      "indexed": false,
+      "tokenized": false,
+      "multivalued": false
+    },
+    "metacard.change.location": {
+      "type": "STRING_TYPE",
+      "stored": true,
+      "indexed": false,
+      "tokenized": false,
+      "multivalued": false
+    },
+    "metacard.change.date": {
+      "type": "DATE_TYPE",
+      "stored": true,
+      "indexed": false,
+      "tokenized": false,
+      "multivalued": false
     }
   },
   "metacardTypes": [
@@ -24,6 +45,15 @@
   "inject": [
     {
       "attribute": "replication.origins"
+    },
+    {
+      "attribute": "metacard.change.user"
+    },
+    {
+      "attribute": "metacard.change.location"
+    },
+    {
+      "attribute": "metacard.change.date"
     }
   ]
 }

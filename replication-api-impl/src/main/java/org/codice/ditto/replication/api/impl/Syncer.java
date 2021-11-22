@@ -14,6 +14,7 @@
 package org.codice.ditto.replication.api.impl;
 
 import com.connexta.replication.data.QueryRequestImpl;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -136,16 +137,17 @@ public class Syncer {
           }
         }
 
-        Optional<ReplicationItem> replicationItem =
-            replicationItemManager.getItem(metadata.getId(), sourceName, destinationName);
-
+        Optional<ReplicationItem> replicationItem = getReplicationItem(metadata.getId());
         try {
           if (metadata.isDeleted() && replicationItem.isPresent()) {
             doDelete(metadata, replicationItem.get());
-          } else if (replicationItem.isPresent() && destination.exists(metadata)) {
-            doUpdate(metadata, replicationItem.get());
           } else {
-            doCreate(metadata, replicationItem);
+            Metadata remoteMetadata = destination.exists(metadata);
+            if (replicationItem.isPresent() && remoteMetadata != null) {
+              doUpdate(metadata, replicationItem.get(), remoteMetadata);
+            } else {
+              doCreate(metadata, replicationItem);
+            }
           }
         } catch (VirtualMachineError e) {
           throw e;
@@ -183,6 +185,45 @@ public class Syncer {
         replicationStatus.setLastMetadataModified(canceled ? null : modifiedAfter);
       }
       return new SyncResponse(replicationStatus.getStatus());
+    }
+
+    Optional<ReplicationItem> getReplicationItem(String metadataId) {
+
+      ReplicationItem item =
+          replicationItemManager.getItem(metadataId, sourceName, destinationName).orElse(null);
+      ReplicationItem reverseDir =
+          replicationItemManager.getItem(metadataId, destinationName, sourceName).orElse(null);
+      if (item == null && reverseDir == null) {
+        return Optional.empty();
+      }
+      if (item != null
+          && (reverseDir == null
+              || (item.getMetadataModified().getTime()
+                  >= reverseDir.getMetadataModified().getTime()))) {
+        return Optional.of(item);
+      }
+
+      if (item != null) {
+        return Optional.of(
+            new ReplicationItemImpl(
+                item.getId(),
+                item.getMetadataId(),
+                reverseDir.getResourceModified(),
+                reverseDir.getMetadataModified(),
+                item.getSource(),
+                item.getDestination(),
+                item.getConfigurationId(),
+                item.getFailureCount()));
+      } else {
+        return Optional.of(
+            new ReplicationItemImpl(
+                metadataId,
+                reverseDir.getResourceModified(),
+                reverseDir.getMetadataModified(),
+                sourceName,
+                destinationName,
+                replicatorConfig.getId()));
+      }
     }
 
     /**
@@ -224,7 +265,7 @@ public class Syncer {
       }
 
       if (created) {
-        ReplicationItem replicationItem = createReplicationItem(metadata, Optional.empty());
+        ReplicationItem replicationItem = createReplicationItem(metadata, item, true);
         replicationItemManager.saveItem(replicationItem);
         replicationStatus.incrementCount();
       } else {
@@ -241,17 +282,18 @@ public class Syncer {
       }
     }
 
-    private void doUpdate(Metadata metadata, ReplicationItem replicationItem) {
+    private void doUpdate(
+        Metadata metadata, ReplicationItem replicationItem, Metadata remoteMetadata) {
       addTagsAndLineage(metadata);
 
       boolean shouldUpdateMetadata =
           metadata.getMetadataModified().after(replicationItem.getMetadataModified())
-              || replicationItem.getFailureCount() > 0;
+              && metadata.getMetadataModified().after(remoteMetadata.getMetadataModified());
 
       boolean shouldUpdateResource =
           hasResource(metadata)
-              && (metadata.getResourceModified().after(replicationItem.getResourceModified())
-                  || replicationItem.getFailureCount() > 0);
+              && metadata.getResourceModified().after(replicationItem.getResourceModified())
+              && metadata.getResourceModified().after(remoteMetadata.getResourceModified());
 
       final String metadataId = metadata.getId();
       boolean updated;
@@ -283,11 +325,15 @@ public class Syncer {
             metadata.getId(),
             sourceName,
             destinationName);
+        ReplicationItem updateReplicationItem =
+            createReplicationItem(metadata, Optional.of(replicationItem), true);
+        replicationItemManager.saveItem(updateReplicationItem);
         return;
       }
 
       if (updated) {
-        ReplicationItem updateReplicationItem = createReplicationItem(metadata, Optional.empty());
+        ReplicationItem updateReplicationItem =
+            createReplicationItem(metadata, Optional.of(replicationItem), true);
         replicationItemManager.saveItem(updateReplicationItem);
         replicationStatus.incrementCount();
       } else {
@@ -336,13 +382,30 @@ public class Syncer {
 
     private void addTagsAndLineage(Metadata metadata) {
       metadata.addLineage(sourceName);
+      // if we are copying to a destination that is in the linage then this is a remote update
+      // we don't want to include the destination node or anything after the destination node
+      // in the linage for something that originated at the destination.
+      List lineage = metadata.getLineage();
+      int destIndex = new ArrayList(lineage).indexOf(destinationName);
+      if (destIndex >= 0) {
+        lineage.subList(destIndex, lineage.size()).clear();
+      }
       metadata.addTag(Replication.REPLICATED_TAG);
     }
 
     private ReplicationItem createReplicationItem(
         Metadata metadata, Optional<ReplicationItem> existingItem) {
+      return createReplicationItem(metadata, existingItem, false);
+    }
+
+    private ReplicationItem createReplicationItem(
+        Metadata metadata, Optional<ReplicationItem> existingItem, boolean clearFailures) {
       int failureCount = existingItem.isPresent() ? existingItem.get().getFailureCount() : 0;
+      if (clearFailures) {
+        failureCount = 0;
+      }
       return new ReplicationItemImpl(
+          existingItem.isPresent() ? existingItem.get().getId() : null,
           metadata.getId(),
           metadata.getResourceModified(),
           metadata.getMetadataModified(),

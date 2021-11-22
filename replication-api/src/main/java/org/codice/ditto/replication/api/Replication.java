@@ -17,7 +17,15 @@ public class Replication {
 
   public static final String REPLICATED_TAG = "replicated";
 
+  public static final String REPLICATION_RUN_TAG = "replication-run";
+
   public static final String ORIGINS = "replication.origins";
+
+  public static final String CHANGE_USER = "metacard.change.user";
+
+  public static final String CHANGE_LOCATION = "metacard.change.location";
+
+  public static final String CHANGE_DATE = "metacard.change.date";
 
   private Replication() {}
 }
