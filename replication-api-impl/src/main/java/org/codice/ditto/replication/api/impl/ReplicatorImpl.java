@@ -178,7 +178,9 @@ public class ReplicatorImpl implements Replicator {
               sync(store1, store2, config, status);
               // in bidirectional config we need to make sure we don't advance the search timestamp
               // past the pull timestamp which could result in missing results
-              if (latestDate != null && status.getLastMetadataModified().after(latestDate)) {
+              if (latestDate != null
+                  && status.getLastMetadataModified() != null
+                  && status.getLastMetadataModified().after(latestDate)) {
                 status.setLastMetadataModified(
                     status.getStatus() == Status.SUCCESS ? latestDate : null);
               }
@@ -217,13 +219,6 @@ public class ReplicatorImpl implements Replicator {
       LOGGER.debug("Failed to remove sync request {} from the active queue", syncRequest);
     }
     LOGGER.trace("Adding replication event to history: {}", status);
-    if (status.getLastMetadataModified() != null) {
-      // pull back 1 minute to account for solr commit time to be safe. We will end up pulling a few
-      // extra metacards
-      // occationally but this will ensure we don't miss any chagnes
-      status.setLastMetadataModified(
-          new Date(status.getLastMetadataModified().getTime() - TimeUnit.SECONDS.toMillis(60)));
-    }
     history.save(status);
     LOGGER.trace("Successfully added replication event to history: {}", status);
   }

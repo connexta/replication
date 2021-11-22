@@ -109,8 +109,8 @@ class ReplicationRow extends React.Component {
     } else {
       return (
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          modified{'  '}
-          {this.getSortIcon(false)}
+          metacard.modified{'  '}
+          {this.getSortIcon(true)}
         </div>
       )
     }

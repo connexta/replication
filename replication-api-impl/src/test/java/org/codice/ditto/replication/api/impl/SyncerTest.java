@@ -162,7 +162,8 @@ public class SyncerTest {
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.empty());
-
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
     when(iterator.hasNext()).thenReturn(true).thenReturn(false);
@@ -239,6 +240,8 @@ public class SyncerTest {
     when(metadata.getResourceModified()).thenReturn(null);
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
+        .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
         .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
@@ -319,6 +322,8 @@ public class SyncerTest {
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -389,6 +394,8 @@ public class SyncerTest {
     when(metadata.getResourceModified()).thenReturn(null);
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
+        .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
         .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
@@ -483,6 +490,8 @@ public class SyncerTest {
                     DESTINATION_NAME,
                     REPLICATOR_ID,
                     1)));
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -547,6 +556,8 @@ public class SyncerTest {
     when(metadata.getResourceSize()).thenReturn(metadataSize);
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
+        .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
         .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
@@ -642,6 +653,8 @@ public class SyncerTest {
     when(metadata.getResourceSize()).thenReturn(metadataSize);
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
+        .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
         .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
@@ -739,6 +752,8 @@ public class SyncerTest {
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -828,6 +843,8 @@ public class SyncerTest {
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -899,14 +916,17 @@ public class SyncerTest {
     when(metadata.getResourceUri()).thenReturn(null);
     when(metadata.getMetadataModified()).thenReturn(modifiedDate);
     when(metadata.getResourceModified()).thenReturn(null);
-
-    when(destination.exists(metadata)).thenReturn(true);
+    Date olderDate = new Date(modifiedDate.getTime() - 1000);
+    Metadata oldMetadata = mockMetadata(metadataId, olderDate, olderDate);
+    when(destination.exists(metadata)).thenReturn(oldMetadata);
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
     when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -984,13 +1004,17 @@ public class SyncerTest {
     when(metadata.getMetadataModified()).thenReturn(modifiedDate);
     when(metadata.getResourceModified()).thenReturn(null);
 
-    when(destination.exists(metadata)).thenReturn(true);
+    Date olderDate = new Date(modifiedDate.getTime() - 1000);
+    Metadata oldMetadata = mockMetadata(metadataId, olderDate, olderDate);
+    when(destination.exists(metadata)).thenReturn(oldMetadata);
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
     when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1063,7 +1087,9 @@ public class SyncerTest {
     when(metadata.getResourceModified()).thenReturn(resourceModified);
     when(metadata.getResourceSize()).thenReturn(resourceSize);
 
-    when(destination.exists(metadata)).thenReturn(true);
+    Date olderDate = new Date(modifiedDate.getTime() - 1000);
+    Metadata oldMetadata = mockMetadata(metadataId, olderDate, olderDate);
+    when(destination.exists(metadata)).thenReturn(oldMetadata);
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
@@ -1072,6 +1098,8 @@ public class SyncerTest {
         .thenReturn(new Date(resourceModified.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1163,7 +1191,9 @@ public class SyncerTest {
     when(metadata.getResourceModified()).thenReturn(resourceModified);
     when(metadata.getResourceSize()).thenReturn(resourceSize);
 
-    when(destination.exists(metadata)).thenReturn(true);
+    Date olderDate = new Date(modifiedDate.getTime() - 1000);
+    Metadata oldMetadata = mockMetadata(metadataId, olderDate, olderDate);
+    when(destination.exists(metadata)).thenReturn(oldMetadata);
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
@@ -1172,6 +1202,8 @@ public class SyncerTest {
         .thenReturn(new Date(resourceModified.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1255,6 +1287,8 @@ public class SyncerTest {
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1321,6 +1355,8 @@ public class SyncerTest {
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1385,13 +1421,15 @@ public class SyncerTest {
     when(metadata.getMetadataModified()).thenReturn(modifiedDate);
     when(metadata.getResourceModified()).thenReturn(null);
 
-    when(destination.exists(metadata)).thenReturn(false);
+    when(destination.exists(metadata)).thenReturn(null);
 
     ReplicationItem replicationItem = mock(ReplicationItem.class);
     // set as some time in the past
     when(replicationItem.getMetadataModified()).thenReturn(new Date(modifiedDate.getTime() - 1000));
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.of(replicationItem));
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1470,6 +1508,8 @@ public class SyncerTest {
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1532,6 +1572,8 @@ public class SyncerTest {
 
     when(replicationItemManager.getItem(metadataId, SOURCE_NAME, DESTINATION_NAME))
         .thenReturn(Optional.empty());
+    when(replicationItemManager.getItem(metadataId, DESTINATION_NAME, SOURCE_NAME))
+        .thenReturn(Optional.empty());
 
     Iterable<Metadata> iterable = mock(Iterable.class);
     Iterator<Metadata> iterator = mock(Iterator.class);
@@ -1563,6 +1605,14 @@ public class SyncerTest {
   private Metadata mockMetadata(String id) {
     Metadata metadata = mock(Metadata.class);
     when(metadata.getId()).thenReturn(id);
+    return metadata;
+  }
+
+  private Metadata mockMetadata(String id, Date metadataModified, Date resourceModified) {
+    Metadata metadata = mock(Metadata.class);
+    when(metadata.getId()).thenReturn(id);
+    when(metadata.getResourceModified()).thenReturn(resourceModified);
+    when(metadata.getMetadataModified()).thenReturn(metadataModified);
     return metadata;
   }
 }

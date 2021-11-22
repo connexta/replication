@@ -39,7 +39,7 @@ public class GetRecordsResponseConverter implements Converter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GetRecordsResponseConverter.class);
 
-  private Converter transformProvider;
+  private Map<String, Converter> transformProviders;
 
   /**
    * Creates a new GetRecordsResponseConverter Object
@@ -47,8 +47,8 @@ public class GetRecordsResponseConverter implements Converter {
    * @param transformProvider The converter which will transform a {@link Metadata} to a the
    *     appropriate XML format and vice versa.
    */
-  public GetRecordsResponseConverter(Converter transformProvider) {
-    this.transformProvider = transformProvider;
+  public GetRecordsResponseConverter(Map<String, Converter> transformProviders) {
+    this.transformProviders = transformProviders;
   }
 
   @Override
@@ -85,7 +85,7 @@ public class GetRecordsResponseConverter implements Converter {
    */
   @Override
   public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-    if (transformProvider == null) {
+    if (transformProviders == null || transformProviders.isEmpty()) {
       throw new AdapterException(
           "Unable to locate Converter for outputSchema: " + Constants.CSW_OUTPUT_SCHEMA);
     }
@@ -106,7 +106,11 @@ public class GetRecordsResponseConverter implements Converter {
           String name = reader.getNodeName();
           LOGGER.trace("node name = {}", name);
           Metadata metacard =
-              (Metadata) context.convertAnother(null, MetadataImpl.class, transformProvider);
+              (Metadata)
+                  context.convertAnother(
+                      null,
+                      MetadataImpl.class,
+                      transformProviders.get(cswRecords.getRecordSchema()));
           metacards.add(metacard);
           reader.moveUp();
         }
@@ -135,6 +139,7 @@ public class GetRecordsResponseConverter implements Converter {
     LOGGER.debug("numberOfRecordsReturned = {}", numberOfRecordsReturned);
     cswRecords.setNumberOfRecordsMatched(Long.parseLong(numberOfRecordsMatched));
     cswRecords.setNumberOfRecordsReturned(Long.parseLong(numberOfRecordsReturned));
+    cswRecords.setRecordSchema(reader.getAttribute("recordSchema"));
   }
 
   /**

@@ -18,7 +18,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import net.jodah.expiringmap.ExpiringMap;
 import org.codice.ddf.persistence.PersistenceException;
 import org.codice.ddf.persistence.PersistentItem;
 import org.codice.ddf.persistence.PersistentStore;
@@ -33,6 +35,8 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplicationItemManagerImpl.class);
 
   private static final String ID_KEY = "id";
+
+  private static final String METADATA_ID_KEY = "metadata-id";
 
   private static final String RESOURCE_MODIFIED_KEY = "resource-modified";
 
@@ -54,15 +58,22 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   private final PersistentStore persistentStore;
 
+  // helps with solr commit time slowness.
+  private Map<String, ReplicationItem> cache =
+      ExpiringMap.builder().expiration(45, TimeUnit.SECONDS).build();
+
   public ReplicationItemManagerImpl(PersistentStore persistentStore) {
     this.persistentStore = persistentStore;
   }
 
   @Override
   public Optional<ReplicationItem> getItem(String metadataId, String source, String destination) {
+    if (cache.containsKey(metadataId + source + destination)) {
+      return Optional.of(cache.get(metadataId + source + destination));
+    }
     String cqlFilter =
         String.format(
-            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
+            "'metadata-id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
             metadataId, source, destination);
     List<Map<String, Object>> matchingPersistentItems;
 
@@ -134,8 +145,13 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   public void saveItem(ReplicationItem replicationItem) {
     try {
       persistentStore.add(PERSISTENCE_TYPE, replicationToPersistentItem(replicationItem));
+      cache.put(
+          replicationItem.getMetadataId()
+              + replicationItem.getSource()
+              + replicationItem.getDestination(),
+          replicationItem);
     } catch (PersistenceException e) {
-      LOGGER.debug("Error persisting replication item {}", replicationItem.toString(), e);
+      LOGGER.debug("Error persisting replication item {}", replicationItem, e);
     }
   }
 
@@ -143,7 +159,7 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
   public void deleteItem(String metadataId, String source, String destination) {
     String cqlFilter =
         String.format(
-            "'id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
+            "'metadata-id' = '%s' AND 'source' = '%s' AND 'destination' = '%s'",
             metadataId, source, destination);
     try {
       persistentStore.delete(PERSISTENCE_TYPE, cqlFilter);
@@ -199,7 +215,8 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   private PersistentItem replicationToPersistentItem(ReplicationItem replicationItem) {
     PersistentItem persistentItem = new PersistentItem();
-    persistentItem.addIdProperty(replicationItem.getMetadataId());
+    persistentItem.addIdProperty(replicationItem.getId());
+    persistentItem.addProperty(METADATA_ID_KEY, replicationItem.getMetadataId());
     persistentItem.addProperty(RESOURCE_MODIFIED_KEY, replicationItem.getResourceModified());
     persistentItem.addProperty(METACARD_MODIFIED_KEY, replicationItem.getMetadataModified());
     persistentItem.addProperty(FAILURE_COUNT_KEY, replicationItem.getFailureCount());
@@ -212,8 +229,9 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
 
   private ReplicationItem mapToReplicationItem(Map<String, Object> persistedMap) {
     Map<String, Object> attributes = PersistentItem.stripSuffixes(persistedMap);
-
-    final String metacardId = (String) attributes.get(ID_KEY);
+    final String id = (String) attributes.get(ID_KEY);
+    final String metadataId =
+        attributes.get(METADATA_ID_KEY) == null ? id : (String) attributes.get(METADATA_ID_KEY);
     final Date resourceModified = (Date) attributes.get(RESOURCE_MODIFIED_KEY);
     final Date metacardModified = (Date) attributes.get(METACARD_MODIFIED_KEY);
     final String source = (String) attributes.get(SOURCE_NAME_KEY);
@@ -222,7 +240,8 @@ public class ReplicationItemManagerImpl implements ReplicationItemManager {
     final int failureCount = (int) attributes.get(FAILURE_COUNT_KEY);
 
     return new ReplicationItemImpl(
-        metacardId,
+        id,
+        metadataId,
         resourceModified,
         metacardModified,
         source,

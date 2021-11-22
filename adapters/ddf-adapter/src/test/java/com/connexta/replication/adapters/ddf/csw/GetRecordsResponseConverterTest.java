@@ -52,19 +52,26 @@ public class GetRecordsResponseConverterTest {
 
   @Test
   public void canConvert() {
+    Map<String, Converter> converters = new HashMap<>();
+    converters.put("urn:catalog:metacard", converter);
     assertThat(
-        new GetRecordsResponseConverter(converter).canConvert(CswRecordCollection.class), is(true));
-    assertThat(new GetRecordsResponseConverter(converter).canConvert(Metadata.class), is(false));
+        new GetRecordsResponseConverter(converters).canConvert(CswRecordCollection.class),
+        is(true));
+    assertThat(new GetRecordsResponseConverter(converters).canConvert(Metadata.class), is(false));
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void marshal() {
-    new GetRecordsResponseConverter(converter)
+    Map<String, Converter> converters = new HashMap<>();
+    converters.put("urn:catalog:metacard", converter);
+    new GetRecordsResponseConverter(converters)
         .marshal(new CswRecordCollection(), writer, marshallingContext);
   }
 
   @Test
   public void unmarshal() throws Exception {
+    Map<String, Converter> converters = new HashMap<>();
+    converters.put("urn:catalog:metacard", converter);
     InputStream inStream = new FileInputStream("src/test/resources/csw-response.xml");
     HierarchicalStreamReader reader =
         new XppReader(
@@ -76,7 +83,7 @@ public class GetRecordsResponseConverterTest {
             new MetadataImpl(new HashMap<String, String>(), Map.class, "123456789", new Date()));
     CswRecordCollection cswRecords =
         (CswRecordCollection)
-            new GetRecordsResponseConverter(converter).unmarshal(reader, unmarshallingContext);
+            new GetRecordsResponseConverter(converters).unmarshal(reader, unmarshallingContext);
     assertThat(cswRecords.getNumberOfRecordsMatched(), is(1L));
     assertThat(cswRecords.getNumberOfRecordsReturned(), is(1L));
     assertThat(cswRecords.getCswRecords().size(), is(1));

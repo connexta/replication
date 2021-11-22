@@ -14,10 +14,13 @@
 package org.codice.ditto.replication.api.impl;
 
 import java.util.Date;
+import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.codice.ditto.replication.api.ReplicationItem;
 
 public class ReplicationItemImpl implements ReplicationItem {
+
+  private final String id;
 
   private final String metadataId;
 
@@ -40,10 +43,41 @@ public class ReplicationItemImpl implements ReplicationItem {
       String source,
       String destination,
       String configId) {
-    this(metadataId, resourceModified, metadataModified, source, destination, configId, 0);
+    this(null, metadataId, resourceModified, metadataModified, source, destination, configId, 0);
   }
 
   public ReplicationItemImpl(
+      String id,
+      String metadataId,
+      Date resourceModified,
+      Date metadataModified,
+      String source,
+      String destination,
+      String configId) {
+    this(id, metadataId, resourceModified, metadataModified, source, destination, configId, 0);
+  }
+
+  public ReplicationItemImpl(
+      String metadataId,
+      Date resourceModified,
+      Date metadataModified,
+      String source,
+      String destination,
+      String configId,
+      int failureCount) {
+    this(
+        null,
+        metadataId,
+        resourceModified,
+        metadataModified,
+        source,
+        destination,
+        configId,
+        failureCount);
+  }
+
+  public ReplicationItemImpl(
+      String id,
       String metadataId,
       Date resourceModified,
       Date metadataModified,
@@ -62,6 +96,11 @@ public class ReplicationItemImpl implements ReplicationItem {
     this.destination = notBlank(destination);
     this.configurationId = configId;
     this.failureCount = failureCount;
+    if (id == null) {
+      this.id = UUID.randomUUID().toString();
+    } else {
+      this.id = id;
+    }
   }
 
   private static String notBlank(String s) {
@@ -70,6 +109,11 @@ public class ReplicationItemImpl implements ReplicationItem {
     } else {
       throw new IllegalArgumentException("String argument may not be empty");
     }
+  }
+
+  @Override
+  public String getId() {
+    return id;
   }
 
   @Override
@@ -115,7 +159,7 @@ public class ReplicationItemImpl implements ReplicationItem {
   @Override
   public String toString() {
     return String.format(
-        "ReplicationItemImpl{id=%s, resourceModified=%s, metadataModified=%s, sourceName=%s, destinationName=%s, replicatorConfigId=%s}",
-        metadataId, resourceModified, metadataModified, source, destination, configurationId);
+        "ReplicationItemImpl{id=%s, metacardId=%s, resourceModified=%s, metadataModified=%s, sourceName=%s, destinationName=%s, replicatorConfigId=%s}",
+        id, metadataId, resourceModified, metadataModified, source, destination, configurationId);
   }
 }

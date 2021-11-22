@@ -25,6 +25,18 @@
     <argument value="60000"/>
   </bean>
 
+  <service interface="ddf.catalog.transform.MetacardTransformer">
+    <service-properties>
+      <entry key="id" value="minimal"/>
+      <entry key="mime-type" value="text/xml"/>
+      <!-- deprecated -->
+      <entry key="shortname" value="minimal"/>
+      <entry key="schema" value="urn:catalog:minimal"/>
+      <entry key="displayName" value="Minimal"/>
+    </service-properties>
+    <bean class="com.connexta.replication.adapters.ddf.transformer.MinimalMetacardTransformer"/>
+  </service>
+
   <service ref="ddfNodeAdapterFactory"
     interface="org.codice.ditto.replication.api.NodeAdapterFactory"/>
 </blueprint>

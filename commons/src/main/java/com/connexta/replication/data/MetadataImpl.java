@@ -135,7 +135,10 @@ public class MetadataImpl implements Metadata {
 
   @Override
   public void addLineage(String name) {
-    lineage.add(name);
+    // don't include remote updates back to source in lineage
+    if (!lineage.contains(name)) {
+      lineage.add(name);
+    }
   }
 
   @Override

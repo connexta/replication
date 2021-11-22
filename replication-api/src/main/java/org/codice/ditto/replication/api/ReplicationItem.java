@@ -18,6 +18,9 @@ import java.util.Date;
 /** Represents a resource that replication has replicated or attempted to replicate. */
 public interface ReplicationItem {
 
+  /** @return the replication item id */
+  String getId();
+
   /**
    * @return id for which {@link org.codice.ditto.replication.api.data.Metadata} this item
    *     represents

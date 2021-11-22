@@ -31,6 +31,8 @@ public class CswRecordCollection {
 
   private long numberOfRecordsMatched;
 
+  private String recordSchema;
+
   /**
    * Retrieves the list of metadata built from the CSW Records returned in a GetRecordsResponse.
    *
@@ -63,5 +65,13 @@ public class CswRecordCollection {
 
   public void setNumberOfRecordsMatched(long numberOfRecordsMatched) {
     this.numberOfRecordsMatched = numberOfRecordsMatched;
+  }
+
+  public String getRecordSchema() {
+    return recordSchema;
+  }
+
+  public void setRecordSchema(String recordSchema) {
+    this.recordSchema = recordSchema;
   }
 }

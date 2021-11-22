@@ -14,6 +14,7 @@
 package org.codice.ditto.replication.api;
 
 import java.io.Closeable;
+import javax.annotation.Nullable;
 import org.codice.ditto.replication.api.data.CreateRequest;
 import org.codice.ditto.replication.api.data.CreateStorageRequest;
 import org.codice.ditto.replication.api.data.DeleteRequest;
@@ -46,11 +47,12 @@ public interface NodeAdapter extends Closeable {
 
   /**
    * @param metadata {@link Metadata} to check existence for
-   * @return {@code true} if the {@link Metadata} exists on the {@code NodeAdapter}, otherwise
-   *     {@code false}.
+   * @return {@code Metadata} for the remote item if the {@link Metadata} exists on the {@code
+   *     NodeAdapter}, otherwise {@code null}. This metadata could be very sparsely populated
    * @throws AdapterException if there is an error checking if the metadata exists
    */
-  boolean exists(Metadata metadata);
+  @Nullable
+  Metadata exists(Metadata metadata);
 
   /**
    * Creates {@link Metadata} on this {@code NodeAdapter}.
