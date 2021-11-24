@@ -86,10 +86,13 @@ public class QueryServiceImpl implements QueryService {
       Metacard mcard) {
     String title = (String) mcard.getAttribute(Core.TITLE).getValue();
     String cql = (String) mcard.getAttribute("cql").getValue();
-    String sortJson =
-        mcard.getAttribute("sorts").getValues().stream()
-            .map(value -> value.toString().replace('=', ':'))
-            .collect(Collectors.joining(",", "::[", "]"));
+    String sortJson = "";
+    if (mcard.getAttribute("sorts") != null) {
+      sortJson =
+          mcard.getAttribute("sorts").getValues().stream()
+              .map(value -> value.toString().replace('=', ':'))
+              .collect(Collectors.joining(",", "::[", "]"));
+    }
     return new org.codice.ditto.replication.api.impl.data.QueryImpl(title, cql + sortJson);
   }
 }

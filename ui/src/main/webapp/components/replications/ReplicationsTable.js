@@ -32,7 +32,11 @@ import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward'
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward'
 import moment from 'moment'
 import Immutable from 'immutable'
-import { withStyles, createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles'
+import {
+  withStyles,
+  createMuiTheme,
+  MuiThemeProvider,
+} from '@material-ui/core/styles'
 import ActionsMenu from './ActionsMenu'
 import Replications from './replications'
 import ReactInterval from 'react-interval'
@@ -55,10 +59,10 @@ const theme = createMuiTheme({
     MuiTableCell: {
       root: {
         padding: '10px 15px',
-      }
-    }
-  }
-});
+      },
+    },
+  },
+})
 
 const format = utc => {
   return utc ? moment.utc(utc).fromNow() : '-'
@@ -79,29 +83,32 @@ class ReplicationRow extends React.Component {
     this.setState({ anchor: null })
   }
 
-  getSortIcon = (asc) => {
+  getSortIcon = asc => {
     const Icon = asc ? ArrowUpwardIcon : ArrowDownwardIcon
     return (
       <Tooltip title={asc ? 'Ascending' : 'Descending'}>
-        <Icon fontSize='small' style={{ 'color': '#808080' }}/>
+        <Icon fontSize='small' style={{ color: '#808080' }} />
       </Tooltip>
     )
   }
 
-  getSorts = (filter) => {
+  getSorts = filter => {
     const parts = filter.split('::')
     if (parts.length > 1 && parts[1] != '[]') {
       const sorts = RJSON.parse(parts[1])
       return sorts.map(s => (
-          <div style={{ 'display': 'flex', 'alignItems': 'center' }}>
-            {s.attribute}{'  '}
-            {this.getSortIcon(s.direction == 'ascending')}
-          </div>
-        )
-      )
+        <div
+          key={s.attribute}
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          {s.attribute}
+          {'  '}
+          {this.getSortIcon(s.direction == 'ascending')}
+        </div>
+      ))
     } else {
       return (
-        <div style={{ 'display': 'flex', 'alignItems': 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           modified{'  '}
           {this.getSortIcon(false)}
         </div>

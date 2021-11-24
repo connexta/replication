@@ -134,7 +134,7 @@ public class SyncerTest {
 
     // then
     verify(replicationItemManager, never()).getItem(metadataId, SOURCE_NAME, DESTINATION_NAME);
-    verify(replicationStatus, never()).setLastMetadataModified(any(Date.class));
+    verify(replicationStatus).setLastMetadataModified(null);
     verify(replicationItemManager, never()).saveItem(any(ReplicationItem.class));
     verify(replicationStatus, times(1)).setStatus(Status.CANCELED);
   }
@@ -1442,7 +1442,7 @@ public class SyncerTest {
   }
 
   @Test
-  public void testFailedItemsAndMofifiedAfterIncludedInQuery() {
+  public void testFailedItemsAndModifiedAfterIncludedInQuery() {
     // setup
     ReplicationStatus status = mock(ReplicationStatus.class);
     Date lastMetadataModified = new Date();
@@ -1504,7 +1504,7 @@ public class SyncerTest {
   }
 
   @Test
-  public void testFailedItemsAndMofifiedBeforeLastModifed() {
+  public void testFailedItemsAndModifiedBeforeLastModified() {
     // setup
     ReplicationStatus status = mock(ReplicationStatus.class);
     Date lastMetadataModified = new Date();
@@ -1523,7 +1523,7 @@ public class SyncerTest {
         .thenReturn(failedItemIds);
 
     final String metadataId = "metadataId";
-    final Date modifiedDate = new Date();
+    final Date modifiedDate = new Date(lastMetadataModified.getTime() - 10000);
     Metadata metadata = mockMetadata(metadataId);
     when(metadata.isDeleted()).thenReturn(false);
     when(metadata.getResourceUri()).thenReturn(null);
@@ -1552,14 +1552,12 @@ public class SyncerTest {
         ArgumentCaptor.forClass(CreateRequest.class);
     when(destination.createRequest(createRequestCaptor.capture())).thenReturn(true);
 
-    when(status.getLastMetadataModified()).thenReturn(new Date(System.currentTimeMillis() + 10000));
-
     // when
     Job job = syncer.create(source, destination, replicatorConfig, status);
     job.sync();
 
     // then
-    verify(status, never()).setLastMetadataModified(any(Date.class));
+    verify(status).setLastMetadataModified(lastMetadataModified);
   }
 
   private Metadata mockMetadata(String id) {
