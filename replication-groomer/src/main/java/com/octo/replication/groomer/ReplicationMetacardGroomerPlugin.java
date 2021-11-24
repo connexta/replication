@@ -175,6 +175,15 @@ public class ReplicationMetacardGroomerPlugin extends AbstractMetacardGroomerPlu
         throw new StopProcessingException("Updated metacard is older that the existing metacard.");
       }
 
+      // The reset endpoint does not maintain injected attributes on content updated which is a bug
+      // We are handling it here for the moment as best we can
+      if (aMetacard.getAttribute(Replication.CHANGE_DATE) == null) {
+        aMetacard.setAttribute(
+            new AttributeImpl(
+                Replication.CHANGE_DATE,
+                aMetacard.getAttribute(Core.METACARD_MODIFIED).getValue()));
+      }
+
       ArrayList<String> tags = new ArrayList<>(aMetacard.getTags());
       tags.remove(Replication.REPLICATION_RUN_TAG);
       aMetacard.setAttribute(new AttributeImpl(Metacard.TAGS, (Serializable) tags));
