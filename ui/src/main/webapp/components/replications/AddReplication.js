@@ -97,7 +97,7 @@ const defaultFormState = {
   sourceId: '',
   destinationId: '',
   filter: '',
-  sorts: [{ attribute: 'modified', direction: 'descending' }],
+  sorts: [{ attribute: 'metacard.modified', direction: 'ascending' }],
   biDirectional: false,
   priority: 5,
   filterErrorText: '',
@@ -134,8 +134,9 @@ class AddReplication extends React.Component {
   }
 
   getFilterToSave = () => {
-    const validSorts = this.state.sorts.filter(s => 
-      s.attribute && s.attribute != '' && s.direction)
+    const validSorts = this.state.sorts.filter(
+      s => s.attribute && s.attribute != '' && s.direction
+    )
     return `${this.state.filter}::${JSON.stringify(validSorts)}`
   }
 
@@ -160,7 +161,7 @@ class AddReplication extends React.Component {
 
   handleSelectorChange = option => {
     if (option) {
-      const parts = option.value.split('::')  
+      const parts = option.value.split('::')
       this.setState({ filter: parts[0] || '' })
       if (parts.length > 1) {
         this.setState({ sorts: RJSON.parse(parts[1]) })
@@ -306,7 +307,7 @@ class AddReplication extends React.Component {
                           label='Priority'
                           control={
                             <Select
-                              style={{ 'paddingRight': '12px' }}
+                              style={{ paddingRight: '12px' }}
                               value={priority}
                               onChange={this.handlePriorityChange('priority')}
                             >
@@ -344,10 +345,10 @@ class AddReplication extends React.Component {
               }
               error={filterErrorText ? true : false}
             />
-            <SortPolicies 
-              sortPolicies={sorts} 
-              onAddSort={this.handleAddSort} 
-              onRemoveSort={this.handleRemoveSort} 
+            <SortPolicies
+              sortPolicies={sorts}
+              onAddSort={this.handleAddSort}
+              onRemoveSort={this.handleRemoveSort}
               onChangeSort={this.handleChangeSort}
             />
           </DialogContent>

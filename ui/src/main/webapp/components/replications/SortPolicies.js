@@ -32,17 +32,23 @@ const styles = {
   },
   sortsFormLabel: {
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   iconButton: {
     '&:hover': {
       backgroundColor: 'transparent',
-   },
-  }
+    },
+  },
 }
 
 function SortPolicies(props) {
-  const { sortPolicies = [], onAddSort, onRemoveSort, onChangeSort, classes } = props
+  const {
+    sortPolicies = [],
+    onAddSort,
+    onRemoveSort,
+    onChangeSort,
+    classes,
+  } = props
 
   return (
     <FormControl className={classes.sortsFormControl}>
@@ -50,32 +56,40 @@ function SortPolicies(props) {
         <div className={classes.sortsFormLabel}>
           Sort Policies
           <IconButton onClick={onAddSort} className={classes.iconButton}>
-            <AddIcon/>
+            <AddIcon />
           </IconButton>
         </div>
       </FormLabel>
-      {sortPolicies.map((sort, index) => 
-        <div style={{ 'display': 'flex', 'alignItems': 'center' }}>
+      {sortPolicies.map((sort, index) => (
+        <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
           <TextField
             margin='none'
             fullWidth
-            onChange={(e) => onChangeSort({ id: 'attribute', value: e.target.value }, index)}
+            onChange={e =>
+              onChangeSort({ id: 'attribute', value: e.target.value }, index)
+            }
             value={sort.attribute}
             placeholder='Attribute name'
           />
           <Select
-            style={{ 'paddingRight': '12px' }}
+            style={{ paddingRight: '12px' }}
             value={sort.direction}
-            onChange={(e) => onChangeSort({ id: 'direction', value: e.target.value }, index)}
+            onChange={e =>
+              onChangeSort({ id: 'direction', value: e.target.value }, index)
+            }
           >
             <MenuItem value='ascending'>Ascending</MenuItem>
             <MenuItem value='descending'>Descending</MenuItem>
           </Select>
-          <IconButton size="small" onClick={() => onRemoveSort(sort)} className={classes.iconButton}>
-            <ClearIcon/>
+          <IconButton
+            size='small'
+            onClick={() => onRemoveSort(sort)}
+            className={classes.iconButton}
+          >
+            <ClearIcon />
           </IconButton>
         </div>
-      )}
+      ))}
     </FormControl>
   )
 }

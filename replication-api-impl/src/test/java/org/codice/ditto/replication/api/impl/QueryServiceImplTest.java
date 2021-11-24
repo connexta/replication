@@ -60,12 +60,14 @@ public class QueryServiceImplTest {
     query.setAttribute(new AttributeImpl(Core.METACARD_TAGS, "query"));
     query.setAttribute(new AttributeImpl(Core.TITLE, "mockTitle"));
     query.setAttribute(new AttributeImpl("cql", "mockCql"));
+    query.setAttribute(new AttributeImpl("sorts", "{attribute=modified, direction=descending}"));
     when(mockQueryResponse.getResults())
         .thenReturn(Collections.singletonList(new ResultImpl(query)));
 
     Query resultingQuery = queryService.queries().findFirst().orElse(null);
     assertThat(resultingQuery.getTitle(), is("mockTitle"));
-    assertThat(resultingQuery.getCql(), is("mockCql"));
+    assertThat(
+        resultingQuery.getCql(), is("mockCql::[{attribute:modified, direction:descending}]"));
   }
 
   @Test(expected = QueryException.class)
