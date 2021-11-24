@@ -345,8 +345,12 @@ public class DdfNodeAdapter implements NodeAdapter {
     LOGGER.debug("Base query filter: {}", cql);
     final List<String> filters = new ArrayList<>();
 
+    List<String> originFilters = new ArrayList<>();
     for (String excludedNode : queryRequest.getExcludedNodes()) {
-      filters.add(CqlBuilder.negate(CqlBuilder.equalTo(Replication.ORIGINS, excludedNode)));
+      originFilters.add(CqlBuilder.negate(CqlBuilder.equalTo(Replication.ORIGINS, excludedNode)));
+    }
+    if (!originFilters.isEmpty()) {
+      filters.addAll(originFilters);
     }
     filters.add(CqlBuilder.equalTo(Constants.METACARD_TAGS, Constants.DEFAULT_TAG));
 
@@ -369,7 +373,7 @@ public class DdfNodeAdapter implements NodeAdapter {
       deletedFilters.add(CqlBuilder.after(Constants.VERSIONED_ON, modifiedAfter));
       deletedFilters.add(CqlBuilder.equalTo(Constants.METACARD_TAGS, Constants.VERSION_TAG));
       deletedFilters.add(CqlBuilder.like(Constants.ACTION, "Deleted*"));
-
+      deletedFilters.addAll(originFilters);
       String timeTypeFilter = CqlBuilder.allOf(filters);
       String deletedItemsFilter = CqlBuilder.allOf(deletedFilters);
       LOGGER.debug("Time and type filter: {}", timeTypeFilter);
