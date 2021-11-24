@@ -17,7 +17,7 @@
     <parent>
         <groupId>replication</groupId>
         <artifactId>replication</artifactId>
-        <version>0.3.4-SNAPSHOT</version>
+        <version>0.3.4</version>
     </parent>
     <artifactId>replication-groomer</artifactId>
     <name>Replication :: Metacard Groomer Plugin</name>
