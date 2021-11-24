@@ -44,8 +44,8 @@ public class GetRecordsResponseConverter implements Converter {
   /**
    * Creates a new GetRecordsResponseConverter Object
    *
-   * @param transformProvider The converter which will transform a {@link Metadata} to a the
-   *     appropriate XML format and vice versa.
+   * @param transformProviders The converter map which will be used to lookup the appropriate
+   *     transformer to transform a {@link Metadata} into an appropriate XML format and vice versa.
    */
   public GetRecordsResponseConverter(Map<String, Converter> transformProviders) {
     this.transformProviders = transformProviders;
